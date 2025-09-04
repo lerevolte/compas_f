@@ -1,0 +1,142 @@
+{
+    "header": [
+        {
+            "id": 0,
+            "key": "id",
+            "title": "",
+            "type": "text",
+            "isLink": false,
+            "width": "50"
+        },
+        {
+            "id": 1,
+            "key": "name",
+            "title": "",
+            "type": "text",
+            "isLink": false,
+            "width": "300"
+        },
+        {
+            "id": 2,
+            "key": "desc",
+            "title": "",
+            "type": "text",
+            "isLink": false,
+            "width": "470"
+        },
+        {
+            "id": 3,
+            "key": "link",
+            "title": "",
+            "type": "text",
+            "isLink": false,
+            "width": "270"
+        },
+        {
+            "id": 4,
+            "key": "created_at",
+            "title": "",
+            "type": "text",
+            "isLink": false,
+            "width": "150"
+        },
+        {
+            "id": 5,
+            "key": "updated_at",
+            "title": "",
+            "type": "text",
+            "isLink": false,
+            "width": "150"
+        }
+    ],
+    "body": [
+        {
+            "id": "",
+            "name": "",
+            "desc": "",
+            "link": "",
+            "created_at": "",
+            "updated_at": ""
+        },
+        {
+            "id": "",
+            "name": "",
+            "desc": "",
+            "link": "",
+            "created_at": "",
+            "updated_at": ""
+        },
+        {
+            "id": "",
+            "name": "",
+            "desc": "",
+            "link": "",
+            "created_at": "",
+            "updated_at": ""
+        },
+        {
+            "id": "",
+            "name": "",
+            "desc": "",
+            "link": "",
+            "created_at": "",
+            "updated_at": ""
+        },
+        {
+            "id": "",
+            "name": "",
+            "desc": "",
+            "link": "",
+            "created_at": "",
+            "updated_at": ""
+        },
+        {
+            "id": "",
+            "name": "",
+            "desc": "",
+            "link": "",
+            "created_at": "",
+            "updated_at": ""
+        },
+        {
+            "id": "",
+            "name": "",
+            "desc": "",
+            "link": "",
+            "created_at": "",
+            "updated_at": ""
+        },
+        {
+            "id": "",
+            "name": "",
+            "desc": "",
+            "link": "",
+            "created_at": "",
+            "updated_at": ""
+        },
+        {
+            "id": "",
+            "name": "",
+            "desc": "",
+            "link": "",
+            "created_at": "",
+            "updated_at": ""
+        },
+        {
+            "id": "",
+            "name": "",
+            "desc": "",
+            "link": "",
+            "created_at": "",
+            "updated_at": ""
+        },
+        {
+            "id": "",
+            "name": "",
+            "desc": "",
+            "link": "",
+            "created_at": "",
+            "updated_at": ""
+        }
+    ]
+}

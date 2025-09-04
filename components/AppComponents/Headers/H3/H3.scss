@@ -1,0 +1,14 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+h3 {
+    font-size: variables.$font-size-h3;
+
+    @media (max-width: 990px) {
+        font-size: variables.$font-size-h3-laptop;
+    }
+
+    @media (max-width: 490px) {
+        font-size: variables.$font-size-h3-phone;
+    }
+}

@@ -1,0 +1,13 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+.blank {
+    gap: 5px;
+    display: flex;
+    flex-direction: column;
+    
+    .blank__title {
+        display: block;
+        font-size: variables.$font-size-label;
+    }
+}

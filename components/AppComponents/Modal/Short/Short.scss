@@ -1,0 +1,87 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+.modal {
+    &.modal_short {
+        display: flex;
+        justify-content: end;
+
+
+
+        & > .modal__content {
+            padding: 0px;
+            width: 600px;
+            margin-right: -760px;
+            animation: showModal 0.25s ease-out forwards;
+
+            .modal__close {
+                position: absolute;
+                top: 50px;
+                left: -155px;
+                gap: 10px;
+                display: flex;
+                align-items: center;
+                font-size: 20px;
+                color: variables.$color-black;
+                padding: 15px 20px;
+                border-radius: 10px 0px 0px 10px;
+                background: variables.$color-white;
+    
+    
+                .icon__close {
+                    @include mixins.resolution(19px, 19px);
+    
+                    svg {
+                        @include mixins.resolution(19px, 19px);
+                    }
+                }
+
+                @media (max-width: 780px) {
+                    display: none;
+                }
+            }
+
+            .modal__body {
+                gap: 30px;
+                height: 100%;
+                padding: 40px;
+                display: grid;
+                overflow: auto;
+                max-height: 100vh;
+                grid-template-rows: auto 1fr auto;
+                @include mixins.scrollBar();
+            }
+
+            h2 {
+                font-size: 30px;
+            }
+            
+            @media (max-width: 780px) {
+                width: 100%;
+            }
+        }
+
+        .modal__fields {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+
+            .modal__field_hide {
+                display: none;
+            }
+        }
+
+        .modal__buttons {
+            flex-direction: column;
+        }
+
+        @keyframes showModal {
+            0% {
+                margin-right: -760px;
+            }
+            100% {
+                margin-right: 0px;
+            }
+        }
+    }
+}

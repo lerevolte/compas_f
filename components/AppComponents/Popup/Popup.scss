@@ -1,0 +1,65 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+.popup {
+    position: relative;
+
+    &.popup_open {
+        .popup__content {
+            display: flex;
+        }
+    }
+}
+
+.popup__header {
+    position: relative;
+    cursor: pointer;
+}
+
+.popup__content {
+    border-radius: 4px;
+    bottom: auto;
+    z-index: 1000;
+    display: none;
+    margin-top: 5px;
+    position: absolute;
+    flex-direction: column;
+    width: 100%;
+    max-width: 200px;
+    background: variables.$color-white;
+    box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.25);
+    max-height: 300px;
+    overflow: auto;
+    @include mixins.scrollBar();
+
+    &.popup__content_top {
+        bottom: calc(100% + 5px);
+    }
+}
+
+.popup__option {
+    cursor: pointer;
+    padding: 10px;
+    color: variables.$color-default;
+
+    &:hover {
+        color: variables.$color-default;
+        background: variables.$color-hover-option;
+    }
+
+    &.popup__option_red {
+        color: variables.$color-red;
+    }
+
+    &.popup__option_blue {
+        color: variables.$color-link;
+    }
+
+    &.popup__option_hide {
+        display: none;
+    }
+
+    &.popup__option_disable {
+        pointer-events: none;
+    }
+}

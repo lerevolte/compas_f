@@ -1,0 +1,13 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+
+.form__item {
+    &.form__item_textarea {
+        @include mixins.blankGap();
+
+        textarea {
+            min-height: 150px;
+        }
+    }
+}

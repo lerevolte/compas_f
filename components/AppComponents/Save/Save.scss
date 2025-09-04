@@ -1,0 +1,77 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+.settings__item {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    cursor: pointer;
+    font-family: PT Sans;
+
+    &.settings__item_back {
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        font-weight: 600;
+        position: sticky;
+        top: 0px;
+        background: variables.$color-white;
+
+        .icon__arrow {
+            transform: rotate(180deg);
+        }
+    }
+
+    &.settings__item_submenu {
+        justify-content: space-between;
+    }
+
+    &.draggable-ghost {
+        background: #fbfcfd;
+        outline: 2px dashed #a6b7d4;
+        border-radius: 5px;
+        font-size: 0px;
+        min-height: 39px;
+
+        * {
+            opacity: 0;
+        }
+    }
+
+    .icon__arrow {
+        display: flex;
+    }
+}
+
+
+.settings {
+    .popup__content {
+        width: 200px;
+    }
+
+    .menu__item-subtitle,
+    .menu__item-hide:after, 
+    .menu__item-hide:before {
+        background-color: #a6b7d4;
+    }
+
+}
+
+.settings__list {
+    &.settings__list_check {
+        .popup__option {
+            padding: 0px;
+
+            .form__item_checkbox {
+                width: 100%;
+                height: 100%;
+
+                label {
+                    padding: 10px;
+                    width: 100%;
+                    height: 100%;
+                    max-width: none;
+                }
+            }
+        }
+    }
+}

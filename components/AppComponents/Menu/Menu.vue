@@ -1,0 +1,337 @@
+<template>
+    <aside class="menu" :class="{'menu_open': menu.isOpen, 'menu_dragging': menu.isDragging}">
+        <teleport to="#mobile-menu-target" v-if="isClient && menu.isMobile">
+            <IconGamburger 
+                class="menu__gambuger"
+                @click="menu.isOpen = true"
+            />
+        </teleport>
+
+        <div class="menu__content">
+            <NuxtLink class="menu__logo" to="/">
+                <IconLogo />
+            </NuxtLink>
+
+            <div class="menu-item__summary menu-item__summary_text" @click="menu.isOpen = false">
+                <figure class='menu__arrow'>
+                    <svg xmlns="http://www.w3.org/2000/svg" id="arrow" width="14" height="8" viewBox="0 0 14 8" fill="none"><path d="M13.5 1L7 7L0.5 1" stroke="#979797"/></svg>
+                </figure>
+                Меню
+            </div>
+    
+            <ul class="menu__list" v-if="menu.loading">
+                <li class="menu__item skeleton" v-for="i in 10" :key="i"> 
+                    <div class="menu__link"></div>
+                </li>
+            </ul>
+    
+            <nav class="menu__nav" v-else>
+                <draggable 
+                    tag="ul"
+                    group="menu"
+                    class="menu__list"
+                    ghost-class="draggable-ghost"
+                    fallback-class="draggable-fallback"
+                    v-model="menu.visible"
+                    :forceFallback="true" 
+                    :fallbackOnBody="true"
+                    item-key="id" 
+                    handle=".icon_drag"
+                    @start="e => menu.dragStart(e)"
+                    @end="val => menu.dragEnd(val)"
+                >
+                    <template #item="{ element: item }">
+                        <li class="menu__item" :class="{'menu__item_disabled': !item.enabled}" v-if="item.children.length == 0">
+                            <IconDrag />
+                            <NuxtLink :class="{'menu__link_active': menu.isActive(item.link)}" class="menu__link" :to="item.link ?? null">
+                                {{ item.name }}
+                            </NuxtLink>
+                        </li>
+                        <li class="menu__item" :class="{'menu__item_disabled': !item.enabled}" v-else>
+                            <IconDrag />
+    
+                            <details class="menu-item menu-item__details">
+                                <summary class="menu-item__summary">
+                                    <NuxtLink class="menu__link" :class="{'menu__link_active': menu.isActive(item.link)}" :to="item.link ?? null">
+                                        {{ item.name }}
+                                    </NuxtLink>
+    
+                                    <figure class='menu__arrow'>
+                                        <svg xmlns="http://www.w3.org/2000/svg" id="arrow" width="14" height="8" viewBox="0 0 14 8" fill="none"><path d="M13.5 1L7 7L0.5 1" stroke="#979797"/></svg>
+                                    </figure>
+                                </summary>
+    
+                                <ul class="menu__sublist">
+                                    <li class="menu__item" :class="{'menu__link_active': menu.isActive(item.link)}" v-for="child in item.children" :key="child.id">
+                                        <NuxtLink class="menu__link" :to="child.link ?? '/'">
+                                            {{ child.name }}
+                                        </NuxtLink>
+                                    </li>
+                                </ul>
+                            </details>
+                        </li>
+                    </template>
+                </draggable>
+    
+                <details class="menu-item menu-item__details menu-item__details_hidden" ref="menuHidden">
+                    <summary class="menu-item__summary">
+                        <div class="menu__link"></div>
+    
+                        <figure class='menu__arrow'>
+                            <svg xmlns="http://www.w3.org/2000/svg" id="arrow" width="14" height="8" viewBox="0 0 14 8" fill="none"><path d="M13.5 1L7 7L0.5 1" stroke="#979797"/></svg>
+                        </figure>
+                    </summary>
+    
+                    <div class="menu-item__hidden-content">
+                        <div class="menu__item-hide" @click="menuHidden.removeAttribute('open')">
+                            <span class="menu__item-subtitle"> Скрытые </span>
+                        </div>
+    
+                        <draggable 
+                            tag="ul"
+                            group="menu"
+                            class="menu__list"
+                            ghost-class="draggable-ghost"
+                            v-model="menu.hidden" 
+                            fallback-class="draggable-fallback"
+                            :forceFallback="true"
+                            :fallbackOnBody="true"
+                            item-key="id" 
+                            handle=".icon_drag"
+                            @start="menu.dragStart()"
+                            @end="val => menu.dragEnd(val)"
+                        >
+                            <template #item="{ element: item }">
+                                <li class="menu__item" :class="{'menu__item_disabled': !item.enabled}" v-if="item.children.length == 0">
+                                    <IconDrag />
+                                    <NuxtLink :class="{'menu__link_active': menu.isActive(item.link)}" class="menu__link" :to="item.link ?? null">
+                                        {{ item.name }}
+                                    </NuxtLink>
+                                </li>
+                                <li class="menu__item" :class="{'menu__item_disabled': !item.enabled}" v-else>
+                                    <IconDrag />
+            
+                                    <details class="menu-item__details">
+                                        <summary class="menu-item__summary">
+                                            <NuxtLink :class="{'menu__link_active': menu.isActive(item.link)}" class="menu__link" :to="item.link ?? null">
+                                                {{ item.name }}
+                                            </NuxtLink>
+            
+                                            <figure class='menu__arrow'>
+                                                <svg xmlns="http://www.w3.org/2000/svg" id="arrow" width="14" height="8" viewBox="0 0 14 8" fill="none"><path d="M13.5 1L7 7L0.5 1" stroke="#979797"/></svg>
+                                            </figure>
+                                        </summary>
+            
+                                        <ul class="menu__sublist">
+                                            <li class="menu__item" v-for="child in item.children" :key="child.id">
+                                                <NuxtLink :class="{'menu__link_active': menu.isActive(item.link)}" class="menu__link" :to="child.link ?? '/'">
+                                                    {{ child.name }}
+                                                </NuxtLink>
+                                            </li>
+                                        </ul>
+                                    </details>
+                                </li>
+                            </template>
+                        </draggable>
+                    </div>
+                </details>
+            </nav>
+            
+            <div class="menu__actions">
+                <AppSettings 
+                    v-model:list="menu.list"
+                    v-model:visible="menu.visible"
+                    v-model:hidden="menu.hidden"
+                    :options="{
+                        isCheck: {
+                            state: true,
+                            name: 'Сущности'
+                        },
+                        isDrag: {
+                            state: true,
+                            name: 'Порядок'
+                        },
+                        isNest: {
+                            state: true,
+                            name: 'Группы вкладок'
+                        },
+                        isHaveDefault: true
+                    }"
+                    @reset="menu.reset()"
+                    @isChanched="menu.isChanched = true"
+                    @dragEvent="state => menu.isDragging = state"
+                    @update:modelVisible="(val) => menu.visible = val"
+                    @update:modelHidden="(val) => menu.hidden = val"
+                    @update:modelList="(val) => {menu.list = val; menu.isChanched = true}"
+                />
+                <AppSave 
+                    v-show="menu.isChanched" 
+                    @save="(role) => menu.save(role)"
+                />
+            </div>
+    
+            <AppPopup class="menu__popup">
+                <template #header>
+                    <div class="menu-user">
+                        <figure class='ibg menu-user__avatar' :class="{'skeleton': menu.loading}">
+                            <img :src='menu.user?.avatar' alt=''>
+                        </figure>
+                        <strong class="menu-user__name" :class="{'skeleton': menu.loading}">
+                            {{ menu.user?.name }}
+                        </strong>
+                    </div>
+
+                    <figure class='menu__arrow' v-show="menu.loading == false">
+                        <svg xmlns="http://www.w3.org/2000/svg" id="arrow" width="14" height="8" viewBox="0 0 14 8" fill="none"><path d="M13.5 1L7 7L0.5 1" stroke="#979797"/></svg>
+                    </figure>
+                </template>
+                <template #content>
+                    <NuxtLink class="popup__option" to="/profile">
+                        Настройки
+                    </NuxtLink>
+                    <a href="/auth/entry" class="popup__option">
+                        Сменить портал
+                    </a>
+                    <div class="popup__option popup__option_red">
+                        Выйти                    
+                    </div>
+                </template>
+            </AppPopup>
+        </div>
+    </aside>
+</template>
+
+<script setup>
+    import './Menu.scss';
+
+    import IconDrag from '@AppIcons/Actions/Drag.vue';
+    import IconLogo from '@AppIcons/Logo.vue';
+    import draggable from 'vuedraggable';
+    import AppSettings from '@AppComponents/Settings/Settings.vue'
+    import AppSave from '@AppComponents/Save/Save.vue'
+    import IconGamburger from '@AppIcons/Gamburger.vue'
+    import AppPopup from '@AppComponents/Popup/Popup.vue'
+    import { useMediaQuery } from '@vueuse/core'
+
+    import dataJSON from './data.json'
+    import { useMenuStore } from '@/stores/menuStore.js'
+    import { useUserStore } from '@/stores/userStore.js'
+    const userStore = useUserStore()
+    const menuStore = useMenuStore()
+
+    const menuHidden = ref(null)
+    const isClient = ref(false)
+	const route = useRoute()
+    
+    class Menu {
+        constructor() {
+            this.isChanched = false
+            this.isHiddenOpen = false
+            this.list = []
+            this.visible = []
+            this.hidden = []
+            this.user = {}
+            this.isOpen = false
+            this.loading = false
+            this.beforeDrag = []
+            this.isDragging = false
+            this.isMobile = useMediaQuery('(max-width: 990px)')
+        }
+
+        // Получение
+        async get() {
+            try {
+                this.loading = true
+                const full_name = `${dataJSON.profile.user?.name ?? ''} ${dataJSON.profile.user?.last_name ?? ''}`
+
+                this.user = {
+                    name: full_name.replaceAll(' ', '') == '' ? 'Без имени' : full_name,
+                    avatar: JSON.parse(dataJSON.profile.user?.avatar)[0]?.url ?? '/undefined.svg'
+                }
+                
+                await this.update()
+            } catch (error) {
+                console.log('menu_template', error);
+            } finally {
+                this.loading = false
+            }
+        }
+
+        // Обновление
+        async update() {
+            this.list = menuStore.list
+            this.visible = this.list.filter(item => !item.is_hidden)
+            this.hidden = this.list.filter(item => item.is_hidden)
+        }
+
+        // Вернуть значение по умолчанию
+        async reset() {
+            try {
+                this.loading = true
+                this.isChanched = true
+                await menuStore.reset()
+                await this.update()
+            } catch (error) {
+                console.log('reset_menu', error);
+            } finally {
+                this.loading = false
+            }
+        }
+
+        // Поиск активной вкладки
+        isActive(link) {
+            return route.path.startsWith(link)
+        }
+
+        // Начало перетаскивания в меню
+        dragStart(e) {
+            e.preventDefault()
+            this.isDragging = true
+            this.beforeDrag = [...this.visible.map(item => item.id), ...this.hidden.map(item => item.id)]
+
+            if (!menuHidden.value.hasAttribute('open')) {
+                this.isHiddenOpen = true
+                menuHidden.value.setAttribute('open', true)
+            }
+        }
+
+        // Конец перетаскивания в меню
+        dragEnd(val) {
+            if (this.isHiddenOpen) {
+                menuHidden.value.removeAttribute('open')
+            }
+
+            const afterDrag = [...this.visible.map(item => item.id), ...this.hidden.map(item => item.id)]
+
+            this.visible.reduce((acc, obj) => {obj.is_hidden = false; acc.push(obj); return acc; }, []);
+            this.hidden.reduce((acc, obj) => {obj.is_hidden = true; acc.push(obj); return acc; }, []);
+            
+            this.isChanched = JSON.stringify(this.beforeDrag) !== JSON.stringify(afterDrag)
+            this.isHiddenOpen = false
+            this.isDragging = false
+            this.updateSortOrder()
+        }
+
+        // Обновление сортировки
+        updateSortOrder() {
+            [...this.visible, ...this.hidden].forEach((el, index) => {
+                el.sort = index + 1
+            })
+
+            this.list = this.list.sort((a, b) => a.sort - b.sort)
+        }
+
+        // Сохранение
+        save(role) {
+            menuStore.save(role, this.list)
+            this.isChanched = false
+        }
+    }
+
+    const menu = ref(new Menu())
+
+    onMounted(() => {
+        menu.value.get()
+        isClient.value = true
+    })
+</script>

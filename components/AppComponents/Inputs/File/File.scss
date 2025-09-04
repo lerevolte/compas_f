@@ -1,0 +1,55 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+.form__item {
+    &.form__item_file {
+        @include mixins.blankGap();
+
+        .file {
+            gap: 20px;
+            display: flex;
+        }
+
+        .file__upload {
+            position: relative;
+            width: max-content;
+
+            input {
+                position: absolute;
+                aspect-ratio: 1 / 1;
+                width: 100px;
+                height: 100px;
+                opacity: 0;
+                z-index: 2;
+                cursor: pointer;
+            }
+
+            &:hover {
+                svg {
+                    * {
+                        stroke: variables.$color-icon-active;
+                    }
+                }
+            }
+        }
+
+        .file__values {
+            gap: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+
+            .fancybox-item__img {
+                width: 100px;
+                overflow: hidden;
+                border-radius: 10px;
+                filter: brightness(0.95);
+                transition: 0.2s all;
+
+                &:hover {
+                    filter: brightness(0.9);
+                }
+            }
+        }
+    }
+}

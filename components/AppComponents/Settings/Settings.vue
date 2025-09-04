@@ -1,0 +1,441 @@
+<template>
+    <AppPopup class="settings" :class="{'settings_dragging': settings.nest.isDragging}" ref="popupRef" @close="settings.nest.close()" :ignore-selectors="['#menu__overlay']">
+        <template #header>
+            <IconSettings />
+        </template>
+        <template #content>
+            <div class="settings__menu">
+                <div class="settings__item popup__option settings__item_back" v-show="settings.nest.active" @click="settings.nest.back()">
+                    {{ settings.nest.active?.label ?? 'Назад' }}
+                    <IconSelectArrow /> 
+                </div>
+
+                <!-- Common -->
+                <div class="settings__list" v-if="settings.nest.active == null">
+                    <div class="settings__item settings__item_submenu popup__option" v-for="item in settings.nest.list" @click="settings.nest.set(item)" :key="item.value">
+                        {{ item.label }}
+                        <IconSelectArrow />
+                    </div>
+                </div>
+
+                <!-- Enable -->
+                <div class="settings__list settings__list_check" v-else-if="settings.nest.active.value == 'isCheck'">
+                    <div class="settings__item popup__option" v-for="field in isInitGroup ? settings.nest.templateField.list : list" :key="field.id">
+                        <AppCheckbox 
+                            v-model="field.enabled"
+                            :options="{
+                                title: field.name
+                            }"
+                             @update:modelValue="emit('isChanched', true)"
+                        />
+                    </div>
+                </div>
+
+
+                <!-- Drag -->
+                <div class="settings__list settings__list_drag"  v-else-if="settings.nest.active.value == 'isDrag'">
+                    <draggable
+                        tag="div"
+                        group="settings"
+                        class="settings__list settings__list_drag"
+                        ghost-class="draggable-ghost"
+                        drag-class="draggable-drag"
+                        v-model="templateListCheck" 
+                        item-key="id" 
+                        fallback-class="draggable-fallback"
+                        :forceFallback="true"
+                        :fallbackOnBody="true"
+                        handle=".icon_drag"
+                        @start="settings.nest.dragStart()"
+                        @end="settings.nest.dragEnd()"
+                    >
+                        <template #item="{ element: field }">
+                            <div class="settings__item popup__option" :class="{'popup__option_hide': !field.enabled}">
+                                <IconDrag />
+                                {{ field.name }}
+                            </div>
+                        </template>
+                    </draggable> 
+                    <div class="menu__item-hide"
+                        v-if="!isInitGroup">
+                        <span class="menu__item-subtitle"> Скрытые </span>
+                    </div>
+                    <draggable
+                        v-if="!isInitGroup"
+                        tag="div"
+                        group="settings"
+                        class="settings__list settings__list_drag"
+                        ghost-class="draggable-ghost"
+                        drag-class="draggable-drag"
+                        v-model="hidden" 
+                        item-key="id" 
+                        fallback-class="draggable-fallback"
+                        :forceFallback="true"
+                        :fallbackOnBody="true"
+                        handle=".icon_drag"
+                        @start="settings.nest.dragStart()"
+                        @end="settings.nest.dragEnd()"
+                    >
+                        <template #item="{ element: field }">
+                            <div class="settings__item popup__option">
+                                <IconDrag />
+                                {{ field.name }}
+                            </div>
+                        </template>
+                    </draggable> 
+                </div>
+
+                <!-- Groups -->
+                <div class="settings__list settings__list_group" v-else-if="settings.nest.active.value == 'isNest'">
+                    <div class="settings__item popup__option settings__item_submenu" @click="settings.nest.initCreate()">
+                        Создать новую
+                        <IconSelectArrow />
+                    </div>
+                    <div class="settings__item popup__option settings__item_submenu" @click="settings.nest.set({label: 'Редактировать существующую', value: 'updateGroup'})">
+                        Редактировать существующую
+                        <IconSelectArrow />
+                    </div>
+                </div>
+
+
+
+
+
+                <!-- Set Update Group -->
+                <div class="settings__list settings__list_group" v-if="settings.nest.active != null && settings.nest.active.value == 'updateGroup'">
+                    <div 
+                        class="settings__item popup__option settings__item_submenu" 
+                        v-for="field in props.list.filter(p => p.children.length > 0)" 
+                        :key="field.id"
+                        @click="settings.nest.initUpdate(field)"
+                    >
+                        {{ field.name }}
+                        <IconSelectArrow />
+                    </div>    
+
+                    <div class="settings__item popup__option popup__option_disable" v-show="props.list.filter(p => p.children.length > 0).length == 0">
+                        Групп нет
+                    </div>
+                </div>
+
+
+
+
+                <!-- Update Group -->
+                <div class="settings__list settings__list_group" v-if="settings.nest.active != null && settings.nest.active.value == 'initGroup'">
+                    <div class="settings__item popup__option" @click="settings.nest.initName(settings.nest.templateField.name)">
+                        Название: {{ settings.nest.templateField.name }}
+                    </div>
+                    <div class="settings__item popup__option settings__item_submenu" @click="settings.nest.set({label: 'Сущности', value: 'isCheck'})">
+                        Сущности
+                        <IconSelectArrow />
+                    </div>
+                    <div class="settings__item popup__option settings__item_submenu" v-show="settings.nest.templateField.list.filter(p => p.enabled).length > 0" @click="settings.nest.set({label: 'Порядок', value: 'isDrag'})">
+                        Порядок
+                        <IconSelectArrow />
+                    </div>
+                    <div 
+                        v-show="settings.nest.templateField.list.filter(p => p.enabled).length > 0 || settings.nest.templateField.name != ''" 
+                        class="settings__item popup__option popup__option_blue" 
+                        @click="settings.nest.save()"
+                    >
+                        Сохранить
+                    </div>
+                    <div class="settings__item popup__option popup__option_red" v-show="settings.nest.statusTemplate == 'update'" @click="settings.nest.initDelete()">
+                        Удалить
+                    </div>
+                 </div>
+
+                <div class="popup__option" v-if="settings.nest.active == null && props.options.isHaveDefault" @click="settings.reset">
+                    Вернуть значения по умолчанию
+                </div>
+            </div>
+        </template>
+    </AppPopup>
+    <teleport to="#menu__overlay" v-if="settings.nest.modal.state && settings.nest.modal.type == 'create'">
+        <AppModalWarning 
+            :options="{
+                title: 'Название группы',
+                action: 'submit',
+                actionTitle: 'Ввести',
+                template: 'slot'
+            }"
+            @submit="settings.nest.saveName()"
+            @close="settings.nest.modal.state = false"
+        >
+            <AppInput v-model="settings.nest.modal.name" />
+        </AppModalWarning>
+    </teleport>
+    <teleport to="#menu__overlay" v-if="settings.nest.modal.state && settings.nest.modal.type == 'delete'">
+        <AppModalWarning 
+            :options="{
+                title: 'Удаление',
+                action: 'delete',
+                actionTitle: 'Удалить',
+                template: 'slot'
+            }"
+            @delete="settings.nest.delete()"
+            @close="settings.nest.modal.state = false"
+        >
+            <p class="warning__text">
+                Вы дейставительно хотите удалить данную группу?
+            </p>
+        </AppModalWarning>
+    </teleport>
+</template>
+
+<script setup>
+    import './Settings.scss';
+    
+    import AppPopup from '@AppComponents/Popup/Popup.vue'
+    import IconSettings from '@AppIcons/Actions/Settings.vue'
+    import IconSelectArrow from '@AppIcons/Input/SelectArrow.vue';
+    import IconDrag from '@AppIcons/Actions/Drag.vue'
+    import AppCheckbox from '@AppComponents/Inputs/Checkbox/Checkbox.vue'
+    import draggable from 'vuedraggable';
+    import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'
+    import AppInput from '@AppComponents/Inputs/Input/Input.vue'
+
+    defineOptions({
+        name: "Settings"
+    })
+
+    const props = defineProps({
+        list: null,
+        visible: null,
+        hidden: null,
+        options: {
+            default: {
+                isCheck: {
+                    state: false,
+                    name: 'Отображение'
+                },
+                isDrag: {
+                    state: false,
+                    name: 'Порядок'
+                },
+                isNest: {
+                    state: false,
+                    name: 'Группы'
+                },
+                isHaveDefault: false
+            },
+            type: Object
+        }
+    })
+
+    const emit = defineEmits([
+        'update:modelValue',
+        'update:modelVisible',
+        'update:modelHidden',
+        'reset',
+        'dragEvent',
+        'isChanched'
+    ])
+
+    const disabledFields = computed({
+        get: () => props.list.reduce((acc, el) => [...acc, {...el, enabled: false}], [])
+    })
+
+    class Settings {
+        constructor() {
+            this.nest = new Nest()
+            
+        }
+
+        // Вернуть настройки по умолчанию
+        reset() {
+            popupRef.value.popup.popupRef.classList.remove('popup_open');
+            emit('reset', true)
+        }
+    }
+
+    class Nest {
+        constructor() {
+            this.isDragging = false
+            this.active = null
+            this.history = []
+            this.list = []
+            this.modal = {
+                state: false,
+                type: 'create',
+                name: ''
+            }
+            this.statusTemplate = null
+            this.templateField = {
+                name: '',
+                list: disabledFields.value
+            }
+
+            if (props.options.isCheck.state) {
+                this.list.push({
+                    label: props.options.isCheck.name ?? 'Отображение',
+                    value: 'isCheck'
+                })
+            }
+
+            if (props.options.isDrag.state) {
+                this.list.push({
+                    label: props.options.isDrag.name ?? 'Порядок',
+                    value: 'isDrag'
+                })
+            }
+
+            if (props.options.isNest.state) {
+                this.list.push({
+                    label: props.options.isNest.name ?? 'Группы',
+                    value: 'isNest'
+                })
+            }
+        }
+
+        // Установка активной вкладки
+        set(tab) {
+            if (this.active) {
+                this.history.push(this.active)
+            }
+
+            this.active = tab
+        }
+
+        // Возврат обратно
+        back() {
+            this.active = this.history.pop()
+        }
+
+        // Закрытие попапа
+        close() {
+            this.active = null,
+            this.history = []
+        }
+
+        // Открытие модального окна для ввода названия
+        initName(name) {
+            this.modal = {
+                state: true,
+                type: 'create',
+                name: name
+            }
+        }
+
+        // Сохранение имени
+        saveName() {
+            this.modal.state = false
+            this.templateField.name = this.modal.name
+        }
+
+        // Инициализация создания
+        initCreate() {
+            this.set({label: 'Создать новую', value: 'initGroup'})
+            this.templateField = {
+                id: new Date().getTime(),
+                name: '',
+                list: disabledFields.value
+            }
+            this.statusTemplate = 'create'
+            disabledFields.value.forEach(item => item.enabled = false)
+        }
+
+        // Инициализация обновления
+        initUpdate(field) {
+            this.set({label: field.name, value: 'initGroup'})
+            this.statusTemplate = 'update'
+
+            this.templateField = {
+                id: field.id,
+                name: field.name,
+                list: disabledFields.value.reduce((acc, el) => [...acc, {...el, enabled: field.children.find(item => item.id == el.id)?.enabled ?? false}], [])
+            }
+        }
+
+        // Сохранение группы
+        async save() {
+            this.templateField.list = this.templateField.list.filter(item => item.enabled)
+            closePopup()
+
+            if (this.statusTemplate == 'create') {
+                visible.value.push({
+                    id: this.templateField.id,
+                    name: this.templateField.name,
+                    enabled: 1,
+                    is_group: 1,
+                    is_hidden: 0,
+                    children: JSON.parse(JSON.stringify(this.templateField.list))
+                })
+            } else if (this.statusTemplate == 'update') {
+                let findedLink = visible.value.find(item => item.id == this.templateField.id) ?? hidden.value.find(item => item.id == this.templateField.id)
+                findedLink.name = this.templateField.name
+                findedLink.children = JSON.parse(JSON.stringify(this.templateField.list))
+            }
+
+            for (let field of this.templateField.list) {
+                field.enabled = false
+            }
+
+            this.statusTemplate = null
+            await nextTick();
+            emit('update:modelList', [...visible.value, ...hidden.value])
+        }
+
+        // Инициализация удаления
+        initDelete() {
+            this.modal.state = true
+            this.modal.type = 'delete'
+        }
+
+        // Удаление группы
+        async delete() {
+            this.modal.state = false
+            visible.value = visible.value.filter(item => item.id != this.templateField.id)
+            hidden.value = hidden.value.filter(item => item.id != this.templateField.id)
+
+            this.templateField.name = ''
+            for (let field of this.templateField.list) {
+                field.enabled = false
+            }
+            closePopup()
+            await nextTick();
+            emit('update:modelList', [...visible.value, ...hidden.value])
+        }
+
+        // Начало перетаскивания
+        dragStart() {
+            this.isDragging = true
+            emit('dragEvent', true)
+        }
+
+        // Конец перетаскивания
+        dragEnd() {
+            this.isDragging = false
+            emit('isChanched', true); 
+            emit('dragEvent', false)
+        }
+    }
+
+    const settings = ref(new Settings())
+    const popupRef = ref(null)
+
+    const closePopup = () => {
+        popupRef.value.popup.popupRef.classList.remove('popup_open');
+        settings.value.nest.close()
+    }
+
+    const visible = computed({
+        get: () => props.visible,
+        set: (val) => emit('update:modelVisible', val)
+    })
+
+    const hidden = computed({
+        get: () => props.hidden,
+        set: (val) => emit('update:modelHidden', val)
+    })
+
+    const isInitGroup = computed(() => {
+        return settings.value.nest.history && settings.value.nest.history.find(p => p.value == 'initGroup')
+    })
+
+    const templateListCheck = computed({
+        get: () => isInitGroup.value ? settings.value.nest.templateField.list : visible.value,
+        set: (val) => isInitGroup.value ? settings.value.nest.templateField.list = val : emit('update:modelVisible', val)
+    })
+</script>

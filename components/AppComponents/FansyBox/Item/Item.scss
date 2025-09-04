@@ -1,0 +1,16 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+.fancybox__item {
+    height: auto;
+
+    .fancybox-item__link {
+        position: relative;
+        aspect-ratio: 1 / 1;
+        border-radius: 10px;
+    }
+
+    .fancybox-item__img {
+        aspect-ratio: 1/1;
+    }
+}

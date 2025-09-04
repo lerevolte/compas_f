@@ -1,0 +1,14 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+.error {
+    input, textarea {
+        border: 1px solid variables.$color-error;
+    }
+}
+
+.error__text {
+    font-size: 15px;
+    margin-top: 5px;
+    color: variables.$color-error;
+}

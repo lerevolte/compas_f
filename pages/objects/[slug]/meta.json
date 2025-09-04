@@ -1,0 +1,187 @@
+{
+    "accounts": {
+        "title": "Аккаунты",
+        "desc": "",
+        "template": null
+    },
+    "addresses": {
+        "title": "",
+        "desc": "",
+        "template": null
+    },
+    "admissions": {
+        "title": "Поступления",
+        "desc": "",
+        "template": null
+    },
+    "articles": {
+        "title": "Статьи",
+        "desc": "",
+        "template": "tableWithCategories"
+    },
+    "autodor": {
+        "title": "Штрафы ГИБДД",
+        "desc": "",
+        "template": null
+    },
+    "blog_categories": {
+        "title": "Категории статей",
+        "desc": "",
+        "template": null
+    },
+    "cameras": {
+        "title": "Камеры",
+        "desc": "",
+        "template": null
+    },
+    "car_marks": {
+        "title": "Автопарк",
+        "desc": "",
+        "template": null
+    },
+    "car_models": {
+        "title": "Автопарк",
+        "desc": "",
+        "template": null
+    },
+    "cars": {
+        "title": "Автопарк",
+        "desc": "",
+        "template": null
+    },
+    "clients": {
+        "title": "Клиенты",
+        "desc": "",
+        "template": null
+    },
+    "companies": {
+        "title": "Компании",
+        "desc": "",
+        "template": null
+    },
+    "documents": {
+        "title": "Документы",
+        "desc": "",
+        "template": null
+    },
+    "drivers": {
+        "title": "Водители",
+        "desc": "",
+        "template": null
+    },
+    "emergencyfund": {
+        "title": "Аварийный фонд",
+        "desc": "",
+        "template": null
+    },
+    "employees": {
+        "title": "Сотрудники",
+        "desc": "",
+        "template": null
+    },
+    "expenses": {
+        "title": "Расходы",
+        "desc": "",
+        "template": null
+    },
+    "faq": {
+        "title": "FAQ",
+        "desc": "",
+        "template": "tableWithCategories"
+    },
+    "faq_categories": {
+        "title": "Категории вопросов",
+        "desc": "",
+        "template": null
+    },
+    "fines_gibdd": {
+        "title": "Штрафы ГИБДД",
+        "desc": "",
+        "template": null
+    },
+    "gibdd_queries": {
+        "title": "Запрос ГИБДД",
+        "desc": "",
+        "template": null
+    },
+    "guide_categories": {
+        "title": "Категории гайдоы",
+        "desc": "",
+        "template": null
+    },
+    "guides": {
+        "title": "Гайды",
+        "desc": "",
+        "template": "tableWithCategories"
+    },
+    "instructions": {
+        "title": "Должностные инструкции",
+        "desc": "",
+        "template": "tableWithCategories"
+    },
+    "invoices": {
+        "title": "Счета",
+        "desc": "",
+        "template": null
+    },
+    "journal_records": {
+        "title": "",
+        "desc": "",
+        "template": null
+    },
+    "knowledge": {
+        "title": "База знаний",
+        "desc": "",
+        "template": "tableWithCategories"
+    },
+    "logistic_tasks": {
+        "title": "Задачи логистики",
+        "desc": "",
+        "template": null
+    },
+    "mileages": {
+        "title": "",
+        "desc": "",
+        "template": null
+    },
+    "osago_companies": {
+        "title": "Полисы ОСАГО",
+        "desc": "",
+        "template": null
+    },
+    "osago_polises": {
+        "title": "Полисы ОСАГО",
+        "desc": "",
+        "template": null
+    },
+    "products": {
+        "title": "Товары",
+        "desc": "",
+        "template": "tableWithCategories"
+    },
+    "remnants": {
+        "title": "Остатки",
+        "desc": "",
+        "template": null
+    },
+    "requisites": {
+        "title": "Компании",
+        "desc": "",
+        "template": null
+    },
+    "routes": {
+        "title": "Маршруты",
+        "desc": "",
+        "template": null
+    },
+    "salaries": {
+        "title": "",
+        "desc": "",
+        "template": null
+    },
+    "users": {
+        "title": "Пользователи",
+        "desc": "",
+        "template": null
+    }
+}

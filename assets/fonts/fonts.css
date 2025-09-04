@@ -1,0 +1,174 @@
+/* Thin */
+@font-face {
+	font-family: 'MyriadPro';
+	font-style: normal;
+	font-weight: 300;
+	font-display: swap;
+	src: url('@/assets/fonts/MyriadPro/MyriadPro-Light.otf') format('truetype');
+}
+
+/* Thin Italic */
+@font-face {
+	font-family: 'MyriadPro';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url('@/assets/fonts/MyriadPro/MYRIADPRO-REGULAR.OTF') format('truetype');
+}
+
+/* ExtraLight */
+@font-face {
+	font-family: 'MyriadPro';
+	font-style: normal;
+	font-weight: 500;
+	font-display: swap;
+	src: url('@/assets/fonts/MyriadPro/MYRIADPRO-COND.OTF') format('truetype');
+}
+
+/* ExtraLight Italic */
+@font-face {
+	font-family: 'MyriadPro';
+	font-style: italic;
+	font-weight: 500;
+	font-display: swap;
+	src: url('@/assets/fonts/MyriadPro/MYRIADPRO-CONDIT.OTF') format('truetype');
+}
+
+/* Light */
+@font-face {
+	font-family: 'MyriadPro';
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url('@/assets/fonts/MyriadPro/MYRIADPRO-SEMIBOLD.OTF') format('truetype');
+}
+
+/* Light Italic */
+@font-face {
+	font-family: 'MyriadPro';
+	font-style: italic;
+	font-weight: 600;
+	font-display: swap;
+	src: url('@/assets/fonts/MyriadPro/MYRIADPRO-SEMIBOLDIT.OTF') format('truetype');
+}
+
+/* Regular */
+@font-face {
+	font-family: 'MyriadPro';
+	font-style: normal;
+	font-weight: 700 ;
+	font-display: swap;
+	src: url('@/assets/fonts/MyriadPro/MYRIADPRO-BOLD.OTF') format('truetype');
+}
+
+/* Regular Italic*/
+@font-face {
+	font-family: 'MyriadPro';
+	font-style: italic;
+	font-weight: 700 ;
+	font-display: swap;
+	src: url('@/assets/fonts/MyriadPro/MYRIADPRO-BOLDCOND.OTF') format('truetype');
+}
+
+/* Medium */
+@font-face {
+	font-family: 'MyriadPro';
+	font-style: italic;
+	font-weight: 700 ;
+	font-display: swap;
+	src: url('@/assets/fonts/MyriadPro/MYRIADPRO-BOLDCONDIT.OTF') format('truetype');
+}
+
+
+
+
+
+
+/* SemiBold */
+@font-face {
+	font-family: 'Verdana';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url('@/assets/fonts/Verdana/Verdana.ttf') format('truetype');
+}
+
+/* SemiBold Italic */
+@font-face {
+	font-family: 'Verdana';
+	font-style: italic;
+	font-weight: 400;
+	font-display: swap;
+	src: url('@/assets/fonts/Verdana/Verdana-Italic.ttf') format('truetype');
+}
+
+/* Bold */
+@font-face {
+	font-family: 'Verdana';
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url('@/assets/fonts/Verdana/Verdana-Bold.ttf') format('truetype');
+}
+
+/* Bold Italic */
+@font-face {
+	font-family: 'Verdana';
+	font-style: italic;
+	font-weight: 600;
+	font-display: swap;
+	src: url('@/assets/fonts/Verdana/Verdana-BoldItalic.ttf') format('truetype');
+}
+
+
+
+
+
+/* SemiBold */
+@font-face {
+	font-family: 'PT Sans';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url('@/assets/fonts/PT/PT_Sans-Web-Regular.ttf') format('truetype');
+}
+
+/* SemiBold Italic */
+@font-face {
+	font-family: 'PT Sans';
+	font-style: italic;
+	font-weight: 400;
+	font-display: swap;
+	src: url('@/assets/fonts/PT/PT_Sans-Web-Italic.ttf') format('truetype');
+}
+
+/* Bold */
+@font-face {
+	font-family: 'PT Sans';
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url('@/assets/fonts/PT/PT_Sans-Web-Bold.ttf') format('truetype');
+}
+
+/* Bold Italic */
+@font-face {
+	font-family: 'PT Sans';
+	font-style: italic;
+	font-weight: 700;
+	font-display: swap;
+	src: url('@/assets/fonts/PT/PT_Sans-Web-BoldItalic.ttf') format('truetype');
+}
+
+
+
+
+
+/* Bold */
+@font-face {
+	font-family: 'VAG';
+	font-style: normal;
+	font-weight: 600 ;
+	font-display: swap;
+	src: url('@/assets/fonts/VAG/VAG_Rounded_TL.ttf') format('truetype');
+}

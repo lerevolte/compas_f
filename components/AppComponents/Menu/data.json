@@ -1,0 +1,239 @@
+{
+    "get": [
+        {
+            "id": 432,
+            "name": "Логистика",
+            "slug": "logistic",
+            "sort": 0,
+            "link": "/logistic",
+            "is_hidden": 0,
+            "enabled": 1,
+            "children": []
+        },
+        {
+            "id": 433,
+            "name": "Маршруты",
+            "slug": "routes",
+            "sort": 1,
+            "link": "/objects/routes",
+            "is_hidden": null,
+            "enabled": 1,
+            "children": []
+        },
+        {
+            "id": 458,
+            "name": "Компании",
+            "slug": "companies",
+            "sort": 2,
+            "link": "/objects/companies",
+            "is_hidden": 0,
+            "enabled": 1,
+            "children": []
+        },
+        {
+            "id": 452,
+            "name": "Автопарк",
+            "slug": "cars",
+            "sort": 3,
+            "link": "/objects/cars",
+            "is_hidden": 0,
+            "enabled": 1,
+            "children": []
+        },
+        {
+            "id": 455,
+            "name": "Сотрудники",
+            "slug": "employees",
+            "sort": 4,
+            "link": "/objects/employees",
+            "is_hidden": 0,
+            "enabled": 1,
+            "children": []
+        },
+        {
+            "id": 456,
+            "name": "Задачи логистики",
+            "slug": "logistic_tasks",
+            "sort": 5,
+            "link": "/objects/logistic_tasks",
+            "is_hidden": 0,
+            "enabled": 1,
+            "children": []
+        },
+        {
+            "id": 459,
+            "name": "Аналитика",
+            "slug": "analytics",
+            "sort": 6,
+            "link": "/analytics",
+            "is_hidden": 0,
+            "enabled": 1,
+            "children": []
+        },
+        {
+            "name": "Настройки",
+            "children": [{
+                    "id": 461,
+                    "name": "Пользователи",
+                    "slug": "users",
+                    "sort": 9,
+                    "link": "/users",
+                    "is_hidden": 1,
+                    "enabled": true,
+                    "children": []
+                },
+                {
+                    "id": 462,
+                    "name": "Настройки ролей сущности",
+                    "slug": "roles",
+                    "sort": 8,
+                    "link": "/roles",
+                    "is_hidden": 1,
+                    "enabled": true,
+                    "children": []
+                },
+                {
+                    "id": 81,
+                    "name": "Тарифы",
+                    "slug": "tariffs",
+                    "sort": 10,
+                    "link": "/tariffs",
+                    "is_hidden": 1,
+                    "enabled": true,
+                    "children": []
+                },
+                {
+                    "id": 2,
+                    "name": "Настройки портала",
+                    "slug": "settings",
+                    "sort": 7,
+                    "link": "/settings",
+                    "is_hidden": 1,
+                    "enabled": true,
+                    "children": []
+                }
+            ],
+            "enabled": 1,
+            "is_group": 1,
+            "is_hidden": 0,
+            "id": 1751983482753,
+            "sort": 7
+        },
+        {
+            "id": 2,
+            "name": "Настройки портала",
+            "slug": "settings",
+            "sort": 8,
+            "link": "/settings",
+            "is_hidden": 1,
+            "enabled": false,
+            "children": []
+        },
+        {
+            "id": 462,
+            "name": "Настройки ролей сущности",
+            "slug": "roles",
+            "sort": 9,
+            "link": "/roles",
+            "is_hidden": 1,
+            "enabled": false,
+            "children": []
+        },
+        {
+            "id": 461,
+            "name": "Пользователи",
+            "slug": "users",
+            "sort": 10,
+            "link": "/users",
+            "is_hidden": 1,
+            "enabled": false,
+            "children": []
+        },
+        {
+            "id": 81,
+            "name": "Тарифы",
+            "slug": "tariffs",
+            "sort": 11,
+            "link": "/tariffs",
+            "is_hidden": 1,
+            "enabled": false,
+            "children": []
+        },
+        {
+            "id": 72,
+            "name": "Корзина",
+            "slug": "trash",
+            "sort": 12,
+            "link": "/trash",
+            "is_hidden": 1,
+            "enabled": 1,
+            "children": []
+        },
+        {
+            "id": 465,
+            "name": "Категории автомобиля",
+            "slug": "car_categories",
+            "sort": 0,
+            "link": "/objects/car_categories",
+            "is_hidden": 0,
+            "enabled": 1,
+            "children": []
+        },
+        {
+            "id": 466,
+            "name": "Марки автомобиля",
+            "slug": "car_marks",
+            "sort": 0,
+            "link": "/objects/car_marks",
+            "is_hidden": 0,
+            "enabled": 1,
+            "children": []
+        },
+        {
+            "id": 467,
+            "name": "Модели автомобиля",
+            "slug": "car_models",
+            "sort": 0,
+            "link": "/objects/car_models",
+            "is_hidden": 0,
+            "enabled": 1,
+            "children": []
+        }
+    ],
+    "profile": {
+        "user": {
+            "id": 1,
+            "role_id": "1",
+            "name": "Денис",
+            "email": "denis@opt6.ru",
+            "avatar": "[{\"id\":6746,\"name\":\"photo_2025-06-27_10-23-57.jpg\",\"url\":\"https:\\/\\/compas.pro\\/storage\\/thumbnails\\/default\\/4d\\/5d\\/8rvyil2ckkkwo440cs0k0.jpg?heighten=200&p=opt6.compas.pro%2Fstorage%2Ftenantopt6%2Fapp%2Fpublic%2Ffiles%2FERFlYkOkiljtSxy3FHAGVkiSWZWszXJQMiucvk6m.jpg&s=https\",\"file\":\"https:\\/\\/opt6.compas.pro\\/storage\\/tenantopt6\\/app\\/public\\/files\\/ERFlYkOkiljtSxy3FHAGVkiSWZWszXJQMiucvk6m.jpg\",\"extension\":\"jpg\",\"status\":\"success\",\"progress\":100}]",
+            "email_verified_at": null,
+            "settings": [],
+            "created_at": "2023-02-10T08:42:01.000000Z",
+            "updated_at": "2025-06-29T18:46:23.000000Z",
+            "deleted_at": null,
+            "choosed_at": "2024-05-15 15:28:50",
+            "latitude": null,
+            "longitude": null,
+            "geo_updated_at": null,
+            "last_name": "Потемкин",
+            "second_name": null,
+            "phone": null,
+            "work_phone": "534",
+            "token": "[\"dDFj3rt9M084mM8goV_Be3:APA91bE6CS2lpkFVRhdOLOn0X8gCyYorHiILw6BJg2VL8Tf_ElQZooxIMUS2CjT6rnVkaGStIsKC44u-yLyjpj8HVIfEEaheEkcvG4LxnFbko75-R7OxuP0\",\"8A2E519F-B243-463D-8642-15BDD4FBE84C\",\"cRYicvgAQYam-9Pb_MQ1Zi:APA91bFz2q3MGZjRMzjN46eHp9Ga92iDWYTzuXU6IsfRkqpYRmNYxIzI3xaTRH-qwdy91ot4cglbNM7ToCewNzw6yYyhSMh8Qo9g_0kkOGVV9GSZUXfHzeQ\",\"ebdhcQEVMU00sSeawwqEBX:APA91bH31ezsyWVChmv_MiWnnXIpjNKQcIAcosK0YsfxNFEWsyrFziPDB1nj0dY3V4Azrr0fWtB6GNwIrMMvpZ1n9ahlkqsGpeOVpn2mGpo2rTDEq2uAOWA\",\"cnJWt7YPSKaFaImpjsBlc4:APA91bFmGrm0gSPfrse05oqt7jHfIzO5wzdsOw_h0HBiJteCgi6wgiBnUNVt7gOJkNRxCeje3ZwG01_ZZR28QQVAd2dwJauLQ-aUhoX0uap1m4VMWBuDOA0\",\"d2YgvCdQ_kkUnx9Wu7Qvcr:APA91bGLAbwQkEneHKNa7RGxZDI8VMNwk4V_fdDueuBMwTFTSJaACerO4k124jhNOc5-ImTnQ0EyZPe9VjrRHnkmLZ_4Cfzny6FRobM85fFpXYRiJRJ5DVA\",\"fidYhwlPS66tnC50DPQroo:APA91bFFsTw-AV_y0A5LOmDrkOjk8WZG9pkmCdKfpX2m_b0lSxpRCHsQZxZj4PQ1twaR7cgruMvgOKCOq_Nw0J2XDcha6PC0fEVZ0DNjd4qHzDvgDvNqJRw\",\"dfIAfY8PSuOqTsCn7GVFAD:APA91bH__99SxgqwU6C29lGkq079ZoyZNweF900dCdLafgtAS3J1JNDA6d-8Ac5gB1HogvtsyMNsh6zfJQXY8cI-PxUt7FdueYUELtJg4mUfnSkAj6K7I5U\",\"dTKiwAnTCU6Bj8QUaw0pXU:APA91bHek_kkul_KZRjMsGS_BSDcnifGQHnZ8zb0lMzyiY0AslJPsaSCF7u6DHcN6kng6Q-ZzGvi5g-FHCTcWR4jbA0J6S9iC6L9DH9PDLWcyYoBpZEf7RM\",\"d089VWVLQWGfNv0EyiepOz:APA91bH7xlm7uHeEKKrlh3-CvNz3FXuNnAdJrkGj1CLEDs71quytJkYlTPmpl3HblOLPzX1y2VFAoF8CsV8sxSXUY-vwXGyxKAF53HSvf0J9grdk6evdmiU\"]",
+            "device_id": "[\"5B968D20-FAC9-57D9-BCAE-B6A00C3AA5F6\",\"8A2E519F-B243-463D-8642-15BDD4FBE84C\",\"e52ae5b78621b7ca\",\"E55CE0D3-88FE-40E7-ABFB-E7DA25FEB8E7\",\"f16ee33b401caf76\",\"9BD57894-D047-4630-94FB-74470C9F1BCF\",\"f66be164473100eb\",\"92A344AC-E3A5-4BCF-904B-733415974097\"]",
+            "app_version": "com.compas.android:2.1.1+21",
+            "permission_geo": null,
+            "permission_notification": null,
+            "color": "linear-gradient(to bottom, #ee9090 2%, #6765dd 100%)",
+            "user_id": 129,
+            "employee_id": 280,
+            "pasport_2427": "[{\"id\":5168,\"name\":\"\\u0418\\u0437\\u043e\\u0431\\u0440\\u0430\\u0436\\u0435\\u043d\\u0438\\u0435 WhatsApp 2024-02-15 \\u0432 13.24.06_f08f18a1.jpg\",\"url\":\"https:\\/\\/compas.pro\\/storage\\/thumbnails\\/default\\/3c\\/6n\\/ue5s31ycs0w808ggg80s0.jpg?heighten=200&p=opt6.compas.pro%2Fstorage%2Ftenantopt6%2Fapp%2Fpublic%2Ffiles%2F0w9Ny5emFOrcM22YyLM0V1bEFHWdCM6j1Z9HyIqq.jpg&s=https\",\"file\":\"https:\\/\\/opt6.compas.pro\\/storage\\/tenantopt6\\/app\\/public\\/files\\/0w9Ny5emFOrcM22YyLM0V1bEFHWdCM6j1Z9HyIqq.jpg\",\"extension\":\"jpg\",\"status\":\"success\"}]",
+            "is_admin": 1,
+            "token_expiration_date": "2025-09-12 14:21:28",
+            "test_23_2492": null
+        },
+        "balance": 76821,
+        "domain": "opt6.compas.pro"
+    }
+}

@@ -1,0 +1,25 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+.virtual-table {
+  display: block;
+  width: 100%;
+  overflow: auto;
+}
+
+.table-row {
+  display: flex;
+  width: 100%;
+}
+
+.table-cell {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ddd;
+}
+
+.cell-content {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

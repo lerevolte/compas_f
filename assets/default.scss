@@ -1,0 +1,247 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+/*Обнуление*/
+*,
+b::before,
+*::after {
+    padding: 0;
+    margin: 0;
+    border: 0;
+    box-sizing: border-box;
+}
+
+a {
+    text-decoration: none;
+    color: variables.$color-white;
+
+    &:hover {
+        color:variables.$color-hover;
+    }
+}
+
+ul,
+ol,
+li {
+    list-style: none;
+}
+
+img {
+    vertical-align: top;
+}
+
+button {
+    cursor: pointer;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-weight: inherit;
+    font-family: PT Sans;
+}
+
+html,
+body {
+    line-height: normal;
+    font-size: variables.$font-size-default;
+    color: variables.$color-black;
+    font-family: PT Sans;
+    overflow-x: hidden;
+    min-height: 100vh;
+    scroll-behavior: smooth;
+    scroll-padding-top: var(--headerHeight);
+
+    &.body_uncscroll {
+        overflow: hidden;
+        max-height: 100vh;
+    }
+}
+
+html {
+    body {
+        background-color: variables.$color-background;
+        @include mixins.scrollBar();
+    }
+}
+
+#app {
+    min-height: 95vh;
+}
+
+#__nuxt,
+.wrapper {
+    min-height: 100vh;
+}
+
+
+/* ------------------------------------------------------------------------------------ */
+
+/*Класс для того, чтобы не было скролла по иксу */
+.wrapper {
+    height: 100%;
+}
+
+.page {
+    display: grid;
+    grid-template-columns: 230px 1fr;
+    overflow: auto;
+    max-height: 100vh;
+    @include mixins.scrollBar();
+
+    @media (max-width: 990px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.container {
+    /*Пишется max-width*/
+    max-width: variables.$container-width;
+    margin: 0 auto;
+    /*Избегание прилипания к краю*/
+    padding: 20px;
+    box-sizing: content-box;
+}
+
+/*фоновое изображение*/
+.ibg {
+    position: relative;
+}
+
+.ibg img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    @include mixins.resolution(100%, 100%);
+    object-fit: cover;
+}
+
+main {
+    height: 100%;
+}
+
+details {
+    summary::marker {
+        display:none;
+        font-size: 0;
+    }
+}
+
+input, textarea {
+    resize: none;
+    outline: none;
+    min-height: 40px;
+    box-shadow: none;
+    padding: 10px 15px;
+    border-radius: 10px;
+    font-family: inherit;
+    caret-color: variables.$color-black;
+    font-size: variables.$font-size-default;
+    background-color: variables.$color-white;
+    border: 1px solid variables.$color-border;
+    @include mixins.resolution(100%, 40px);
+
+    &:focus {
+        border: 1px solid variables.$color-focus
+    }
+
+    &::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    &[disabled] {
+        opacity: 0.6;
+    }
+}
+
+.skeleton {
+    position: relative;
+
+    &::after {
+        content: '';
+        background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite linear;
+        border-radius: 4px;
+        width: 100%;
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        z-index: 2;
+        aspect-ratio: 1/1;
+    }
+}
+
+/* Анимация */
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.Toastify {
+    .Toastify__toast-container {
+        z-index: 100000;
+    }
+
+    .Toastify__toast-body {
+        align-items: start;
+        overflow: hidden;
+
+        & > div {
+            & > div {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+        
+                h4 {
+                    font-size: 14px;
+                }
+            }
+        }
+    }
+
+    .Toastify__toast-description {
+        font-size: 17px;
+    }
+
+    .Toastify__toast-theme--light {
+        background: variables.$color-background;
+        border-radius: 10px;
+        border: 1px solid variables.$color-red;
+
+        * {
+            color:variables.$color-white;
+        }
+
+    }
+    .Toastify__close-button {
+        opacity: 1;
+
+        svg {
+            fill: #FFF;
+
+            * {
+                color: #FFF;
+            }
+        }
+    }
+}
+
+.modal {
+    padding: 20px;
+}
+
+.modal__background {
+    background: #000c;
+    height: 100%;
+    left: 0;
+    overflow: auto;
+    position: absolute;
+    top: 0;
+    width: 100%;
+    z-index: 1;
+}

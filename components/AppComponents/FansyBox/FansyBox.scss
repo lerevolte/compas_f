@@ -1,0 +1,55 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+
+.fancybox__slide  {
+    &.has-html5video {
+      .fancybox__content {
+        margin: 0 auto;
+        background: inherit;
+        aspect-ratio: auto !important;
+      }
+  
+      .fancybox__html5video {
+        width: 100%;
+        object-fit: contain;
+        margin: 0 auto;
+      }
+    }
+  
+    .fancybox__content {
+      max-height: 600px;
+    }
+  }
+  
+  .fancybox__footer {
+    .is-modern {
+      .f-thumbs__track {
+        gap: 10px;
+        margin: 0 auto;
+        transform: none !important;
+      }
+  
+      .f-thumbs__slide {
+        -webkit-clip-path: none;
+        clip-path: none;
+        @include mixins.resolution(48px, 48px);
+        transform: none;
+  
+        & > * {
+          clip-path: none;
+        }
+  
+        .f-thumbs__slide__button {
+          width: 100%;
+          border-radius: 5px;
+          background: variables.$color-white;
+          border: 1px solid variables.$color-border;
+  
+          img {
+            object-fit: cover;
+          }
+        }
+      }
+    }
+  }

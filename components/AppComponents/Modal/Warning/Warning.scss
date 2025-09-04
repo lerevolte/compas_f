@@ -1,0 +1,88 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+
+.modal {
+    &.modal_warning {
+        position: fixed;
+        background: none;
+        display: grid;
+        place-items: center;
+        @include mixins.position(0px, 0px);
+        @include mixins.resolution(100%, 100%);
+
+
+        .modal__content {
+            width: 100%;
+            max-width: 670px;
+            display: flex;
+            padding: 25px 35px;
+            align-items: center;
+            flex-direction: column;
+            border-radius: 10px;
+            z-index: 2;
+            position: relative;
+            background: variables.$color-background;
+
+            h2 {
+                font-size: 18px;
+                margin-bottom: 20px;
+            }
+
+            .form__item  {
+                width: 100%;
+            }
+
+            @media (max-width: 750px) {
+                width: calc(100% - 80px);
+                margin: 0 auto;
+            }
+
+            @media (max-width: 550px) {
+                gap: 50px;
+            }
+            
+            .modal__text {
+                @media (max-width: 550px) {
+                    text-align: center;
+                    line-height: 140%;
+                }
+            }
+        }
+        
+        .modal__close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+
+            svg {
+                aspect-ratio: 1;
+                height: auto;
+                width: 10px;
+            }
+        }
+        
+        .modal__buttons {
+            margin-top: 20px;
+            gap: 10px;
+            display: flex;
+            justify-content: space-between;
+        
+            button {
+                width: 140px;
+                justify-content: center;
+            }
+
+            @media (max-width: 550px) {
+                flex-direction: column;
+                width: 100%;
+                gap: 15px;
+
+                button {
+                    width: 100%;
+                }
+            }
+        }
+    }
+}

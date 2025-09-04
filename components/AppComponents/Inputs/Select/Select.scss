@@ -1,0 +1,180 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+.form__item {
+    &.form__item_select {
+        @include mixins.blankGap();
+
+        .form__item_input {
+            cursor: pointer;
+            
+            label {
+                display: none;
+            }
+
+            input {
+                cursor: pointer;
+            }
+        }
+    }
+}
+
+.select {
+    position: relative;
+
+    .icon__arrow {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        display: flex;
+        height: 20px;
+        aspect-ratio: 1 / 2;
+        transform: rotate(90deg);
+
+        svg {
+            @include mixins.resolution(100%, 100%);
+        }
+    }
+
+    .icon__warning {
+        position: absolute;
+        top: -13px;
+        right: -13px;
+
+        svg {
+            @include mixins.resolution(15px, 15px);
+        }
+    }
+
+    &.select_open {
+        .select__options {
+            display: flex;
+        }
+
+        .icon__arrow {
+            transform: rotate(270deg);
+        }
+
+        .select__value_single {
+            opacity: 0.5;
+        }
+    }
+
+    &.select_icon {
+        .form__item_input {
+            padding-left: 50px;
+        }
+
+        .select__value  {
+            top: 0px;
+            left: 5px;
+        }
+    }
+}
+
+.select__content {
+    position: relative;
+}
+
+.select__values {
+    top: 0px;
+    left: 15px;
+    width: 100%;
+    height: 100%;
+    gap: 5px;
+    cursor: pointer;
+    display: flex;
+    overflow: hidden;
+    max-width: calc(100% - 50px);
+    position: absolute;
+    align-items: center;
+    @include mixins.userSelect(none);
+
+    .select__value {
+        gap: 5px;
+        top: 0px;
+        left: 0px;
+        display: flex;
+        font-size: 16px;
+        position: relative;
+        align-items: center;
+        border: 1px solid variables.$color-border;
+        padding: 4px 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        white-space: nowrap;
+
+        .icon__close {
+            display: flex;
+            aspect-ratio: 1 / 1;
+            width: 20px;
+            pointer-events: none;
+
+            svg {
+                width: 100%;
+                height: 100%;
+            }
+        }
+    }
+}
+
+
+.select__value {
+    position: absolute;
+    top: 8px;
+    left: 15px;
+
+    &.select__value_single {
+        pointer-events: none;
+        overflow: hidden;
+        max-width: calc(100% - 50px);
+        white-space: nowrap;
+
+        &.select__value_typing {
+            opacity: 0;
+        }
+    }
+
+    &.select__value_typing {
+        opacity: 0;
+    }
+}
+
+
+.select__options {
+    bottom: auto;
+    z-index: 1000;
+    display: none;
+    margin-top: 5px;
+    position: absolute;
+    flex-direction: column;
+    width: 450px;
+    background: variables.$color-white;
+    box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.25);
+}
+
+.select__option {
+    cursor: pointer;
+    padding: 10px 15px;
+
+    &.select__option_active {
+        color: variables.$color-border;
+    }
+
+    &:hover {
+        color:variables.$color-black;
+        background: variables.$color-hover-option;
+    }
+}
+
+.select__value-icon {
+    gap: 20px;
+    display: flex;
+    align-items: center;
+
+    img {
+        width: 40px;
+        aspect-ratio: 1/1;
+        border-radius: 50%;
+    }
+}
