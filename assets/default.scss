@@ -97,6 +97,7 @@ html {
     }
 
     main {
+        padding: 25px;
         display: flex;
         flex-direction: column;
     }
@@ -249,4 +250,37 @@ input, textarea {
     top: 0;
     width: 100%;
     z-index: 1;
+}
+
+section {
+    background: variables.$color-white;
+    border: 1px solid variables.$color-border-light;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px variables.$color-border-light;
+    max-width: 100%;
+}
+
+.popup {
+    &.popup_open {
+        .icon-action {
+            svg {
+                * {
+                    fill: variables.$color-icon-active;
+                }
+            }
+        }
+    }
+}
+
+.icon-action {
+    display: flex;
+    cursor: pointer;
+
+    &:hover {
+        svg {
+            * {
+                fill: variables.$color-icon-active;
+            }
+        }
+    }
 }

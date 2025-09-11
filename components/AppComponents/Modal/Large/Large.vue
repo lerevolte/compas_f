@@ -11,7 +11,7 @@
             <div class="modal__body">
                 <div class="modal_header">
                     <div class="modal__header" @click="emit('close', true)">
-                        <IconSelectArrow />
+                        <SelectArrowSubmenu />
                         <AppH2>
                             {{ props.options.title }}
                         </AppH2>
@@ -59,7 +59,7 @@
     import AppTable from '@AppComponents/Table/Table.vue'
     import AppModalShort from '@AppComponents/Modal/Short/Short.vue'
     import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'
-    import IconSelectArrow from '@AppIcons/Input/SelectArrow.vue';
+    import SelectArrowSubmenu from '@AppIcons/Input/SelectArrowSubmenu.vue';
     import { Table } from '@/helpers/classes.js'
 
     const emit = defineEmits([

@@ -1,19 +1,25 @@
 @use '@/assets/variables.scss' as variables;
 @use '@/assets/mixins.scss' as mixins;
 
+.section-table {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .table {
   width: 100%;
-  height: 100%; /* любая высота контейнера */
+  height: calc(100% - 37px);
   overflow: auto;
   display: flex;
   flex-direction: column;
-  border: 1px solid #ccc;
   max-height: 100%;
-  max-width: calc(100vw - 230px);
+  max-width: calc(100vw - 290px);
 }
 
 .table__header {
-  z-index: 2;
+  z-index: 10;
   position: sticky;
   top: 0px;
   
@@ -30,7 +36,6 @@
 .table__cell {
   flex: 0 0 var(--cell-size);
   max-width: var(--cell-size);
-  border: 1px solid #ccc;
   display: flex;
   align-items: center;
   min-height: 50px;
@@ -39,6 +44,7 @@
 
 .table__row {
   position: absolute;
+  background: var(--color-row);
   top: var(--row-start);
   left: 0;
   display: flex;

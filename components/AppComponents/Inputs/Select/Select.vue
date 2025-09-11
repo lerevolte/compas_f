@@ -56,7 +56,7 @@
                 <IconSelectArrow />
             </div>
             <div class="select__options">
-                <div class="select__option" v-if="!props.options.multiple" :value="null" @click="select.changeValue({ value: null })">
+                <div class="select__option" v-if="props.isHaveNull && !props.options.multiple" :value="null" @click="select.changeValue({ value: null })">
                     Не выбрано
                 </div>
 
@@ -186,6 +186,7 @@
                 searchable: false,
                 required: false,
                 have_icon: false,
+                isHaveNull: false,
                 multiple: false,
                 placeholder: '' 
             },

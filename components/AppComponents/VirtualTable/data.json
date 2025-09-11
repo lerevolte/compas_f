@@ -1,6 +1,23 @@
 {
     "meta": [
         {
+            "id": 0,
+            "title": "Выделение",
+            "key": "isChoose",
+            "width": "100px",
+            "enabled": true,
+            "type": "checkbox",
+            "fixed": true
+        },
+        {
+            "id": 2,
+            "title": "Действие",
+            "key": "actions",
+            "width": "100px",
+            "enabled": true,
+            "fixed": true
+        },
+        {
             "key": "id",
             "title": "ID",
             "fixed": true,

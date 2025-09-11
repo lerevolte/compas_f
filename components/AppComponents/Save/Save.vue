@@ -7,7 +7,7 @@
             <div class="settings__menu">
                 <div class="settings__item popup__option settings__item_back" v-show="nest.active" @click="nest.back()">
                     {{ nest.active?.label ?? 'Назад' }}
-                    <IconSelectArrow /> 
+                    <SelectArrowSubmenu /> 
                 </div>
 
                 <!-- Common -->
@@ -17,7 +17,7 @@
                     </div>
                     <div class="settings__item popup__option settings__item_submenu" @click="nest.set({label: 'Применить для роли', value: 'changeRole'})">
                         Применить для роли
-                        <IconSelectArrow />
+                        <SelectArrowSubmenu />
                     </div>
                     <div class="settings__item popup__option" @click="nest.save('all')">
                         Применить для всех
@@ -46,7 +46,7 @@
     
     import AppPopup from '@AppComponents/Popup/Popup.vue'
     import IconSave from '@AppIcons/Actions/Save.vue'
-    import IconSelectArrow from '@AppIcons/Input/SelectArrow.vue';
+    import SelectArrowSubmenu from '@AppIcons/Input/SelectArrowSubmenu.vue';
 
     import { useUserStore } from '@/stores/userStore.js'
     const userStore = useUserStore()

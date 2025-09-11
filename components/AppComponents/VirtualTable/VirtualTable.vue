@@ -1,82 +1,132 @@
 <template>
-  <button @click="edit()">
-      Edit
-  </button>
-      <div ref="tableRef" class="table">
-        <div class="table__header">
-          <div class="table__row">
-            <div
-              v-for="col in columns"
-              class="table__cell"
-              :key="col.key"
-              :style="`--cell-size: ${col.width}`"
-            >
-              {{ col.title }}
-            </div>
-          </div>
-        </div>
-        <div class="table__body">
-          <div
-            v-for="row in rowVirtualizer.getVirtualItems()"
-            :key="row.key"
-            class="table__row"
-            :ref="el => el && rowVirtualizer.measureElement(el)"
-            :data-index="row.index"
-            :style="`--row-start: ${row.start}px;`"
-            >
-            <div
-              v-for="col in columns"
-              class="table__cell"
-              :key="col.key"
-              :style="`--cell-size: ${col.width}`"
-            >
-              <AppInput
-                v-if="rows[row.index].edit" 
-                v-model="rows[row.index][col.key]"
-              />
-              <span v-else>
-              {{ rows[row.index][col.key] }}
-            </span>
-            </div>
-          </div>
-        </div>
-      </div>
+  <section class="section-table">
+    <TableTop />
+
+    <div ref="tableRef" class="table">
+      <TableHeader />
+      <TableBody />
+    </div>
+    <TableFooter />
+  </section>
 </template>
 
 <script setup>
-import './VirtualTable.scss'
-import { useVirtualizer } from '@tanstack/vue-virtual'
-import dataJSON from './data.json'
+  import './VirtualTable.scss'
+  import dataJSON from './data.json'
 
-  import AppInput from '@AppComponents/Inputs/Input/Input.vue'
+  import { useVirtualizer } from '@tanstack/vue-virtual'
+  import TableTop from '@AppComponents/VirtualTable/Top/Top.vue'
+  import TableHeader from '@AppComponents/VirtualTable/Header/Header.vue'
+  import TableBody from '@AppComponents/VirtualTable/Body/Body.vue'
+  import TableFooter from '@AppComponents/VirtualTable/Footer/Footer.vue'
+  
+  const tableRef = ref(null)
 
-const tableRef = ref(null)
-
-const rows = ref(dataJSON.data)
-const columns = ref(dataJSON.meta)
-
-// вертикальный виртуализатор
-const rowVirtualizer = useVirtualizer({
-  count: rows.value.length,
-  estimateSize: () => 40,
-  getScrollElement: () => tableRef.value,
-  overscan: 5,
-})
-
-// горизонтальный виртуализатор
-const colVirtualizer = useVirtualizer({
-  horizontal: true,
-  count: columns.value.length,
-  estimateSize: () => 150,
-  getScrollElement: () => tableRef.value,
-  overscan: 3,
-})
-
-const edit = () => {
-  rows.value.forEach((element, index) => {
-    if (index % 2) {
-      element.edit = !element.edit
+  class Table {
+    constructor() {
+      this.isChanched = false
+      this.header = []
+      this.body = []
+      this.rowVirtualizer = null
+      this.pages = {
+        current: 1,
+        total: 6,
+        limit: 25
+      }
+      this.visibleColumns = []
     }
-  });
-}
+
+    // Получение данных для таблицы
+    get() {
+      this.getHeader(dataJSON.meta)
+      this.getBody(dataJSON.data)
+      this.rowVirtualizer = useVirtualizer({
+        count: this.body.length,
+        estimateSize: () => 40,
+        getScrollElement: () => tableRef.value,
+        overscan: 5,
+      })
+    }
+
+    // Получнеие шапки
+    getHeader(data) {
+      this.header = data
+      this.visibleColumns = computed(() => this.header.filter(p => p.enabled))
+    }
+
+    // Получение контента
+    getBody(data) {
+      this.body = data
+    }
+
+    // Вернуть настройки по умолчанию
+    reset() {
+      console.log('reset');
+    }
+
+    // Сохранение
+    save(role) {}
+
+    // Создание
+    create() {
+      console.log('create');
+    }
+
+    // Отмена редактирования
+    cancel() {
+
+    }
+
+    // Скачать Excel
+    downloadExcel() {
+      console.log('downloadExcel');
+    }
+
+    // Выбрать все строки
+    chooseAll(state) {
+      if (state) {
+        this.body.forEach(row => {
+          row.isChoose = true
+        })
+      } else {
+        this.body.forEach(row => {
+          row.isChoose = false
+        })
+      }
+    }
+
+    // Открыть строку
+    open() {
+
+    }
+
+    // Редактировать строку
+    edit(row) {
+      row.edit = true
+      console.log(row);
+    }
+
+    // Копировать строку 
+    copy() {
+
+    }
+
+    // Удалить строку 
+    delete() {
+
+    }
+
+    // Пагинация
+    changePage(page) {
+      this.pages.current = page
+    }
+  }
+
+  const table = ref(new Table())
+
+  onMounted(() => {
+    table.value.get()
+  })
+
+  provide('table', table)
 </script>

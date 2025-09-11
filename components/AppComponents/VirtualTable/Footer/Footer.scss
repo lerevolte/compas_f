@@ -1,0 +1,143 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+.table-footer {
+    gap: 20px;
+    display: flex;
+    padding: 10px 15px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.table-footer__checked {
+    gap: 10px;
+    display: flex;
+    align-items: center;
+
+    
+
+    .text {
+        &:not(.text_accent) {
+            width: 50px;
+        }
+
+        &.text_accent {
+            color: variables.$color-border;
+        }
+    }
+}
+
+.table-footer__group {
+    gap: 30px;
+    display: flex;
+    align-items: center;
+
+
+    .text {
+        &.text_accent {
+            color: variables.$color-border;
+        }
+    }
+}
+
+
+.table-footer__count {
+    gap: 10px;
+    display: flex;
+    align-items: center;
+
+    &.form__item {
+        &.form__item_select {
+            gap: 10px;
+            flex-direction: row;
+
+            & > label {
+                font-size: 15px;
+                color: variables.$color-border;
+            }
+        }
+    }
+
+    .select {
+        max-width: 80px;
+
+        input {
+            min-height: 30px;
+            height: 30px;
+        }
+
+        .icon__arrow {
+            top: 5px;
+        }
+
+        .select__value {
+            top: 5px;
+        }
+    }
+
+
+    .select__options {
+        bottom: 35px;
+        max-width: 200px;
+        left: auto;
+        right: 0px;
+        top: auto;
+    }
+}
+
+.table__footer {
+    display: flex;
+    justify-content: center;
+
+    &.table__footer_prevent {
+        pointer-events: none;
+    }
+}
+
+.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.pagination__item {
+    width: 37px;
+    height: 31px;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    border: 1px solid variables.$color-border;
+    border-left: none;
+    @include mixins.userSelect(none);
+
+    &:hover {
+        background: variables.$color-hover-option;
+    }
+
+    &.pagination__item_active {
+        pointer-events: none;
+        background: variables.$color-hover-option;
+    }
+
+    &:first-child {
+        border-radius: 5px 0 0 5px;
+        border-left: 1px solid variables.$color-border;
+    }
+
+    &:last-child {
+        border-radius: 0 5px 5px 0;
+    }
+
+    &.pagination__item_none {
+        border: none;
+        cursor: default;
+
+        &:hover {
+            background: transparent;
+        }
+
+        & + .pagination__item {
+        border-left: 1px solid variables.$color-border;
+    }
+    }
+}

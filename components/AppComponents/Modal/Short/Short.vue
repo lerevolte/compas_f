@@ -10,7 +10,7 @@
 
             <div class="modal__body">
                 <div class="modal__header" @click="emit('close', true)">
-                    <IconSelectArrow />
+                    <SelectArrowSubmenu />
                     <AppH2>
                         {{ props.options.title }}
                     </AppH2>
@@ -75,7 +75,7 @@
     import AppBlank from '@AppComponents/Blank/Blank.vue';
     import AppSelect from '@AppComponents/Inputs/Select/Select.vue';
     import AppFile from '@AppComponents/Inputs/File/File.vue'
-    import IconSelectArrow from '@AppIcons/Input/SelectArrow.vue';
+    import SelectArrowSubmenu from '@AppIcons/Input/SelectArrowSubmenu.vue';
     import { format  } from 'date-fns'
 
     const emit = defineEmits([

@@ -1,0 +1,24 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+.section-table__top {
+    gap: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: end;
+    padding: 10px;
+    border-bottom: 1px solid variables.$color-border-light;
+
+    .settings {
+        .icon-action {
+            padding: 0px 5px;
+        }
+
+        .popup__content {
+            bottom: auto;
+            left: auto;
+            right: 0px;
+        }
+    }
+}
+

@@ -1,5 +1,5 @@
 <template>
-    <AppPopup class="settings" :class="{'settings_dragging': settings.nest.isDragging}" ref="popupRef" @close="settings.nest.close()" :ignore-selectors="['#menu__overlay']">
+    <AppPopup class="settings" :class="{'settings_dragging': settings.nest.isDragging}" :isContentBottom="props.options.isContentBottom" ref="popupRef" @close="settings.nest.close()" :ignore-selectors="['#menu__overlay']">
         <template #header>
             <IconSettings />
         </template>
@@ -7,14 +7,14 @@
             <div class="settings__menu">
                 <div class="settings__item popup__option settings__item_back" v-show="settings.nest.active" @click="settings.nest.back()">
                     {{ settings.nest.active?.label ?? 'Назад' }}
-                    <IconSelectArrow /> 
+                    <SelectArrowSubmenu /> 
                 </div>
 
                 <!-- Common -->
                 <div class="settings__list" v-if="settings.nest.active == null">
                     <div class="settings__item settings__item_submenu popup__option" v-for="item in settings.nest.list" @click="settings.nest.set(item)" :key="item.value">
-                        {{ item.label }}
-                        <IconSelectArrow />
+                        {{ item.label ?? item.title }}
+                        <SelectArrowSubmenu />
                     </div>
                 </div>
 
@@ -24,7 +24,7 @@
                         <AppCheckbox 
                             v-model="field.enabled"
                             :options="{
-                                title: field.name
+                                title: field.name ?? field.title
                             }"
                              @update:modelValue="emit('isChanched', true)"
                         />
@@ -52,16 +52,16 @@
                         <template #item="{ element: field }">
                             <div class="settings__item popup__option" :class="{'popup__option_hide': !field.enabled}">
                                 <IconDrag />
-                                {{ field.name }}
+                                {{ field.name ?? field.title }}
                             </div>
                         </template>
                     </draggable> 
                     <div class="menu__item-hide"
-                        v-if="!isInitGroup">
+                        v-if="props.options.isHaveHidden && !isInitGroup">
                         <span class="menu__item-subtitle"> Скрытые </span>
                     </div>
                     <draggable
-                        v-if="!isInitGroup"
+                        v-if="props.options.isHaveHidden && !isInitGroup"
                         tag="div"
                         group="settings"
                         class="settings__list settings__list_drag"
@@ -89,11 +89,11 @@
                 <div class="settings__list settings__list_group" v-else-if="settings.nest.active.value == 'isNest'">
                     <div class="settings__item popup__option settings__item_submenu" @click="settings.nest.initCreate()">
                         Создать новую
-                        <IconSelectArrow />
+                        <SelectArrowSubmenu />
                     </div>
                     <div class="settings__item popup__option settings__item_submenu" @click="settings.nest.set({label: 'Редактировать существующую', value: 'updateGroup'})">
                         Редактировать существующую
-                        <IconSelectArrow />
+                        <SelectArrowSubmenu />
                     </div>
                 </div>
 
@@ -110,7 +110,7 @@
                         @click="settings.nest.initUpdate(field)"
                     >
                         {{ field.name }}
-                        <IconSelectArrow />
+                        <SelectArrowSubmenu />
                     </div>    
 
                     <div class="settings__item popup__option popup__option_disable" v-show="props.list.filter(p => p.children.length > 0).length == 0">
@@ -128,11 +128,11 @@
                     </div>
                     <div class="settings__item popup__option settings__item_submenu" @click="settings.nest.set({label: 'Сущности', value: 'isCheck'})">
                         Сущности
-                        <IconSelectArrow />
+                        <SelectArrowSubmenu />
                     </div>
                     <div class="settings__item popup__option settings__item_submenu" v-show="settings.nest.templateField.list.filter(p => p.enabled).length > 0" @click="settings.nest.set({label: 'Порядок', value: 'isDrag'})">
                         Порядок
-                        <IconSelectArrow />
+                        <SelectArrowSubmenu />
                     </div>
                     <div 
                         v-show="settings.nest.templateField.list.filter(p => p.enabled).length > 0 || settings.nest.templateField.name != ''" 
@@ -189,7 +189,7 @@
     
     import AppPopup from '@AppComponents/Popup/Popup.vue'
     import IconSettings from '@AppIcons/Actions/Settings.vue'
-    import IconSelectArrow from '@AppIcons/Input/SelectArrow.vue';
+    import SelectArrowSubmenu from '@AppIcons/Input/SelectArrowSubmenu.vue';
     import IconDrag from '@AppIcons/Actions/Drag.vue'
     import AppCheckbox from '@AppComponents/Inputs/Checkbox/Checkbox.vue'
     import draggable from 'vuedraggable';
@@ -218,6 +218,7 @@
                     state: false,
                     name: 'Группы'
                 },
+                isHaveHidden: true,
                 isHaveDefault: false
             },
             type: Object
@@ -226,6 +227,7 @@
 
     const emit = defineEmits([
         'update:modelValue',
+        'update:modelList',
         'update:modelVisible',
         'update:modelHidden',
         'reset',
@@ -267,21 +269,21 @@
                 list: disabledFields.value
             }
 
-            if (props.options.isCheck.state) {
+            if (props.options.isCheck && props.options.isCheck.state) {
                 this.list.push({
                     label: props.options.isCheck.name ?? 'Отображение',
                     value: 'isCheck'
                 })
             }
 
-            if (props.options.isDrag.state) {
+            if (props.options.isDrag && props.options.isDrag.state) {
                 this.list.push({
                     label: props.options.isDrag.name ?? 'Порядок',
                     value: 'isDrag'
                 })
             }
 
-            if (props.options.isNest.state) {
+            if (props.options.isNest && props.options.isNest.state) {
                 this.list.push({
                     label: props.options.isNest.name ?? 'Группы',
                     value: 'isNest'
@@ -420,6 +422,11 @@
         settings.value.nest.close()
     }
 
+    const list = computed({
+        get: () => props.list,
+        set: (val) => emit('update:modelList', val)
+    })
+
     const visible = computed({
         get: () => props.visible,
         set: (val) => emit('update:modelVisible', val)
@@ -435,7 +442,19 @@
     })
 
     const templateListCheck = computed({
-        get: () => isInitGroup.value ? settings.value.nest.templateField.list : visible.value,
-        set: (val) => isInitGroup.value ? settings.value.nest.templateField.list = val : emit('update:modelVisible', val)
+        get: () => {
+            if (props.options.isHaveHidden) {
+                return isInitGroup.value ? settings.value.nest.templateField.list : visible.value
+            } else {
+                return list.value
+            }
+        },
+        set: (val) => {
+            if (props.options.isHaveHidden) {
+                isInitGroup.value ? settings.value.nest.templateField.list = val : emit('update:modelVisible', val)
+            } else {
+                emit('update:modelValue', val)
+            }
+        }
     })
 </script>

@@ -1,5 +1,5 @@
 <template>
-    <figure class='icon_settings'>
+    <figure class='icon-action icon_settings'>
         <svg width="15px" height="15px" viewBox="0 0 15 15" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
             <g id="Журнал" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                 <g id="Логистика-Copy-37" transform="translate(-1673.000000, -231.000000)" fill="#A6B7D4" fill-rule="nonzero">

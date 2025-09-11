@@ -1,0 +1,8 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+.show-more {
+    .popup__header {
+        padding: 0px 10px;
+    }
+}
