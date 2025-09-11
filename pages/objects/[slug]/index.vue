@@ -6,7 +6,7 @@
             {{ entity.active?.title }}
 		</AppH1>
 
-        <!-- <TemplateTablePage /> -->
+        <TemplateTablePage />
     </main>
 </template>
 
@@ -14,7 +14,7 @@
     import AppMenu from '@AppComponents/Menu/Menu.vue';
 	import AppH1 from '@AppComponents/Headers/H1/H1.vue';
 
-    // import TemplateTablePage from '@AppTemplates/TablePage/TablePage.vue'
+    import TemplateTablePage from '@AppTemplates/TablePage/TablePage.vue'
 
 
 	import metaJSON from './meta.json'

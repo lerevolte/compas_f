@@ -66,4 +66,17 @@ button {
         overflow: hidden;
         pointer-events: none;
     }
+
+    &.button_text {
+        padding: 0px;
+        background: none;
+        cursor: pointer;
+        text-decoration: underline;
+        max-width: max-content;
+        color: variables.$color-link;
+
+        &:hover {
+            text-decoration: none;
+        }
+    }
 }

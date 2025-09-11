@@ -189,10 +189,10 @@
                     <NuxtLink class="popup__option" to="/profile">
                         Настройки
                     </NuxtLink>
-                    <a href="/auth/entry" class="popup__option">
+                    <a href="https://compas.pro/auth/entry" class="popup__option">
                         Сменить портал
                     </a>
-                    <div class="popup__option popup__option_red">
+                    <div class="popup__option popup__option_red" @click="userStore.logout()">
                         Выйти                    
                     </div>
                 </template>
@@ -213,7 +213,6 @@
     import AppPopup from '@AppComponents/Popup/Popup.vue'
     import { useMediaQuery } from '@vueuse/core'
 
-    import dataJSON from './data.json'
     import { useMenuStore } from '@/stores/menuStore.js'
     import { useUserStore } from '@/stores/userStore.js'
     const userStore = useUserStore()
@@ -242,11 +241,10 @@
         async get() {
             try {
                 this.loading = true
-                const full_name = `${dataJSON.profile.user?.name ?? ''} ${dataJSON.profile.user?.last_name ?? ''}`
-
+                const full_name = `${userStore.user?.name ?? ''} ${userStore.user?.last_name ?? ''}`
                 this.user = {
                     name: full_name.replaceAll(' ', '') == '' ? 'Без имени' : full_name,
-                    avatar: JSON.parse(dataJSON.profile.user?.avatar)[0]?.url ?? '/undefined.svg'
+                    avatar: userStore.user ? JSON.parse(userStore.user?.avatar)[0]?.url ?? '/undefined.svg' : '/undefined.svg'
                 }
                 
                 await this.update()
@@ -254,6 +252,10 @@
                 console.log('menu_template', error);
             } finally {
                 this.loading = false
+
+                if (route.path == '/') {
+                    navigateTo(this.visible[0].link)
+                }
             }
         }
 

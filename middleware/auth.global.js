@@ -5,10 +5,10 @@ export default defineNuxtRouteMiddleware((to, from) => {
 
     if (import.meta.server) return
 
-    if (!userStore.token && to.path == '/admin') {
+    if (!userStore.token && to.path != '/auth') {
         return navigateTo('/auth')
     } else if (userStore.token != null && to.path === '/auth') {
-        return navigateTo('/admin')
+        return navigateTo('/')
     }
 })
   

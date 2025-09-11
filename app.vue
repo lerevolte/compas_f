@@ -11,8 +11,5 @@
   import '@/assets/default.scss'
   import '@/assets/fonts/fonts.css'
 
-  import { useUserStore } from '@/stores/userStore.js'
-  const userStore = useUserStore()
-
   const router = useRoute()
 </script>

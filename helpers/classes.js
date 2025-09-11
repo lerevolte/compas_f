@@ -2,11 +2,7 @@ import api from '@/helpers/api.js'
 import 'vue3-toastify/dist/index.css';
 import routes from '@/helpers/routes.js'
 
-import contactsJSON from '/public/admin/contacts.js'
-import localTableMeta from '/public/admin/localTableMeta.json'
-
 import { toast } from 'vue3-toastify';
-import { useCartStore } from '@/stores/cartStore.js'
 import { useUserStore } from '@/stores/userStore.js'
 
 export class Common {
@@ -110,6 +106,15 @@ export class Common {
             newestOnTop: true
         });
     }
+
+
+    // Чистый URL без параметров
+    cleanUrl() {
+        if (window.location.search) {
+          const cleanUrl = window.location.origin + window.location.pathname;
+          window.history.replaceState({}, document.title, cleanUrl);
+        }
+      };
 } 
 
 export class Auth {
@@ -232,7 +237,7 @@ export class Table {
         this.content.body = response.data.data
 
         if (response.data.meta == undefined) {
-            response.data.meta = localTableMeta
+            // response.data.meta = localTableMeta
         }
 
         this.content.header = response.data.meta.fields.filter(p => p.show_in_table)

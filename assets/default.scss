@@ -95,6 +95,11 @@ html {
     @media (max-width: 990px) {
         grid-template-columns: 1fr;
     }
+
+    main {
+        display: flex;
+        flex-direction: column;
+    }
 }
 
 .container {
@@ -136,7 +141,7 @@ input, textarea {
     min-height: 40px;
     box-shadow: none;
     padding: 10px 15px;
-    border-radius: 10px;
+    border-radius: 5px;
     font-family: inherit;
     caret-color: variables.$color-black;
     font-size: variables.$font-size-default;

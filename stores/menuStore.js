@@ -18,6 +18,7 @@ export const useMenuStore = defineStore('menuStore', {
                 this.list = response.data
             } catch (error) {
                 console.log('get_menu', error)
+            } finally {
             }
         },
 

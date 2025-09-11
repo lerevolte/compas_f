@@ -1,7 +1,9 @@
 export default {
     domain: 'https://opt6.compas.pro',
     auth: {
-        login: '/user/login'
+        login: '/auth',
+        reset_password: '/password/reset',
+        forgot: '/password/forgot'
     },
     user: {
         me: '/profile',
