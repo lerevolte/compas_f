@@ -95,6 +95,7 @@ html {
     grid-template-columns: 230px 1fr;
     overflow: auto;
     max-height: 100vh;
+    overflow-x: hidden; 
     @include mixins.scrollBar();
 
     @media (max-width: 990px) {
