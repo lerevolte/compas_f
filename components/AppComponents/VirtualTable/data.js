@@ -1,4 +1,4 @@
-{
+export const dataJSON = {
     "meta": [
         {
             "id": 0,
@@ -33,318 +33,318 @@
             "type": "text",
             "width": "200px"
         },
-        {
-            "key": "field_2",
-            "title": "Поле 2",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_3",
-            "title": "Поле 3",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_4",
-            "title": "Поле 4",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_5",
-            "title": "Длинное название поля для проверки перестраивания",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_6",
-            "title": "Поле 6",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_7",
-            "title": "Поле 7",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_8",
-            "title": "Поле 8",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_9",
-            "title": "Поле 9",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_10",
-            "title": "Поле 10",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_11",
-            "title": "Поле 11",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_12",
-            "title": "Поле 12",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_13",
-            "title": "Поле 13",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_14",
-            "title": "Поле 14",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_15",
-            "title": "Поле 15",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_16",
-            "title": "Поле 16",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_17",
-            "title": "Поле 17",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_18",
-            "title": "Поле 18",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_19",
-            "title": "Поле 19",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_20",
-            "title": "Поле 20",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_21",
-            "title": "Поле 21",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_22",
-            "title": "Поле 22",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_23",
-            "title": "Поле 23",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_24",
-            "title": "Поле 24",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_25",
-            "title": "Поле 25",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_26",
-            "title": "Поле 26",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_27",
-            "title": "Поле 27",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_28",
-            "title": "Поле 28",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_29",
-            "title": "Поле 29",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_30",
-            "title": "Поле 30",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_31",
-            "title": "Поле 31",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_32",
-            "title": "Поле 32",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_33",
-            "title": "Поле 33",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_34",
-            "title": "Поле 34",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_35",
-            "title": "Поле 35",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_36",
-            "title": "Поле 36",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_37",
-            "title": "Поле 37",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_38",
-            "title": "Поле 38",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_39",
-            "title": "Поле 39",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        },
-        {
-            "key": "field_40",
-            "title": "Поле 40",
-            "fixed": true,
-            "enabled": true,
-            "type": "text",
-            "width": "200px"
-        }
+        // {
+        //     "key": "field_2",
+        //     "title": "Поле 2",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_3",
+        //     "title": "Поле 3",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_4",
+        //     "title": "Поле 4",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_5",
+        //     "title": "Длинное название поля для проверки перестраивания",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_6",
+        //     "title": "Поле 6",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_7",
+        //     "title": "Поле 7",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_8",
+        //     "title": "Поле 8",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_9",
+        //     "title": "Поле 9",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_10",
+        //     "title": "Поле 10",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_11",
+        //     "title": "Поле 11",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_12",
+        //     "title": "Поле 12",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_13",
+        //     "title": "Поле 13",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_14",
+        //     "title": "Поле 14",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_15",
+        //     "title": "Поле 15",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_16",
+        //     "title": "Поле 16",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_17",
+        //     "title": "Поле 17",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_18",
+        //     "title": "Поле 18",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_19",
+        //     "title": "Поле 19",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_20",
+        //     "title": "Поле 20",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_21",
+        //     "title": "Поле 21",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_22",
+        //     "title": "Поле 22",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_23",
+        //     "title": "Поле 23",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_24",
+        //     "title": "Поле 24",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_25",
+        //     "title": "Поле 25",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_26",
+        //     "title": "Поле 26",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_27",
+        //     "title": "Поле 27",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_28",
+        //     "title": "Поле 28",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_29",
+        //     "title": "Поле 29",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_30",
+        //     "title": "Поле 30",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_31",
+        //     "title": "Поле 31",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_32",
+        //     "title": "Поле 32",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_33",
+        //     "title": "Поле 33",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_34",
+        //     "title": "Поле 34",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_35",
+        //     "title": "Поле 35",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_36",
+        //     "title": "Поле 36",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_37",
+        //     "title": "Поле 37",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_38",
+        //     "title": "Поле 38",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_39",
+        //     "title": "Поле 39",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // },
+        // {
+        //     "key": "field_40",
+        //     "title": "Поле 40",
+        //     "fixed": true,
+        //     "enabled": true,
+        //     "type": "text",
+        //     "width": "200px"
+        // }
     ],
     "data": [
         {

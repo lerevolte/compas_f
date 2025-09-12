@@ -100,6 +100,7 @@
             document.body.classList.remove('body_resize')
             tableRef.value.classList.remove('table_resize')
             table.value.isChanged = true
+            this.normalizeToContainerMinWidth()
         }
 
         /** Обработка движения мыши */
@@ -107,6 +108,8 @@
             if (!this.isResizing.value || this.resizingColumnIdx < 0) return
             const delta = e.clientX - this.startClientX
             this.setWidthPx(this.resizingColumnIdx, this.startWidthPx + delta)
+            // Во время ресайза поддерживаем минимальную ширину контейнера
+            this.normalizeToContainerMinWidth(true)
         }
 
         /** Преобразование ширины в пиксели */
@@ -140,6 +143,56 @@
             })
         }
 
+        /** Пропорционально увеличивает ширины колонок, если их сумма меньше ширины контейнера **/
+        normalizeToContainerMinWidth(useDomCurrent = false) {
+            const tableEl = tableRef?.value
+            if (!tableEl || !Array.isArray(table?.value?.visibleColumns)) return
+
+            const containerWidth = tableEl.clientWidth - 15 || 0
+            if (containerWidth <= 0) return
+
+            const currentWidthsPx = table.value.visibleColumns.map(col => {
+                if (useDomCurrent) {
+                    const cell = tableEl.querySelector(`.table__cell[data-column-key="${col.key}"]`)
+                    const cssVar = cell?.style?.getPropertyValue('--cell-size')?.trim()
+                    if (cssVar) {
+                        const px = parseInt(cssVar.replace('px', ''))
+                        if (Number.isFinite(px)) return px
+                    }
+                }
+                return this.parseWidthToPx(col.width)
+            })
+            const sumWidths = currentWidthsPx.reduce((acc, n) => acc + (Number.isFinite(n) ? n : 0), 0)
+
+            if (sumWidths <= 0 || sumWidths >= containerWidth) return
+
+            const scale = containerWidth / sumWidths
+            let accumulated = 0
+
+            table.value.visibleColumns.forEach((col, index) => {
+                const base = currentWidthsPx[index] || 0
+                let newWidth = index === table.value.visibleColumns.length - 1
+                    ? Math.max(MIN_COLUMN_WIDTH, containerWidth - accumulated)
+                    : Math.max(MIN_COLUMN_WIDTH, Math.round(base * scale))
+
+                accumulated += newWidth
+
+                col.width = `${newWidth}px`
+
+                const cells = tableEl.querySelectorAll(`.table__cell[data-column-key="${col.key}"]`)
+                cells.forEach(cell => {
+                    cell.style.setProperty('--cell-size', `${newWidth}px`)
+                    if (newWidth <= 50) {
+                        cell.classList.add('table__cell_hide-text')
+                    } else {
+                        cell.classList.remove('table__cell_hide-text')
+                    }
+                })
+            })
+
+            table.value.isChanged = true
+        }
+
         /** Очистка обработчиков */
         clear() {
             window.removeEventListener('mousemove', this.onMouseMove)
@@ -157,5 +210,9 @@
  
     onBeforeUnmount(() => {
         resizer.clear()
+    })
+
+    onMounted(() => {
+        nextTick(() => resizer.normalizeToContainerMinWidth())
     })
 </script>

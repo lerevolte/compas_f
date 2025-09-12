@@ -12,7 +12,7 @@
 
 <script setup>
   import './VirtualTable.scss'
-  import dataJSON from './data.json'
+  import { dataJSON } from './data.js'
 
   import { useVirtualizer } from '@tanstack/vue-virtual'
   import TableTop from '@AppComponents/VirtualTable/Top/Top.vue'

@@ -4,5 +4,15 @@
 .show-more {
     .popup__header {
         padding: 0px 10px;
+
+        &:hover {
+            .icon-action {
+                svg {
+                    * {
+                        fill: variables.$color-icon-active;
+                    }
+                }
+            }
+        }
     }
 }
