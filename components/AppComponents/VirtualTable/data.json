@@ -59,7 +59,7 @@
         },
         {
             "key": "field_5",
-            "title": "Поле 5",
+            "title": "Длинное название поля для проверки перестраивания",
             "fixed": true,
             "enabled": true,
             "type": "text",
@@ -57322,5 +57322,9 @@
             "field_39": "AM2",
             "field_40": "AN2"
         }
-    ]
+    ],
+    "list": {
+        "sort_field": "name",
+        "sort_order": "asc"
+    }
 }

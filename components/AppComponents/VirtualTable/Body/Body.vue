@@ -8,7 +8,7 @@
             :data-index="row.index"
             :style="`--row-start: ${row.start}px; --color-row: ${row.index % 2 === 0  ? '#f7fbff' : 'transparent'}`"
         >
-            <div v-for="column in table.visibleColumns" class="table__cell" :key="column.key + (column.isPlaceholder ? '-ph' : '')" :style="`--cell-size: ${column.width}`">
+            <div v-for="column in table.visibleColumns" class="table__cell" :data-column-key="column.key" :key="column.key + (column.isPlaceholder ? '-ph' : '')" :style="`--cell-size: ${column.width}`">
                 <AppCheckbox 
                     v-if="column.key == 'isChoose'"
                     v-model="table.body[row.index].isChoose"

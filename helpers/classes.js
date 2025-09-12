@@ -1,6 +1,7 @@
 import api from '@/helpers/api.js'
 import 'vue3-toastify/dist/index.css';
 import routes from '@/helpers/routes.js'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 import { toast } from 'vue3-toastify';
 import { useUserStore } from '@/stores/userStore.js'
@@ -111,10 +112,29 @@ export class Common {
     // Чистый URL без параметров
     cleanUrl() {
         if (window.location.search) {
-          const cleanUrl = window.location.origin + window.location.pathname;
-          window.history.replaceState({}, document.title, cleanUrl);
+            const cleanUrl = window.location.origin + window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
         }
-      };
+    };
+
+    useDoubleClick(callback, delay = 300) {
+        let lastClickTime = 0
+        let lastEl = null
+      
+        return (event) => {
+          const now = Date.now()
+          const el = event.currentTarget
+      
+          if (el === lastEl && now - lastClickTime <= delay) {
+            callback(el, event)
+            lastClickTime = 0
+            lastEl = null
+          } else {
+            lastClickTime = now
+            lastEl = el
+          }
+        }
+    }
 } 
 
 export class Auth {

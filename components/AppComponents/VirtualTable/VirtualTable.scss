@@ -16,22 +16,12 @@
   flex-direction: column;
   max-height: 100%;
   max-width: calc(100vw - 290px);
-}
 
-.table__header {
-  z-index: 10;
-  position: sticky;
-  top: 0px;
-  
-  .table__row {
-    position: relative;
-  }
-
-  .table__cell {
-    z-index: 2;
-    background: variables.$color-background;
+  &.table_resize {
+    overflow-y: hidden;
   }
 }
+
 
 .table__cell {
   flex: 0 0 var(--cell-size);
@@ -39,7 +29,7 @@
   display: flex;
   align-items: center;
   min-height: 50px;
-  justify-content: center;
+  padding: 10px 0 10px 10px;
 }
 
 .table__row {

@@ -26,7 +26,7 @@
                             :options="{
                                 title: field.name ?? field.title
                             }"
-                             @update:modelValue="emit('isChanched', true)"
+                             @update:modelValue="emit('isChanged', true)"
                         />
                     </div>
                 </div>
@@ -232,7 +232,7 @@
         'update:modelHidden',
         'reset',
         'dragEvent',
-        'isChanched'
+        'isChanged'
     ])
 
     const disabledFields = computed({
@@ -409,7 +409,7 @@
         // Конец перетаскивания
         dragEnd() {
             this.isDragging = false
-            emit('isChanched', true); 
+            emit('isChanged', true); 
             emit('dragEvent', false)
         }
     }

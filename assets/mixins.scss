@@ -40,9 +40,9 @@
 }
 
 // Скрытие текста, длиннее 2 строк
-@mixin textVerticalHidden() {
+@mixin textVerticalHidden($stroke: 2) {
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: $stroke;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }

@@ -1,9 +1,29 @@
 <template>
     <figure class='icon_sort'>
-        <svg width="28" height="17" viewBox="0 0 28 17" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M2 2H26.375" stroke="#404040" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M2 8.5H18.25" stroke="#404040" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M2 15H10.125" stroke="#404040" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="7" fill="none">
+            <path fill="#0584FE" fill-rule="evenodd" 
+                d="M11.77 1.2 6.15 6.91S6.04 7 5.86 7s-.3-.09-.3-.09L.1 1.21S-.14.7.22.3s.9-.23.9-.23l4.72 4.85L10.6.08s.5-.22.94.18c.45.4.23.94.23.94Z"
+                clip-rule="evenodd">
+            </path>
         </svg>
     </figure>
 </template>
+
+<style lang="scss">
+    @use '@/assets/variables.scss' as variables;
+    
+    .icon_sort {
+        display: flex;
+        position: absolute;
+        height: 100%;
+        align-items: center;
+        background: variables.$color-white;
+        right: 0px;
+        padding: 0px 10px;
+        pointer-events: none;
+
+        &.icon_sort_up {
+            transform: rotate(180deg);
+        }
+    }
+</style>

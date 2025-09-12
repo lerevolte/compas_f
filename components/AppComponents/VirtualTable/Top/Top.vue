@@ -1,7 +1,7 @@
 <template>
     <div class="section-table__top">
         <AppSave 
-            v-show="table.isChanched" 
+            v-show="table.isChanged" 
             @save="(role) => table.save(role)"
         />
         <AppShowMore 
@@ -22,8 +22,8 @@
                 isHaveDefault: true
             }"
             @reset="table.reset()"
-            @isChanched="table.isChanched = true"
-            @update:modelValue="(val) => {table.header = val; table.isChanched = true}"
+            @isChanged="table.isChanged = true"
+            @update:modelValue="(val) => {table.header = val; table.isChanged = true}"
         />
     </div>
 </template>

@@ -158,14 +158,14 @@
                         isHaveDefault: true
                     }"
                     @reset="menu.reset()"
-                    @isChanched="menu.isChanched = true"
+                    @isChanged="menu.isChanged = true"
                     @dragEvent="state => menu.isDragging = state"
                     @update:modelVisible="(val) => menu.visible = val"
                     @update:modelHidden="(val) => menu.hidden = val"
-                    @update:modelList="(val) => {menu.list = val; menu.isChanched = true}"
+                    @update:modelList="(val) => {menu.list = val; menu.isChanged = true}"
                 />
                 <AppSave 
-                    v-show="menu.isChanched" 
+                    v-show="menu.isChanged" 
                     @save="(role) => menu.save(role)"
                 />
             </div>
@@ -224,7 +224,7 @@
     
     class Menu {
         constructor() {
-            this.isChanched = false
+            this.isChanged = false
             this.isHiddenOpen = false
             this.list = []
             this.visible = []
@@ -270,7 +270,7 @@
         async reset() {
             try {
                 this.loading = true
-                this.isChanched = true
+                this.isChanged = true
                 await menuStore.reset()
                 await this.update()
             } catch (error) {
@@ -308,7 +308,7 @@
             this.visible.reduce((acc, obj) => {obj.is_hidden = false; acc.push(obj); return acc; }, []);
             this.hidden.reduce((acc, obj) => {obj.is_hidden = true; acc.push(obj); return acc; }, []);
             
-            this.isChanched = JSON.stringify(this.beforeDrag) !== JSON.stringify(afterDrag)
+            this.isChanged = JSON.stringify(this.beforeDrag) !== JSON.stringify(afterDrag)
             this.isHiddenOpen = false
             this.isDragging = false
             this.updateSortOrder()
@@ -326,7 +326,7 @@
         // Сохранение
         save(role) {
             menuStore.save(role, this.list)
-            this.isChanched = false
+            this.isChanged = false
         }
     }
 

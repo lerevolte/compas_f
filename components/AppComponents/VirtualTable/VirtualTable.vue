@@ -24,7 +24,7 @@
 
   class Table {
     constructor() {
-      this.isChanched = false
+      this.isChanged = false
       this.header = []
       this.body = []
       this.rowVirtualizer = null
@@ -33,12 +33,20 @@
         total: 6,
         limit: 25
       }
+      this.sortItem = {
+        sort_field: null,
+        sort_order: null
+      }
       this.visibleColumns = []
     }
 
     // Получение данных для таблицы
     get() {
       this.getHeader(dataJSON.meta)
+      this.setSortItem({
+        sort_field: dataJSON.list.sort_field,
+        sort_order: dataJSON.list.sort_order
+      })
       this.getBody(dataJSON.data)
       this.rowVirtualizer = useVirtualizer({
         count: this.body.length,
@@ -57,6 +65,10 @@
     // Получение контента
     getBody(data) {
       this.body = data
+    }
+
+    setSortItem(item) {
+      this.sortItem = item
     }
 
     // Вернуть настройки по умолчанию
@@ -120,6 +132,14 @@
     changePage(page) {
       this.pages.current = page
     }
+
+    // Сортировка таблицы
+    sort(column) {
+      this.setSortItem({
+        sort_field: column.key,
+        sort_order: column.key == this.sortItem.sort_field ? this.sortItem.sort_order == 'asc' ? 'desc' : 'asc' : 'asc'
+      })
+    }
   }
 
   const table = ref(new Table())
@@ -129,4 +149,5 @@
   })
 
   provide('table', table)
+  provide('tableRef', tableRef)
 </script>

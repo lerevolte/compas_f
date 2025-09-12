@@ -65,6 +65,11 @@ html {
     body {
         background-color: variables.$color-background;
         @include mixins.scrollBar();
+
+        &.body_resize {
+            cursor: col-resize;
+            user-select: none;
+        }
     }
 }
 
