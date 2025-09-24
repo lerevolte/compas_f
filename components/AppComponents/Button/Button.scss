@@ -8,7 +8,10 @@ button {
     align-items: center;
     font-weight: 500;
     padding: 15px 30px;
-    border-radius: 10px;
+    border-radius: 7px;
+    background: #f0f0f0;
+    outline: none;
+    position: relative;
     font-size: variables.$font-size-default;
     @include mixins.hoverElem();
 
@@ -43,8 +46,11 @@ button {
 
         &.skeleton {
             &::after {
+                top: 0px;
+                left: 0px;
                 background: linear-gradient(90deg, variables.$button-fill 25%, #f0f0f0 50%, variables.$button-fill 75%);
                 background-size: 200% 100%;
+                height: auto;
             }
         }
     }
@@ -53,11 +59,11 @@ button {
         gap: 10px;
         display: flex;
         align-items: center;
-        font-size: 18px;
+        font-size: 15px;
         padding: 15px 20px;
 
         svg {
-            @include mixins.resolution(18px, 18px);
+            @include mixins.resolution(15px, 15px);
         }
     }
 

@@ -6,8 +6,18 @@
         @include mixins.blankGap();
 
         .dp__input {
-            border-color:variables.$color-border !important;
-            border-radius: 10px;
+            border-color: variables.$color-border !important;
+            border-radius: 5px;
+            padding: 7px 15px;
+        }
+
+        .dp__input_icon,
+        .dp__arrow_top {
+            display: none;
+        }
+
+        .dp--menu-wrapper {
+            z-index: 10;
         }
     }
 }

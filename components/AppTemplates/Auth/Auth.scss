@@ -80,12 +80,19 @@
         .auth__form {
             gap: 15px;
             padding: 35px;
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-rows: 1fr repeat(2, auto);
+            min-height: 345px;
             background-color: variables.$color-background;
             border: 1px solid #eeeff1;
             box-shadow: variables.$box-shadow;
             border-radius: 10px;
+
+            .auth__list {
+                gap: 15px;
+                display: flex;
+                flex-direction: column;
+            }
 
             .auth__desc {
                 margin-bottom: 0px;
@@ -139,7 +146,7 @@
         .icon_show {
             cursor: pointer;
             position: absolute;
-            top: 33px;
+            top: 30px;
             right: 12px;
 
             &.icon_show_active {

@@ -1,6 +1,6 @@
 <template>
-    <div class="form__item form__item_date">
-        <label :for="props.options.id">
+    <div class="form__item form__item_date" ref="dateRef">
+        <label :for="props.options.id" v-if="props.options.title && props.options.title != ''">
             {{ props.options.title }}
         </label>
         <VueDatePicker 
@@ -19,7 +19,8 @@
 			hide-offset-dates
 			format="dd.MM.yyyy"
 			:placeholder="'__.__.____'"
-            @update:modelValue="emit('update:modelValue', $event)"
+            @update:modelValue="emit('update:modelValue', format($event, `yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'`))"
+            @open="datepickerField.open()"
         />
     </div>
 </template>
@@ -29,11 +30,10 @@
     
     import VueDatePicker from '@vuepic/vue-datepicker';
     import '@vuepic/vue-datepicker/dist/main.css'
+    import { format } from 'date-fns'
 
-    const emit = defineEmits([
-        'update:modelValue'
-    ])
-    
+    const dateRef = ref(null)
+
     const props = defineProps({
         options: {
             default: {
@@ -48,4 +48,25 @@
         },
         modelValue: [String, Date, Array]
     })
+
+    const emit = defineEmits([
+        'update:modelValue',
+        'open'
+    ])
+
+    class Datepicker {
+        constructor() {
+
+        }
+
+        // Открытие датапикера
+        open() {
+            document.querySelectorAll('.popup_open').forEach(el => el.classList.remove('popup_open'))
+            document.querySelectorAll('.status_open').forEach(el => el.classList.remove('status_open'))
+            document.querySelectorAll('.select_open').forEach(el => el.classList.remove('select_open'))
+            emit('open', dateRef.value)
+        }
+    }
+
+    const datepickerField = ref(new Datepicker())
 </script>

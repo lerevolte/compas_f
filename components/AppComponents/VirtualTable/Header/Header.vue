@@ -2,13 +2,23 @@
     <div class="table__header">
         <div class="table__row" ref="headerRowRef">
             <div 
-                v-for="(column, idx) in table.visibleColumns" 
+                v-for="(column, idx) in table.header" 
                 class="table__cell" 
-                :class="{'table__cell_hide-text': column.width.replace('px', '') < 50, 'table__cell_sort': column.key == table.sortItem.sort_field}"
+                :class="{
+                    'table__cell_hide-text': column.width.replace('px', '') < 50, 
+                    'table__cell_sort': column.key == table.sortItem.sort_field,
+                    'table__cell_hide': !column.enabled,
+                    'table__cell_fixed': column.fixed
+                }"
                 :key="column.key" 
-                :style="`--cell-size: ${column.width}`"
+                :style="`--cell-size: ${column.width}; --cell-left: ${column.left}px;`"
                 :data-column-key="column.key"
                 :data-idx="idx"
+                :draggable="true"
+                @dragover.prevent
+				@dragenter.prevent
+                @dragstart="(event) => dragger.dragStart(event, column.key)"
+                @dragend="() => dragger.dragEnd(null)"   
                 @click="(event) => doubleClick(event)"
             >
                 <span 
@@ -41,10 +51,9 @@
     const table = inject('table')
     const tableRef = inject('tableRef')
 
-    const MIN_COLUMN_WIDTH = 40
-
     class Resize {
         constructor() {
+            this.MIN_COLUMN_WIDTH = 40
             this.isResizing = ref(false)
             this.startClientX = 0
             this.startWidthPx = 0
@@ -53,7 +62,6 @@
 
             this.onMouseMove = this.onMouseMove.bind(this)
             this.onMouseUp = this.onMouseUp.bind(this)
-            this.SCROLLBAR_COMPENSATION = 15
         }
 
         /** Старт ресайза */
@@ -61,11 +69,11 @@
             this.isResizing.value = true
             this.resizingColumnIdx = idx
             this.startClientX = e.clientX
-            this.startWidthPx = this.parseWidthToPx(table.value.visibleColumns[idx].width)
+            this.startWidthPx = this.parseWidthToPx(table.value.header[idx].width)
 
             tableRef.value.classList.add('table_resize')
 
-            this.choosed.value.list = tableRef.value.querySelectorAll(`.table__cell[data-column-key="${table.value.visibleColumns[idx].key}"]`)
+            this.choosed.value.list = tableRef.value.querySelectorAll(`.table__cell[data-column-key="${table.value.header[idx].key}"]`)
             this.choosed.value.headerColumn = e.target.closest('.table__cell')
             this.choosed.value.headerColumn.classList.add('table__cell_resize')
 
@@ -78,7 +86,9 @@
         /** Завершение ресайза */
         onMouseUp() {
             if (!this.isResizing.value) return
-            // Модель уже обновлена во время ресайза через setColumnWidth
+            const colKey = table.value.header[this.resizingColumnIdx].key
+            const findedColumn = table.value.header.find(el => el.key === colKey)
+            findedColumn.width = this.choosed.value.list[0].style.getPropertyValue('--cell-size')
 
             this.isResizing.value = false
             this.resizingColumnIdx = -1
@@ -98,8 +108,9 @@
             
             document.body.classList.remove('body_resize')
             tableRef.value.classList.remove('table_resize')
-            table.value.isChanged = true
             this.normalizeToContainerMinWidth()
+            table.value.isChanged = true
+            this.setFixedLeft()
         }
 
         /** Обработка движения мыши */
@@ -107,7 +118,6 @@
             if (!this.isResizing.value || this.resizingColumnIdx < 0) return
             const delta = e.clientX - this.startClientX
             this.setWidthPx(this.resizingColumnIdx, this.startWidthPx + delta)
-            // Во время ресайза поддерживаем минимальную ширину контейнера
             this.normalizeToContainerMinWidth(true)
         }
 
@@ -125,46 +135,48 @@
             return Number.isNaN(n) ? 0 : n
         }
 
-        /** Установка ширины колонки по индексу */
+        /** Установка ширины ячеек */
         setWidthPx(idx, px) {
-            if (!table?.value?.visibleColumns?.[idx]) return
-            const newPx = Math.max(MIN_COLUMN_WIDTH, Math.round(px))
-            const colKey = table.value.visibleColumns[idx].key
-            this.setColumnWidth(colKey, newPx)
-        }
+            if (!table?.value?.header?.[idx]) return
+            const newPx = Math.max(this.MIN_COLUMN_WIDTH, Math.round(px))
+            
+            if (newPx <= 50) {
+                this.choosed.value.headerColumn.classList.add('table__cell_hide-text')
+            } else {
+                this.choosed.value.headerColumn.classList.remove('table__cell_hide-text')
+            }
 
-        /** Применить ширину к колонке (модель + DOM) */
-        setColumnWidth(columnKey, widthPx) {
-            const newPx = Math.max(MIN_COLUMN_WIDTH, Math.round(widthPx))
-            const column = table.value.visibleColumns.find(c => c.key === columnKey)
-            if (column) column.width = `${newPx}px`
-
-            const tableEl = tableRef?.value
-            if (!tableEl) return
-            const cells = tableEl.querySelectorAll(`.table__cell[data-column-key="${columnKey}"]`)
-            cells.forEach(cell => {
-                cell.style.setProperty('--cell-size', `${newPx}px`)
-                if (newPx <= 50) {
-                    cell.classList.add('table__cell_hide-text')
-                } else {
-                    cell.classList.remove('table__cell_hide-text')
-                }
+            this.choosed.value.list.forEach(el => {
+                el.style.setProperty('--cell-size', `${newPx}px`)
             })
         }
 
-        /** Текущая минимальная ширина контейнера таблицы */
-        getContainerWidth() {
-            const tableEl = tableRef?.value
-            if (!tableEl) return 0
-            const cw = tableEl.clientWidth || 0
-            return cw > 0 ? Math.max(0, cw - this.SCROLLBAR_COMPENSATION) : 0
+        // Установка отступов слева у блоков
+        setFixedLeft() {
+            let left = 0
+            
+            table.value.header.forEach((column, idx) => {
+                if (column.fixed && column.enabled) {
+                column.left = left
+                left += parseInt(column.width.replace('px', ''))
+                }
+            })
+            // Сообщаем, что позиции фиксированных колонок обновились
+            if (tableRef.value) {
+                tableRef.value.dispatchEvent(new CustomEvent('vt-fixed-update'))
+            }      
         }
 
-        /** Получить массив текущих ширин колонок в пикселях */
-        getCurrentWidthsPx(useDomCurrent = false) {
+        /** Пропорционально увеличивает ширины колонок, если их сумма меньше ширины контейнера **/
+        normalizeToContainerMinWidth(useDomCurrent = false) {
             const tableEl = tableRef?.value
-            return table.value.visibleColumns.map(col => {
-                if (useDomCurrent && tableEl) {
+            if (!tableEl || !Array.isArray(table?.value?.header)) return
+
+            const containerWidth = tableEl.clientWidth - 15 || 0
+            if (containerWidth <= 0) return
+
+            const currentWidthsPx = table.value.header.map(col => {
+                if (useDomCurrent) {
                     const cell = tableEl.querySelector(`.table__cell[data-column-key="${col.key}"]`)
                     const cssVar = cell?.style?.getPropertyValue('--cell-size')?.trim()
                     if (cssVar) {
@@ -174,16 +186,6 @@
                 }
                 return this.parseWidthToPx(col.width)
             })
-        }
-
-        /** Пропорционально увеличивает ширины колонок, если их сумма меньше ширины контейнера */
-        normalizeToContainerMinWidth(useDomCurrent = false) {
-            if (!Array.isArray(table?.value?.visibleColumns)) return
-
-            const containerWidth = this.getContainerWidth()
-            if (containerWidth <= 0) return
-
-            const currentWidthsPx = this.getCurrentWidthsPx(useDomCurrent)
             const sumWidths = currentWidthsPx.reduce((acc, n) => acc + (Number.isFinite(n) ? n : 0), 0)
 
             if (sumWidths <= 0 || sumWidths >= containerWidth) return
@@ -191,13 +193,25 @@
             const scale = containerWidth / sumWidths
             let accumulated = 0
 
-            table.value.visibleColumns.forEach((col, index) => {
+            table.value.header.forEach((col, index) => {
                 const base = currentWidthsPx[index] || 0
-                const isLast = index === table.value.visibleColumns.length - 1
-                const proposed = isLast ? (containerWidth - accumulated) : Math.round(base * scale)
-                const newWidth = Math.max(MIN_COLUMN_WIDTH, proposed)
+                let newWidth = index === table.value.header.length - 1
+                    ? Math.max(this.MIN_COLUMN_WIDTH, containerWidth - accumulated)
+                    : Math.max(this.MIN_COLUMN_WIDTH, Math.round(base * scale))
+
                 accumulated += newWidth
-                this.setColumnWidth(col.key, newWidth)
+
+                col.width = `${newWidth}px`
+
+                const cells = tableEl.querySelectorAll(`.table__cell[data-column-key="${col.key}"]`)
+                cells.forEach(cell => {
+                    cell.style.setProperty('--cell-size', `${newWidth}px`)
+                    if (newWidth <= 50) {
+                        cell.classList.add('table__cell_hide-text')
+                    } else {
+                        cell.classList.remove('table__cell_hide-text')
+                    }
+                })
             })
 
             table.value.isChanged = true
@@ -211,18 +225,241 @@
         }
     }
 
+    let draggingItem = ref(null)
+    let prevMouseCoords = ref(null)
+
+    class Drag {
+        constructor() {
+            this.copy = null
+            this.draggingCell = null
+        }
+
+        // Начало перетаскивания
+        dragStart(event, key) {
+            if (event.target.classList.contains('table__cell_stuck')) {
+                event.preventDefault()
+                return
+            }
+
+            draggingItem.value = key
+            this.setDragImage(event)
+            document.addEventListener("dragover", this.onMouseMove);
+            tableRef.value.classList.add('table_dragging')
+        }
+
+        // Конец перетаскивания
+        async dragEnd() {
+            let removingItem = document.getElementById('table_transfer')
+            this.copy.remove()
+            if (removingItem != null) {
+                removingItem.remove()
+            }
+
+            this.draggingCell.classList.remove('table__cell_dragging')
+            this.draggingCell.style.removeProperty('--table-height')
+            this.draggingCell = null
+
+            table.value.header = common.reorderArrayByKey(
+                table.value.header, 
+                [...tableRef.value.querySelectorAll('.table__header .table__cell')].map(el => {return {key: el.getAttribute('data-column-key')}}), 
+                'key'
+            )
+            tableRef.value.classList.remove('table_dragging')
+            await nextTick()
+            resizer.setFixedLeft()
+        }
+
+        // Создание колонки для дататрансфера
+        setDragImage(event) {
+            const setCopy = () => {
+                this.copy = tableRef.value.cloneNode(true);
+                this.copy.classList.add('table_copy')
+                this.copy.id = "table_transfer";
+                this.copy.style.maxWidth = this.copy.querySelector(`.table__header .table__cell[data-column-key=${draggingItem.value}]`)?.style.getPropertyValue('--cell-size')
+                document.body.appendChild(this.copy);
+
+
+                this.draggingCell = tableRef.value.querySelector(`.table__header .table__cell[data-column-key=${draggingItem.value}]`)
+                this.draggingCell.classList.add('table__cell_dragging')
+                this.draggingCell.style.setProperty('--table-height', `${tableRef.value.offsetHeight}px`)
+            }
+
+            const setRow = () => {
+                let backupRows = tableRef.value.querySelectorAll('.table__row')
+                let rows = this.copy?.querySelectorAll('.table__row') || []
+    
+                rows.forEach((row, index) => {
+                    let items = row.querySelectorAll('.table__cell')
+                    for (let item of items) {
+                        if (item.getAttribute('data-column-key') != draggingItem.value) {
+                            item.remove()
+                        } else {
+                            let findedRow = [...backupRows][index]
+                            if (findedRow != undefined) {
+                                item.style.height = `${ findedRow.offsetHeight}px`
+                            } else {
+                                item.style.height = `${ row.offsetHeight}px`
+                            }
+                        }
+                    }
+                })
+            }
+            
+            setCopy()
+            setRow()
+            event.dataTransfer.setDragImage(this.copy, event.offsetX, event.offsetY);
+        }
+
+        // Движение мыши
+        onMouseMove(e) {
+            // Перетаскивание колонки
+            const moveColumn = (posX) => {
+                let itemListParent = tableRef.value.querySelector('.table__header .table__row');
+                let itemList = itemListParent.querySelectorAll('.table__cell');
+
+
+                let tableBodyListParent = tableRef.value.querySelectorAll('.table__body .table__row')
+                let fromIndex = [...itemList].findIndex(p => p.getAttribute('data-column-key') == draggingItem.value)
+                let stopDrag = false
+
+                let hoverElementIndex = [...itemList].findIndex((elem, index) => {
+                    let itemCoords = elem.getBoundingClientRect();
+                    let startCoord = itemCoords.x
+                    let center = (itemCoords.x + (itemCoords.x + itemCoords.width)) / 2 + 10
+                    let endCoord = itemCoords.x + itemCoords.width + 10
+                    let coord = (startCoord + center) / 2
+
+                    if ((posX >= coord && posX <= endCoord) && ((posX > center + 3 && fromIndex > index) || (posX < center - 3 && fromIndex < index))) {
+                        stopDrag = true
+                    }
+
+                    return posX >= coord && posX <= endCoord
+                })
+
+                if (stopDrag || [null, undefined, -1].includes(hoverElementIndex) || itemList[hoverElementIndex].classList.contains('table__cell_stuck')) return
+
+                if (fromIndex > hoverElementIndex) {
+                    itemListParent.insertBefore(itemList[fromIndex], itemList[hoverElementIndex]);
+
+                    for (let row of tableBodyListParent) {
+                        row.insertBefore(row.children[fromIndex], row.children[hoverElementIndex]);
+                    }
+                } else if (fromIndex < hoverElementIndex) {
+                    itemListParent.insertBefore(itemList[hoverElementIndex], itemList[fromIndex]);
+
+                    for (let row of tableBodyListParent) {
+                        row.insertBefore(row.children[hoverElementIndex], row.children[fromIndex]);
+                    }
+                } else {
+                    return
+                }
+            }
+
+            e = e || window.event;
+            var dragX = e.pageX
+            if (prevMouseCoords.value != dragX) {
+                moveColumn(dragX)
+            }
+            prevMouseCoords.value = dragX
+        }
+    }
+
+    class Fixed {
+        constructor() {}
+
+        // Функция для проверки sticky позиционирования при горизонтальном скролле
+        checkStickyCells() {
+            if (!tableRef.value) return
+            
+            const fixedCells = tableRef.value.querySelectorAll('.table__cell_fixed')
+            const tableRect = tableRef.value.getBoundingClientRect()
+            
+            // Проверяем, скроллилась ли таблица по горизонтали
+            const isScrolledHorizontally = tableRef.value.scrollLeft > 0
+            
+            fixedCells.forEach(cell => {
+                const rect = cell.getBoundingClientRect()
+                const stickyLeft = parseFloat(cell.style.getPropertyValue('--cell-left') || '0')
+                
+                const actualLeft = rect.left - tableRect.left
+                const tolerance = 2 // Небольшая погрешность для учета погрешностей вычислений
+                
+                let isStuck = Math.abs(actualLeft - stickyLeft) <= tolerance
+                
+                if (!isScrolledHorizontally) {
+                    isStuck = false
+                }
+                
+                cell.classList.toggle('table__cell_stuck', isStuck)
+            })
+        }
+    }
+
     const resizer = new Resize()
+    const dragger = new Drag()
+    const fixed = new Fixed()
     const common = new Common()
 
     const doubleClick = common.useDoubleClick((event) => {
-        table.value.sort(table.value.visibleColumns[event.getAttribute('data-idx')])
+        table.value.sort(table.value.header[event.getAttribute('data-idx')])
     })
  
     onBeforeUnmount(() => {
         resizer.clear()
+        
+        // Очищаем обработчики
+        if (tableRef.value) {
+            if (window._stickyScrollHandler) {
+                tableRef.value.removeEventListener('scroll', window._stickyScrollHandler)
+                delete window._stickyScrollHandler
+            }
+            if (window._stickyFixedUpdateHandler) {
+                tableRef.value.removeEventListener('vt-fixed-update', window._stickyFixedUpdateHandler)
+                delete window._stickyFixedUpdateHandler
+            }
+        }
     })
 
     onMounted(() => {
         nextTick(() => resizer.normalizeToContainerMinWidth())
+
+        // Обработчик горизонтального скролла
+        // rAF-склейка скролла для снижения дрожи и reflow
+        let scheduled = false
+        const handleScrollRaf = () => {
+            if (scheduled) return
+            scheduled = true
+            requestAnimationFrame(() => {
+                scheduled = false
+                fixed.checkStickyCells()
+            })
+        }
+
+        // Добавляем обработчик скролла (passive)
+        tableRef.value.addEventListener('scroll', handleScrollRaf, { passive: true })
+        
+        // Проверяем состояние сразу после монтирования
+        nextTick(() => {
+            fixed.checkStickyCells()
+        })
+
+        // Сохраняем ссылку на обработчик для очистки
+        window._stickyScrollHandler = handleScrollRaf
+        
+        // Добавляем обработчик для обновления позиций фиксированных колонок
+        const handleFixedUpdate = () => {
+            nextTick(() => fixed.checkStickyCells())
+        }
+        
+        tableRef.value.addEventListener('vt-fixed-update', handleFixedUpdate)
+        window._stickyFixedUpdateHandler = handleFixedUpdate
     })
+
+    // Автоматически пересчитывать позиции при динамическом изменении колонок (fixed/width/enabled)
+    watch(() => table.value.header, async () => {
+        nextTick(() => resizer.setFixedLeft())
+        }, {
+        deep: true
+        }
+    )
 </script>

@@ -1,1 +1,49 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
 
+#mass-action-container {
+    position: absolute;
+    bottom: 0px;
+    width: calc(100% - 230px);
+    left: 230px;
+    z-index: 10;
+}
+
+.mass-action {
+    width: 100%;
+    padding: 10px 16px;
+    background: variables.$color-white;
+    box-shadow: 0 5px 20px #00000012;
+    border-top: 1px solid #eeeff1;
+}
+
+.mass-action__groups {
+    width: 100%;
+    display: grid;
+    grid-template-columns: var(--grid-columns);
+    gap: 10px;
+}
+
+.mass-action__group {
+    gap: 10px;
+    display: flex;
+    justify-content: center;
+
+    button {
+        padding: 10px 15px;
+        
+        svg {
+            display: flex;
+            align-items: center;
+        }
+    }
+}
+
+
+
+@media (max-width: 990px) {
+    .mass-action {
+        left: 0px;
+        width: 100%;
+    }
+}

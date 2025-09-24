@@ -13,7 +13,7 @@ b::before,
 
 a {
     text-decoration: none;
-    color: variables.$color-white;
+    color: variables.$color-link;
 
     &:hover {
         color:variables.$color-hover;
@@ -95,17 +95,19 @@ html {
     grid-template-columns: 230px 1fr;
     overflow: auto;
     max-height: 100vh;
-    overflow-x: hidden; 
+    overflow-x: hidden;
     @include mixins.scrollBar();
-
-    @media (max-width: 990px) {
-        grid-template-columns: 1fr;
-    }
 
     main {
         padding: 25px;
         display: flex;
         flex-direction: column;
+    }
+
+    @media (max-width: 990px) {
+        grid-template-columns: 1fr;
+        height: 100vh;
+        grid-template-rows: 1fr;
     }
 }
 
@@ -157,7 +159,7 @@ input, textarea {
     @include mixins.resolution(100%, 40px);
 
     &:focus {
-        border: 1px solid variables.$color-focus
+        border: 1px solid variables.$color-hover;
     }
 
     &::-webkit-inner-spin-button {
@@ -288,5 +290,17 @@ section {
                 fill: variables.$color-icon-active;
             }
         }
+    }
+}
+
+
+.draggable-ghost {
+    background: #fbfcfd;
+    outline: 2px dashed #a6b7d4;
+    border-radius: 5px;
+    font-size: 0px;
+
+    * {
+        opacity: 0;
     }
 }

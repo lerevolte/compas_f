@@ -1,8 +1,9 @@
 <template>
     <figure class='icon_edit icon-action'>
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 15V19C19 19.5304 18.7893 20.0391 18.4142 20.4142C18.0391 20.7893 17.5304 21 17 21H3C2.46957 21 1.96086 20.7893 1.58579 20.4142C1.21071 20.0391 1 19.5304 1 19V5C1 4.46957 1.21071 3.96086 1.58579 3.58579C1.96086 3.21071 2.46957 3 3 3H7" stroke="#404040" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M11.5 14.8L21 5.2L16.8 1L7.3 10.5L7 15L11.5 14.8Z" stroke="#404040" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path fill-rule="evenodd" clip-rule="evenodd"
+                d="M11.3384 3.70456L9.29544 1.6616L10.6234 0.333683C10.6234 0.333683 11.747 -0.381352 12.5642 0.43583C13.3814 1.25301 12.6663 2.37664 12.6663 2.37664L11.3384 3.70456ZM2.1451 8.81194L4.18806 10.8549L10.6234 4.41959L8.58041 2.37664L2.1451 8.81194ZM1.53222 9.52698L0 13L3.57517 11.4678L1.53222 9.52698Z"
+                fill="#A6B7D4"></path>
         </svg>
-    </figure>    
+    </figure>
 </template>

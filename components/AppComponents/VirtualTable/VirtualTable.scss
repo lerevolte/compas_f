@@ -6,6 +6,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  margin-bottom: 40px;
 }
 
 .table {
@@ -16,9 +17,31 @@
   flex-direction: column;
   max-height: 100%;
   max-width: calc(100vw - 275px);
+  contain: layout paint;
+  will-change: scroll-position;
 
-  &.table_resize {
+  &.table_resize,
+  &.table_dragging {
     overflow-y: hidden;
+
+    .table__cell {
+      &.table__cell_fixed:not(.table__cell_stuck) {
+        left: auto;
+      }
+    }
+  }
+
+  &#table_transfer {
+    width: 100%;
+    position: absolute;
+    top: -10000px;
+    left: -10000px;
+    background: variables.$color-white;
+    overflow: hidden;
+
+    .table__row {
+      position: relative;
+    }
   }
 }
 
@@ -30,6 +53,146 @@
   align-items: center;
   min-height: 50px;
   padding: 10px 0 10px 10px;
+
+  &.table__cell_fixed {
+    position: sticky;
+    z-index: 10;
+    left: var(--cell-left);
+
+    &.table__cell_stuck {
+      z-index: 40;
+      background: #f9f9fa;  
+
+      &.table__cell_active {
+        z-index: 41;
+      }
+    }
+  }
+
+  &.table__cell_hide {
+    display: none;
+  }
+
+  &.table__cell_active {
+    z-index: 30;
+  }
+
+  &.skeleton {
+    &:not(.table__cell_fixed) {
+      position: relative;
+    }
+
+    * {
+      opacity: 0;
+    }
+
+    &::after {
+      top: 10px;
+      height: calc(100% - 20px);
+      left: 10px;
+      width: calc(100% - 20px);
+    }
+  }
+
+  .table__label {
+    display: none;
+    font-size: 12px;
+    margin-bottom: 5px;
+  }
+
+  .table__cell-content {
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+
+  .table__text {
+    &:not(a) {
+      color: var(--color-text);
+    }
+  }
+
+  .table__text-group {
+    gap: 5px;
+    display: flex;
+    flex-direction: column;
+
+    .button_copy {
+      white-space: nowrap;
+      color: variables.$color-icon;
+      text-decoration: none;
+      justify-content: start;
+
+      &::after {
+        content: 'Скопировать адрес'
+      }
+
+      &.button_copy_active {
+        &::after {
+          content: 'Скопировано'
+        }
+      }
+
+      &:hover {
+        color: variables.$color-link;
+      }
+    }
+  }
+
+  .table__file {
+    width: 100%;
+    height: calc(100% - 20px);
+    position: absolute;
+    display: flex;
+    top: 10px;
+    left: 10px;
+    max-height: 76px;
+
+    .fancybox__item {
+      &:first-child {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+
+        .fancybox-item__img {
+          position: relative;
+          height: 100%;
+          width: auto;
+          min-height: 20px;
+          aspect-ratio: 1;
+          max-height: 76px;
+          
+          img {
+            border-radius: 5px;
+          }
+        }
+
+        .fancybox-item__link {
+          height: 100%;
+        }
+
+        &::after {
+          content: var(--count-files);
+          background-color: variables.$color-icon;
+          border-radius: 50%;
+          color: variables.$color-white;
+          display: grid;
+          font-size: 12px;
+          height: 21px;
+          min-width: 21px;
+          opacity: .6;
+          padding: 3px;
+          place-items: center;
+          width: 21px;
+        }
+      }
+
+      &:not(:first-child) {
+        display: none;
+      }
+    }
+  }
 }
 
 .table__row {
@@ -38,9 +201,108 @@
   top: var(--row-start);
   left: 0;
   display: flex;
+  will-change: transform;
+
+  &.table__row_edit {
+    .form__item_status {
+      pointer-events: visible;
+
+      .status__content {
+        overflow: hidden;
+      }
+    }
+  }
+
+  &:not(.table__row_edit) {
+    .form__item_status {
+      pointer-events: none;
+  
+      .status__value-rect {
+        border-radius: 5px;
+  
+        &::before {
+          border-radius: 5px;
+        }
+      }
+
+      .status__arrow {
+        display: none;
+      }
+    }
+  }
+
+  &.table__row_active {
+    z-index: 10;
+  }
 }
 
 .table__body {
   width: 100%;
   position: relative;
+
+  &.table__body_choose {
+    .table__row:not(.table__row_choose) {
+      filter: opacity(0.2);
+    }
+  }
+
+  &.table__body_edit {
+    .table__row:not(.table__row_choose) {
+      .table__cell {
+        &[data-column-key="isChoose"],
+        &[data-column-key="actions"] {
+          pointer-events: none;
+        }
+      }
+    }
+  }
+
+  .table__row {
+    &:nth-child(-n+8) {
+      .popup {
+        &.popup_open {
+          .popup__content {
+            bottom: auto;
+          }
+        }
+      }
+    }
+  }
+
+  .table__cell {
+    align-items: start;
+    background: var(--color-row);
+  }
+}
+
+@media (max-width: 990px) {
+  .table {
+    max-width: calc(100vw - 45px);
+
+    .table__header {
+      display: none;
+    }
+
+    .table__row {
+      gap: 15px;
+      width: 100%;
+      padding: 15px;
+      flex-direction: column;
+      border-bottom: 1px solid #eeeff1;
+    }
+
+    .table__cell {
+      flex: auto;
+      align-items: start;
+      flex-direction: column;
+      max-width: none;
+      min-height: auto;
+      width: 100%;
+      padding: 0px;
+    }
+
+    .table__label {
+      display: block;
+    }
+  }
 }

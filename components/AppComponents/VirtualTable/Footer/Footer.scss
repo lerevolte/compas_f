@@ -48,6 +48,7 @@
 
     &.form__item {
         &.form__item_select {
+            width: auto;
             gap: 10px;
             flex-direction: row;
 
@@ -95,6 +96,7 @@
 }
 
 .pagination {
+    gap: 10px 0px;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -107,7 +109,7 @@
     place-items: center;
     cursor: pointer;
     border: 1px solid variables.$color-border;
-    border-left: none;
+    margin-left: -1px;
     @include mixins.userSelect(none);
 
     &:hover {
@@ -122,6 +124,10 @@
     &:first-child {
         border-radius: 5px 0 0 5px;
         border-left: 1px solid variables.$color-border;
+
+        &:last-child {
+            border-radius: 5px;
+        }
     }
 
     &:last-child {
@@ -141,3 +147,12 @@
     }
     }
 }
+
+
+
+@media (max-width: 1030px) {
+    .table-footer {
+      align-items: start;
+      flex-direction: column;
+    }
+  }

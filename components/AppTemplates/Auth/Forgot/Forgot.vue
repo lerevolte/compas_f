@@ -5,33 +5,35 @@
             {{ auth.domain }}
         </AppH1>
 
-        <p class="auth__desc" v-if="!stages.stages[stages.activeStage].is_desc_in_form">
+        <p class="auth__desc" v-if="!stages.stages[stages.activeStage].is_desc_in_form && stages.stages[stages.activeStage].desc != '' && stages.stages[stages.activeStage].desc != null">
             {{ stages.stages[stages.activeStage].desc }}
         </p>
 
         <form class="auth__form" @submit.prevent>
-            <p class="auth__desc" v-if="stages.stages[stages.activeStage].is_desc_in_form">
-                {{ stages.stages[stages.activeStage].desc }}
-            </p>
-
-            <div class="auth__item" v-for="item in stages.stages[stages.activeStage].fields" :class="{'error': auth.error.forgot[item.key]}">
-                <AppInput 
-                    v-model="auth.formForgot[item.key]"
-                    :options="{
-                        id: item.id,
-                        title: item.title,
-                        type: item.showPassword ? 'text' :item.type,
-                        name: item.name,
-                        autocomplete: 'on',
-                        placeholder: null
-                    }"
-                >
-                    <IconShow v-if="item.showPassword != undefined" @click="item.showPassword = !item.showPassword" :class="{'icon_show_active': item.showPassword}"/>
-                </AppInput>
-
-                <AppError v-show="auth.error.forgot[item.key]">
-                    {{ auth.error.forgot[item.key] }}
-                </AppError>
+            <div class="auth__list">
+                <p class="auth__desc" v-if="stages.stages[stages.activeStage].is_desc_in_form">
+                    {{ stages.stages[stages.activeStage].desc }}
+                </p>
+    
+                <div class="auth__item" v-for="item in stages.stages[stages.activeStage].fields" :class="{'error': auth.error.forgot[item.key]}">
+                    <AppInput 
+                        v-model="auth.formForgot[item.key]"
+                        :options="{
+                            id: item.id,
+                            title: 'E-mail',
+                            type: item.showPassword ? 'text' :item.type,
+                            name: item.name,
+                            autocomplete: 'on',
+                            placeholder: 'E-mail'
+                        }"
+                    >
+                        <IconShow v-if="item.showPassword != undefined" @click="item.showPassword = !item.showPassword" :class="{'icon_show_active': item.showPassword}"/>
+                    </AppInput>
+    
+                    <AppError v-show="auth.error.forgot[item.key]">
+                        {{ auth.error.forgot[item.key] }}
+                    </AppError>
+                </div>
             </div>
             <AppButton class="button_fill button_arrow" :class="{'skeleton': auth.loading}" type="submit"  @click="stages.changeStage(stages.activeStage + 1)">
                 {{ stages.stages[stages.activeStage].button_text ?? 'Далее' }}
@@ -40,7 +42,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="13" viewBox="0 0 14 13"><title>Path 12</title><path fill="#fff" fill-rule="evenodd" d="M11.923 6.92.57 6.913a.566.566 0 0 1-.565-.57.577.577 0 0 1 .575-.573l11.328-.037-4.443-4.471a.6.6 0 0 1-.009-.84.573.573 0 0 1 .82-.009l5.595 5.59a.5.5 0 0 1-.001.709l-5.68 5.634a.59.59 0 0 1-.842-.013.617.617 0 0 1 .012-.862z"/></svg>
                 </figure>
             </AppButton>
-            <AppButton class="button_text" type="submit" v-if="stages.activeStage == 1" @click="stages.changeStage(stages.activeStage - 1)">
+            <AppButton class="button_text auth__text auth__text_action" type="submit" v-if="stages.activeStage == 1" @click="stages.changeStage(stages.activeStage - 1)">
                 {{ stages.activeStage == 1 ? 'Войти в портал' : 'Назад' }}
             </AppButton>
         </form>

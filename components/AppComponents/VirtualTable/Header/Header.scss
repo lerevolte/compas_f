@@ -2,7 +2,7 @@
 @use '@/assets/mixins.scss' as mixins;
 
 .table__header {
-  z-index: 10;
+  z-index: 55;
   position: sticky;
   top: 0px;
   width: max-content;
@@ -17,6 +17,7 @@
     position: relative;
     z-index: 2;
     background: variables.$color-white;
+    @include mixins.userSelect(none);
 
     span {
       @include mixins.textVerticalHidden(2);
@@ -24,9 +25,9 @@
 
     &.table__cell_resize {
       .table__cell-border {
-          height: 100vh;
-          border-right: 1px solid variables.$color-border;
-        }
+        height: 100vh;
+        border-right: 1px solid variables.$color-border;
+      }
     }
 
     &.table__cell_sort {
@@ -37,6 +38,53 @@
       .text,
       .checkbox__label {
         opacity: 0;
+      }
+    }
+
+    &.table__cell_fixed {
+      position: sticky;
+      z-index: 3;
+    }
+
+    &.table__cell_stuck {
+      margin-right: -1px;
+      z-index: 5;
+
+      .table__cell-border {
+        pointer-events: none;
+      }
+
+      .icon_sort {
+        background: #f9f9fa;
+      }
+    }
+
+    &.table__cell_dragging {
+      left: 0px;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: calc(100% - 5px);
+        height: calc(var(--table-height) - 20px);
+        background: #fbfcfd;
+        outline: 2px dashed #a6b7d4;
+        border-radius: 5px;
+        font-size: 0px;
+    
+        * {
+            opacity: 0;
+        }
+      }
+    }
+
+    .form__item_checkbox {
+      overflow: hidden;
+
+      .checkbox__input {
+        min-width: 15px;
       }
     }
   }
@@ -56,4 +104,27 @@
     height: 100vh;
     border-right: 1px solid variables.$color-border;
   }
+}
+
+
+
+
+
+
+
+
+
+.drag-ghost {
+  display: flex;
+  flex-direction: column;
+  opacity: 0.85;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border: 1px solid #ccc;
+}
+
+.placeholder {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px dashed #aaa;
+  height: 100%;
 }

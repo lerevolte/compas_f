@@ -2,7 +2,7 @@
     <div class="section-table__top">
         <AppSave 
             v-show="table.isChanged" 
-            @save="(role) => table.save(role)"
+            @save="(role) => table.saveSettings(role)"
         />
         <AppShowMore 
             :options="showMore"
@@ -18,6 +18,10 @@
                 isDrag: {
                     state: true,
                     name: 'Порядок'
+                },
+                isFixed: {
+                    state: true,
+                    name: 'Фиксированные'
                 },
                 isHaveDefault: true
             }"
@@ -44,7 +48,7 @@
         },
         {
             name: 'Скачать Excel',
-            action: 'downloadExcel'
+            action: 'initDownloadExcel'
         }
     ]
 

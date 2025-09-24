@@ -6,47 +6,49 @@
         </AppH1>
 
         <form class="auth__form" @submit.prevent>
-            <div class="auth__item" :class="{'error': auth.error.entry.email}">
-                <AppInput 
-                    v-model="auth.formEntry.email"
+            <div class="auth__list">
+                <div class="auth__item" :class="{'error': auth.error.entry.email}">
+                    <AppInput 
+                        v-model="auth.formEntry.email"
+                        :options="{
+                            id: 0,
+                            title: 'E-mail',
+                            type: 'email',
+                            name: 'email',
+                            autocomplete: 'on',
+                            placeholder: 'E-mail'
+                        }"
+                    />
+                    <AppError v-show="auth.error.entry.email">
+                        {{ auth.error.entry.email }}
+                    </AppError>
+                </div>
+    
+                <div class="auth__item" :class="{'error': auth.error.entry.password}">
+                    <AppInput 
+                        v-model="auth.formEntry.password"
+                        :options="{
+                            id: 0,
+                            title: 'Пароль',
+                            type: auth.isShowPassword ? 'text' : 'password',
+                            name: 'password',
+                            autocomplete: 'on',
+                            placeholder: 'Пароль'
+                        }"
+                    >
+                        <IconShow @click="auth.isShowPassword = !auth.isShowPassword" :class="{'icon_show_active': auth.isShowPassword}"/>
+                    </AppInput>
+                    <AppError v-show="auth.error.entry.password">
+                        {{ auth.error.entry.password }}
+                    </AppError>
+                </div>
+                <AppCheckbox 
+                    v-model="auth.formEntry.rememberMe"
                     :options="{
-                        id: 0,
-                        title: 'E-mail',
-                        type: 'email',
-                        name: 'email',
-                        autocomplete: 'on',
-                        placeholder: 'E-mail'
+                        title: 'Запомнить меня'
                     }"
                 />
-                <AppError v-show="auth.error.entry.email">
-                    {{ auth.error.entry.email }}
-                </AppError>
             </div>
-
-            <div class="auth__item" :class="{'error': auth.error.entry.password}">
-                <AppInput 
-                    v-model="auth.formEntry.password"
-                    :options="{
-                        id: 0,
-                        title: 'Пароль',
-                        type: auth.isShowPassword ? 'text' : 'password',
-                        name: 'password',
-                        autocomplete: 'on',
-                        placeholder: 'Пароль'
-                    }"
-                >
-                    <IconShow @click="auth.isShowPassword = !auth.isShowPassword" :class="{'icon_show_active': auth.isShowPassword}"/>
-                </AppInput>
-                <AppError v-show="auth.error.entry.password">
-                    {{ auth.error.entry.password }}
-                </AppError>
-            </div>
-            <AppCheckbox 
-                v-model="auth.formEntry.rememberMe"
-                :options="{
-                    title: 'Запомнить меня'
-                }"
-            />
             <AppButton class="button_fill button_arrow" :class="{'skeleton': auth.loading}" type="submit" @click="auth.logIn()">
                 Войти
 

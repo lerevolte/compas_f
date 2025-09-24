@@ -9,7 +9,7 @@
                 <p class="auth__text">
                     Открыть сайт
                 </p>
-                <a href="/" target="_blank" class="auth__link">
+                <a href="https://compas.pro/" target="_blank" class="auth__link">
                     Compas.pro
                 </a>
             </div>

@@ -19,5 +19,15 @@ export default {
     },
     settings: {
         get_account: '/settings/account'
+    },
+    table: {
+        get: '/objects/${slug}/compose',
+        reset: '/tables/${slug}/reset',
+        save_settings: '/tables/${slug}',
+        save: '/objects/${slug}/batch',
+        download: '/objects/${slug}/export',
+        open: '/objects/${slug}/${row_id}/compose',
+        copy: '/objects/${slug}/${row_id}/compose?is_copy=1',
+        delete: '/objects/${slug}'
     }
 }

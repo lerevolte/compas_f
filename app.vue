@@ -1,6 +1,6 @@
 <template>
   <div class="wrapper">
-      <div class="page" :class="{ 'page_auth': router.path == '/auth' }">
+      <div class="page" :class="{ 'page_auth': checkPath.includes('/auth') }">
         <NuxtPage />
       </div>
       <div class="menu__overlay" id="menu__overlay"></div>
@@ -12,4 +12,9 @@
   import '@/assets/fonts/fonts.css'
 
   const router = useRoute()
+
+  const checkPath = computed(() => {
+    return router.path
+  })
+
 </script>

@@ -1,6 +1,6 @@
 <template>
     <div class="form__item form__item_input">
-        <label :for="props.options.id">
+        <label :for="props.options.id" v-if="props.options.title && props.options.title != ''">
             <span>{{ props.options.title }}</span>
         </label>
         <input 
@@ -11,12 +11,18 @@
             :value="modelValue"
             :min="props.options.type == 'number' ? 1 : null"
             :autocomplete="props.options.autocomplete"
-            :tokens="`A:[a-zA-Zа-яА-Я]|#:[0-9]|*:[a-zA-Z0-9]`"
-            v-maska="props.options.mask"
+            v-maska="{
+                mask: props.options.mask,
+                tokens: {
+                    A: { pattern: /[a-zA-Zа-яА-Я]/ },
+                    '#': { pattern: /\d/ },
+                    '*': { pattern: /[a-zA-Z0-9]/ },
+                    S: { pattern: /[0-9а-яА-Я]/ }
+                }
+            }"
             @input="(event) => emit('update:modelValue', event.target.value)"
             @blur="event => emit('blur', event)"
         >
-
         <slot></slot>
     </div>
 </template>

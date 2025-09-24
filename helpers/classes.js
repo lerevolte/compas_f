@@ -117,6 +117,30 @@ export class Common {
         }
     };
 
+    // Установка параметров в URL
+    setQueryUrl(query) {
+        const cleanUrl = window.location.origin + window.location.pathname + query;
+        window.history.replaceState({}, document.title, cleanUrl);
+    }
+
+    // Получение параметров из URL
+    getQueryUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const params = {};
+    
+        for (const [key, value] of urlParams.entries()) {
+            const numberValue = Number(value);
+            if (value !== '' && !isNaN(numberValue)) {
+                params[key] = numberValue;
+            } else {
+                params[key] = value;
+            }
+        }
+    
+        return Object.keys(params).length === 0 ? null : params;
+    }
+    
+
     useDoubleClick(callback, delay = 300) {
         let lastClickTime = 0
         let lastEl = null
@@ -133,6 +157,52 @@ export class Common {
             lastClickTime = now
             lastEl = el
           }
+        }
+    }
+
+    // Сортируем первый массив в порядке второго массива
+    reorderArrayByKey(firstArray, secondArray, key) {
+        const orderMap = new Map();
+        secondArray.forEach((item, index) => {
+            orderMap.set(item[key], index);
+        });
+        
+        return [...firstArray].sort((a, b) => {
+            const indexA = orderMap.get(a[key]);
+            const indexB = orderMap.get(b[key]);
+            return indexA - indexB;
+        });
+    }
+
+    async copyText(text) {
+        try {
+            // Проверяем поддержку современного API
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(text)
+            } else {
+                // Fallback для старых браузеров
+                const textArea = document.createElement('textarea')
+                textArea.value = text
+                textArea.style.position = 'fixed'
+                textArea.style.left = '-999999px'
+                textArea.style.top = '-999999px'
+                document.body.appendChild(textArea)
+                textArea.focus()
+                textArea.select()
+                
+                const successful = document.execCommand('copy')
+                document.body.removeChild(textArea)
+                
+                if (!successful) {
+                throw new Error('Failed to copy text')
+                }
+            }
+            
+            return true
+        } 
+        catch (error) {
+            console.error('Failed to copy text:', error)
+            return false
         }
     }
 } 
@@ -202,195 +272,6 @@ export class Auth {
     async logOut() {
         this.userStore.token = null
         navigateTo('/auth')
-    }
-}
-
-
-export class Table {
-    constructor(slug, dependences) {
-        this.content = {
-            sortItem: {
-                key: 'id',
-                order: 'desc'
-            },
-            header: [],
-            body: [],
-            pages: {
-                total: 0,
-                current: 1
-            },
-            actions: [
-                "edit",
-                "delete"
-            ]
-        }
-
-        this.tableModal = {
-            create: [],
-            edit: []
-        }
-
-        this.filter = new Filter(this)
-
-        this.slug = slug
-        this.loading = false
-        this.localLoading = false
-        this.modal = new Modal()
-        this.dependences = dependences    
-    }
-
-    // Получение данных в таблице
-    async get() {
-        try {
-            this.loading = true
-            let response = await api.callMethod("GET", `/${this.slug}`)
-            await this.set(response)
-        } catch (error) {
-            console.log(error);                
-        } finally {
-            this.loading = false
-        }
-    }
-
-    // Установка контента
-    async set(response) {
-        this.content.body = response.data.data
-
-        if (response.data.meta == undefined) {
-            // response.data.meta = localTableMeta
-        }
-
-        this.content.header = response.data.meta.fields.filter(p => p.show_in_table)
-        this.content.pages = {
-            current: response.data.meta.current_page,
-            total: response.data.meta.last_page
-        }
-        this.filter.default.fields = response.data.meta.fields.map(p => {if (p.type === 'date') {p.multiple = true} return p}).filter(p => p.filterable)
-        this.modal.fields.create = response.data.meta.fields.filter(p => p.create)
-        this.modal.fields.edit = response.data.meta.fields
-        this.content.actions = response.data.meta.actions
-        this.filter.short.content = response.data.meta.tabs
-    }
-
-    // Сортировка таблицы
-    async sort(item) {
-        try {
-            this.filter.filtering = true
-            this.content.sortItem = item
-            let response = await api.callMethod("GET", `/${this.slug}?sort=${this.content.sortItem.key}&order=${this.content.sortItem.order}${this.filter.default.query ? '&' + this.filter.default.query : ''}`)
-            await this.set(response)
-        } catch (error) {
-            console.log(error);
-        } finally {
-            this.filter.filtering = false
-        }
-    }
-
-    // Пагинация
-    async changePage(page) {
-        try {
-            this.filter.filtering = true
-            let response = await api.callMethod("GET", `/${this.slug}?page=${page}&sort=${this.content.sortItem.key}&order=${this.content.sortItem.order}${this.filter.default.query ? '&' + this.filter.default.query : ''}`)
-            await this.set(response)
-        } catch (error) {
-            console.log(error);
-        } finally {
-            this.filter.filtering = false
-        }
-    }
-
-    // Создание
-    async create(row) {
-        try {
-            this.modal.loading = true
-
-            let response = await api.callMethod("POST", `/${this.slug}`, row)
-
-            if ([200, 201].includes(response.status)) {
-                this.content.body.push(response.data.data)
-
-                if (this.content.body.length >= 10) {
-                    this.get()
-                }
-            }
-        } catch (error) {
-            console.log(error);
-        } finally {
-            this.modal.toggleOpen(false)
-            this.modal.loading = false
-        }
-    }
-
-    // Редактирование
-    async edit(row) {
-        const initUpdate = () => {
-            let request = {}
-
-            this.modal.fields.edit.forEach(element => {
-                if (element.edit) {
-                    if (element.type == 'relation' && element.formatter != 'file') {
-                        request[element.key] = row[element.key] ? {id: row[element.key]} : null
-                    } else if ( element.formatter == 'file') {
-                        request[element.key] = row[element.key] ? row[element.key][0] : row[element.key]
-                    } else {
-                        request[element.key] = row[element.key]
-                    }
-                }
-            });
-
-            return request
-        }
-
-        try {
-            this.modal.loading = true
-
-            let response = await api.callMethod("PUT", `/${this.slug.split('?')[0]}/${row.id}`, this.modal.isOpen ? initUpdate(row) : row)
-
-            if ([200, 201].includes(response.status)) {
-                let findedRow = this.content.body.findIndex(item => item.id == row.id)
-                this.content.body[findedRow] = response.data.data
-            }
-        } catch (error) {
-            console.log(error);
-        } finally {
-            this.modal.toggleOpen(false)
-            this.modal.loading = false
-        }
-    }
-
-    // Удаление
-    async delete(rows) {
-        try {
-            this.modal.loading = true
-
-            for (let row of rows) {
-                await api.callMethod("DELETE", `/${this.slug.split('?')[0]}/${row.id}`)
-                this.content.body = this.content.body.filter(item => item.id != row.id)
-            }
-        } catch (error) {
-            console.log(error);
-        } finally {
-            this.modal.toggleOpen(false)
-            this.modal.loading = false
-        }
-    }
-
-    // Сохранение загружаемого файла
-    async saveUploadPrice(row) {
-        if (row.price) {
-            try {
-                this.modal.loading = true
-                await api.callMethod("POST", `/${this.dependences.suppliers.slug}/${row.id}/price`, {attachment: {id: row.price[0].id}})
-                this.get()
-            } catch (error) {
-                console.log(error);
-            } finally {
-                this.modal.loading = false
-            }
-            this.modal.toggleOpen(false)
-        } else {
-            this.modal.toggleOpen(false)
-        }
     }
 }
 

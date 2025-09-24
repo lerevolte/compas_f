@@ -6,7 +6,9 @@
             {{ entity.active?.title }}
 		</AppH1>
 
-        <TemplateTablePage />
+        <TemplateTablePage 
+			:slug="route.params.slug"
+		/>
     </main>
 </template>
 

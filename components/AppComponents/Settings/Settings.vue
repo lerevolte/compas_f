@@ -31,6 +31,18 @@
                     </div>
                 </div>
 
+                <!-- Fixed -->
+                <div class="settings__list settings__list_check" v-else-if="settings.nest.active.value == 'isFixed'">
+                    <div class="settings__item popup__option" v-for="field in isInitGroup ? settings.nest.templateField.list : list" :key="field.id">
+                        <AppCheckbox 
+                            v-model="field.fixed"
+                            :options="{
+                                title: field.name ?? field.title
+                            }"
+                             @update:modelValue="emit('isChanged', true)"
+                        />
+                    </div>
+                </div>
 
                 <!-- Drag -->
                 <div class="settings__list settings__list_drag"  v-else-if="settings.nest.active.value == 'isDrag'">
@@ -287,6 +299,12 @@
                 this.list.push({
                     label: props.options.isNest.name ?? 'Группы',
                     value: 'isNest'
+                })
+            }
+            if (props.options.isFixed && props.options.isFixed.state) {
+                this.list.push({
+                    label: props.options.isFixed.name ?? 'Группы',
+                    value: 'isFixed'
                 })
             }
         }

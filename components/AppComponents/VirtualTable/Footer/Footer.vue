@@ -70,6 +70,7 @@
                 isHaveNull: false,
                 list: countList
             }"
+            @update:model-value="table.setCountPage()"
         />
     </div>
 </template>

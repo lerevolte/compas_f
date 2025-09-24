@@ -1,6 +1,6 @@
 <template>
     <div class="form__item form__item_file">
-        <label :for="props.options.id">
+        <label :for="props.options.id" v-if="props.options.title && props.options.title != ''">
             {{ props.options.title }}
         </label>
 

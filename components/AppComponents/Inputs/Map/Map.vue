@@ -1,6 +1,6 @@
 <template>
     <div class="form__item form__item_select">
-        <label :for="props.options.id" v-if="props.options.title && props.options.title != ''">
+        <label :for="props.options.id">
             {{ props.options.title }}
         </label>
 
@@ -10,7 +10,7 @@
 
                 <AppInput 
                     :options="{
-                        id: `${props.options.id}_search`,
+                        id: 'select',
                         title: '',
                         type: 'text',
                         name: '',
@@ -24,7 +24,7 @@
     
                 <div class="select__values" ref="selectValuesRef" v-if="props.options.multiple">
                     <div class="select__value" v-for="option in select.getActiveOptions(props.modelValue)" @click="select.changeValue(option)">
-                        {{ option?.label }}
+                        {{ option.label }}
 
                         <IconClose />
                     </div>
@@ -32,17 +32,9 @@
                 <div class="select__value select__value_single" :class="{ 'select__value_typing': select.state.search.length > 0 }" v-else>
                     <template v-if="props.options.have_icon">
                         <figure class='select__value-icon' v-if="select.getActiveOptions(props.modelValue)">
-                            <img v-if="typeof select.getActiveOptions(props.modelValue).label?.file == 'string'" :src='select.getActiveOptions(props.modelValue).label?.file' alt=''>
-                            <div class="img-text" v-else :style="{ '--bgColor': select.getActiveOptions(props.modelValue).label?.color }">
-                                {{ select.getActiveOptions(props.modelValue).label?.text.slice(0, 1) }}
-                            </div>
+                            <img :src='select.getActiveOptions(props.modelValue).label?.attachment.thumbnail_path' alt=''>
                             <figcaption>
-                                <span class="value__text">
-                                    {{ select.getActiveOptions(props.modelValue).label?.text }} 
-                                </span>
-                                <span class="value__text">
-                                    {{ select.getActiveOptions(props.modelValue).value }}
-                                </span>
+                                {{ select.getActiveOptions(props.modelValue).label?.name }}
                             </figcaption>
                         </figure>
 
@@ -64,7 +56,7 @@
                 <IconSelectArrow />
             </div>
             <div class="select__options">
-                <div class="select__option" v-if="props.options.isHaveNull && !props.options.multiple" :value="null" @click="select.changeValue({ value: null })">
+                <div class="select__option" v-if="props.isHaveNull && !props.options.multiple" :value="null" @click="select.changeValue({ value: null })">
                     Не выбрано
                 </div>
 
@@ -75,12 +67,7 @@
                     :value="option.value" 
                     @click="select.changeValue(option)"
                 >
-                    <span class="value__text">
-                        {{ option.label.text ? option.label.text : option.label }} 
-                    </span>
-                    <span class="value__text value__text_subtext" v-if="props.options.have_icon">
-                        ID: {{ option.value }}
-                    </span>
+                    {{ option.label.name ? option.label.name : option.label }}
                 </div>
             </div>
         </div>
@@ -88,7 +75,7 @@
 </template>
 
 <script setup>
-    import './Select.scss';
+    import './Map.scss';
     
     import AppInput from '@AppComponents/Inputs/Input/Input.vue';
     import IconSelectArrow from '@AppIcons/Input/SelectArrow.vue';
@@ -96,7 +83,6 @@
     import IconWarning from '@AppIcons/Warning.vue';
     import api from '@/helpers/api.js'
     import throttle from 'lodash/throttle'
-    import isEqual from 'lodash/isEqual'
 
     const selectRef = ref(null)
     const selectValuesRef = ref(null)
@@ -121,21 +107,15 @@
                 if (this.selectRef.value && !this.selectRef.value.contains(event.target)) {
                     this.state.isOpen = false;
                     this.state.search = ''
-                    this.setOptions()
+                    this.state.list = props.options.list
                     document.removeEventListener('click', this.closeOptions);
                 }
             };
 
             // Объявляем `throttle` один раз
             this.throttledFilter = throttle(async (value) => {
-                let response = null
-                if (props.options.type == 'address') {
-                    response = await api.callMethod("GET", `/map/geocode?address=${value}`)
-                    this.state.list = response.data.map(p => ({ label: p.text, value: JSON.parse(JSON.stringify(p)) }))
-                } else {
-                    response = await api.callMethod("GET", `/objects/search?field_id=${props.options.relation}&q=${value}`)
-                    this.state.list = response.data.map(p => ({ label: p.label, value: p.value }))
-                }
+                let response = await api.callMethod("GET", `/${props.options.relation}?filter[q]=${value}`)
+                this.state.list = response.data.data.map(p => ({ label: p.name, value: p.id }))
             }, 100);
         }
 
@@ -143,8 +123,6 @@
         getActiveOptions(value) {
             if (props.options.multiple) {
                 return value == null ? [] : value.map(option => this.state.list.find(p => p.value == option));
-            } else if (props.options.type == 'address') {
-                return this.state.list ? this.state.list.find(p => isEqual(p.value, value)) : null
             } else {
                 return this.state.list ? this.state.list.find(p => p.value == value) : null
             }
@@ -193,19 +171,6 @@
                 document.removeEventListener('click', this.closeOptions);
             }
         }
-        
-        setOptions() {
-            if (props.options.type == 'address') {
-            this.state.list = props.options.list ?? []
-            
-            if (props.modelValue && Array.isArray(this.state.list) && !this.state.list.find(p => isEqual(p.value, props.modelValue))) {
-                const option = JSON.parse(JSON.stringify(props.modelValue))
-                this.state.list.push({label: option.text, value: option})
-            }
-        } else {
-            this.state.list = props.options.list ?? []
-        }
-        }
     }
 
     const select = new Select(selectRef, selectValuesRef)
@@ -223,7 +188,6 @@
                 have_icon: false,
                 isHaveNull: false,
                 multiple: false,
-                type: 'select',
                 placeholder: '' 
             },
             type: Object
@@ -232,11 +196,11 @@
     })
 
     onMounted(() => {
-        select.setOptions()
+        select.state.list = props.options.list ?? []
     })
 
     watch(() => props.options.list, () => {
-        select.setOptions()
+        select.state.list = props.options.list ?? []
     })
 
     onBeforeUnmount(() => {
