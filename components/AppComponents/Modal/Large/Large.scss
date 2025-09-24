@@ -3,19 +3,26 @@
 
 .modal {
     &.modal_large {
+        padding: 0px;
+        width: 100%;
+        height: 100%;
         display: flex;
         justify-content: end;
-
+        background: transparent;
+        
         & > .modal__content {
             padding: 0px;
             width: 80vw;
+            position: relative;
+            z-index: 2;
+            background: variables.$color-background;
             margin-right: calc(-80vw - 160px);
             animation: showModal 0.25s ease-out forwards;
 
             & > .modal__close {
                 position: absolute;
                 top: 50px;
-                left: -155px;
+                left: -135px;
                 gap: 10px;
                 display: flex;
                 align-items: center;
@@ -48,68 +55,6 @@
                 max-height: 100vh;
                 grid-template-rows: auto 1fr auto;
                 @include mixins.scrollBar();
-            }
-
-            .modal__section {
-                .table-container {
-                    height: 100%;
-                    max-width: 76vw;
-
-                    @media (max-width: 1250px) {
-                        max-width: 70vw;
-                    }
-
-                    @media (max-width: 880px) {
-                        max-width: 90vw;
-                    }
-
-                    @media (max-width: 800px) {
-                        max-width: 87vw;
-                    }
-                }
-            }
-
-            h2 {
-                font-size: 30px;
-            }
-
-            @media (max-width: 880px) {
-                width: 100%;
-            }
-        }
-
-        .modal__fields {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .modal_header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-
-            @media (max-width: 720px) {
-                gap: 20px;
-                align-items: start;
-                flex-direction: column;
-            }
-        }
-
-        .modal__header {
-            .icon__arrow {
-                @media (max-width: 880px) {
-                    display: flex;
-                }
-            }
-        }
-
-        .modal__buttons {
-            gap: 20px;
-            justify-content: start;
-
-            @media (max-width: 400px) {
-                align-items: start;
-                flex-direction: column;
             }
         }
 

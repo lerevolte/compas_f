@@ -1,6 +1,7 @@
 <template>
     <AppVirtualTable 
         :slug="props.slug"
+        @openModal="item => emit('openModal', item)"
     />
     <div id="mass-action-container"></div>
 </template>
@@ -14,4 +15,8 @@
             type: String
         }
     })
+
+    const emit = defineEmits([
+        'openModal'
+    ])
 </script>

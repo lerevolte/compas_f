@@ -349,11 +349,6 @@
     }
 }
 
-.menu__overlay {
-    position: relative;
-    z-index: 1000;
-}
-
 @media (max-width: 990px) {
     .menu {
         display: none;

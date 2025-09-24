@@ -4,6 +4,7 @@
         <NuxtPage />
       </div>
       <div class="menu__overlay" id="menu__overlay"></div>
+      <div class="detail__overlay" id="detail__overlay"></div>
   </div>
 </template>
 

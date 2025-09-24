@@ -74,6 +74,10 @@
       }
   })
 
+  const emit = defineEmits([
+      'openModal'
+  ])
+
   const isClient = ref(false)
   const tableRef = ref(null)
   const common = new Common()
@@ -274,7 +278,7 @@
 
     // Создание
     create() {
-      console.log('create');
+      emit('openModal', {type: 'create'})
     }
 
     // Отмена редактирования
@@ -344,7 +348,7 @@
 
     // Открыть строку
     open(row) {
-      console.log('open', row);
+      emit('openModal', {type: 'open', item: row})
     }
 
     // Редактировать строку (батчами для избежания зависаний)
@@ -368,7 +372,7 @@
 
     // Копировать строку 
     copy(row) {
-      console.log('copy', row);
+      emit('openModal', {type: 'copy', item: row})
     }
 
     // Инициализация удаления
