@@ -6,8 +6,22 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     return
   }
 
+  // Проверяем, что это первый заход или обновление страницы
+  // Если from.name === null, значит это первая загрузка или обновление
+  // Если from.name !== null, значит это переход через навигацию
+  if (from.name !== null && from.name !== undefined) {
+    return
+  }
+
   const menu = useMenuStore()
   const user = useUserStore()
-  await menu.get()
-  await user.getRoles()
+  
+  // Загружаем данные только если они еще не загружены
+  if (menu.list.length === 0) {
+    await menu.get()
+  }
+  
+  if (user.roles.length === 0) {
+    await user.getRoles()
+  }
 })
