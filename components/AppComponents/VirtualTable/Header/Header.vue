@@ -59,7 +59,7 @@
             this.startWidthPx = 0
             this.resizingColumnIdx = -1
             this.choosed = ref({ list: [], headerColumn: null })
-            this.visibleHeader = table.value.header.filter(el => el.enabled)
+            this.visibleHeader = reactive(table.value.header.filter(el => el.enabled))
             this.onMouseMove = this.onMouseMove.bind(this)
             this.onMouseUp = this.onMouseUp.bind(this)
         }
@@ -174,9 +174,6 @@
 
             const containerWidth = tableEl.clientWidth - 15 || 0
             if (containerWidth <= 0) return
-            console.log(this.visibleHeader);
-            console.log(containerWidth);
-            
 
             const currentWidthsPx = this.visibleHeader.map(col => {
                 if (useDomCurrent) {
@@ -461,11 +458,8 @@
     // Автоматически пересчитывать позиции при динамическом изменении колонок (fixed/width/enabled)
     watch(() => table.value.header, async () => {
         if (table.value.header.length == 0) return
-        console.log('table.value.header', table.value.header);
-        // nextTick(() => resizer.setFixedLeft())
-        // nextTick(() => resizer.normalizeToContainerMinWidth())
-        }, {
-        deep: true
-        }
-    )
+        resizer.visibleHeader = table.value.header.filter(el => el.enabled)
+        nextTick(() => resizer.setFixedLeft())
+        nextTick(() => resizer.normalizeToContainerMinWidth())
+    })
 </script>
