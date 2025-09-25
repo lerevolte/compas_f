@@ -44,6 +44,26 @@
                     @initClick="action => table[action](table.body[row.index])"
                 />
 
+                <AppRelation  
+                    v-else-if="column.type == 'relation'"
+                    :options="{
+                        id: `${row.index}_${column.key}`,
+                        title: null,
+                        edit: table.body[row.index].edit,
+                        type: column.type,
+                        list: column.options,
+                        name: column.key,
+                        relation: column.id,
+                        searchable: true,
+                        required: false,
+                        isHaveNull: true,
+                        multiple: column.is_plural,
+                        placeholder: '' 
+                    }"
+                    v-model="cell.useCellModel(row.index, column).value"
+                    @clickLink="id => table.open({id})"
+                />
+
                 <template v-else-if="table.body[row.index] && table.body[row.index].edit" >
                     <AppInput
                         v-if="column.type == 'text'" 
@@ -199,26 +219,7 @@
                         </template>
                     </AppFansyBox>
 
-                    <div class="table__text-group_relation table__text-relation" v-else-if="column.type == 'relation'">
-                        <AppRelation  
-                            :options="{
-                                id: `${row.index}_${column.key}`,
-                                title: null,
-                                edit: table.body[row.index].edit,
-                                type: column.type,
-                                list: column.options,
-                                name: column.key,
-                                relation: column.id,
-                                searchable: true,
-                                required: false,
-                                isHaveNull: true,
-                                multiple: column.is_plural,
-                                placeholder: '' 
-                            }"
-                            v-model="cell.useCellModel(row.index, column).value"
-                            @clickLink="id => table.open({id})"
-                        />
-                    </div>
+                        
                 </div>
             </div>
         </div>

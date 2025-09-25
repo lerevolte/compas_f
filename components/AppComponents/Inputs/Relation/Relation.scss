@@ -73,6 +73,7 @@
 
         .select__options {
             left: 50px;
+            width: calc(100% - 50px);
         }
 
         .select__option {
@@ -278,5 +279,45 @@
         text-transform: uppercase;
         background: var(--bgColor);
         color: variables.$color-white;
+    }
+}
+
+.select-container {
+    margin-bottom: 10px;
+    
+    &:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.add-select-button {
+    margin-top: 15px;
+    
+    .btn-add-select {
+        background: variables.$color-white;
+        border: 2px dashed variables.$color-border;
+        border-radius: 5px;
+        padding: 10px 15px;
+        cursor: pointer;
+        color: variables.$color-border;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        
+        &:hover {
+            border-color: variables.$color-link;
+            color: variables.$color-link;
+            background: rgba(variables.$color-link, 0.05);
+        }
+        
+        &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            
+            &:hover {
+                border-color: variables.$color-border;
+                color: variables.$color-border;
+                background: variables.$color-white;
+            }
+        }
     }
 }

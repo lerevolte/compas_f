@@ -5,22 +5,22 @@
         </label>
 
         <div 
-            v-for="selectItem in props.modelValue.value"
-            class="select select_icon" 
-            ref="selectRef" 
+            v-for="(selectItem, index) in normalizedModelValue.value"
+            :key="index"
+            class="select select_icon select-container" 
+            :ref="el => setSelectRef(el, index)"
             :class="{ 
-                'select_open': select.state.isOpen, 
+                'select_open': selectInstances[index]?.state.isOpen, 
                 'select_disabled': props.options.edit == false, 
-                'select_empty': activeOption == undefined 
+                'select_empty': getActiveOption(index) == undefined 
             }"
         >
-            <div class="select__content" @click="event => select.toggleOptions(event)">
-                {{ selectItem }}
-                <IconWarning v-if="props.options.required && !activeOption"/>
+            <div class="select__content" @click="event => selectInstances[index]?.toggleOptions(event)">
+                <IconWarning v-if="props.options.required && !getActiveOption(index)"/>
 
                 <AppInput 
                     :options="{
-                        id: `${props.options.id}_search`,
+                        id: `${props.options.id}_search_${index}`,
                         title: '',
                         type: 'text',
                         name: '',
@@ -28,70 +28,78 @@
                         autocomplete: 'off',
                         placeholder: ''
                     }"
-                    @update:modelValue="(value) => select.filterOptions(value)"
-                    v-model="select.state.search"
+                    @update:modelValue="(value) => selectInstances[index]?.filterOptions(value)"
+                    :model-value="selectInstances[index]?.state?.search || ''"
+                    @update:model-value="(value) => selectInstances[index]?.state && (selectInstances[index].state.search = value)"
                 />
     
-                <div class="select__value select__value_single" :class="{ 'select__value_typing': select.state.search.length > 0 }">
-                    <template>
-                        <figure class='select__value-icon' v-if="activeOption">
-                            <img 
-                                v-if="typeof activeOption.label?.file == 'string' && activeOption.label?.file != ''" :src='activeOption.label?.file' alt=''
-                                @click="emit('clickLink', activeOption.value)" 
-                            >
-                            <div 
-                                v-else 
-                                class="img-text" 
-                                :style="{ 
-                                    '--bgColor': activeOption.label?.color == '' || !activeOption.label?.color? '#a6b7d4' : activeOption.label?.color 
-                                }"
-                                @click="emit('clickLink', activeOption.value)" 
-                            >
-                                {{ activeOption.label?.text.slice(0, 1) }}
-                            </div>
-                            <figcaption>
-                                <span class="value__text value__text_link" @click="emit('clickLink', activeOption.value)">
-                                    {{ activeOption.label?.text }}  
-                                </span>
-                                <span class="value__text">
-                                    {{ activeOption.value }}
-                                </span>
-                            </figcaption>
-                        </figure>
+                <div class="select__value select__value_single" :class="{ 'select__value_typing': (selectInstances[index]?.state?.search?.length || 0) > 0 }">
+                    <figure class='select__value-icon' v-if="getActiveOption(index)">
+                        <img 
+                            v-if="typeof getActiveOption(index).label?.file == 'string' && getActiveOption(index).label?.file != ''" :src='getActiveOption(index).label?.file' alt=''
+                            @click="emit('clickLink', getActiveOption(index).value)" 
+                        >
+                        <div 
+                            v-else 
+                            class="img-text" 
+                            :style="{ 
+                                '--bgColor': getActiveOption(index).label?.color == '' || !getActiveOption(index).label?.color? '#a6b7d4' : getActiveOption(index).label?.color 
+                            }"
+                            @click="emit('clickLink', getActiveOption(index).value)" 
+                        >
+                            {{ getActiveOption(index).label?.text.slice(0, 1) }}
+                        </div>
+                        <figcaption>
+                            <span class="value__text value__text_link" @click="emit('clickLink', getActiveOption(index).value)">
+                                {{ getActiveOption(index).label?.text }}  
+                            </span>
+                        </figcaption>
+                    </figure>
 
-                        <figure class='select__value-icon' v-else>
-                            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <circle cx="20" cy="20" r="20" fill="#404040"/>
-                                <path d="M24.6 13H26.06V27H24.6V13ZM15.84 27H14.36V13H15.84V27ZM24.74 20.54H15.68V19.24H24.74V20.54Z" fill="white"/>
-                            </svg>
-                            <figcaption>
-                                Не выбрано
-                            </figcaption>
-                        </figure>
-                    </template>
+                    <figure class='select__value-icon' v-else>
+                        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="20" cy="20" r="20" fill="#404040"/>
+                            <path d="M24.6 13H26.06V27H24.6V13ZM15.84 27H14.36V13H15.84V27ZM24.74 20.54H15.68V19.24H24.74V20.54Z" fill="white"/>
+                        </svg>
+                        <figcaption>
+                            Не выбрано
+                        </figcaption>
+                    </figure>
                 </div>
     
                 <IconSelectArrow />
             </div>
             <div class="select__options">
-                <div class="select__option" v-if="props.options.isHaveNull && !props.options.multiple" :value="null" @click="select.changeValue({ value: null })">
+                <div class="select__option" v-if="props.options.isHaveNull && !props.options.multiple" :value="null" @click="selectInstances[index]?.changeValue({ value: null }, index)">
                     Не выбрано
                 </div>
                 <div 
                     class="select__option" 
-                    v-for="option in select.state.list" 
-                    :class="{ 'select__option_active': props.modelValue && (props.modelValue == option.value || (Array.isArray(props.modelValue) && props.modelValue.includes(option.value)))}" 
+                    v-for="option in selectInstances[index]?.state?.list || []" 
+                    :class="{ 'select__option_active': normalizedModelValue.value[index] == option.value }" 
                     :value="option.value" 
-                    @click="select.changeValue(option)"
+                    @click="selectInstances[index]?.changeValue(option, index)"
                 >
                     <span class="value__text">
-                        {{ option.label.text ? option.label.text : option.label }} 
+                        {{ option.label.text || option.label.text == null ? option.label.text : option.label }} 
                     </span>
                     <span class="value__text value__text_subtext">
                         ID: {{ option.value }}
                     </span>
                 </div>
             </div>
+        </div>
+        
+        <!-- Кнопка добавления нового селекта -->
+        <div v-if="props.options.edit !== false" class="add-select-button">
+            <button 
+                type="button" 
+                @click="addNewSelect"
+                class="btn-add-select"
+                :disabled="props.options.edit === false"
+            >
+                + Добавить еще
+            </button>
         </div>
     </div>
 </template>
@@ -105,17 +113,18 @@
     import api from '@/helpers/api.js'
     import throttle from 'lodash/throttle'
 
-    const selectRef = ref(null)
-    const selectValuesRef = ref(null)
+    const selectRefs = ref([])
+    const selectInstances = ref([])
 
     const emit = defineEmits([
-        'update:modelValue'
+        'update:modelValue',
+        'clickLink'
     ])
 
     class Select {
-        constructor() {
-            this.selectRef = selectRef;
-            this.selectValuesRef = selectValuesRef
+        constructor(index) {
+            this.index = index;
+            this.selectRef = null;
 
             this.state = reactive({
                 list: [],
@@ -125,7 +134,7 @@
 
             // Закрытие опций
             this.closeOptions = (event) => {
-                if (this.selectRef.value && !this.selectRef.value.contains(event.target)) {
+                if (this.selectRef && !this.selectRef.contains(event.target)) {
                     this.state.isOpen = false;
                     this.state.search = ''
                     this.setOptions()
@@ -141,15 +150,18 @@
             }, 100);
         }
 
-        get() {
-            if (!Array.isArray(props.modelValue.value)) {
-                emit('update:modelValue', [props.modelValue.value])
-            }
+        setSelectRef(ref) {
+            this.selectRef = ref;
         }
 
         // Получение активных опций
-        getActiveOptions(value) {
-            // return this.state.list ? this.state.list.find(p => p.value == value) : null
+        getActiveOption(value, localOptions) {
+            // Сначала проверяем localOptions из modelValue
+            if (localOptions && localOptions[this.index]) {
+                return localOptions[this.index];
+            }
+            // Затем ищем в текущем списке опций
+            return this.state.list.find(p => p.value == value) || null;
         }
 
         // Фильтрация опций
@@ -157,20 +169,32 @@
             if (props.options.searchable) {
                 this.throttledFilter(value)
             } else {
-                this.state.list = props.options.list.filter(p => p.label.toLowerCase().includes(value.toLowerCase()))
+                this.state.list = props.options.list.filter(p => 
+                    p.label.text ? p.label.text.toLowerCase().includes(value.toLowerCase()) : p.label.toLowerCase().includes(value.toLowerCase())
+                )
             }
         }
 
         // Изменение значения
-        changeValue(option) {
+        changeValue(option, selectIndex) {
             this.toggleOptions()
-            emit('update:modelValue', option.value)
+            updateModelValue(option.value, option, selectIndex);
         }
 
         // Открытие/закрытие опций
         toggleOptions(event) {
             if (props.options.edit == false) return
-            if (props.options.multiple && this.state.isOpen && this.selectValuesRef.value.contains(event.target)) return
+            
+            // Закрываем все другие селекты
+            selectInstances.value.forEach((instance, idx) => {
+                if (idx !== this.index && instance.state.isOpen) {
+                    instance.state.isOpen = false;
+                    instance.state.search = '';
+                    instance.setOptions();
+                    document.removeEventListener('click', instance.closeOptions);
+                }
+            });
+
             this.state.isOpen = !this.state.isOpen;
 
             if (this.state.isOpen) {
@@ -180,7 +204,10 @@
                 if (!props.options.searchable) {
                     this.state.list = props.options.list
                 }
-                selectRef.value.querySelector('input').blur();
+                if (this.selectRef) {
+                    const input = this.selectRef.querySelector('input');
+                    if (input) input.blur();
+                }
                 document.removeEventListener('click', this.closeOptions);
             }
         }
@@ -190,8 +217,150 @@
         }
     }
 
-    const select = new Select(selectRef, selectValuesRef)
-    const activeOption = computed(() => select.getActiveOptions(props.modelValue))
+    // Функция нормализации modelValue
+    const normalizeModelValue = (modelValue) => {
+        if (!modelValue || typeof modelValue !== 'object') {
+            return { value: [null], localOptions: [null] };
+        }
+
+        let normalizedValue = modelValue.value;
+        let normalizedLocalOptions = modelValue.localOptions || [];
+
+        // Если value не массив, делаем его массивом
+        if (!Array.isArray(normalizedValue)) {
+            normalizedValue = [normalizedValue];
+        }
+
+        // Если localOptions не массив или длина не совпадает, корректируем
+        if (!Array.isArray(normalizedLocalOptions)) {
+            normalizedLocalOptions = [normalizedLocalOptions];
+        }
+
+        // Дополняем localOptions до нужной длины
+        while (normalizedLocalOptions.length < normalizedValue.length) {
+            normalizedLocalOptions.push(null);
+        }
+
+        // Обрезаем localOptions если он длиннее
+        if (normalizedLocalOptions.length > normalizedValue.length) {
+            normalizedLocalOptions = normalizedLocalOptions.slice(0, normalizedValue.length);
+        }
+
+        return { value: normalizedValue, localOptions: normalizedLocalOptions };
+    };
+
+    // Реактивная нормализованная модель
+    const normalizedModelValue = ref({ value: [null], localOptions: [null] });
+
+    // Функция обновления нормализованных данных
+    const updateNormalizedData = () => {
+        const normalized = normalizeModelValue(props.modelValue);
+        normalizedModelValue.value = normalized;
+    };
+
+    // Функция обновления modelValue
+    const updateModelValue = (newValue, newOption, selectIndex) => {
+        // Получаем текущие нормализованные данные
+        const current = normalizedModelValue.value;
+        
+        
+        // Создаем копии массивов
+        const newValueArray = [...current.value];
+        const newLocalOptionsArray = [...current.localOptions];
+        
+        // Обновляем только нужный индекс
+        newValueArray[selectIndex] = newValue;
+        newLocalOptionsArray[selectIndex] = newOption;
+        
+        
+        // Обновляем внутренние данные
+        normalizedModelValue.value = { value: newValueArray, localOptions: newLocalOptionsArray };
+        
+        emit('update:modelValue', { 
+            value: newValueArray, 
+            localOptions: newLocalOptionsArray 
+        });
+    };
+
+    // Функция добавления нового селекта
+    const addNewSelect = () => {
+        // Получаем текущие нормализованные данные
+        const current = normalizedModelValue.value;
+        
+        
+        // Создаем копии массивов
+        const newValueArray = [...current.value];
+        const newLocalOptionsArray = [...current.localOptions];
+        
+        // Добавляем новые элементы
+        newValueArray.push(null);
+        newLocalOptionsArray.push(null);
+        
+        
+        // Обновляем внутренние данные
+        normalizedModelValue.value = { value: newValueArray, localOptions: newLocalOptionsArray };
+        
+        emit('update:modelValue', { 
+            value: newValueArray, 
+            localOptions: newLocalOptionsArray 
+        });
+    };
+
+    // Функция удаления селекта
+    const removeSelect = (selectIndex) => {
+        // Получаем текущие нормализованные данные
+        const current = normalizedModelValue.value;
+        
+        // Создаем копии массивов
+        const newValueArray = [...current.value];
+        const newLocalOptionsArray = [...current.localOptions];
+        
+        // Удаляем элемент по индексу
+        newValueArray.splice(selectIndex, 1);
+        newLocalOptionsArray.splice(selectIndex, 1);
+        
+        // Обновляем внутренние данные
+        normalizedModelValue.value = { value: newValueArray, localOptions: newLocalOptionsArray };
+        
+        emit('update:modelValue', { 
+            value: newValueArray, 
+            localOptions: newLocalOptionsArray 
+        });
+    };
+
+    // Функция получения активной опции для конкретного селекта
+    const getActiveOption = (index) => {
+        const currentValue = normalizedModelValue.value.value[index];
+        const localOptions = normalizedModelValue.value.localOptions;
+        
+        // Сначала проверяем localOptions из modelValue
+        if (localOptions && localOptions[index]) {
+            return localOptions[index];
+        }
+        
+        // Затем ищем в списке опций компонента
+        if (props.options.list && props.options.list.length > 0) {
+            return props.options.list.find(p => p.value == currentValue) || null;
+        }
+        
+        // Если есть экземпляр селекта, ищем в его списке
+        const selectInstance = selectInstances.value[index];
+        if (selectInstance && selectInstance.state.list && selectInstance.state.list.length > 0) {
+            return selectInstance.state.list.find(p => p.value == currentValue) || null;
+        }
+        
+        return null;
+    };
+
+    // Функция установки ref для селекта
+    const setSelectRef = (el, index) => {
+        if (el) {
+            selectRefs.value[index] = el;
+            if (selectInstances.value[index]) {
+                selectInstances.value[index].setSelectRef(el);
+            }
+        }
+    };
 
     const props = defineProps({
         options: {
@@ -215,16 +384,58 @@
         modelValue: null
     })
 
+    // Инициализация экземпляров селектов
+    const initializeSelects = () => {
+        if (!normalizedModelValue.value || !normalizedModelValue.value.value) return;
+        
+        const currentValues = normalizedModelValue.value.value;
+        
+        // Удаляем лишние экземпляры
+        while (selectInstances.value.length > currentValues.length) {
+            const lastInstance = selectInstances.value.pop();
+            if (lastInstance && lastInstance.selectRef) {
+                document.removeEventListener('click', lastInstance.closeOptions);
+            }
+        }
+        
+        // Добавляем недостающие экземпляры
+        while (selectInstances.value.length < currentValues.length) {
+            const index = selectInstances.value.length;
+            const newInstance = new Select(index);
+            selectInstances.value.push(newInstance);
+            
+            // Устанавливаем ref если он уже существует
+            if (selectRefs.value[index]) {
+                newInstance.setSelectRef(selectRefs.value[index]);
+            }
+            
+            newInstance.setOptions();
+        }
+    };
+
     onMounted(() => {
-        select.get()
-        select.setOptions()
-    })
+        updateNormalizedData();
+        initializeSelects();
+    });
+
+    watch(() => normalizedModelValue.value?.value?.length, () => {
+        initializeSelects();
+    });
+
+    watch(() => props.modelValue, () => {
+        updateNormalizedData();
+        nextTick(() => {
+            initializeSelects();
+        });
+    }, { deep: true });
 
     watch(() => props.options.list, () => {
-        select.setOptions()
-    })
+        selectInstances.value.forEach(instance => instance.setOptions());
+    });
 
     onBeforeUnmount(() => {
-        document.removeEventListener('click', select.closeOptions);
+        selectInstances.value.forEach(instance => {
+            document.removeEventListener('click', instance.closeOptions);
+        });
     });
 </script>
