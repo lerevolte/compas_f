@@ -90,6 +90,33 @@
                 }
             }
         }
+
+        &.select_disabled {
+            .select__content {
+                pointer-events: none;
+            }
+
+            &.select_empty {
+                // opacity: 0;
+                // pointer-events: none;
+            }
+
+            .select__value-icon {
+                gap: 15px;
+            }
+
+            .select__value  {
+                pointer-events: all;
+            }
+
+            .form__item_input {
+                opacity: 0;
+            }
+
+            .icon__arrow {
+                display: none;
+            }
+        }
     }
 
     .value__text {

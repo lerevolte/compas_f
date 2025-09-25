@@ -59,17 +59,17 @@
                         }"
                     />
                     <AppSelect 
-                        v-else-if="column.type == 'relation' || column.type == 'select_dropdown'" 
+                        v-else-if="column.type == 'select_dropdown'" 
                         :options="{
                             id: `${row.index}_${column.key}`,
                             title: null,
                             type: column.type,
                             list: column.options,
                             name: column.key,
-                            relation: column.id,
-                            searchable: column.type == 'relation',
+                            relation: null,
+                            edit: table.body[row.index].edit,
+                            searchable: false,
                             required: false,
-                            have_icon: column.type == 'relation',
                             isHaveNull: true,
                             multiple: column.is_plural,
                             placeholder: '' 
@@ -134,7 +134,6 @@
                             relation: null,
                             searchable: true,
                             required: false,
-                            have_icon: false,
                             isHaveNull: true,
                             multiple: false,
                             placeholder: '' 
@@ -144,62 +143,83 @@
                 </template>
 
                 <div class="table__cell-content" v-else-if="table.body[row.index] && !table.body[row.index].edit" >
-                        <span class="table__text text" v-if="column.type == 'text' && (!column.is_external_link || !table.body[row.index][column.key].external_link)">
-                            {{ cell.useCellModel(row.index, column).value }}
+                    <span class="table__text text" v-if="column.type == 'text' && (!column.is_external_link || !table.body[row.index][column.key].external_link)">
+                        {{ cell.useCellModel(row.index, column).value }}
+                    </span>
+
+                    <a :href="cell.useCellModel(row.index, column, 'external_link').value" target="_blank" class="table__text text" v-else-if="column.type == 'text' && column.is_external_link">
+                        {{ cell.useCellModel(row.index, column, 'value').value }}
+                    </a>
+
+                    <div class="table__text-group"  v-else-if="column.type == 'address'">
+                        <span class="table__text text">
+                            {{ cell.useCellModel(row.index, column).value?.text }}
                         </span>
-    
-                        <a :href="cell.useCellModel(row.index, column, 'external_link').value" target="_blank" class="table__text text" v-else-if="column.type == 'text' && column.is_external_link">
-                            {{ cell.useCellModel(row.index, column, 'value').value }}
-                        </a>
-    
-                        <div class="table__text-group"  v-else-if="column.type == 'address'">
-                            <span class="table__text text">
-                                {{ cell.useCellModel(row.index, column).value?.text }}
-                            </span>
-                            <AppButton 
-                                v-show="cell.useCellModel(row.index, column).value != null" 
-                                class="button_text button_copy" 
-                                @click="event => cell.copyText(cell.useCellModel(row.index, column).value?.text, event.target)"
+                        <AppButton 
+                            v-show="cell.useCellModel(row.index, column).value != null" 
+                            class="button_text button_copy" 
+                            @click="event => cell.copyText(cell.useCellModel(row.index, column).value?.text, event.target)"
+                        />
+                    </div>
+
+                    <span class="table__text text" v-else-if="column.type == 'date'">
+                        {{ cell.useCellModel(row.index, column).value ? format(cell.useCellModel(row.index, column).value, 'dd.MM.yyyy') : null }}
+                    </span>
+
+                    <span class="table__text text" v-else-if="column.type == 'select_dropdown'">
+                        {{ cell.useCellSelectModel(row.index, column).value }}
+                    </span>
+
+                    <AppStatus 
+                        v-else-if="column.type == 'status'"
+                        :options="{
+                            id: `${row.index}_${column.key}`,
+                            title: null,
+                            type: column.type,
+                            list: column.options,
+                            name: column.key,
+                            required: false,
+                            isHaveNull: false,
+                            placeholder: '' 
+                        }"
+                        :model-value="cell.useCellModel(row.index, column).value"
+                    />
+
+                    <AppFansyBox class='table__text-group_file table__file' v-else-if="column.type == 'file'">
+                        <template v-if="Array.isArray(table.body[row.index][column.key]) && table.body[row.index][column.key].length">
+                            <AppFansyBoxItem 
+                                v-for="file in table.body[row.index][column.key]"
+                                :style="`--count-files: '${table.body[row.index][column.key].length}'`"
+                                :id="`${row.index}_${column.key}`"
+                                :image="{
+                                    path: file.url,
+                                    thumbnail_path: file.file,
+                                }"
                             />
-                        </div>
+                        </template>
+                    </AppFansyBox>
 
-                        <span class="table__text text" v-else-if="column.type == 'date'">
-                            {{ cell.useCellModel(row.index, column).value ? format(cell.useCellModel(row.index, column).value, 'dd.MM.yyyy') : null }}
-                        </span>
-
-                        <span class="table__text text" v-else-if="column.type == 'select_dropdown'">
-                            {{ cell.useCellSelectModel(row.index, column).value }}
-                        </span>
-
-                        <AppStatus 
-                            v-else-if="column.type == 'status'"
+                    <div class="table__text-group_relation table__text-relation" v-else-if="column.type == 'relation'">
+                        <AppRelation  
                             :options="{
                                 id: `${row.index}_${column.key}`,
                                 title: null,
+                                edit: table.body[row.index].edit,
                                 type: column.type,
                                 list: column.options,
                                 name: column.key,
+                                relation: column.id,
+                                searchable: true,
                                 required: false,
-                                isHaveNull: false,
+                                isHaveNull: true,
+                                multiple: column.is_plural,
                                 placeholder: '' 
                             }"
-                            :model-value="cell.useCellModel(row.index, column).value"
+                            v-model="cell.useCellModel(row.index, column).value"
+                            @clickLink="id => table.open({id})"
                         />
-    
-                        <AppFansyBox class='table__text-group_file table__file' v-else-if="column.type == 'file'">
-                            <template v-if="Array.isArray(table.body[row.index][column.key]) && table.body[row.index][column.key].length">
-                                <AppFansyBoxItem 
-                                    v-for="file in table.body[row.index][column.key]"
-                                    :style="`--count-files: '${table.body[row.index][column.key].length}'`"
-                                    :id="`${row.index}_${column.key}`"
-                                    :image="{
-                                        path: file.url,
-                                        thumbnail_path: file.file,
-                                    }"
-                                />
-                            </template>
-                        </AppFansyBox>
                     </div>
+                </div>
             </div>
         </div>
     </div>
@@ -208,6 +228,7 @@
 <script setup>
     import './Body.scss';
 
+    import AppRelation from '@AppComponents/Inputs/Relation/Relation.vue'
     import AppDate from '@AppComponents/Inputs/Date/Date.vue'
     import AppSelect from '@AppComponents/Inputs/Select/Select.vue'
     import AppCheckbox from '@AppComponents/Inputs/Checkbox/Checkbox.vue'
@@ -286,6 +307,10 @@
                     const cell = table.value.body[rowIndex][column.key]
                     if (column.type == 'address') {
                         return cell
+                    } else if (Array.isArray(cell)) {
+                        return cell
+                    } else if (column.type == 'relation') {
+                        return cell ?? null
                     } else {
                         return typeof cell === 'object' && cell !== null ? cell[slug] : cell
                     }
@@ -301,7 +326,6 @@
                         } else if ('value' in cell) {
                             cell.value = val
                         } else {
-                            // если структура нестандартна — перезапишем значение целиком
                             table.value.body[rowIndex][column.key] = val
                         }
                     } else {
@@ -321,7 +345,17 @@
             const c = computed({
                 get() {
                     const cell = table.value.body[rowIndex][column.key]
-                    return cell == null ? [] : column.options.filter(option => cell.includes(option.value))
+                    let response = null
+                    
+                    if (cell == null) return null
+                    if (Array.isArray(cell)) response = column.options.filter(option => cell.includes(option.value)).map(option => option.label)
+                    else if (typeof cell == 'object' && cell !== null) response = column.options.filter(option => option.value == cell.value).map(option => option.label)
+                    else response = column.options.filter(option => option.value == cell).map(option => option.label)
+                
+                    if (column.type == 'select_dropdown') {
+                        return response.join(', ')
+                    } 
+                    return response
                 }
             })
             this._selectCache.set(cacheKey, c)

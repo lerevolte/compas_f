@@ -15,6 +15,7 @@
         font-weight: 600;
         position: sticky;
         top: 0px;
+        z-index: 10;
         background: variables.$color-white;
 
         .icon__arrow {
@@ -68,6 +69,8 @@
 }
 
 .settings__list {
+    overflow-x: hidden;
+
     &.settings__list_check {
         .popup__option {
             padding: 0px;

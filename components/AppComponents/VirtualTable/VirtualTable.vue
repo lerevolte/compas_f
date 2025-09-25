@@ -454,6 +454,7 @@
         sort_order: this.sortItem.sort_order,
         fields: this.header
       })
+      this.isChanged = false
     }
 
     // Изменение количества страниц

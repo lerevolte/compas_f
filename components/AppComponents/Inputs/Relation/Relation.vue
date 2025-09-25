@@ -5,14 +5,17 @@
         </label>
 
         <div 
-            class="select" 
+            v-for="selectItem in props.modelValue.value"
+            class="select select_icon" 
             ref="selectRef" 
             :class="{ 
                 'select_open': select.state.isOpen, 
                 'select_disabled': props.options.edit == false, 
                 'select_empty': activeOption == undefined 
-            }">
+            }"
+        >
             <div class="select__content" @click="event => select.toggleOptions(event)">
+                {{ selectItem }}
                 <IconWarning v-if="props.options.required && !activeOption"/>
 
                 <AppInput 
@@ -29,15 +32,43 @@
                     v-model="select.state.search"
                 />
     
-                <div class="select__values" ref="selectValuesRef" v-if="props.options.multiple">
-                    <div class="select__value" v-for="option in activeOption" @click="select.changeValue(option)">
-                        {{ option?.label }}
+                <div class="select__value select__value_single" :class="{ 'select__value_typing': select.state.search.length > 0 }">
+                    <template>
+                        <figure class='select__value-icon' v-if="activeOption">
+                            <img 
+                                v-if="typeof activeOption.label?.file == 'string' && activeOption.label?.file != ''" :src='activeOption.label?.file' alt=''
+                                @click="emit('clickLink', activeOption.value)" 
+                            >
+                            <div 
+                                v-else 
+                                class="img-text" 
+                                :style="{ 
+                                    '--bgColor': activeOption.label?.color == '' || !activeOption.label?.color? '#a6b7d4' : activeOption.label?.color 
+                                }"
+                                @click="emit('clickLink', activeOption.value)" 
+                            >
+                                {{ activeOption.label?.text.slice(0, 1) }}
+                            </div>
+                            <figcaption>
+                                <span class="value__text value__text_link" @click="emit('clickLink', activeOption.value)">
+                                    {{ activeOption.label?.text }}  
+                                </span>
+                                <span class="value__text">
+                                    {{ activeOption.value }}
+                                </span>
+                            </figcaption>
+                        </figure>
 
-                        <IconClose />
-                    </div>
-                </div>
-                <div class="select__value select__value_single" :class="{ 'select__value_typing': select.state.search.length > 0 }" v-else>
-                    {{ activeOption?.label }}
+                        <figure class='select__value-icon' v-else>
+                            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="20" cy="20" r="20" fill="#404040"/>
+                                <path d="M24.6 13H26.06V27H24.6V13ZM15.84 27H14.36V13H15.84V27ZM24.74 20.54H15.68V19.24H24.74V20.54Z" fill="white"/>
+                            </svg>
+                            <figcaption>
+                                Не выбрано
+                            </figcaption>
+                        </figure>
+                    </template>
                 </div>
     
                 <IconSelectArrow />
@@ -46,7 +77,6 @@
                 <div class="select__option" v-if="props.options.isHaveNull && !props.options.multiple" :value="null" @click="select.changeValue({ value: null })">
                     Не выбрано
                 </div>
-
                 <div 
                     class="select__option" 
                     v-for="option in select.state.list" 
@@ -57,6 +87,9 @@
                     <span class="value__text">
                         {{ option.label.text ? option.label.text : option.label }} 
                     </span>
+                    <span class="value__text value__text_subtext">
+                        ID: {{ option.value }}
+                    </span>
                 </div>
             </div>
         </div>
@@ -64,15 +97,13 @@
 </template>
 
 <script setup>
-    import './Select.scss';
+    import './Relation.scss';
     
     import AppInput from '@AppComponents/Inputs/Input/Input.vue';
     import IconSelectArrow from '@AppIcons/Input/SelectArrow.vue';
-    import IconClose from '@AppIcons/Close.vue';
     import IconWarning from '@AppIcons/Warning.vue';
     import api from '@/helpers/api.js'
     import throttle from 'lodash/throttle'
-    import isEqual from 'lodash/isEqual'
 
     const selectRef = ref(null)
     const selectValuesRef = ref(null)
@@ -105,25 +136,20 @@
             // Объявляем `throttle` один раз
             this.throttledFilter = throttle(async (value) => {
                 let response = null
-                if (props.options.type == 'address') {
-                    response = await api.callMethod("GET", `/map/geocode?address=${value}`)
-                    this.state.list = response.data.map(p => ({ label: p.text, value: JSON.parse(JSON.stringify(p)) }))
-                } else {
-                    response = await api.callMethod("GET", `/objects/search?per_page=12&field_id=${props.options.relation}&q=${value}`)
-                    this.state.list = response.data.map(p => ({ label: p.label, value: p.value }))
-                }
+                response = await api.callMethod("GET", `/objects/search?per_page=12&field_id=${props.options.relation}&q=${value}`)
+                this.state.list = response.data.map(p => ({ label: p.label, value: p.value }))
             }, 100);
+        }
+
+        get() {
+            if (!Array.isArray(props.modelValue.value)) {
+                emit('update:modelValue', [props.modelValue.value])
+            }
         }
 
         // Получение активных опций
         getActiveOptions(value) {
-            if (props.options.multiple) {
-                return value == null ? [] : value.map(option => this.state.list.find(p => p.value == option));
-            } else if (props.options.type == 'address') {
-                return this.state.list ? this.state.list.find(p => isEqual(p.value, value)) : null
-            } else {
-                return this.state.list ? this.state.list.find(p => p.value == value) : null
-            }
+            // return this.state.list ? this.state.list.find(p => p.value == value) : null
         }
 
         // Фильтрация опций
@@ -137,23 +163,8 @@
 
         // Изменение значения
         changeValue(option) {
-            if (props.options.multiple) {
-                if (props.modelValue == null) {
-                    console.log('null');
-                    emit('update:modelValue', [option.value])
-                } else {
-                    if (props.modelValue.includes(option.value)) {
-                        console.log('filter');
-                        emit('update:modelValue', props.modelValue.filter(p => p != option.value))
-                    } else {
-                        console.log('update');
-                        emit('update:modelValue', [...props.modelValue, option.value])
-                    }
-                }
-            } else {
-                this.toggleOptions()
-                emit('update:modelValue', option.value)
-            }
+            this.toggleOptions()
+            emit('update:modelValue', option.value)
         }
 
         // Открытие/закрытие опций
@@ -175,21 +186,11 @@
         }
         
         setOptions() {
-            if (props.options.type == 'address') {
-                this.state.list = props.options.list ?? []
-                
-                if (props.modelValue && Array.isArray(this.state.list) && !this.state.list.find(p => isEqual(p.value, props.modelValue))) {
-                    const option = JSON.parse(JSON.stringify(props.modelValue))
-                    this.state.list.push({label: option.text, value: option})
-                }
-            } else {
-                this.state.list = props.options.list ?? []
-            }
+            this.state.list = props.options.list ?? []
         }
     }
 
     const select = new Select(selectRef, selectValuesRef)
-
     const activeOption = computed(() => select.getActiveOptions(props.modelValue))
 
     const props = defineProps({
@@ -203,6 +204,7 @@
                 relation: null,
                 searchable: false,
                 required: false,
+                have_icon: false,
                 isHaveNull: false,
                 multiple: false,
                 type: 'select',
@@ -214,6 +216,7 @@
     })
 
     onMounted(() => {
+        select.get()
         select.setOptions()
     })
 
