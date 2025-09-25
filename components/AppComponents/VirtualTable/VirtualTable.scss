@@ -172,19 +172,21 @@
           height: 100%;
         }
 
-        &::after {
-          content: var(--count-files);
-          background-color: variables.$color-icon;
-          border-radius: 50%;
-          color: variables.$color-white;
-          display: grid;
-          font-size: 12px;
-          height: 21px;
-          min-width: 21px;
-          opacity: .6;
-          padding: 3px;
-          place-items: center;
-          width: 21px;
+        &:not(:last-child) {
+          &::after {
+            content: var(--count-files);
+            background-color: variables.$color-icon;
+            border-radius: 50%;
+            color: variables.$color-white;
+            display: grid;
+            font-size: 12px;
+            height: 21px;
+            min-width: 21px;
+            opacity: .6;
+            padding: 3px;
+            place-items: center;
+            width: 21px;
+          }
         }
       }
 

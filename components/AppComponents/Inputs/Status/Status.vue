@@ -6,18 +6,18 @@
 
         <div class="status" ref="statusRef" :class="{ 'status_open': status.state.isOpen }">
             <div class="status__content" @click="event => status.toggleOptions(event)">
-                <IconWarning v-if="props.options.required && !status.getActiveOptions(props.modelValue)"/>
+                <IconWarning v-if="props.options.required && !activeOption"/>
                 <figure class="status__value">
                     <div class="status__rect">
-                        <img class="status__value-rect" v-if="status.getActiveOptions(props.modelValue)?.label?.file != ''" :src="status.getActiveOptions(props.modelValue)?.label?.file" />
-                        <div class="status__value-rect" v-else :style="`--bgColor: ${status.getActiveOptions(props.modelValue)?.label?.color}`"></div>
+                        <img class="status__value-rect" v-if="activeOption?.label?.file != '' && activeOption?.label?.file != null" :src="activeOption?.label?.file" />
+                        <div class="status__value-rect" v-else :style="`--bgColor: ${activeOption?.label?.color}`"></div>
                         <figure class='status__arrow'>
                             <svg xmlns="http://www.w3.org/2000/svg" width="4" height="3" fill="none" viewBox="0 0 4 3"><path fill="#888" d="M0 0h4L2 3z"/></svg>
                         </figure>
                     </div>
 
                     <figcaption class="status__value-text">
-                        {{ status.getActiveOptions(props.modelValue)?.label.text }}
+                        {{ activeOption?.label.text }}
                     </figcaption>
                 </figure>
             </div>
@@ -45,7 +45,6 @@
 <script setup>
     import './Status.scss';
     
-    import IconSelectArrow from '@AppIcons/Input/SelectArrow.vue';
     import IconWarning from '@AppIcons/Warning.vue';
 
     const statusRef = ref(null)
@@ -101,6 +100,7 @@
     }
 
     const status = new Status(statusRef)
+    const activeOption = computed(() => status.getActiveOptions(props.modelValue))
 
     const props = defineProps({
         options: {

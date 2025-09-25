@@ -53,6 +53,9 @@
                             <span class="value__text value__text_link" @click="emit('clickLink', getActiveOption(index).value)">
                                 {{ getActiveOption(index).label?.text }}  
                             </span>
+                            <span class="value__text value__text_id">
+                                ID: {{ getActiveOption(index).label?.id }}  
+                            </span>
                         </figcaption>
                     </figure>
 
@@ -68,6 +71,10 @@
                 </div>
     
                 <IconSelectArrow />
+
+                <figure class='relation__arrow' @click="emit('clickLink', getActiveOption(index).value)" >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="4" height="3" fill="none" viewBox="0 0 4 3"><path fill="#888" d="M0 0h4L2 3z"/></svg>
+                </figure>
             </div>
             <div class="select__options">
                 <div class="select__option" :value="null" @click="selectInstances[index]?.changeValue({ value: null }, index)">
@@ -87,26 +94,29 @@
                         ID: {{ option.value }}
                     </span>
                 </div>
+
+                <div class="select__option select__option_create" :value="null" @click="emit('create', {related_table: props.options.relation})">
+                    Создать
+                </div>
             </div>
         </div>
         
         <!-- Кнопка добавления нового селекта -->
-        <div v-if="props.options.edit !== false" class="add-select-button">
-            <button 
-                type="button" 
-                @click="addNewSelect"
-                class="btn-add-select"
+            <AppButton 
+                v-if="props.options.edit !== false"
+                class="button_text"
                 :disabled="props.options.edit === false"
+                @click="addNewSelect"
             >
-                + Добавить еще
-            </button>
-        </div>
+                + Добавить
+            </AppButton>
     </div>
 </template>
 
 <script setup>
     import './Relation.scss';
     
+    import AppButton from '@AppComponents/Button/Button.vue';
     import AppInput from '@AppComponents/Inputs/Input/Input.vue';
     import IconSelectArrow from '@AppIcons/Input/SelectArrow.vue';
     import IconWarning from '@AppIcons/Warning.vue';
@@ -118,7 +128,8 @@
 
     const emit = defineEmits([
         'update:modelValue',
-        'clickLink'
+        'clickLink',
+        'create'
     ])
 
     class Select {

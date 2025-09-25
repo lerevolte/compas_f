@@ -61,50 +61,9 @@
         }
     }
 
-    &.select_icon {
-        .form__item_input {
-            padding-left: 50px;
-        }
-
-        .select__value  {
-            top: 5px;
-            left: 5px;
-        }
-
-        .select__options {
-            left: 50px;
-        }
-
-        .select__option {
-            &.select__option_active {
-                &::after {
-                    content: none;
-                }
-
-                .value__text_subtext {
-                    &::after {
-                        content: url('/public/Icons/checkOption.svg');
-                        position: relative;
-                        margin-left: 10px;
-                    }
-                }
-            }
-        }
-    }
-
     .value__text {
         &.value__text_subtext {
             color: variables.$color-border;
-        }
-
-        &.value__text_link {
-            cursor: pointer;
-            text-decoration: underline;
-            color: variables.$color-link;
-
-            &:hover {
-                text-decoration: none;
-            }
         }
     }
 }

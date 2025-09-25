@@ -2,7 +2,7 @@
     <div 
         v-if="table.rowVirtualizer"
         class="table__body" 
-        :class="{'table__body_edit': table.state == 'edit', 'table__body_choose': table.body.filter(row => row.isChoose).length > 0}"
+        :class="{'table__body_edit': table.state == 'edit', 'table__body_choose': table.body.filter(row => row.isChoose).length > 0, 'table__body_saving': table.saving}"
     >
         <div 
             v-for="(row, index) in table.rowVirtualizer.getVirtualItems()" 
@@ -62,7 +62,24 @@
                     }"
                     v-model="cell.useCellModel(row.index, column).value"
                     @clickLink="id => table.open({id})"
+                    @create="item => table.create(item)"
                 />
+
+                <div class="table__cell-content" v-else-if="column.type == 'file'">
+                    <AppFansyBox class='table__text-group_file table__file'>
+                        <template v-if="Array.isArray(table.body[row.index][column.key]) && table.body[row.index][column.key].length">
+                            <AppFansyBoxItem 
+                                v-for="file in table.body[row.index][column.key]"
+                                :style="`--count-files: '${table.body[row.index][column.key].length}'`"
+                                :id="`${row.index}_${column.key}`"
+                                :image="{
+                                    path: file.url,
+                                    thumbnail_path: file.file,
+                                }"
+                            />
+                        </template>
+                    </AppFansyBox>
+                </div>
 
                 <template v-else-if="table.body[row.index] && table.body[row.index].edit" >
                     <AppInput
@@ -110,22 +127,6 @@
                         v-model="cell.useCellModel(row.index, column).value"
                         @open="event => cell.setActiveCell({currentTarget: event.closest('.table__cell')}, row.index, column.key)"
                     />
-
-                    <div class="table__cell-content" v-else-if="column.type == 'file'">
-                        <AppFansyBox class='table__text-group_file table__file'>
-                            <template v-if="Array.isArray(table.body[row.index][column.key]) && table.body[row.index][column.key].length">
-                                <AppFansyBoxItem 
-                                    v-for="file in table.body[row.index][column.key]"
-                                    :style="`--count-files: '${table.body[row.index][column.key].length}'`"
-                                    :id="`${row.index}_${column.key}`"
-                                    :image="{
-                                        path: file.url,
-                                        thumbnail_path: file.file,
-                                    }"
-                                />
-                            </template>
-                        </AppFansyBox>
-                    </div>
 
                     <AppStatus 
                         v-else-if="column.type == 'status'"
@@ -204,22 +205,6 @@
                         }"
                         :model-value="cell.useCellModel(row.index, column).value"
                     />
-
-                    <AppFansyBox class='table__text-group_file table__file' v-else-if="column.type == 'file'">
-                        <template v-if="Array.isArray(table.body[row.index][column.key]) && table.body[row.index][column.key].length">
-                            <AppFansyBoxItem 
-                                v-for="file in table.body[row.index][column.key]"
-                                :style="`--count-files: '${table.body[row.index][column.key].length}'`"
-                                :id="`${row.index}_${column.key}`"
-                                :image="{
-                                    path: file.url,
-                                    thumbnail_path: file.file,
-                                }"
-                            />
-                        </template>
-                    </AppFansyBox>
-
-                        
                 </div>
             </div>
         </div>

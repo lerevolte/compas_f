@@ -17,6 +17,15 @@
                 cursor: pointer;
             }
         }
+
+        .button_text {
+            text-decoration: none;
+            color: variables.$color-icon;
+
+            &:hover {
+                color: variables.$color-icon-active;
+            }
+        }
     }
 }
 
@@ -67,6 +76,7 @@
         }
 
         .select__value  {
+            width: 100%;
             top: 5px;
             left: 5px;
         }
@@ -93,13 +103,18 @@
         }
 
         &.select_disabled {
+            .relation__arrow {
+                display: none;
+
+            }
+
             .select__content {
                 pointer-events: none;
             }
 
             &.select_empty {
-                // opacity: 0;
-                // pointer-events: none;
+                opacity: 0;
+                pointer-events: none;
             }
 
             .select__value-icon {
@@ -117,6 +132,38 @@
             .icon__arrow {
                 display: none;
             }
+
+            .value__text_id {
+                display: none;
+            }
+
+            .value__text_link {
+                cursor: pointer;
+                text-decoration: underline;
+                color: variables.$color-link;
+    
+                &:hover {
+                    text-decoration: none;
+                }
+            }
+        }
+
+        .relation__arrow {
+            cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: -8px;
+            border-radius: 0px 0px 5px 5px;
+            display: grid;
+            place-items: center;
+            height: 20px;
+            width: 38px;
+            background: variables.$color-border-light;
+            transform: rotate(-90deg);
+        }
+
+        .icon__arrow {
+            right: 28px;
         }
     }
 
@@ -125,14 +172,8 @@
             color: variables.$color-border;
         }
 
-        &.value__text_link {
-            cursor: pointer;
-            text-decoration: underline;
-            color: variables.$color-link;
-
-            &:hover {
-                text-decoration: none;
-            }
+        &.value__text_id {
+            color: variables.$color-border;
         }
     }
 }
@@ -244,6 +285,14 @@
         }
     }
 
+    &.select__option_create {
+        color: variables.$color-icon;
+
+        &:hover {
+            color: variables.$color-icon-active;
+        }
+    }
+
     .value__text {
         white-space: nowrap;
         overflow: hidden;
@@ -256,6 +305,7 @@
 }
 
 .select__value-icon {
+    width: 100%;
     gap: 30px;
     display: flex;
     align-items: center;
@@ -271,7 +321,6 @@
         cursor: pointer;
     }
 
-
     .img-text {
         font-family: VAG;
         display: grid;
@@ -280,6 +329,13 @@
         background: var(--bgColor);
         color: variables.$color-white;
     }
+
+    figcaption {
+        gap: 10px;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+    }
 }
 
 .select-container {
@@ -287,37 +343,5 @@
     
     &:last-child {
         margin-bottom: 0;
-    }
-}
-
-.add-select-button {
-    margin-top: 15px;
-    
-    .btn-add-select {
-        background: variables.$color-white;
-        border: 2px dashed variables.$color-border;
-        border-radius: 5px;
-        padding: 10px 15px;
-        cursor: pointer;
-        color: variables.$color-border;
-        font-size: 14px;
-        transition: all 0.3s ease;
-        
-        &:hover {
-            border-color: variables.$color-link;
-            color: variables.$color-link;
-            background: rgba(variables.$color-link, 0.05);
-        }
-        
-        &:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            
-            &:hover {
-                border-color: variables.$color-border;
-                color: variables.$color-border;
-                background: variables.$color-white;
-            }
-        }
     }
 }
