@@ -15,13 +15,6 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
   const menu = useMenuStore()
   const user = useUserStore()
-  
-  // Загружаем данные только если они еще не загружены
-  if (menu.list.length === 0) {
-    await menu.get()
-  }
-  
-  if (user.roles.length === 0) {
-    await user.getRoles()
-  }
+  await menu.get()
+  await user.getRoles()
 })

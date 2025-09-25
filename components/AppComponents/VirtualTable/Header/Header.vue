@@ -59,7 +59,7 @@
             this.startWidthPx = 0
             this.resizingColumnIdx = -1
             this.choosed = ref({ list: [], headerColumn: null })
-
+            this.visibleHeader = table.value.header.filter(el => el.enabled)
             this.onMouseMove = this.onMouseMove.bind(this)
             this.onMouseUp = this.onMouseUp.bind(this)
         }
@@ -174,8 +174,11 @@
 
             const containerWidth = tableEl.clientWidth - 15 || 0
             if (containerWidth <= 0) return
+            console.log(this.visibleHeader);
+            console.log(containerWidth);
+            
 
-            const currentWidthsPx = table.value.header.map(col => {
+            const currentWidthsPx = this.visibleHeader.map(col => {
                 if (useDomCurrent) {
                     const cell = tableEl.querySelector(`.table__cell[data-column-key="${col.key}"]`)
                     const cssVar = cell?.style?.getPropertyValue('--cell-size')?.trim()
@@ -193,9 +196,9 @@
             const scale = containerWidth / sumWidths
             let accumulated = 0
 
-            table.value.header.forEach((col, index) => {
+            this.visibleHeader.forEach((col, index) => {
                 const base = currentWidthsPx[index] || 0
-                let newWidth = index === table.value.header.length - 1
+                let newWidth = index === this.visibleHeader.length - 1
                     ? Math.max(this.MIN_COLUMN_WIDTH, containerWidth - accumulated)
                     : Math.max(this.MIN_COLUMN_WIDTH, Math.round(base * scale))
 
@@ -421,7 +424,7 @@
     })
 
     onMounted(() => {
-        nextTick(() => resizer.normalizeToContainerMinWidth())
+        // nextTick(() => resizer.normalizeToContainerMinWidth())
 
         // Обработчик горизонтального скролла
         // rAF-склейка скролла для снижения дрожи и reflow
@@ -457,7 +460,10 @@
 
     // Автоматически пересчитывать позиции при динамическом изменении колонок (fixed/width/enabled)
     watch(() => table.value.header, async () => {
-        nextTick(() => resizer.setFixedLeft())
+        if (table.value.header.length == 0) return
+        console.log('table.value.header', table.value.header);
+        // nextTick(() => resizer.setFixedLeft())
+        // nextTick(() => resizer.normalizeToContainerMinWidth())
         }, {
         deep: true
         }
