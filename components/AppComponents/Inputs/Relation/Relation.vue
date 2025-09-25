@@ -47,7 +47,7 @@
                             }"
                             @click="emit('clickLink', getActiveOption(index).value)" 
                         >
-                            {{ getActiveOption(index).label?.text.slice(0, 1) }}
+                            {{ getActiveOption(index).value ? getActiveOption(index).label?.text.slice(0, 1) : 'Н' }}
                         </div>
                         <figcaption>
                             <span class="value__text value__text_link" @click="emit('clickLink', getActiveOption(index).value)">
@@ -70,7 +70,7 @@
                 <IconSelectArrow />
             </div>
             <div class="select__options">
-                <div class="select__option" v-if="props.options.isHaveNull && !props.options.multiple" :value="null" @click="selectInstances[index]?.changeValue({ value: null }, index)">
+                <div class="select__option" :value="null" @click="selectInstances[index]?.changeValue({ value: null }, index)">
                     Не выбрано
                 </div>
                 <div 
@@ -274,7 +274,7 @@
         
         
         // Обновляем внутренние данные
-        normalizedModelValue.value = { value: newValueArray, localOptions: newLocalOptionsArray };
+        normalizedModelValue.value = { value: newValueArray, localOptions: newLocalOptionsArray };      
         
         emit('update:modelValue', { 
             value: newValueArray, 
@@ -296,28 +296,6 @@
         newValueArray.push(null);
         newLocalOptionsArray.push(null);
         
-        
-        // Обновляем внутренние данные
-        normalizedModelValue.value = { value: newValueArray, localOptions: newLocalOptionsArray };
-        
-        emit('update:modelValue', { 
-            value: newValueArray, 
-            localOptions: newLocalOptionsArray 
-        });
-    };
-
-    // Функция удаления селекта
-    const removeSelect = (selectIndex) => {
-        // Получаем текущие нормализованные данные
-        const current = normalizedModelValue.value;
-        
-        // Создаем копии массивов
-        const newValueArray = [...current.value];
-        const newLocalOptionsArray = [...current.localOptions];
-        
-        // Удаляем элемент по индексу
-        newValueArray.splice(selectIndex, 1);
-        newLocalOptionsArray.splice(selectIndex, 1);
         
         // Обновляем внутренние данные
         normalizedModelValue.value = { value: newValueArray, localOptions: newLocalOptionsArray };
@@ -373,7 +351,6 @@
                 relation: null,
                 searchable: false,
                 required: false,
-                have_icon: false,
                 isHaveNull: false,
                 multiple: false,
                 type: 'select',

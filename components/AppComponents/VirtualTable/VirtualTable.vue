@@ -245,17 +245,26 @@
         let request = []
         let requestRow = {}
         let isEdit = false
+        let column = null
 
         for (let backupRow of this.backup.body) {
           requestRow = {}
           isEdit = false
 
           let row = rawRequest.find(item => item.id == backupRow.id)
-
+          
           if (row) {
             for (let key in row) {
               if (!isEqual(row[key], backupRow[key]) && ['isChoose', 'edit'].indexOf(key) == -1) {
-                requestRow[key] = row[key]
+                column = this.header.find(column => column.key == key)
+                requestRow[key] = JSON.parse(JSON.stringify(row[key]))
+                
+                if (column.type == 'relation') {
+                  row[key].value = row[key].value.filter(p => p != null)
+                  row[key].localOptions = row[key].localOptions.filter(p => p != null)
+                  requestRow[key] = requestRow[key].value.filter(p => p != null)
+                }
+
                 isEdit = true
               }
             }
@@ -266,7 +275,8 @@
             }
           }
         }
-
+        
+        if (request.length == 0) return
         await api.callMethod('POST', routes.table.save.replace('${slug}', props.slug), {rows: request})   
       } catch (error) {
         console.log('get_table', error);

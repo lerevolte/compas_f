@@ -321,7 +321,10 @@
 
                     if (column.type == 'address') {
                         table.value.body[rowIndex][column.key] = val
-                    } else if (typeof cell === 'object' && cell !== null) {
+                    }  else if (column.type == 'relation') {
+                        table.value.body[rowIndex][column.key] = val
+                    }
+                     else if (typeof cell === 'object' && cell !== null) {
                         if (slug in cell) {
                             cell[slug] = val
                         } else if ('value' in cell) {
