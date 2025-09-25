@@ -213,8 +213,6 @@
                     }
                 })
             })
-
-            table.value.isChanged = true
         }
 
         /** Очистка обработчиков */

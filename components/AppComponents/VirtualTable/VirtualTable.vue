@@ -221,15 +221,16 @@
     async reset() {
       try {
         this.loading = true
-        this.setSortItem({
-          sort_field: 'id',
-          sort_order: 'asc'
-        })
         this.isChanged = true
-        this.pages.current = 1
         const response = await api.callMethod('GET', routes.table.reset.replace('${slug}', props.slug))
-        this.set(response.data)
-        this.getHeader(response.data.table)
+
+        if (response.data.fields) {
+          this.setSortItem({
+            sort_field: response.data.sort_field,
+            sort_order: response.data.sort_order
+          })
+          this.getHeader(response.data.fields)
+        }
       } catch (error) {
         console.log('get_table', error);
       } finally {

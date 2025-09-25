@@ -20,7 +20,7 @@
                     S: { pattern: /[0-9а-яА-Я]/ }
                 }
             }"
-            @input="(event) => emit('update:modelValue', event.target.value)"
+            @input="onInput"
             @blur="event => emit('blur', event)"
         >
         <slot></slot>
@@ -52,4 +52,19 @@
         },
         modelValue: [String, Number]
     })
+
+    // Коалесцируем несколько input-событий (сырое + от v-maska) в один emit
+    let emitRafId = null
+
+    function onInput(event) {
+        const target = event.target
+        if (emitRafId !== null) {
+            cancelAnimationFrame(emitRafId)
+            emitRafId = null
+        }
+        emitRafId = requestAnimationFrame(() => {
+            emit('update:modelValue', target.value)
+            emitRafId = null
+        })
+    }
 </script>

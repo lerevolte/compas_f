@@ -25,8 +25,8 @@
                         autocomplete: 'off',
                         placeholder: ''
                     }"
-                    @update:modelValue="(value) => select.filterOptions(value)"
-                    v-model="select.state.search"
+                    :model-value="select.state.search"
+                    @update:modelValue="(value) => { select.state.search = value; select.filterOptions(value); }"
                 />
     
                 <div class="select__values" ref="selectValuesRef" v-if="props.options.multiple">
