@@ -5,11 +5,8 @@
   z-index: 55;
   position: sticky;
   top: 0px;
-  width: max-content;
-  border-bottom: 1px solid variables.$color-border-light;
 
   .table__row {
-    width: max-content;
     position: relative;
   }
 
@@ -17,6 +14,7 @@
     position: relative;
     z-index: 2;
     background: variables.$color-white;
+    border-bottom: 1px solid variables.$color-border-light;
     @include mixins.userSelect(none);
 
     span {
@@ -105,14 +103,6 @@
     border-right: 1px solid variables.$color-border;
   }
 }
-
-
-
-
-
-
-
-
 
 .drag-ghost {
   display: flex;

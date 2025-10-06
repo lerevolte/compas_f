@@ -154,6 +154,10 @@
             background: variables.$color-orange;
         }
     }
+
+    &:hover {
+        color: variables.$color-white;
+    }
 }
 
 .menu__logo {
