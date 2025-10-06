@@ -21,7 +21,7 @@
                 v-for="column in table.header" 
                 class="table__cell" 
                 :class="{ 
-                    'skeleton': table.loading,
+                    'table__cell_loading': table.loading,
                     'table__cell_fixed': column.fixed,
                     'table__cell_hide': !column.enabled,
                 }"
@@ -46,6 +46,7 @@
 
                 <AppRelation  
                     v-else-if="column.type == 'relation'"
+                    :parentContainer="sectionRef"
                     :options="{
                         id: `${row.index}_${column.key}`,
                         title: null,
@@ -73,8 +74,8 @@
                                 :style="`--count-files: '${table.body[row.index][column.key].length}'`"
                                 :id="`${row.index}_${column.key}`"
                                 :image="{
-                                    path: file.url,
-                                    thumbnail_path: file.file,
+                                    path: file.file,
+                                    thumbnail_path: file.url,
                                 }"
                             />
                         </template>
@@ -97,6 +98,7 @@
                     />
                     <AppSelect 
                         v-else-if="column.type == 'select_dropdown'" 
+                        :parentContainer="sectionRef"
                         :options="{
                             id: `${row.index}_${column.key}`,
                             title: null,
@@ -130,6 +132,7 @@
 
                     <AppStatus 
                         v-else-if="column.type == 'status'"
+                        :parentContainer="sectionRef"
                         :options="{
                             id: `${row.index}_${column.key}`,
                             title: null,
@@ -146,6 +149,7 @@
 
                     <AppSelect 
                         v-else-if="column.type == 'address'" 
+                        :parentContainer="sectionRef"
                         :options="{
                             id: `${row.index}_${column.key}`,
                             title: null,
@@ -228,6 +232,7 @@
     import { format } from 'date-fns'
 
     const table = inject('table')
+    const sectionRef = inject('sectionRef')
     const common = new Common()
 
     const doubleClick = common.useDoubleClick((elem, event) => {

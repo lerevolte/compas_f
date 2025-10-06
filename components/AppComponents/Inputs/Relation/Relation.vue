@@ -76,7 +76,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="4" height="3" fill="none" viewBox="0 0 4 3"><path fill="#888" d="M0 0h4L2 3z"/></svg>
                 </figure>
             </div>
-            <div class="select__options">
+            <div class="select__options" :class="{ 'popup__content_top': selectInstances[index]?.state?.isTop }">
                 <div class="select__option" :value="null" @click="selectInstances[index]?.changeValue({ value: null }, index)">
                     Не выбрано
                 </div>
@@ -139,6 +139,7 @@
 
             this.state = reactive({
                 list: [],
+                isTop: false,
                 search: '',
                 isOpen: false
             });
@@ -148,6 +149,7 @@
                 if (this.selectRef && !this.selectRef.contains(event.target)) {
                     this.state.isOpen = false;
                     this.state.search = ''
+                    this.state.isTop = false
                     this.setOptions()
                     document.removeEventListener('click', this.closeOptions);
                 }
@@ -200,6 +202,7 @@
             selectInstances.value.forEach((instance, idx) => {
                 if (idx !== this.index && instance.state.isOpen) {
                     instance.state.isOpen = false;
+                    instance.state.isTop = false
                     instance.state.search = '';
                     instance.setOptions();
                     document.removeEventListener('click', instance.closeOptions);
@@ -210,7 +213,9 @@
 
             if (this.state.isOpen) {
                 document.addEventListener('click', this.closeOptions);
+                nextTick(() => this.checkPosition(event));
             } else {
+                this.state.isTop = false;
                 this.state.search = ''
                 if (!props.options.searchable) {
                     this.state.list = props.options.list
@@ -223,6 +228,19 @@
             }
         }
         
+        checkPosition(event) {
+            let popupRef = event.target.closest('.select')
+            let contentRef = popupRef.querySelector('.select__options')
+
+            
+
+            if (!popupRef || !contentRef) return;
+
+            const parentRect = props.parentContainer ? props.parentContainer.getBoundingClientRect() : popupRef.getBoundingClientRect();
+            const contentRect = contentRef.getBoundingClientRect();
+            this.state.isTop = contentRect.bottom > parentRect.bottom;
+        }
+
         setOptions() {
             this.state.list = props.options.list ?? []
         }
@@ -352,6 +370,9 @@
     };
 
     const props = defineProps({
+        parentContainer: {
+            default: null
+        },
         options: {
             default: {
                 id: 0,

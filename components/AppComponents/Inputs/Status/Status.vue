@@ -21,7 +21,7 @@
                     </figcaption>
                 </figure>
             </div>
-            <div class="status__options">
+            <div class="status__options" ref="contentRef" :class="{ 'popup__content_top': status.state.isTop }">
                 <div class="status__option" v-if="props.options.isHaveNull" :value="null" @click="status.changeValue({ value: null })">
                     Не выбрано
                 </div>
@@ -48,6 +48,7 @@
     import IconWarning from '@AppIcons/Warning.vue';
 
     const statusRef = ref(null)
+    const contentRef = ref(null)
 
     const emit = defineEmits([
         'update:modelValue'
@@ -55,17 +56,17 @@
 
     class Status {
         constructor() {
-            this.statusRef = statusRef;
-
             this.state = reactive({
                 list: [],
+                isTop: false,
                 isOpen: false
             });
 
             // Закрытие опций
             this.closeOptions = (event) => {
-                if (this.statusRef.value && !this.statusRef.value.contains(event.target)) {
+                if (statusRef.value && !statusRef.value.contains(event.target)) {
                     this.state.isOpen = false;
+                    this.state.isTop = false;
                     this.state.list = props.options.list
                     document.removeEventListener('click', this.closeOptions);
                 }
@@ -89,20 +90,31 @@
 
             if (this.state.isOpen) {
                 document.addEventListener('click', this.closeOptions);
+                nextTick(() => this.checkPosition());
             } else {
+                this.state.isTop = false
                 this.state.list = props.options.list
-
-                console.log(this.state.list);
-                
                 document.removeEventListener('click', this.closeOptions);
             }
         }
+
+        checkPosition() {
+            if (!contentRef.value || !statusRef.value) return;
+
+            const parentRect = props.parentContainer ? props.parentContainer.getBoundingClientRect() : statusRef.value.getBoundingClientRect();
+            const contentRect = contentRef.value.getBoundingClientRect();
+            
+            this.state.isTop = contentRect.bottom > parentRect.bottom;
+        }
     }
 
-    const status = new Status(statusRef)
+    const status = new Status(statusRef.value, contentRef.value)
     const activeOption = computed(() => status.getActiveOptions(props.modelValue))
 
     const props = defineProps({
+        parentContainer: {
+            default: null
+        },
         options: {
             default: {
                 id: 0,

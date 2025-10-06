@@ -26,6 +26,8 @@
     import api from '@/helpers/api.js'
     import route from '@/helpers/routes.js'
     import { useUserStore } from '@/stores/userStore.js'
+    import { useMenuStore } from '@/stores/menuStore.js'
+    const menuStore = useMenuStore()
     const userStore = useUserStore()
     
     const router = useRoute()
@@ -75,6 +77,7 @@
                 } else {
                     userStore.token = response.data.token
                     await userStore.get()
+                    await menuStore.get()
                     navigateTo('/')
                 }
             } catch (error) {

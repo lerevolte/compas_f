@@ -6,7 +6,7 @@ export const useUserStore = defineStore('userStore', {
     // states
     state: () =>  {
         return {
-            token: 'asdasdasdasdasdas',
+            token: null,
             loading: false,
             balance: 0,
             domain: null,

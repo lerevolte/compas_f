@@ -67,14 +67,17 @@
         checkPosition() {
             if (!this.popupRef || !this.contentRef) return;
 
-            const parentRect = this.popupRef.getBoundingClientRect();
-            const contentRect = this.contentRef.getBoundingClientRect();
+            const parentRect = props.parentContainer ? props.parentContainer.getBoundingClientRect() : this.popupRef.getBoundingClientRect();
+            const contentRect = contentRef.value.getBoundingClientRect();
 
             this.state.isTop = contentRect.bottom > parentRect.bottom;
         }
     }
 
     const props = defineProps({
+        parentContainer: {
+            default: null
+        },
         ignoreSelectors: {
             type: Array,
             default: () => []

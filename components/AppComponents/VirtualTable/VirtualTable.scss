@@ -77,21 +77,8 @@
     z-index: 30;
   }
 
-  &.skeleton {
-    &:not(.table__cell_fixed) {
-      position: relative;
-    }
-
-    * {
-      opacity: 0;
-    }
-
-    &::after {
-      top: 10px;
-      height: calc(100% - 20px);
-      left: 10px;
-      width: calc(100% - 20px);
-    }
+  &.table__cell_loading {
+    opacity: 0.5;
   }
 
   .table__label {
@@ -123,6 +110,7 @@
       color: variables.$color-icon;
       text-decoration: none;
       justify-content: start;
+      font-weight: 400;
 
       &::after {
         content: 'Скопировать адрес'
@@ -260,7 +248,7 @@
   }
 
   .table__row {
-    &:nth-child(-n+8) {
+    &:nth-child(-n+12) {
       .popup {
         &.popup_open {
           .popup__content {
@@ -274,6 +262,23 @@
   .table__cell {
     align-items: start;
     background: var(--color-row);
+
+    &[data-column-key="isChoose"] {
+      padding: 0px;
+    }
+  
+    .form__item_checkbox {
+      width: 100%;
+      height: 100%;
+  
+      label {
+        width: 100%;
+        max-width: none;
+        height: 100%;
+        padding: 10px 0 10px 10px;
+        align-items: start;
+      }
+    }
   }
 }
 

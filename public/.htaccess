@@ -1,0 +1,18 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  Options -Multiviews
+
+  # Serve existing files/directories as-is
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Fallback all other requests to index.html (SPA routing)
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# If mod_rewrite is not available, try FallbackResource (if supported)
+<IfModule !mod_rewrite.c>
+  FallbackResource /index.html
+</IfModule>

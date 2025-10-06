@@ -1,10 +1,11 @@
 <template>
-  <section class="section-table">
+  <section class="section-table" ref="sectionRef">
     <TableTop />
 
     <div ref="tableRef" class="table">
       <TableHeader />
       <TableBody />
+      <IconLoader v-if="table.loading"/>
       <ScrollButtons />
     </div>
     <TableFooter />
@@ -57,6 +58,7 @@
   import isEqual from 'lodash/isEqual'
   import api from '@AppHelpers/api.js'
   import routes from '@AppHelpers/routes.js'
+  import IconLoader from '@AppIcons/Loader.vue'
   import { Common } from '@AppHelpers/classes.js'
   import { useVirtualizer } from '@tanstack/vue-virtual'
   import TableTop from '@AppComponents/VirtualTable/Top/Top.vue'
@@ -80,6 +82,7 @@
 
   const isClient = ref(false)
   const tableRef = ref(null)
+  const sectionRef = ref(null)
   const common = new Common()
 
   class Table {
@@ -262,7 +265,7 @@
                 
                 if (column.type == 'relation') {
                   row[key].value = row[key].value.filter(p => p != null)
-                  row[key].localOptions = row[key].localOptions.filter(p => p != null)
+                  row[key].localOptions = row[key].localOptions.filter(p => p != null && p.value != null)
                   requestRow[key] = requestRow[key].value.filter(p => p != null)
                 }
 
@@ -498,4 +501,6 @@
 
   provide('table', table)
   provide('tableRef', tableRef)
+  provide('sectionRef', sectionRef)
+  
 </script>

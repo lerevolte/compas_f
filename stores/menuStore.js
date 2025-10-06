@@ -10,6 +10,13 @@ export const useMenuStore = defineStore('menuStore', {
         }
     },
 
+    // Явно включаем персист в localStorage на клиенте
+    persist: {
+        key: 'menuStore',
+        storage: import.meta.client ? localStorage : undefined,
+        paths: ['list']
+    },
+
     actions: {
         // Получение меню
         async get() {

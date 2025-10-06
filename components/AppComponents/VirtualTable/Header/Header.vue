@@ -263,6 +263,7 @@
                 'key'
             )
             tableRef.value.classList.remove('table_dragging')
+            table.value.isChanged = true
             await nextTick()
             resizer.setFixedLeft()
         }

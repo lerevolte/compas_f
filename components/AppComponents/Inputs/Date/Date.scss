@@ -12,12 +12,17 @@
         }
 
         .dp__input_icon,
-        .dp__arrow_top {
+        .dp__arrow_top,
+        .dp__arrow_bottom {
             display: none;
         }
 
         .dp--menu-wrapper {
             z-index: 10;
+        }
+
+        .dp__menu {
+            border-radius: 5px;
         }
     }
 }

@@ -332,8 +332,10 @@
 
     const menu = ref(new Menu())
 
-    onMounted(() => {
-        menu.value.get()
+    onMounted(async () => {
+        await menuStore.get()
+        await userStore.getRoles()
+        await menu.value.get()
         isClient.value = true
     })
 </script>

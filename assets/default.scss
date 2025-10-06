@@ -108,6 +108,10 @@ html {
         grid-template-columns: 1fr;
         height: 100vh;
         grid-template-rows: 1fr;
+
+        main {
+            padding: 15px 10px;
+        }
     }
 }
 

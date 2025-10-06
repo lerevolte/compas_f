@@ -42,7 +42,7 @@
     
                 <IconSelectArrow />
             </div>
-            <div class="select__options">
+            <div class="select__options" ref="contentRef" :class="{ 'popup__content_top': select.state.isTop }">
                 <div class="select__option" v-if="props.options.isHaveNull && !props.options.multiple" :value="null" @click="select.changeValue({ value: null })">
                     Не выбрано
                 </div>
@@ -75,6 +75,7 @@
     import isEqual from 'lodash/isEqual'
 
     const selectRef = ref(null)
+    const contentRef = ref(null)
     const selectValuesRef = ref(null)
 
     const emit = defineEmits([
@@ -83,9 +84,6 @@
 
     class Select {
         constructor() {
-            this.selectRef = selectRef;
-            this.selectValuesRef = selectValuesRef
-
             this.state = reactive({
                 list: [],
                 search: '',
@@ -94,9 +92,10 @@
 
             // Закрытие опций
             this.closeOptions = (event) => {
-                if (this.selectRef.value && !this.selectRef.value.contains(event.target)) {
+                if (selectRef.value && !selectRef.value.contains(event.target)) {
                     this.state.isOpen = false;
                     this.state.search = ''
+                    this.state.isTop = false;
                     this.setOptions()
                     document.removeEventListener('click', this.closeOptions);
                 }
@@ -159,13 +158,15 @@
         // Открытие/закрытие опций
         toggleOptions(event) {
             if (props.options.edit == false) return
-            if (props.options.multiple && this.state.isOpen && this.selectValuesRef.value.contains(event.target)) return
+            if (props.options.multiple && this.state.isOpen && selectValuesRef.value.contains(event.target)) return
             this.state.isOpen = !this.state.isOpen;
 
             if (this.state.isOpen) {
                 document.addEventListener('click', this.closeOptions);
+                nextTick(() => this.checkPosition());
             } else {
                 this.state.search = ''
+                this.state.isTop = false
                 if (!props.options.searchable) {
                     this.state.list = props.options.list
                 }
@@ -186,13 +187,25 @@
                 this.state.list = props.options.list ?? []
             }
         }
+
+        checkPosition() {
+            if (!contentRef.value || !selectRef.value) return;
+
+            const parentRect = props.parentContainer ? props.parentContainer.getBoundingClientRect() : selectRef.value.getBoundingClientRect();
+            const contentRect = contentRef.value.getBoundingClientRect();
+            
+            this.state.isTop = contentRect.bottom > parentRect.bottom;
+        }
     }
 
-    const select = new Select(selectRef, selectValuesRef)
+    const select = new Select()
 
     const activeOption = computed(() => select.getActiveOptions(props.modelValue))
 
     const props = defineProps({
+        parentContainer: {
+            default: null
+        },
         options: {
             default: {
                 id: 0,
