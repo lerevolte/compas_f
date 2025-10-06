@@ -221,6 +221,10 @@
     const menuHidden = ref(null)
     const isClient = ref(false)
 	const route = useRoute()
+
+    // Загружаем данные самыми первыми на сайте
+    await menuStore.get()
+    await userStore.getRoles()
     
     class Menu {
         constructor() {
@@ -246,7 +250,6 @@
                     name: full_name.replaceAll(' ', '') == '' ? 'Без имени' : full_name,
                     avatar: userStore.user ? JSON.parse(userStore.user?.avatar)[0]?.url ?? '/undefined.svg' : '/undefined.svg'
                 }
-                
                 await this.update()
             } catch (error) {
                 console.log('menu_template', error);
@@ -333,9 +336,8 @@
     const menu = ref(new Menu())
 
     onMounted(async () => {
-        await menuStore.get()
-        await userStore.getRoles()
         await menu.value.get()
         isClient.value = true
     })
+    
 </script>
