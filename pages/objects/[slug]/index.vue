@@ -4,9 +4,9 @@
 			<AppH1 id="mobile-menu-target">
 				{{ entity.active?.title }}
 			</AppH1>
-			<AppFilter 
-				
-			/>
+
+			<div id="filter-container"></div>
+
 			<AppButton class="button_fill">
 				<AppIconPlus />
 				Создать
@@ -34,7 +34,6 @@
 
     import AppVirtualTable from '@AppComponents/VirtualTable/VirtualTable.vue';
 	import AppWarningLarge from '@AppComponents/Modal/Large/Large.vue'
-	import AppFilter from '@AppComponents/Filter/Filter.vue'
 	import AppButton from '@AppComponents/Button/Button.vue'
 	import AppIconPlus from '@AppIcons/Plus.vue'
 

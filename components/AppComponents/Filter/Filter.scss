@@ -1,6 +1,12 @@
 @use '@/assets/variables.scss' as variables;
 @use '@/assets/mixins.scss' as mixins;
 
+#filter-container {
+    width: 100%;
+    max-width: 600px;
+}
+
+
 .filter {
     position: relative;
     width: 100%;

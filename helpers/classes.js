@@ -322,7 +322,9 @@ export class Table {
         try {
             this.loading = true
             const response = await api.callMethod('GET', routes.table.get.replace('${slug}', this.slug))
+            const hiddenFilter = response.data.filters.find(f => f.is_hidden)
             this.set(response.data, true)
+            this.filter.set(hiddenFilter)
             this.getHeader(response.data.table)
             await this.initVirtualizer()
         } catch (error) {
@@ -337,6 +339,8 @@ export class Table {
         try {
             this.loading = true
             let response = await this.filter.get([], query)
+            const hiddenFilter = response.filters.find(f => f.is_hidden)
+            this.filter.set(hiddenFilter)
             this.getHeader(response.table)
             await this.initVirtualizer()
         } catch (error) {
@@ -731,5 +735,9 @@ export class Filter {
         } finally {
             this.filtering = false
         }
+    }
+
+    set(filter) {
+        this.fields = filter.fields ?? []
     }
 }

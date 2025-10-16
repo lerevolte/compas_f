@@ -40,7 +40,14 @@
                     />
                     <AppDate 
                         v-else-if="field.type == 'date'"
-                        :options="field"
+                        :options="{
+                            id: field.id,
+                            title: field.title,
+                            type: field.type,
+                            name: field.name,
+                            multiple: true,
+                            placeholder: field.placeholder
+                        }"
                         v-model="filter.state.tabsValues[field.key]"
                     />
                     <AppSelect 

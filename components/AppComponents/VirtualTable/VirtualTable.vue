@@ -49,6 +49,12 @@
           </p>
       </AppModalWarning>
   </teleport>
+  <teleport to="#filter-container" v-if="isClient">
+    <AppFilter 
+      :fields="table.filter.fields"
+      @update="item => table.filter.get(item)"
+    />
+  </teleport>
 
 </template>
 
@@ -57,6 +63,7 @@
 
   import IconLoader from '@AppIcons/Loader.vue'
   import { Table, Common } from '@AppHelpers/classes.js'
+	import AppFilter from '@AppComponents/Filter/Filter.vue'
   import TableTop from '@AppComponents/VirtualTable/Top/Top.vue'
   import TableBody from '@AppComponents/VirtualTable/Body/Body.vue'
   import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'

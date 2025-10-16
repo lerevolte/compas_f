@@ -45,7 +45,7 @@
                 />
 
                 <AppRelation  
-                    v-else-if="column.type == 'relation'"
+                    v-else-if="column.type == 'relation' && table.body[row.index]"
                     :parentContainer="sectionRef"
                     :options="{
                         id: `${row.index}_${column.key}`,
@@ -66,7 +66,7 @@
                     @create="item => table.create(item)"
                 />
 
-                <div class="table__cell-content" v-else-if="column.type == 'file'">
+                <div class="table__cell-content" v-else-if="column.type == 'file' && table.body[row.index]">
                     <AppFansyBox class='table__text-group_file table__file'>
                         <template v-if="Array.isArray(table.body[row.index][column.key]) && table.body[row.index][column.key].length">
                             <AppFansyBoxItem 
@@ -288,6 +288,12 @@
             this._selectCache = new Map()
         }
 
+        // Очистка кэша
+        clearCache() {
+            this._modelCache.clear()
+            this._selectCache.clear()
+        }
+
         // Получение значения (с кэшем computed)
         useCellModel(rowIndex, column, slug = 'value') {
             const cacheKey = `${rowIndex}__${column.key}__${slug}`
@@ -295,6 +301,11 @@
 
             const c = computed({
                 get() {
+                    // Проверяем что строка существует
+                    if (!table.value.body[rowIndex]) {
+                        return null
+                    }
+                    
                     const cell = table.value.body[rowIndex][column.key]
                     if (column.type == 'address') {
                         return cell
@@ -307,6 +318,11 @@
                     }
                 },
                 set(val) {
+                    // Проверяем что строка существует
+                    if (!table.value.body[rowIndex]) {
+                        return
+                    }
+                    
                     const cell = table.value.body[rowIndex][column.key]
 
                     if (column.type == 'address') {
@@ -338,6 +354,11 @@
 
             const c = computed({
                 get() {
+                    // Проверяем что строка существует
+                    if (!table.value.body[rowIndex]) {
+                        return null
+                    }
+                    
                     const cell = table.value.body[rowIndex][column.key]
                     let response = null
                     
@@ -387,4 +408,9 @@
     }
 
     const cell = new Cell()
+
+    // Очищаем кэш при изменении данных таблицы
+    watch(() => table.value.body, () => {
+        cell.clearCache()
+    }, { deep: true })
 </script>

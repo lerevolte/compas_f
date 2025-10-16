@@ -19,9 +19,9 @@
 			hide-offset-dates
 			format="dd.MM.yyyy"
 			:placeholder="'__.__.____'"
-            @update:modelValue="emit('update:modelValue', format($event, `yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'`))"
+            @update:modelValue="emit('update:modelValue', props.options.multiple ? [format($event[0], `yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'`), format($event[1], `yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'`)] : format($event, `yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'`))"
             @open="datepickerField.open()"
-        />
+            />
     </div>
 </template>
 
