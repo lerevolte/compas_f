@@ -20,7 +20,7 @@ export default {
                 }).catch((error) => {
                     if (error.response.status == 401) {
                         userStore.token = null
-                        window.location.href = '/auth'
+                        navigateTo('/auth')
                     }
 
                     return error.response

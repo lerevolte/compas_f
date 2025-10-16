@@ -1,7 +1,8 @@
 import api from '@/helpers/api.js'
 import 'vue3-toastify/dist/index.css';
 import routes from '@/helpers/routes.js'
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { useVirtualizer } from '@tanstack/vue-virtual'
+import isEqual from 'lodash/isEqual'
 
 import { toast } from 'vue3-toastify';
 import { useUserStore } from '@/stores/userStore.js'
@@ -19,15 +20,15 @@ export class Common {
         if (type == 'link') {
             return phone
                 .replace(/^(\+?7|8)\s*|\s+|\(|\)|-/g, (match, p1) => {
-                if (p1 === '8' || p1 === '7') return '+7';
-                if (p1 === '+7') return '+7';
-                return '';
-            });
+                    if (p1 === '8' || p1 === '7') return '+7';
+                    if (p1 === '+7') return '+7';
+                    return '';
+                });
         } else {
             return phone
-            .replace(/\D/g, '')
-            .replace(/^(\d)/, (_, p1) => p1 === '8' || p1 === '7' ? '+7' : p1)
-            .replace(/^(\+7)(\d{3})(\d{3})(\d{2})(\d{2})$/, '$1 ($2) $3 $4-$5');
+                .replace(/\D/g, '')
+                .replace(/^(\d)/, (_, p1) => p1 === '8' || p1 === '7' ? '+7' : p1)
+                .replace(/^(\+7)(\d{3})(\d{3})(\d{2})(\d{2})$/, '$1 ($2) $3 $4-$5');
         }
     }
 
@@ -45,7 +46,7 @@ export class Common {
         const checkPhone = (phone) => {
             const phoneRegex = /^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$/;
             return phoneRegex.test(phone)
-        } 
+        }
 
         let logs = null
         let isError = false
@@ -60,7 +61,7 @@ export class Common {
                     isError = true
                 }
                 break;
-        
+
             case 'phone':
                 if (!checkPhone(field.value)) {
                     logs = {
@@ -69,7 +70,7 @@ export class Common {
                     }
                     isError = true
                 }
-        
+
                 break;
             default:
                 if (!checkText(field.value)) {
@@ -127,7 +128,7 @@ export class Common {
     getQueryUrl() {
         const urlParams = new URLSearchParams(window.location.search);
         const params = {};
-    
+
         for (const [key, value] of urlParams.entries()) {
             const numberValue = Number(value);
             if (value !== '' && !isNaN(numberValue)) {
@@ -136,27 +137,27 @@ export class Common {
                 params[key] = value;
             }
         }
-    
+
         return Object.keys(params).length === 0 ? null : params;
     }
-    
+
 
     useDoubleClick(callback, delay = 300) {
         let lastClickTime = 0
         let lastEl = null
-      
+
         return (event) => {
-          const now = Date.now()
-          const el = event.currentTarget
-      
-          if (el === lastEl && now - lastClickTime <= delay) {
-            callback(el, event)
-            lastClickTime = 0
-            lastEl = null
-          } else {
-            lastClickTime = now
-            lastEl = el
-          }
+            const now = Date.now()
+            const el = event.currentTarget
+
+            if (el === lastEl && now - lastClickTime <= delay) {
+                callback(el, event)
+                lastClickTime = 0
+                lastEl = null
+            } else {
+                lastClickTime = now
+                lastEl = el
+            }
         }
     }
 
@@ -166,7 +167,7 @@ export class Common {
         secondArray.forEach((item, index) => {
             orderMap.set(item[key], index);
         });
-        
+
         return [...firstArray].sort((a, b) => {
             const indexA = orderMap.get(a[key]);
             const indexB = orderMap.get(b[key]);
@@ -189,23 +190,22 @@ export class Common {
                 document.body.appendChild(textArea)
                 textArea.focus()
                 textArea.select()
-                
+
                 const successful = document.execCommand('copy')
                 document.body.removeChild(textArea)
-                
+
                 if (!successful) {
-                throw new Error('Failed to copy text')
+                    throw new Error('Failed to copy text')
                 }
             }
-            
+
             return true
-        } 
-        catch (error) {
+        } catch (error) {
             console.error('Failed to copy text:', error)
             return false
         }
     }
-} 
+}
 
 export class Auth {
     constructor() {
@@ -229,21 +229,23 @@ export class Auth {
 
             for (let key in this.form) {
                 if (key == 'remember_me' || key == 'email') continue
-                
-                let response = this.common.validate({key: key, value: this.form[key]}, key)
+
+                let response = this.common.validate({
+                    key: key,
+                    value: this.form[key]
+                }, key)
                 if (response.isError) {
                     this.errorLogs.push(response.logs)
                     isError = true
                 }
-            }                
+            }
 
             if (isError) return
 
             let response = await api.callMethod('POST', routes.auth.login, this.form)
 
             if (response.status == 400) {
-                this.errorLogs = [
-                    {
+                this.errorLogs = [{
                         item: 'email',
                         text: 'Данные введены неверно'
                     },
@@ -275,113 +277,426 @@ export class Auth {
     }
 }
 
-export class Filter {
-    constructor(table) {
-        this.setter = table
-        this.filtering = false
+export class Table {
+    constructor(tableRef, slug, emit) {
+        this.common = new Common()
+        this.slug = slug
+        this.emit = emit
 
-        this.default = {
-            fields: [],
-            query: null,
+        this.isChanged = false
+        this.tableRef = tableRef
+        this.header = []
+        this.body = []
+        this.rowVirtualizer = null
+        this._virtScope = null
+        this.pages = {
+            current: 1,
+            total: 1,
+            limit: 25
         }
-
-        this.short = {
-            content:  [],
-            values: []
+        this.sortItem = {
+            sort_field: null,
+            sort_order: null
+        }
+        this.loading = false
+        this.saving = false
+        this.state = null
+        this.backup = {
+            header: [],
+            body: []
+        }
+        this.deleteBuffer = {
+            state: false,
+            list: []
+        }
+        this.downloadExcelBuffer = {
+            state: false,
+            loading: false,
+            link: null
         }
     }
 
-    // Установка коротких фильтров
-    async setShortFilters(item) {
-        const setValue = (item) => {
-            let fields = this.default.query?.split('&') ?? []
+    // Получение данных для таблицы
+    async get() {
+        try {
+            this.loading = true
+            console.log(this);
+            const response = await api.callMethod('GET', routes.table.get.replace('${slug}', this.slug))
+            this.set(response.data, true)
+            this.getHeader(response.data.table)
+            await this.initVirtualizer()
+        } catch (error) {
+            console.log('get_table', error);
+        } finally {
+            this.loading = false
+        }
+    }
 
-            if (fields.length > 0) {
-                fields = fields.map(field => {
-                    return {
-                        key: field.split('=')[0].replaceAll('filter[', '').replaceAll(']', '').replaceAll('[', ''),
-                        value: field.split('=')[1]
-                    }
+    // Получение данных для таблицы с параметрами
+    async getWithQuery() {
+        try {
+            this.loading = true
+            const response = await api.callMethod('GET', routes.table.get.replace('${slug}', this.slug) + this.getQuery(common.getQueryUrl()))
+            this.set(response.data, true)
+            this.getHeader(response.data.table)
+            await this.initVirtualizer()
+        } catch (error) {
+            console.log('get_table', error);
+        } finally {
+            this.loading = false
+        }
+    }
+
+    async initVirtualizer() {
+        // корректно очищаем предыдущий scope
+        if (this._virtScope) {
+            try {
+                this._virtScope.stop()
+            } catch (e) {}
+            this._virtScope = null
+        }
+        await nextTick()
+        const scope = effectScope()
+        this._virtScope = scope
+        scope.run(() => {
+            this.rowVirtualizer = useVirtualizer({
+                count: this.body.length,
+                estimateSize: () => 50,
+                getScrollElement: () => this.tableRef,
+                overscan: 8,
+            })
+        })
+    }
+
+    // Установка таблицы
+    async set(response, skip = false) {
+        this.getBody(response.list.data)
+        this.setSortItem({
+            sort_field: response.list.sort_field,
+            sort_order: response.list.sort_order
+        })
+        this.pages = {
+            current: response.list.current_page,
+            total: response.list.last_page,
+            limit: response.list.per_page
+        }
+        await this.initVirtualizer()
+        this.rowVirtualizer.scrollToIndex(0)
+        this.rowVirtualizer.measure()
+        this.clear()
+        this.setQueryUrl(skip)
+    }
+
+    // Получнеие шапки
+    getHeader(data) {
+        this.header = data
+    }
+
+    // Получение контента
+    getBody(data) {
+        this.body = data
+    }
+
+    // Получение квери параметров таблицы
+    getQuery(query = null) {
+        let local_query = {
+            per_page: this.pages.limit,
+            page: this.pages.current,
+            sort_field: this.sortItem.sort_field,
+            sort_order: this.sortItem.sort_order
+        }
+
+        return `?${new URLSearchParams(query ?? local_query).toString()}`
+    }
+
+    // Установка квери параметров
+    setQueryUrl(skip = false) {
+        if (skip) return
+        this.common.setQueryUrl(this.getQuery())
+    }
+
+    // Сортировка
+    async setSortItem(item) {
+        this.sortItem = item
+    }
+
+    // Вернуть настройки по умолчанию
+    async reset() {
+        try {
+            this.loading = true
+            this.isChanged = true
+            const response = await api.callMethod('GET', routes.table.reset.replace('${slug}', this.slug))
+
+            if (response.data.fields) {
+                this.setSortItem({
+                    sort_field: response.data.sort_field,
+                    sort_order: response.data.sort_order
                 })
-
-                fields = fields.filter(p => this.short.values.findIndex(filter => filter.key == p.key) == -1 && p.value)
+                this.getHeader(response.data.fields)
             }
+        } catch (error) {
+            console.log('get_table', error);
+        } finally {
+            this.loading = false
+        }
+    }
 
-            for (let tab of item) {
-                if (tab.value.value) {
-                    for (let tabFilter of tab.value.filters) {
-                        if (Array.isArray(tabFilter.value)) {
-                            for (let value of tabFilter.value) {
-                                this.short.values.push({
-                                    key: tab.key,
-                                    value: String(value),
-                                    operator: `[]${tabFilter.operator}`
-                                })
+    // Сохранение
+    async save() {
+        try {
+            this.saving = true
+            let rawRequest = this.body.filter(row => row.edit)
+            let request = []
+            let requestRow = {}
+            let isEdit = false
+            let column = null
+
+            for (let backupRow of this.backup.body) {
+                requestRow = {}
+                isEdit = false
+
+                let row = rawRequest.find(item => item.id == backupRow.id)
+
+                if (row) {
+                    for (let key in row) {
+                        if (!isEqual(row[key], backupRow[key]) && ['isChoose', 'edit'].indexOf(key) == -1) {
+                            column = this.header.find(column => column.key == key)
+                            requestRow[key] = JSON.parse(JSON.stringify(row[key]))
+
+                            if (column.type == 'relation') {
+                                row[key].value = row[key].value.filter(p => p != null)
+                                row[key].localOptions = row[key].localOptions.filter(p => p != null && p.value != null)
+                                requestRow[key] = requestRow[key].value.filter(p => p != null)
                             }
-                        } else {
-                            this.short.values.push({
-                                key: tab.key,
-                                value: String(tabFilter.value),
-                                operator: tabFilter.operator
-                            })
+
+                            isEdit = true
                         }
                     }
-                } else {
-                    this.short.values = this.short.values.filter(p => p.key != tab.key)
-                    fields = fields.filter(p => p.key != tab.key)
+
+                    if (isEdit) {
+                        requestRow.id = row.id
+                        request.push(requestRow)
+                    }
                 }
             }
 
-            return fields
-        }
-
-        try {
-            this.short.values = this.short.values.filter(filter => item.findIndex(p => p.key == filter.key) == -1)
-            let fields = setValue(item)
-            this.filter(this.short.values.filter(p => p.value || p.value == 0).concat(fields))
+            if (request.length == 0) return
+            await api.callMethod('POST', routes.table.save.replace('${slug}', this.slug), {
+                rows: request
+            })
         } catch (error) {
-            console.log(error);
+            console.log('get_table', error);
+        } finally {
+            this.clear()
+            this.saving = false
         }
     }
 
-    // Фильтрация
-    async filter(fields) {
-        // Установка фильтра
-        const setFilter = (fields) => {
-            let response = []
-            let operator = '='
+    // Создание
+    create() {
+        this.emit('openModal', {
+            type: 'create'
+        })
+    }
 
-            fields.forEach(field => {
-                operator = field.operator ?? '='
-                if (field.value.includes(' - ')) {
-                    let value = field.value.split(' - ')
-                    if (value[0] == value[1]) {
-                        response.push(`filter[${field.key}]${operator}${value[0]}`)
-                    } else {
-                        response.push(`filter[${field.key}][]${operator}${value[0]}`)
-                        response.push(`filter[${field.key}][]${operator}${value[1]}`)
-                    }
-                } else {
-                    if (field.key == 'search') {
-                        response.push(`filter[q]${operator}${field.value}`)
-                    } else {
-                        response.push(`filter[${field.key}]${operator}${field.value}`)
-                    }
-                }
-            });
-
-            return response.join('&')
+    // Отмена редактирования
+    cancel() {
+        let backupRow = null
+        for (let i = 0; i < this.body.length; i++) {
+            backupRow = this.backup.body.find(item => item.id == this.body[i].id)
+            if (backupRow) {
+                this.body[i] = backupRow
+            }
         }
-        
+
+        this.clear()
+    }
+
+    // Очистка строк
+    clear() {
+        for (let i = 0; i < this.body.length; i++) {
+            this.body[i].isChoose = false
+            this.body[i].edit = false
+        }
+
+        let isChooseAll = this.header.find(column => column.key == 'isChoose')
+        isChooseAll.value = false
+        this.state = null
+        this.backup.body = []
+    }
+
+    // Инициализация скачивания Excel
+    async initDownloadExcel() {
+        let response = null
         try {
-            this.filtering = true
-            this.default.query = setFilter(fields)
-            let response = await api.callMethod("GET", `/${this.setter.slug}${this.default.query ? '?' + this.default.query : ''}`)
-            this.setter.set(response)
+            this.downloadExcelBuffer.state = true
+            this.downloadExcelBuffer.loading = true
+            let request = this.header.filter(p => p.key != 'isChoose' && p.key != 'actions' && p.enabled).map(p => {
+                return `fields[]=${p.key}`
+            })
+            response = await api.callMethod('GET', routes.table.download.replace('${slug}', this.slug) + `?${request.join('&')}`)
         } catch (error) {
-            console.log(error);
+            console.log('error_download_excel', error);
         } finally {
-            this.filtering = false
+            this.downloadExcelBuffer.link = response.data.link
+            this.downloadExcelBuffer.loading = false
+        }
+    }
+
+    // Скачать Excel
+    downloadExcel() {
+        window.open(this.downloadExcelBuffer.link, '_blank')
+        this.downloadExcelBuffer = {
+            link: null,
+            loading: false,
+            state: false
+        }
+    }
+
+    // Выбрать все строки
+    chooseAll(state) {
+        if (state) {
+            this.body.forEach(row => {
+                row.isChoose = true
+            })
+        } else {
+            this.body.forEach(row => {
+                row.isChoose = false
+            })
+        }
+    }
+
+    // Открыть строку
+    open(row) {
+        this.emit('openModal', {
+            type: 'open',
+            item: row
+        })
+    }
+
+    // Редактировать строку (батчами для избежания зависаний)
+    async edit(rows = []) {
+        rows = Array.isArray(rows) ? rows : [rows]
+
+        this.backup.body = JSON.parse(JSON.stringify(rows))
+        this.state = 'edit'
+
+        const CHUNK_SIZE = 200
+        for (let start = 0; start < rows.length; start += CHUNK_SIZE) {
+            const end = Math.min(start + CHUNK_SIZE, rows.length)
+            for (let i = start; i < end; i++) {
+                rows[i].edit = true
+                rows[i].isChoose = true
+            }
+            // отдаём управление главному потоку между пачками
+            await new Promise(requestAnimationFrame)
+        }
+    }
+
+    // Копировать строку 
+    copy(row) {
+        this.emit('openModal', {
+            type: 'copy',
+            item: row
+        })
+    }
+
+    // Инициализация удаления
+    initDelete(rows = []) {
+        this.deleteBuffer = {
+            list: Array.isArray(rows) ? rows : [rows],
+            state: true
+        }
+    }
+
+    // Удалить строку 
+    async delete() {
+        try {
+            this.deleteBuffer.loading = true
+            let request = this.deleteBuffer.list.map(p => p.id)
+            this.body = this.body.filter(row => this.deleteBuffer.list.findIndex(item => item.id == row.id) == -1)
+            await api.callMethod('DELETE', routes.table.delete.replace('${slug}', this.slug), {
+                ids: request
+            })
+        } catch (error) {
+            console.log('delete', error);
+        } finally {
+            this.deleteBuffer = {
+                list: [],
+                loading: false,
+                state: false
+            }
+        }
+
+        try {
+            this.loading = true
+            const response = await api.callMethod('GET', routes.table.get.replace('${slug}', this.slug) + this.getQuery())
+            this.set(response.data)
+        } catch (error) {
+            console.log('get_table', error);
+        } finally {
+            this.loading = false
+        }
+    }
+
+    // Пагинация
+    async changePage(page) {
+        try {
+            this.loading = true
+            this.pages.current = page
+            const response = await api.callMethod('GET', routes.table.get.replace('${slug}', this.slug) + this.getQuery())
+            this.set(response.data)
+        } catch (error) {
+            console.log('get_table', error);
+        } finally {
+            this.loading = false
+        }
+    }
+
+    // Сортировка таблицы
+    async sort(column) {
+        try {
+            this.loading = true
+            if (['isChoose', 'actions'].includes(column.key)) return
+            this.setSortItem({
+                sort_field: column.key,
+                sort_order: column.key == this.sortItem.sort_field ? this.sortItem.sort_order == 'asc' ? 'desc' : 'asc' : 'asc'
+            })
+            this.isChanged = true
+            this.pages.current = 1
+            const response = await api.callMethod('GET', routes.table.get.replace('${slug}', this.slug) + this.getQuery())
+            this.set(response.data)
+        } catch (error) {
+            console.log('get_table', error);
+        } finally {
+            this.loading = false
+        }
+    }
+
+    // Сохранение настроек
+    async saveSettings(role) {
+        let method = routes.table.save_settings.replace('${slug}', this.slug)
+
+        await api.callMethod('POST', role ? `${method}/${role}` : method, {
+            sort_field: this.sortItem.sort_field,
+            sort_order: this.sortItem.sort_order,
+            fields: this.header
+        })
+        this.isChanged = false
+    }
+
+    // Изменение количества страниц
+    async setCountPage() {
+        try {
+            this.loading = true
+            this.isChanged = true
+            this.pages.current = 1
+            const response = await api.callMethod('GET', routes.table.get.replace('${slug}', this.slug) + this.getQuery())
+            this.set(response.data)
+        } catch (error) {
+            console.log('get_table', error);
+        } finally {
+            this.loading = false
         }
     }
 }

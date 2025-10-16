@@ -115,6 +115,14 @@ html {
     }
 }
 
+.page__header {
+    display: flex;
+    justify-content: space-between;
+    gap: 100px;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
 .container {
     /*Пишется max-width*/
     max-width: variables.$container-width;

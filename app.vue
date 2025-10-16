@@ -1,7 +1,7 @@
 <template>
   <div class="wrapper">
       <div class="page" :class="{ 'page_auth': checkPath.includes('/auth') }">
-        <AppMenu />
+        <AppMenu v-if="!checkPath.includes('/auth')"/>
         <NuxtPage />
       </div>
       <div class="menu__overlay" id="menu__overlay"></div>

@@ -1,13 +1,23 @@
 <template>
     <main>
-		<AppH1 id="mobile-menu-target">
-            {{ entity.active?.title }}
-		</AppH1>
+		<div class="page__header">
+			<AppH1 id="mobile-menu-target">
+				{{ entity.active?.title }}
+			</AppH1>
+			<AppFilter 
+				
+			/>
+			<AppButton class="button_fill">
+				<AppIconPlus />
+				Создать
+			</AppButton>
+		</div>
 
-        <TemplateTablePage 
+		<AppVirtualTable 
 			:slug="route.params.slug"
 			@openModal="item => entity.openModal(item)"
 		/>
+		<div id="mass-action-container"></div>
 
 		<teleport to="#detail__overlay" v-if="entity.modal.length > 0">
 			<AppWarningLarge v-for="modal in entity.modal" @close="entity.modal.pop()">
@@ -22,8 +32,11 @@
 <script setup>
 	import AppH1 from '@AppComponents/Headers/H1/H1.vue';
 
-    import TemplateTablePage from '@AppTemplates/TablePage/TablePage.vue'
+    import AppVirtualTable from '@AppComponents/VirtualTable/VirtualTable.vue';
 	import AppWarningLarge from '@AppComponents/Modal/Large/Large.vue'
+	import AppFilter from '@AppComponents/Filter/Filter.vue'
+	import AppButton from '@AppComponents/Button/Button.vue'
+	import AppIconPlus from '@AppIcons/Plus.vue'
 
 
 	import metaJSON from './meta.json'
