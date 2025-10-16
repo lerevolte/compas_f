@@ -50,7 +50,7 @@
                     :options="{
                         id: `${row.index}_${column.key}`,
                         title: null,
-                        edit: table.body[row.index].edit,
+                        edit: table.body[row.index]?.edit,
                         type: column.type,
                         list: column.options,
                         name: column.key,

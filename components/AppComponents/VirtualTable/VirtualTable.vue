@@ -80,14 +80,17 @@
   const tableRef = ref(null)
   const sectionRef = ref(null)
 
-  const table = ref(new Table(tableRef.value, props.slug, emit))
+  const table = ref(new Table(tableRef, props.slug, emit))
   const common = new Common()
 
   onMounted(async () => {
     isClient.value = true
 
+    // Ждем пока tableRef будет доступен
+    await nextTick()
+
     if (common.getQueryUrl()) {
-      table.value.getWithQuery()
+      table.value.getWithQuery(common.getQueryUrl())
     } else {
       table.value.get()
     }

@@ -280,6 +280,7 @@ export class Auth {
 export class Table {
     constructor(tableRef, slug, emit) {
         this.common = new Common()
+        this.filter = new Filter(this)
         this.slug = slug
         this.emit = emit
 
@@ -320,7 +321,6 @@ export class Table {
     async get() {
         try {
             this.loading = true
-            console.log(this);
             const response = await api.callMethod('GET', routes.table.get.replace('${slug}', this.slug))
             this.set(response.data, true)
             this.getHeader(response.data.table)
@@ -333,12 +333,11 @@ export class Table {
     }
 
     // Получение данных для таблицы с параметрами
-    async getWithQuery() {
+    async getWithQuery(query) {
         try {
             this.loading = true
-            const response = await api.callMethod('GET', routes.table.get.replace('${slug}', this.slug) + this.getQuery(common.getQueryUrl()))
-            this.set(response.data, true)
-            this.getHeader(response.data.table)
+            let response = await this.filter.get([], query)
+            this.getHeader(response.table)
             await this.initVirtualizer()
         } catch (error) {
             console.log('get_table', error);
@@ -347,8 +346,8 @@ export class Table {
         }
     }
 
+    // Инициализация виртуализации
     async initVirtualizer() {
-        // корректно очищаем предыдущий scope
         if (this._virtScope) {
             try {
                 this._virtScope.stop()
@@ -356,6 +355,13 @@ export class Table {
             this._virtScope = null
         }
         await nextTick()
+
+        // Проверяем что tableRef доступен
+        if (!this.tableRef) {
+            console.warn('TableRef not available for virtualizer initialization')
+            return
+        }
+        
         const scope = effectScope()
         this._virtScope = scope
         scope.run(() => {
@@ -381,10 +387,11 @@ export class Table {
             limit: response.list.per_page
         }
         await this.initVirtualizer()
-        this.rowVirtualizer.scrollToIndex(0)
-        this.rowVirtualizer.measure()
+        if (this.rowVirtualizer) {
+            this.rowVirtualizer.scrollToIndex(0)
+            this.rowVirtualizer.measure()
+        }
         this.clear()
-        this.setQueryUrl(skip)
     }
 
     // Получнеие шапки
@@ -395,24 +402,6 @@ export class Table {
     // Получение контента
     getBody(data) {
         this.body = data
-    }
-
-    // Получение квери параметров таблицы
-    getQuery(query = null) {
-        let local_query = {
-            per_page: this.pages.limit,
-            page: this.pages.current,
-            sort_field: this.sortItem.sort_field,
-            sort_order: this.sortItem.sort_order
-        }
-
-        return `?${new URLSearchParams(query ?? local_query).toString()}`
-    }
-
-    // Установка квери параметров
-    setQueryUrl(skip = false) {
-        if (skip) return
-        this.common.setQueryUrl(this.getQuery())
     }
 
     // Сортировка
@@ -630,8 +619,7 @@ export class Table {
 
         try {
             this.loading = true
-            const response = await api.callMethod('GET', routes.table.get.replace('${slug}', this.slug) + this.getQuery())
-            this.set(response.data)
+            await this.filter.get()
         } catch (error) {
             console.log('get_table', error);
         } finally {
@@ -644,8 +632,7 @@ export class Table {
         try {
             this.loading = true
             this.pages.current = page
-            const response = await api.callMethod('GET', routes.table.get.replace('${slug}', this.slug) + this.getQuery())
-            this.set(response.data)
+            await this.filter.get()
         } catch (error) {
             console.log('get_table', error);
         } finally {
@@ -664,8 +651,7 @@ export class Table {
             })
             this.isChanged = true
             this.pages.current = 1
-            const response = await api.callMethod('GET', routes.table.get.replace('${slug}', this.slug) + this.getQuery())
-            this.set(response.data)
+            await this.filter.get()
         } catch (error) {
             console.log('get_table', error);
         } finally {
@@ -691,12 +677,59 @@ export class Table {
             this.loading = true
             this.isChanged = true
             this.pages.current = 1
-            const response = await api.callMethod('GET', routes.table.get.replace('${slug}', this.slug) + this.getQuery())
-            this.set(response.data)
+            await this.filter.get()
         } catch (error) {
             console.log('get_table', error);
         } finally {
             this.loading = false
+        }
+    }
+}
+
+export class Filter {
+    constructor(table) {
+        this.setter = table
+        this.filtering = false
+        this.fields = []
+        this.query = null
+    }
+
+    // Фильтрация
+    async get(fields = [], saved_query = {}) {
+        // Установка фильтра
+        const setFilter = (fields, saved_query) => {
+            let response = []
+
+            response.push(`per_page=${saved_query.per_page ?? this.setter.pages.limit}`)
+            response.push(`page=${saved_query.page ?? this.setter.pages.current}`)
+            response.push(`sort_field=${saved_query.sort_field ?? this.setter.sortItem.sort_field}`)
+            response.push(`sort_order=${saved_query.sort_order ?? this.setter.sortItem.sort_order}`)
+
+            fields.forEach(field => {
+                if (field.key == 'search') {
+                    response.push(`q=${field.value}`)
+                } else if (typeof field.value == 'boolean') {
+                    response.push(`filter[${field.key}]=${field.value ? 1 : 0}`)
+                } else if (field.value != null && field.value != '') {
+                    response.push(`filter[${field.key}]=${field.value}`)
+                }
+            });
+
+            return response.join('&')
+        }
+        
+        try {
+            this.filtering = true
+            this.query = setFilter(fields, saved_query)
+            let response = await api.callMethod("GET", routes.table.get.replace('${slug}', this.setter.slug) + `${this.query ? '?' + this.query : ''}`)
+            this.setter.set(response.data)
+            console.log(response.data);
+            this.setter.common.setQueryUrl(this.query ? '?' + this.query : '')
+            return response.data
+        } catch (error) {
+            console.log(error);
+        } finally {
+            this.filtering = false
         }
     }
 }
