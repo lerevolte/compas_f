@@ -238,7 +238,7 @@
 
             const parentRect = props.parentContainer ? props.parentContainer.getBoundingClientRect() : popupRef.getBoundingClientRect();
             const contentRect = contentRef.getBoundingClientRect();
-            this.state.isTop = contentRect.bottom > parentRect.bottom;
+            this.state.isTop = props.isPreventBottom ? false : contentRect.bottom > parentRect.bottom;
         }
 
         setOptions() {
@@ -372,6 +372,10 @@
     const props = defineProps({
         parentContainer: {
             default: null
+        },
+        isPreventBottom: {
+            default: false,
+            type: Boolean
         },
         options: {
             default: {

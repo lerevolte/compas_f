@@ -4,6 +4,7 @@ import routes from '@/helpers/routes.js'
 import { useVirtualizer } from '@tanstack/vue-virtual'
 import isEqual from 'lodash/isEqual'
 
+import { format } from 'date-fns'
 import { toast } from 'vue3-toastify';
 import { useUserStore } from '@/stores/userStore.js'
 
@@ -175,6 +176,7 @@ export class Common {
         });
     }
 
+    // Копирование текста
     async copyText(text) {
         try {
             // Проверяем поддержку современного API
@@ -203,6 +205,15 @@ export class Common {
         } catch (error) {
             console.error('Failed to copy text:', error)
             return false
+        }
+    }
+
+    // Трансформация дат
+    transformDate = (field, formatType = 'dd.MM.yyyy') => {
+        if (Array.isArray(field)) {
+            return `${format(field[0], formatType)} - ${format(field[1], formatType)}`
+        } else {
+            return format(field, formatType)
         }
     }
 }
@@ -322,9 +333,9 @@ export class Table {
         try {
             this.loading = true
             const response = await api.callMethod('GET', routes.table.get.replace('${slug}', this.slug))
-            const hiddenFilter = response.data.filters.find(f => f.is_hidden)
             this.set(response.data, true)
-            this.filter.set(hiddenFilter)
+            this.filter.setSaves(response.data.filters)
+            this.filter.set(response.data.fields)
             this.getHeader(response.data.table)
             await this.initVirtualizer()
         } catch (error) {
@@ -339,8 +350,8 @@ export class Table {
         try {
             this.loading = true
             let response = await this.filter.get([], query)
-            const hiddenFilter = response.filters.find(f => f.is_hidden)
-            this.filter.set(hiddenFilter)
+            this.filter.setSaves(response.filters)
+            this.filter.set(response.fields)
             this.getHeader(response.table)
             await this.initVirtualizer()
         } catch (error) {
@@ -695,6 +706,7 @@ export class Filter {
         this.setter = table
         this.filtering = false
         this.fields = []
+        this.saves = []
         this.query = null
     }
 
@@ -709,12 +721,14 @@ export class Filter {
             response.push(`sort_field=${saved_query.sort_field ?? this.setter.sortItem.sort_field}`)
             response.push(`sort_order=${saved_query.sort_order ?? this.setter.sortItem.sort_order}`)
 
+
             fields.forEach(field => {
                 if (field.key == 'search') {
                     response.push(`q=${field.value}`)
                 } else if (typeof field.value == 'boolean') {
+                    console.log('boolean', field);
                     response.push(`filter[${field.key}]=${field.value ? 1 : 0}`)
-                } else if (field.value != null && field.value != '') {
+                } else if (field.value == 0 || (field.value != null && field.value != '')) {
                     response.push(`filter[${field.key}]=${field.value}`)
                 }
             });
@@ -727,7 +741,6 @@ export class Filter {
             this.query = setFilter(fields, saved_query)
             let response = await api.callMethod("GET", routes.table.get.replace('${slug}', this.setter.slug) + `${this.query ? '?' + this.query : ''}`)
             this.setter.set(response.data)
-            console.log(response.data);
             this.setter.common.setQueryUrl(this.query ? '?' + this.query : '')
             return response.data
         } catch (error) {
@@ -737,7 +750,67 @@ export class Filter {
         }
     }
 
-    set(filter) {
-        this.fields = filter.fields ?? []
+    // Установка полей для активного фильтра
+    set(fields) {
+        let response = []
+        for (let key in fields) {
+            response.push({
+                id: fields[key].id,
+                title: fields[key].title,
+                type: fields[key].type,
+                key: key,
+                value: null,
+                options: fields[key].options,
+                enabled: false
+            })
+        }
+
+        this.fields = response.filter(field => !['isChoose', 'actions', 'file'].includes(field.type)).map(p => {
+            return {
+                ...p,
+                type: p.type == 'address' ? 'text' : p.type
+            }
+        })
+    }
+
+    // Установка сохраненных фильтров
+    setSaves(saves) {
+        this.saves = saves
+        const hiddenFilter = this.saves.find(f => f.is_hidden)
+    }
+
+    // Удаление сохраненного фильтра
+    async deleteSavedFilter(id) {
+        this.saves = this.saves.filter(f => f.id != id)
+        await api.callMethod('DELETE', routes.filter.delete.replace('${slug}', this.setter.slug) + `/${id}`)
+    }
+
+    // Перемещение сохраненного фильтра
+    async moveSavedFilters(list) {
+        await api.callMethod('POST', routes.filter.move.replace('${slug}', this.setter.slug), {
+            items: list
+        })
+    }
+
+    // Обновление сохраненного фильтра
+    async updateSavedFilter(filter) {
+        await api.callMethod('PUT', routes.filter.edit.replace('${slug}', this.setter.slug) + `/${filter.id}`, {
+            fields: filter.fields,
+            title: filter.title
+        })
+    }
+
+    // Создание сохраненного фильтра
+    async createSavedFilter(filter) {
+        const response = await api.callMethod('POST', routes.filter.create.replace('${slug}', this.setter.slug), {
+            fields: filter.fields,
+            title: filter.title
+        })
+        this.saves.push({
+            id: response.data.id,
+            title: filter.title,
+            is_hidden: false,
+            fields: filter.fields
+        })
     }
 }

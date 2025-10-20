@@ -71,7 +71,8 @@
     display: flex;
     flex-direction: column;
     
-    label {
+    label,
+    .form__item-title {
         display: block;
         font-size: variables.$font-size-label;
     }

@@ -192,6 +192,10 @@
             },
             type: Object
         },
+        isPreventBottom: {
+            default: false,
+            type: Boolean
+        },
         modelValue: null
     })
 

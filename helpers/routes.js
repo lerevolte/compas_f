@@ -29,5 +29,11 @@ export default {
         open: '/objects/${slug}/${row_id}/compose',
         copy: '/objects/${slug}/${row_id}/compose?is_copy=1',
         delete: '/objects/${slug}'
+    },
+    filter: {
+        move: '/filters/${slug}/change-sort',
+        create: '/filters/${slug}',
+        edit: '/filters/${slug}',
+        delete: '/filters/${slug}'
     }
 }

@@ -16,61 +16,156 @@
         <IconSearch class="filter__mobile-search" @click="event => filter.toggleOptions(event)"/>
 
         <div class="filter__content" v-if="filter.state.fields.length > 0 || filter.state.activeTabs.length > 0">
-            <div class="filter__info" @click="filter.closeContent(null, true)">
-                <IconSelectArrow />
-                Фильтр
+            <div class="filter__group">
+                <div class="filter__info" @click="filter.closeContent(null, true)">
+                    <IconSelectArrow />
+                    Фильтр
+                </div>
+                <div class="filter__fields">
+                    <div class="filter__field" :class="{'filter__field_disabled': filter.state.activeTabs.length == 0}">
+                        <AppInput 
+                            class="filter__field_search"
+                            @keyup.enter="filter.updateInfo()" 
+                            v-model="filter.state.search" 
+                            :options="{ id: 0, title: 'Поиск', type: 'text', name: 'search', placeholder: '', autocomplete: 'off' }" 
+                        />
+                    </div>
+    
+    
+                    <div class="filter__field" v-for="field in filter.state.fields" :class="{'filter__field_disabled': !field.enabled}">
+                        <AppSelect 
+                            v-if="field.type == 'select_dropdown' || field.type == 'relation'"
+                            :isPreventBottom="true"
+                            :options="{
+                                ...field,
+                                list: field.options ?? [],
+                                isHaveNull: true,
+                                searchable: field.type == 'relation',
+                                relation: field.type == 'relation' ? field.id : null
+                            }"
+                            v-model="filter.state.tabsValues[field.key]"
+                            @update:list="options => field.options = options"
+                            @update:modelList="options => field.options = options"
+                        />
+                        <AppDate 
+                            v-else-if="field.type == 'date'"
+                            :options="{
+                                id: field.id,
+                                title: field.title,
+                                type: field.type,
+                                name: field.name,
+                                multiple: true,
+                                placeholder: field.placeholder
+                            }"
+                            v-model="filter.state.tabsValues[field.key]"
+                        />
+                        <AppSelect 
+                            v-else-if="field.type == 'boolean'"
+                            :isPreventBottom="true"
+                            :options="field"
+                            v-model="filter.state.tabsValues[field.key]"
+                        />
+                        <AppStatus 
+                            v-else-if="field.type == 'status'"
+                            :isPreventBottom="true"
+                            :options="{
+                                ...field,
+                                list: field.options,
+                                isHaveNull: false,
+                            }"
+                            v-model="filter.state.tabsValues[field.key]"
+                        />
+                        <AppInput 
+                            v-else
+                            :options="field"
+                            v-model="filter.state.tabsValues[field.key]"
+                            @keyup.enter="filter.updateInfo()" 
+                        />
+    
+                    </div>
+                </div>
+                <AppPopup class="filter__popup" :isPreventBottom="true">
+                    <template #header>
+                        <AppButton class="button_text">
+                            Выбрать поле
+                        </AppButton>
+                    </template>
+                    <template #content>
+                        <AppCheckbox 
+                            class="popup__option"
+                            v-for="field in filter.state.fields"
+                            v-model="field.enabled"
+                            :options="field"
+                            @update:modelValue="filter.savedFilter.updateSavedFilter()"
+                        />
+                    </template>
+                </AppPopup>
+
+
+                <div class="filter__actions" v-if="filter.savedFilter.active.state">
+                    <AppButton @click="(event) => filter.savedFilter.cancel()">
+                        Отмена
+                    </AppButton>
+                    <AppButton class="button_fill" @click="filter.savedFilter.save()">
+                        Сохранить
+                    </AppButton>
+                </div>
+                <div class="filter__actions" v-else>
+                    <AppButton @click="(event) => filter.dropUnsavedFields()">
+                        Отмена
+                    </AppButton>
+                    <AppButton class="button_fill" @click="filter.updateInfo()">
+                        Поиск
+                    </AppButton>
+                </div>
             </div>
 
-            <div class="filter__fields">
-                <AppInput 
-                    v-show="filter.state.activeTabs.length > 0" 
-                    class="filter__field_search"
-                    @keyup.enter="filter.updateInfo()" 
-                    v-model="filter.state.search" 
-                    :options="{ id: 0, title: 'Поиск', type: 'text', name: 'search', placeholder: '', autocomplete: 'off' }" 
-                />
+            <div class="filter__group" ref="filterSavedRef">
+                <strong class="filter__subtitle">
+                    Сохраненные
+                </strong>
+                <div class="filter__saves">
+                    <div 
+                        class="filter__save filter-save" 
+                        v-for="(save, index) in savedFilters" 
+                        @click="!filter.savedFilter.active.state && filter.savedFilter.get(save, index)"
+                    >
+                        <div class="filter-save__title">
+                            <AppInput 
+                                v-if="filter.savedFilter.active.state && filter.savedFilter.active.id == save.id"
+                                :options="{ 
+                                    id: 0, 
+                                    title: null, 
+                                    type: 'text', 
+                                    name: 'saved-filter-title', 
+                                }"
+                                v-model="filter.savedFilter.active.title"
+                            />
+                            <span class="text" v-else>
+                                {{ save.title }}
+                            </span>
+                        </div>
 
-
-                <template v-for="field in filter.state.fields">
-                    <AppSelect 
-                        v-if="field.type == 'select' || field.type == 'relation'"
-                        :options="field"
-                        v-model="filter.state.tabsValues[field.key]"
-                        @update:list="options => field.options = options"
-                    />
-                    <AppDate 
-                        v-else-if="field.type == 'date'"
-                        :options="{
-                            id: field.id,
-                            title: field.title,
-                            type: field.type,
-                            name: field.name,
-                            multiple: true,
-                            placeholder: field.placeholder
-                        }"
-                        v-model="filter.state.tabsValues[field.key]"
-                    />
-                    <AppSelect 
-                        v-else-if="field.type == 'boolean'"
-                        :options="field"
-                        v-model="filter.state.tabsValues[field.key]"
-                    />
+                        <AppShowMore 
+                            @click.prevent.stop
+                            :options="filter.savedFilter.actions"
+                            :isPreventBottom="true"
+                            @initClick="action => filter.savedFilter[action](save, index)"
+                        />
+                    </div>
                     <AppInput 
-                        v-else
-                        :options="field"
-                        v-model="filter.state.tabsValues[field.key]"
-                        @keyup.enter="filter.updateInfo()" 
+                        v-if="filter.savedFilter.active.state && filter.savedFilter.active.id == 'new'"
+                        :options="{ 
+                            id: 0, 
+                            title: null, 
+                            type: 'text', 
+                            name: 'saved-filter-title', 
+                        }"
+                        v-model="filter.savedFilter.active.title"
                     />
-
-                </template>
-            </div>
-
-            <div class="filter__actions">
-                <AppButton @click="(event) => filter.dropUnsavedFields()">
-                    Отмена
-                </AppButton>
-                <AppButton class="button_fill" @click="filter.updateInfo()">
-                    Поиск
+                </div>
+                <AppButton class="button_text filter__add" @click="filter.savedFilter.initCreate()">
+                    + Добавить фильтр
                 </AppButton>
             </div>
         </div>
@@ -80,6 +175,10 @@
 <script setup>
     import './Filter.scss';
     
+    import AppStatus from '@AppComponents/Inputs/Status/Status.vue'
+    import AppPopup from '@AppComponents/Popup/Popup.vue'
+    import AppCheckbox from '@AppComponents/Inputs/Checkbox/Checkbox.vue'
+    import AppShowMore from '@AppComponents/ShowMore/ShowMore.vue'
     import IconClose from '@AppIcons/Close.vue';
     import IconSearch from '@AppIcons/Input/Search.vue';
     import AppButton from '@AppComponents/Button/Button.vue'
@@ -87,25 +186,28 @@
     import AppInput from '@AppComponents/Inputs/Input/Input.vue';
     import AppSelect from '@AppComponents/Inputs/Select/Select.vue';
     import IconSelectArrow from '@AppIcons/Input/SelectArrow.vue';
-    import { format  } from 'date-fns'
     import isEqual from 'lodash/isEqual'
+    import { Common } from '~/helpers/classes';
 
     const filterRef = ref(null)
+    const injectedFilter = inject('filter')
+    const filterSavedRef = ref(null)
+    const common = new Common()
 
     const props = defineProps({
-        fields: {
-            default: [],
-            type: Array
+        filter: {
+            default: {
+                fields: [],
+                saves: []
+            },
+            type: Object
         }
     })
-
-    const emit = defineEmits([
-        'update'
-    ])
 
     class Filter {
         constructor() {
             this.filterRef = filterRef
+            this.savedFilter = new SavedFilter(this)
 
             this.state = reactive({
                 activeTabs: [],
@@ -140,35 +242,38 @@
 
         // Обновление информации
         updateInfo() {
-            const setValue = (key) => {
-                // Трансформация дат
-                const transformDate = (item) => {
-                    if (Array.isArray(item)) {
-                        return `${format(item[0], 'dd.MM.yyyy')} - ${format(item[1], 'dd.MM.yyyy')}`
-                    } else {
-                        return format(item, 'dd.MM.yyyy')
-                    }
-                }
-
+            const setValue = (key, type = null) => {
                 // Трансформация селекта
-                const transformSelect = (item, type = 'select') => {
-                    if (Array.isArray(item)) {
-                        return item.join(', ')
-                    } else {
-                        return item
+                const transformSelect = (item, key, type = null) => {
+                    const field = this.state.fields.find(p => p.key == key)
+                    if (field) {
+                        const findedOption = field.options.find(option => option.value == item)
+                        if (type == 'request') {
+                            return findedOption?.value
+                        } else {
+                            console.log(findedOption.label?.text);
+                            console.log(field);
+                            console.log(findedOption);
+                            return field.type == 'status' || field.type == 'relation' ? findedOption.label?.text : findedOption.label
+                        }
                     }
                 }
 
                 const findedField = this.state.fields.find(field => field.key == key)
-                
-
+                let response = null
                 switch (findedField.type) {
                     case 'date':
-                        return transformDate(this.state.tabsValues[key])
-                    case 'select':
-                        return transformSelect(this.state.tabsValues[key])
+                        response = common.transformDate(this.state.tabsValues[key], type == 'request' ? 'yyyy-MM-dd' : 'dd.MM.yyyy')
+                        if (type == 'request') {
+                            response = response.replace(' - ', '%2C')
+                        }
+                        return response
+                    case 'select_dropdown':
+                        return transformSelect(this.state.tabsValues[key], key, type)
+                    case 'status':
+                        return transformSelect(this.state.tabsValues[key], key, type)
                     case 'relation':
-                        return transformSelect(this.state.tabsValues[key], 'searchable')
+                        return transformSelect(this.state.tabsValues[key], key, type)
                     default:
                         return this.state.tabsValues[key]
                 }
@@ -190,7 +295,15 @@
             }
 
             this.closeContent(null, true)
-            emit('update', this.state.activeTabs)
+
+            const request = JSON.parse(JSON.stringify(Object.keys(this.state.tabsValues))).filter(key => (this.state.tabsValues[key] || typeof this.state.tabsValues[key] == 'boolean') && key != 'search').map(key => (
+                {
+                    label: this.state.fields.find(field => field.key == key)?.title,
+                    key: key,
+                    value: setValue(key, 'request')
+                }
+            ))
+            injectedFilter.get(request)
         }
 
         // Открытие/закрытие опций
@@ -219,12 +332,8 @@
         }
 
         setTabValue(tab) {
-            const findedField = this.state.fields.find(field => field.key == tab.key)
-            
             if (typeof tab.value == 'boolean') {
                 return tab.value ? 'Да' : 'Нет'
-            } else if (findedField && findedField.type == 'relation') {
-                return findedField.options?.find(option => option.value == tab.value)?.label
             } else {
                 return tab.value
             }
@@ -232,23 +341,207 @@
 
         // Получение полей
         getFields() {
-            this.state.fields = JSON.parse(JSON.stringify(props.fields))
+            this.state.fields = JSON.parse(JSON.stringify(injectedFilter.fields))
 
             this.state.fields.forEach(element => {
-                if (element.type == 'boolean') {
-                    element.list = [
-                        {
-                            label: 'Да',
-                            value: true
-                        },
-                        {
-                            label: 'Нет',
-                            value: false
-                        }
-                    ]
-                }
                 this.state.tabsValues[element.key] = null
             });
+
+            this.savedFilter.setDefaultFields()
+            this.savedFilter.updateSort()
+        }
+
+        updateFields(savedFilterFields) {
+            let findedField = null
+            for (let field of savedFilterFields) {
+                findedField = this.state.fields.find(f => f.key == field.key)
+                
+                if (findedField) {
+                    findedField.value = field.value
+                    findedField.enabled = true
+                }
+            }
+        }
+    }
+
+    // Сохраненный фильтр
+    class SavedFilter {
+        constructor() {
+            this.actions = [
+                {
+                    name: 'Вверх',
+                    action: 'moveUp'
+                },    
+                {
+                    name: 'Вниз',
+                    action: 'moveDown'
+                },
+                {
+                    name: 'Редактировать',
+                    action: 'initEdit'
+                },
+                {
+                    name: 'Удалить',
+                    action: 'delete'
+                }
+            ]
+
+            this.backupTemplate = null
+
+            this.active = reactive({
+                id: 0,
+                is_hidden: false,
+                title: '',
+                fields: [],
+                state: false
+            })
+        }
+
+        // Обновление сортировки
+        updateSort() {
+            injectedFilter.saves = injectedFilter.saves.map((p, index) => {
+                p.sort = p.is_hidden ? -1 : index
+                return p
+            })
+        }
+ 
+        // Получение полей и значений из сохраненного фильтра
+        get(item, is_update = true) {
+            let findedField = null
+            let flag = false
+
+
+            for (let field of item.fields) {
+                findedField = filter.state.fields.find(f => f.key == field.key)
+                if (findedField) {
+                    filter.state.tabsValues[field.key] = field.value
+
+                    if (!findedField.enabled) {
+                        flag = true
+                        findedField.enabled = true
+                    }
+                }
+            }
+
+
+            if (is_update) {
+                filter.updateInfo()
+            }
+
+            if (flag) {
+                this.updateSavedFilter()
+            }
+        }
+
+        // Перемещение сохраненного фильтра вверх
+        moveUp(item, index) {
+            if (index <= 0) return
+            const prev = savedFilters.value[index - 1]
+            const curr = savedFilters.value[index];
+            [prev.sort, curr.sort] = [curr.sort, prev.sort]
+            savedFilters.value = savedFilters.value.map((p, index) => ({ ...p, sort: index }))
+            injectedFilter.moveSavedFilters(savedFilters.value.map(p => p.id))
+        }
+
+        // Перемещение сохраненного фильтра вниз
+        moveDown(item, index) {
+            if (index >= savedFilters.value.length - 1) return
+            const curr = savedFilters.value[index]
+            const next = savedFilters.value[index + 1];
+            [next.sort, curr.sort] = [curr.sort, next.sort]
+            savedFilters.value = savedFilters.value.map((p, index) => ({ ...p, sort: index }))
+            injectedFilter.moveSavedFilters(savedFilters.value.map(p => p.id))
+        }
+
+        initEdit(item) {
+            this.backupTemplate = JSON.parse(JSON.stringify(item))
+            this.get(item, false)
+            Object.assign(this.active, {
+                id: item.id,
+                title: item.title,
+                state: true
+            })
+        }
+
+        // Редактирование сохраненного фильтра
+        save() {
+            const request = {
+                title: this.active.title,
+                fields: filter.state.fields.filter(f => f.enabled).map((p, index) => {
+                    return {
+                        key: p.key,
+                        value: filter.state.tabsValues[p.key],
+                        sort: index
+                    }
+                }),
+                id: this.active.id
+            }
+
+            if (this.active.id == 'new') {
+                injectedFilter.createSavedFilter(request)
+            } else {
+                injectedFilter.updateSavedFilter(request)
+            }
+            
+            this.clear()
+        }
+
+        // Инициализация создания
+        initCreate() {
+            this.active.state = true
+            this.active.id = 'new'
+            this.active.is_hidden = false
+        }
+
+        // Отмена редактирования
+        cancel() {
+            injectedFilter.saves[injectedFilter.saves.findIndex(p => p.id == this.active.id)] = this.backupTemplate
+            this.clear()
+        }
+
+        // Очистка создания
+        clear() {
+            Object.assign(this.active, {
+                id: 0,
+                title: '',
+                state: false
+            })
+        }
+
+        // Установка полей дефолтного фильтра
+        setDefaultFields() {
+            const hiddenFilter = injectedFilter.saves.find(f => f.is_hidden)
+            
+            Object.assign(this.active, {
+                id: hiddenFilter ? hiddenFilter.id : 0,
+                title: null,
+                state: false,
+                fields: hiddenFilter ? hiddenFilter.fields : []
+            })
+
+            filter.updateFields(this.active.fields)
+        }
+
+        // Обновление дефолтного фильтра
+        updateSavedFilter(item = null) {
+            const hiddenFilter = injectedFilter.saves.find(f => f.is_hidden)
+
+            injectedFilter.updateSavedFilter({
+                title: hiddenFilter.title,
+                fields: filter.state.fields.filter(f => f.enabled).map((p, index) => {
+                    return {
+                        key: p.key,
+                        value: p.value,
+                        sort: index
+                    }
+                }),
+                id: hiddenFilter.id
+            })
+        }
+
+        // Удаление сохраненного фильтра
+        delete(item) {
+            injectedFilter.deleteSavedFilter(item.id)
         }
     }
 
@@ -260,11 +553,15 @@
         document.removeEventListener('click', filter.closeContent);
     });
 
-    watch(() => props.fields, (next, prev) => {
+    watch(() => injectedFilter.fields, (next, prev) => {
         if (!isEqual(next.map(p => p.key), prev.map(p => p.key))) {
             filter.getFields()
         }
     })
+
+    const savedFilters = computed(() => {
+        return injectedFilter.saves?.filter(p => !p.is_hidden).sort((p1, p2) => p1.sort - p2.sort)
+    })  
 
     const filter = new Filter(filterRef)
 

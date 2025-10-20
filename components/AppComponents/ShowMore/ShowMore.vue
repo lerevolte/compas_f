@@ -1,10 +1,10 @@
 <template>
-    <AppPopup ref="popupRef" class="show-more settings">
+    <AppPopup ref="popupRef" class="show-more settings" :parentContainer="props.parentContainer" :isPreventBottom="props.isPreventBottom">
         <template #header>
             <IconShowMore />
         </template>
         <template #content>
-            <div class="popup__option" :class="{ 'popup__option_red': option.action == 'delete'}" v-for="option in props.options" @click="initClick(option.action)">
+            <div class="popup__option" :data-action="option.action" :class="{ 'popup__option_red': option.action == 'delete'}" v-for="option in props.options" @click="initClick(option.action)">
                 {{ option.name }}
             </div>
             <slot></slot>
@@ -31,6 +31,13 @@
                 }
             ],
             type: Object
+        },
+        isPreventBottom: {
+            default: false,
+            type: Boolean
+        },
+        parentContainer: {
+            default: null
         }
     })
 

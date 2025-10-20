@@ -104,7 +104,7 @@
             const parentRect = props.parentContainer ? props.parentContainer.getBoundingClientRect() : statusRef.value.getBoundingClientRect();
             const contentRect = contentRef.value.getBoundingClientRect();
             
-            this.state.isTop = contentRect.bottom > parentRect.bottom;
+            this.state.isTop = props.isPreventBottom ? false : contentRect.bottom > parentRect.bottom;
         }
     }
 
@@ -114,6 +114,10 @@
     const props = defineProps({
         parentContainer: {
             default: null
+        },
+        isPreventBottom: {
+            default: false,
+            type: Boolean
         },
         options: {
             default: {

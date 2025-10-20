@@ -37,7 +37,7 @@
                     </div>
                 </div>
                 <div class="select__value select__value_single" :class="{ 'select__value_typing': select.state.search.length > 0 }" v-else>
-                    {{ activeOption?.label }}
+                    {{ props.options.type == 'relation' ? activeOption?.label.text : activeOption?.label }}
                 </div>
     
                 <IconSelectArrow />
@@ -79,7 +79,8 @@
     const selectValuesRef = ref(null)
 
     const emit = defineEmits([
-        'update:modelValue'
+        'update:modelValue',
+        'update:modelList'
     ])
 
     class Select {
@@ -110,6 +111,7 @@
                 } else {
                     response = await api.callMethod("GET", `/objects/search?per_page=12&field_id=${props.options.relation}&q=${value}`)
                     this.state.list = response.data.map(p => ({ label: p.label, value: p.value }))
+                    emit('update:modelList', this.state.list)
                 }
             }, 100);
         }
@@ -142,16 +144,14 @@
                     emit('update:modelValue', [option.value])
                 } else {
                     if (props.modelValue.includes(option.value)) {
-                        console.log('filter');
                         emit('update:modelValue', props.modelValue.filter(p => p != option.value))
                     } else {
-                        console.log('update');
                         emit('update:modelValue', [...props.modelValue, option.value])
                     }
                 }
             } else {
                 this.toggleOptions()
-                emit('update:modelValue', option.value)
+                emit('update:modelValue', String(option.value))
             }
         }
 
@@ -194,7 +194,7 @@
             const parentRect = props.parentContainer ? props.parentContainer.getBoundingClientRect() : selectRef.value.getBoundingClientRect();
             const contentRect = contentRef.value.getBoundingClientRect();
             
-            this.state.isTop = contentRect.bottom > parentRect.bottom;
+            this.state.isTop = props.isPreventBottom ? false : contentRect.bottom > parentRect.bottom;
         }
     }
 
@@ -205,6 +205,10 @@
     const props = defineProps({
         parentContainer: {
             default: null
+        },
+        isPreventBottom: {
+            default: false,
+            type: Boolean
         },
         options: {
             default: {

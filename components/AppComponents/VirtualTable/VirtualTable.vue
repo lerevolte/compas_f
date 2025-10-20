@@ -51,8 +51,7 @@
   </teleport>
   <teleport to="#filter-container" v-if="isClient">
     <AppFilter 
-      :fields="table.filter.fields"
-      @update="item => table.filter.get(item)"
+      :filter="table.filter"
     />
   </teleport>
 
@@ -104,6 +103,7 @@
   })
 
   provide('table', table)
+  provide('filter', table.value.filter)
   provide('tableRef', tableRef)
   provide('sectionRef', sectionRef)
   

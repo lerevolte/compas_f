@@ -2,6 +2,9 @@
 @use '@/assets/mixins.scss' as mixins;
 
 .show-more {
+    display: flex;
+    align-items: center;
+    
     .popup__header {
         padding: 0px 10px;
 
@@ -13,6 +16,15 @@
                     }
                 }
             }
+        }
+    }
+
+    .popup__content {
+        top: 15px;
+
+        &.popup__content_top {
+            top: auto;
+            bottom: 15px;
         }
     }
 }
