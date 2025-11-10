@@ -14,6 +14,7 @@
 
     const popupRef = ref(null)
     const contentRef = ref(null)
+    const classObserver = ref(null)
 
     const emit = defineEmits([
         'close'
@@ -89,6 +90,30 @@
     })
 
     const popup = ref(new Popup(popupRef, contentRef))
+
+    onMounted(() => {
+        if (!popupRef.value) return;
+
+        classObserver.value = new MutationObserver(() => {
+            const rootEl = popupRef.value;
+            if (!rootEl) return;
+
+            const hasOpenClass = rootEl.classList.contains('popup_open');
+            if (!hasOpenClass && popup.value.state.isOpen) {
+                popup.value.state.isOpen = false;
+                popup.value.state.isTop = false;
+                document.removeEventListener('mousedown', popup.value.closeOptions);
+                emit('close', true)
+            }
+        });
+
+        classObserver.value.observe(popupRef.value, { attributes: true, attributeFilter: ['class'] });
+    })
+
+    onBeforeUnmount(() => {
+        if (classObserver.value) classObserver.value.disconnect();
+        document.removeEventListener('mousedown', popup.value.closeOptions);
+    })
 
     defineExpose({ popup });
 </script>

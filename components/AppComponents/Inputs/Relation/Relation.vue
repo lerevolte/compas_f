@@ -1,6 +1,6 @@
 <template>
     <div class="form__item form__item_select">
-        <label :for="props.options.id" v-if="props.options.title && props.options.title != ''">
+        <label class="blank__title" :for="props.options.id" v-if="props.options.title && props.options.title != ''">
             {{ props.options.title }}
         </label>
 
@@ -36,6 +36,7 @@
                 <div class="select__value select__value_single" :class="{ 'select__value_typing': (selectInstances[index]?.state?.search?.length || 0) > 0 }">
                     <figure class='select__value-icon' v-if="getActiveOption(index)">
                         <img 
+                            class="select__value-img"
                             v-if="typeof getActiveOption(index).label?.file == 'string' && getActiveOption(index).label?.file != ''" :src='getActiveOption(index).label?.file' alt=''
                             @click="emit('clickLink', getActiveOption(index).value)" 
                         >
@@ -387,6 +388,7 @@
                 relation: null,
                 searchable: false,
                 required: false,
+                isSetDefault: false,
                 isHaveNull: false,
                 multiple: false,
                 type: 'select',
@@ -423,6 +425,10 @@
             }
             
             newInstance.setOptions();
+        }
+
+        if (props.options.isSetDefault && (props.modelValue.value == null || props.modelValue.value.length == 0)) {
+            addNewSelect()
         }
     };
 

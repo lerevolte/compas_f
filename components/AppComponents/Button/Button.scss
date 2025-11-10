@@ -44,6 +44,13 @@ button {
             }
         }
 
+        &.button_white {
+            background: variables.$color-white;
+            color: variables.$color-black;
+            border: 1px solid #eeeff1;
+            box-shadow: 0 5px 20px #eeeff1;
+        }
+
         &.skeleton {
             &::after {
                 top: 0px;

@@ -1,0 +1,183 @@
+
+{
+    "users": {
+        "slug": "users",
+        "title_singular": "Пользователь",
+        "title_plural": "Пользователи",
+        "color": "#13A276"
+    },
+    "roles": {
+        "slug": "roles",
+        "title_singular": "Роль",
+        "title_plural": "Роли",
+        "color": "#275093"
+    },
+    "logistic_tasks": {
+        "slug": "logistic_tasks",
+        "title_singular": "Задача логистики",
+        "title_plural": "Задачи логистики",
+        "color": "#2AA7FF"
+    },
+    "emergencyfund": {
+        "slug": "emergencyfund",
+        "title_singular": "Аварийный фонд",
+        "title_plural": "Аварийный фонд",
+        "color": "#6A3DAF"
+    },
+    "salaries": {
+        "slug": "salaries",
+        "title_singular": "Зарплата",
+        "title_plural": "Зарплата",
+        "color": "#3C8B04"
+    },
+    "journal_records": {
+        "slug": "journal_records",
+        "title_singular": "Журнал расходов",
+        "title_plural": "Журнал",
+        "color": "#A478E5"
+    },
+    "cars": {
+        "slug": "cars",
+        "title_singular": "Автопарк",
+        "title_plural": "Автопарк",
+        "color": "#6CC4FF"
+    },
+    "employees": {
+        "slug": "employees",
+        "title_singular": "Сотрудник",
+        "title_plural": "Сотрудники",
+        "color": "#FAA961"
+    },
+    "routes": {
+        "slug": "routes",
+        "title_singular": "Маршрут",
+        "title_plural": "Маршруты",
+        "color": "#6D67DA"
+    },
+    "companies": {
+        "slug": "companies",
+        "title_singular": "Компания",
+        "title_plural": "Компании",
+        "color": "#EA7F7C"
+    },
+    "mileages": {
+        "slug": "mileages",
+        "title_singular": "Пробег, км и моточасы",
+        "title_plural": "Пробег, км и моточасы",
+        "color": "#275093"
+    },
+    "addresses": {
+        "slug": "addresses",
+        "title_singular": "Адрес",
+        "title_plural": "Адреса",
+        "color": "#989BFF"
+    },
+    "products": {
+        "slug": "products",
+        "title_singular": "Товар",
+        "title_plural": "Товары",
+        "color": "#4FBC5E"
+    },
+    "remnants": {
+        "slug": "remnants",
+        "title_singular": "Остаток",
+        "title_plural": "Остатки",
+        "color": "#275093"
+    },
+    "clients": {
+        "slug": "clients",
+        "title_singular": "Клиент",
+        "title_plural": "Клиенты",
+        "color": "#139AA2"
+    },
+    "requisites": {
+        "slug": "requisites",
+        "title_singular": "Реквизит",
+        "title_plural": "Реквизиты",
+        "color": "#275093"
+    },
+    "instructions": {
+        "slug": "instructions",
+        "title_singular": "Инструкция",
+        "title_plural": "Должностные инструкции",
+        "color": "#E365FF"
+    },
+    "instruction_groups": {
+        "slug": "instruction_groups",
+        "title_singular": "Группа инструкций",
+        "title_plural": "Группы инструкций",
+        "color": "#275093"
+    },
+    "categories": {
+        "slug": "categories",
+        "title_singular": "Категория",
+        "title_plural": "Категории",
+        "color": "#275093"
+    },
+    "fines_gibdd": {
+        "slug": "fines_gibdd",
+        "title_singular": "Штраф ГИБДД",
+        "title_plural": "Штрафы ГИБДД",
+        "color": "#E365FF"
+    },
+    "documents": {
+        "slug": "documents",
+        "title_singular": "Документ",
+        "title_plural": "Документы",
+        "color": "#139AA2"
+    },
+    "balance_operations": {
+        "slug": "balance_operations",
+        "title_singular": "Операции баланса",
+        "title_plural": "Операции баланса",
+        "color": "#139AA2"
+    },
+    "osago_polises": {
+        "slug": "osago_polises",
+        "title_singular": "Полис ОСАГО",
+        "title_plural": "Полисы ОСАГО",
+        "color": "#139AA2"
+    },
+    "osago_companies": {
+        "slug": "osago_companies",
+        "title_singular": "Страховая компания",
+        "title_plural": "Страховые компании",
+        "color": "#139AA2"
+    },
+    "car_categories": {
+        "slug": "car_categories",
+        "title_singular": "Категория автомобиля",
+        "title_plural": "Категории автомобиля",
+        "color": "#139AA2"
+    },
+    "car_marks": {
+        "slug": "car_marks",
+        "title_singular": "Марка автомобиля",
+        "title_plural": "Марки автомобиля",
+        "color": "#139AA2"
+    },
+    "car_models": {
+        "slug": "car_models",
+        "title_singular": "Модель автомобиля",
+        "title_plural": "Модели автомобиля",
+        "color": "#139AA2"
+    },
+    "analytics": {
+        "slug": "analytics",
+        "title_singular": "Аналитика",
+        "title_plural": "Аналитика",
+        "color": "#139AA2"
+    },
+    "autodor": {
+        "slug": "autodor",
+        "title_singular": "Автодор",
+        "title_plural": "Автодор",
+        "color": "#E365FF"
+    },
+    "logistic": {
+        "slug": "logistic",
+        "title_singular": "Логистика",
+        "title_plural": "Логистика",
+        "color": "#6D67DA"
+    }
+}

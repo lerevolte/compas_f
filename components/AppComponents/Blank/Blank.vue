@@ -4,8 +4,17 @@
         <span class="blank__title">
             {{ props.item.title }}
         </span>
-        <p class="blank__text">
-            {{ props.item.text }}
+        <a 
+            v-if="props.options.isLink"
+            :href="props.item.link" 
+            target="_blank" 
+            class="blank__link" 
+            :class="{'blank__text_empty': props.options.isCheckEmpty && !props.item.text, 'blank__text_default': !props.item.link}"
+        >
+            {{ props.item.text ? props.item.text.value ?? props.item.text : '' }}
+        </a>
+        <p v-else class="blank__text" :class="{'blank__text_empty': props.options.isCheckEmpty && !props.item.text}">
+            {{ props.item.text ? props.item.text.value ?? props.item.text : '' }}
         </p>
     </div>
 </template>
@@ -17,7 +26,15 @@
         item: {
             default: {
                 title: '',
+                link: '',
                 text: ''
+            },
+            type: Object
+        },
+        options: {
+            default: {
+                isCheckEmpty: false,
+                isLink: false
             },
             type: Object
         }

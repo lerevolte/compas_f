@@ -147,6 +147,7 @@ html {
 
 main {
     height: 100%;
+    position: relative;
 }
 
 details {
@@ -199,6 +200,15 @@ input, textarea {
         left: 0px;
         z-index: 2;
         aspect-ratio: 1/1;
+    }
+}
+
+.text {
+    &.text_empty {
+        &::after {
+            color: variables.$color-border;
+            content: "не заполнено";
+        }
     }
 }
 

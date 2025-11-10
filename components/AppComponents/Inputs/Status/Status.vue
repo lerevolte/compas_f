@@ -1,5 +1,5 @@
 <template>
-    <div class="form__item form__item_status">
+    <div class="form__item form__item_status" :class="{ 'form__item_status_disabled': !props.options.edit }">
         <span class="form__item-title" :for="props.options.id" v-if="props.options.title && props.options.title != ''">
             {{ props.options.title }}
         </span>
@@ -125,6 +125,7 @@
                 title: '',
                 list: [],
                 name: '',
+                edit: true,
                 required: false,
                 isHaveNull: false,
                 type: 'status',

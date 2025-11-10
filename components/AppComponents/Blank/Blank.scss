@@ -10,4 +10,33 @@
         display: block;
         font-size: variables.$font-size-label;
     }
+
+    .blank__text,
+    .blank__link {
+        &.blank__text_empty {
+            color: variables.$color-border;
+
+            &::after {
+                content: 'не заполнено'
+            }
+        }
+    }
+
+    .blank__link {
+        color: variables.$color-link;
+        max-width: max-content;
+
+        &:not(.blank__text_empty) {
+            text-decoration: underline;
+        }
+
+        &:hover {
+            text-decoration: none;
+        }
+
+        &.blank__text_default {
+            text-decoration: none;
+            color: variables.$color-default;
+        }
+    }
 }

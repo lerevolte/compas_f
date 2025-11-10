@@ -49,7 +49,7 @@
           </p>
       </AppModalWarning>
   </teleport>
-  <teleport to="#filter-container" v-if="isClient">
+  <teleport to="#filter-container" v-if="props.options.isHaveFilter && isClient">
     <AppFilter 
       :filter="table.filter"
     />
@@ -75,6 +75,14 @@
       slug: {
           default: '',
           type: String
+      },
+      options: {
+        default: {
+          isHaveQuery: false,
+          query: {},
+          isHaveFilter: true
+        },
+        type: Object
       }
   })
 
@@ -97,6 +105,8 @@
 
     if (common.getQueryUrl()) {
       table.value.getWithQuery(common.getQueryUrl())
+    } else if (props.options.isHaveQuery) {
+      table.value.getWithQuery(props.options.query, false)
     } else {
       table.value.get()
     }

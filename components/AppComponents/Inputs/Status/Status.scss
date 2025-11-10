@@ -6,6 +6,22 @@
         width: 100%;
         @include mixins.blankGap();
     }
+
+    &.form__item_status_disabled {
+        pointer-events: none;
+  
+        .status__value-rect {
+          border-radius: 5px;
+    
+          &::before {
+            border-radius: 5px;
+          }
+        }
+  
+        .status__arrow {
+          display: none;
+        }
+    }
 }
 
 .status {
@@ -83,13 +99,6 @@
     .status__rect {
         display: flex;
     }
-    // position: absolute;
-    // top: 8px;
-    // left: 15px;
-    // pointer-events: none;
-    // overflow: hidden;
-    // max-width: calc(100% - 50px);
-    // white-space: nowrap;
 }
 
 .status__arrow {

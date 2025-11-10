@@ -1,0 +1,43 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+.detail {
+    height: calc(100% - 150px);
+}
+
+.detail-page__header {
+    max-width: max-content;
+    
+    h1 {
+        position: relative;
+
+        * {
+            font-size: variables.$font-size-h1;
+        }
+
+        .ghost_text {
+            font-size: variables.$font-size-h1;
+        }
+    }
+}
+
+
+.detail-page__actions {
+    display: flex;
+    gap: 5px;
+    order: -1;
+    align-items: center;
+
+    .icon-action,
+    .show-more {
+        .popup__header {
+            padding: 0px;
+        }
+
+        svg {
+            width: 25px;
+            height: auto;
+            aspect-ratio: 25/19;
+        }
+    }
+}

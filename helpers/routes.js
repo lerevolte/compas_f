@@ -9,6 +9,9 @@ export default {
         me: '/profile',
         roles: '/roles'
     },
+    file: {
+        upload: '/files/store'
+    },
     menu: {
         get: '/sidebar/get',
         update: '/sidebar/set',
@@ -35,5 +38,18 @@ export default {
         create: '/filters/${slug}',
         edit: '/filters/${slug}',
         delete: '/filters/${slug}'
+    },
+    detail: {
+        get: '/objects/${slug}/${id}/compose',
+        update_title: '/objects/${slug}/batch',
+        update_tabs: '/entities/${slug}/menu',
+        settings_tabs: '/tabs/${slug}/permissions',
+        reset_tabs: '/entities/${slug}/menu/reset',
+        history: '/history/${slug}/${id}',
+        create_section: '/field_sections',
+        hidden_fields: '/field/hide_batch',
+        delete_section: '/field_sections/${id}',
+        show_field: '/field/${id}',
+        module: '/objects/${slug}/${id}/${tab}/compose'
     }
 }

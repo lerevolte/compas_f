@@ -94,11 +94,12 @@
         font-size: 16px;
         position: relative;
         align-items: center;
-        border: 1px solid variables.$color-border;
+        border: 1px solid variables.$color-icon-active;
         padding: 4px 10px;
         border-radius: 5px;
         cursor: pointer;
         white-space: nowrap;
+        background-color: variables.$color-hover-option;
 
         .icon__close {
             display: flex;

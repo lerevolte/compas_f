@@ -346,10 +346,10 @@ export class Table {
     }
 
     // Получение данных для таблицы с параметрами
-    async getWithQuery(query) {
+    async getWithQuery(query, setURL = true) {
         try {
             this.loading = true
-            let response = await this.filter.get([], query)
+            let response = await this.filter.get([], query, setURL)
             this.filter.setSaves(response.filters)
             this.filter.set(response.fields)
             this.getHeader(response.table)
@@ -571,10 +571,11 @@ export class Table {
     }
 
     // Открыть строку
-    open(row) {
+    open(row, slug) {
         this.emit('openModal', {
-            type: 'open',
-            item: row
+            ...row, 
+            slug,
+            type: 'open'
         })
     }
 
@@ -600,8 +601,8 @@ export class Table {
     // Копировать строку 
     copy(row) {
         this.emit('openModal', {
+            ...row,
             type: 'copy',
-            item: row
         })
     }
 
@@ -711,7 +712,7 @@ export class Filter {
     }
 
     // Фильтрация
-    async get(fields = [], saved_query = {}) {
+    async get(fields = [], saved_query = {}, setURL = true) {
         // Установка фильтра
         const setFilter = (fields, saved_query) => {
             let response = []
@@ -720,13 +721,25 @@ export class Filter {
             response.push(`page=${saved_query.page ?? this.setter.pages.current}`)
             response.push(`sort_field=${saved_query.sort_field ?? this.setter.sortItem.sort_field}`)
             response.push(`sort_order=${saved_query.sort_order ?? this.setter.sortItem.sort_order}`)
+            
+            const otherKeys = Object.keys(saved_query).filter(key => key != 'per_page' && key != 'page' && key != 'sort_field' && key != 'sort_order')
 
+            if (otherKeys.length) {
+                for (let key of otherKeys) {
+                    if (Array.isArray(saved_query[key])) {
+                        for (let value of saved_query[key]) {
+                            response.push(`filter[${key}][]=${value}`)
+                        }
+                    } else {
+                        response.push(`filter[${key}]=${saved_query[key]}`)
+                    }
+                }
+            }
 
             fields.forEach(field => {
                 if (field.key == 'search') {
                     response.push(`q=${field.value}`)
                 } else if (typeof field.value == 'boolean') {
-                    console.log('boolean', field);
                     response.push(`filter[${field.key}]=${field.value ? 1 : 0}`)
                 } else if (field.value == 0 || (field.value != null && field.value != '')) {
                     response.push(`filter[${field.key}]=${field.value}`)
@@ -741,7 +754,9 @@ export class Filter {
             this.query = setFilter(fields, saved_query)
             let response = await api.callMethod("GET", routes.table.get.replace('${slug}', this.setter.slug) + `${this.query ? '?' + this.query : ''}`)
             this.setter.set(response.data)
-            this.setter.common.setQueryUrl(this.query ? '?' + this.query : '')
+            if (setURL) {
+                this.setter.common.setQueryUrl(this.query ? '?' + this.query : '')
+            }
             return response.data
         } catch (error) {
             console.log(error);

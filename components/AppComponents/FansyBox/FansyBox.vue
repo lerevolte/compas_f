@@ -24,4 +24,6 @@
             ...(options || {}),
         });
     });
+
+    defineExpose({ fansyBoxRef })
 </script>

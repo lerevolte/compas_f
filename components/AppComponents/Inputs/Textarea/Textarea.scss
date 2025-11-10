@@ -11,3 +11,42 @@
         }
     }
 }
+
+.textarea_title {
+    .ghost_text {
+        position: relative;
+        z-index: 1;
+        opacity: 0;
+        pointer-events: none;
+        line-height: 110%;
+        white-space: pre-wrap;
+
+        &.ghost_text_show {
+            z-index: 2;
+            opacity: 1;
+            pointer-events: all;
+            
+            & + .form__item_textarea textarea {
+                opacity: 0;
+                pointer-events: none;
+            }
+        }
+    }
+
+    textarea {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 2;
+        overflow: hidden;
+        line-height: 110%;
+        opacity: 1;
+        border: none;
+        padding: 0px;
+        min-height: auto !important;
+        min-width: auto;
+        color: variables.$color-black;
+    }
+}

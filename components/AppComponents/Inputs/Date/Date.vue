@@ -1,6 +1,6 @@
 <template>
     <div class="form__item form__item_date" ref="dateRef">
-        <label :for="props.options.id" v-if="props.options.title && props.options.title != ''">
+        <label class="blank__title" :for="props.options.id" v-if="props.options.title && props.options.title != ''">
             {{ props.options.title }}
         </label>
         <VueDatePicker 

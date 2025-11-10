@@ -4,52 +4,119 @@
 .form__item {
     &.form__item_file {
         @include mixins.blankGap();
+    }
+}
 
-        .file {
-            gap: 20px;
-            display: flex;
+.file {
+    gap: 8px;
+    display: flex;
+
+    &.file_empty {
+        color: variables.$color-border;
+
+        &::after {
+            content: 'не заполнено'
         }
+    }
+}
 
-        .file__upload {
-            position: relative;
-            width: max-content;
+.file__upload {
+    position: relative;
+    width: max-content;
 
-            input {
-                position: absolute;
-                aspect-ratio: 1 / 1;
-                width: 100px;
-                height: 100px;
-                opacity: 0;
-                z-index: 2;
-                cursor: pointer;
+    input {
+        position: absolute;
+        aspect-ratio: 1 / 1;
+        width: 100px;
+        height: 100px;
+        opacity: 0;
+        z-index: 2;
+        cursor: pointer;
+    }
+
+    &:hover {
+        svg {
+            * {
+                stroke: variables.$color-icon-active;
             }
+        }
+    }
+}
 
-            &:hover {
-                svg {
-                    * {
-                        stroke: variables.$color-icon-active;
-                    }
+.file__values {
+    gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+
+    .fancybox-item__img {
+        width: 100px;
+        overflow: hidden;
+        border-radius: 10px;
+        filter: brightness(0.95);
+        transition: 0.2s all;
+
+        &:hover {
+            filter: brightness(0.9);
+        }
+    }
+}
+
+.file__values-list {
+    gap: 8px;    
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.file__image {
+    position: relative;
+
+    .show-more {
+        position: absolute;
+        left: 35px;
+        top: 35px;
+        z-index: 20;
+        opacity: 0;
+        transition: 0.1s all;
+
+        &.popup_open {
+            opacity: 1;
+        }
+    }
+
+    &:hover {
+        .show-more {
+            opacity: 1;
+        }
+    }
+
+    .popup__header {
+        background-color: #f6f5f399;
+        border: 1px solid #4e4e4e;
+        border-radius: 50%;
+        cursor: pointer;
+        display: grid;
+        grid-template-columns: 1fr;
+        height: 30px;
+        place-items: center;
+        width: 30px;
+
+        .icon__dots {
+            svg {
+                * {
+                    fill: variables.$color-icon-active
                 }
             }
         }
+    }
 
-        .file__values {
-            gap: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
+    .popup__content {
+        top: 30px;
+    }
 
-            .fancybox-item__img {
-                width: 100px;
-                overflow: hidden;
-                border-radius: 10px;
-                filter: brightness(0.95);
-                transition: 0.2s all;
-
-                &:hover {
-                    filter: brightness(0.9);
-                }
-            }
+    &.draggable-drag {
+        .show-more {
+            display: none !important;
         }
     }
 }

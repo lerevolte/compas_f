@@ -1,6 +1,6 @@
 <template>
     <div class="form__item form__item_select">
-        <label :for="props.options.id" v-if="props.options.title && props.options.title != ''">
+        <label class="blank__title" :for="props.options.id" v-if="props.options.title && props.options.title != ''">
             {{ props.options.title }}
         </label>
 
@@ -119,7 +119,7 @@
         // Получение активных опций
         getActiveOptions(value) {
             if (props.options.multiple) {
-                return value == null ? [] : value.map(option => this.state.list.find(p => p.value == option));
+                return value == null || value == '' ? [] : value.map(option => this.state.list.find(p => p.value == option));
             } else if (props.options.type == 'address') {
                 return this.state.list ? this.state.list.find(p => isEqual(p.value, value)) : null
             } else {

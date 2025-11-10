@@ -2,30 +2,25 @@
     <main>
 		<div class="page__header">
 			<AppH1 id="mobile-menu-target">
-				{{ entity.active?.title }}
+				{{ props.entity.active?.title }}
 			</AppH1>
 
 			<div id="filter-container"></div>
 
-			<AppButton class="button_fill">
+			<AppButton class="button_fill" @click="emit('openModal', {
+				type: 'create',
+				slug: props.slug,
+				id: '0'
+			})">
 				<AppIconPlus />
 				Создать
 			</AppButton>
 		</div>
 
 		<AppVirtualTable 
-			:slug="route.params.slug"
-			@openModal="item => entity.openModal(item)"
+			:slug="props.slug"
+			@openModal="item => emit('openModal', item)"
 		/>
-		<div id="mass-action-container"></div>
-
-		<teleport to="#detail__overlay" v-if="entity.modal.length > 0">
-			<AppWarningLarge v-for="modal in entity.modal" @close="entity.modal.pop()">
-				<h1>
-					{{ modal.type == 'create' ? 'Создание' : modal.type == 'copy' ? 'Копирование' : 'Просмотр' }} {{ modal.item ? `ID: ${modal.item.id}` : '' }}
-				</h1>
-			</AppWarningLarge>
-		</teleport>
     </main>
 </template>
 
@@ -33,27 +28,34 @@
 	import AppH1 from '@AppComponents/Headers/H1/H1.vue';
 
     import AppVirtualTable from '@AppComponents/VirtualTable/VirtualTable.vue';
-	import AppWarningLarge from '@AppComponents/Modal/Large/Large.vue'
 	import AppButton from '@AppComponents/Button/Button.vue'
 	import AppIconPlus from '@AppIcons/Plus.vue'
 
+	import metaJSON from '/meta.json'
 
-	import metaJSON from './meta.json'
+	const emit = defineEmits([
+		'openModal'
+	])
 
-	const route = useRoute()
-
-	class Entity {
-		constructor() {
-			this.modal = []
-			this.active = metaJSON[route.params.slug]
+	const props = defineProps({
+		entity: {
+			default: {
+				modal: [],
+				active: null,
+				addresses: []
+			},
+			type: Object
+		},
+		slug: {
+			default: '',
+			type: String
 		}
-
-		openModal(item) {
-			console.log(item)
-			this.modal.push(item)
-		}
-	}
-
-	const entity = ref(new Entity())
+	})
+	
+	onMounted(() => {
+		useHead({
+			title: `${metaJSON[props.slug]?.title} | Compas.pro`
+		})
+	})
 
 </script>

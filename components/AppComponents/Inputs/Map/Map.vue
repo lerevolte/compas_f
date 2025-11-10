@@ -1,6 +1,6 @@
 <template>
     <div class="form__item form__item_select">
-        <label :for="props.options.id">
+        <label class="blank__title" :for="props.options.id">
             {{ props.options.title }}
         </label>
 

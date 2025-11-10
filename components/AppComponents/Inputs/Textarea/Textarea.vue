@@ -1,6 +1,6 @@
 <template>
-    <div class="form__item form__item_textarea">
-        <label :for="props.options.id">
+    <div class="form__item form__item_textarea" ref="textareaRef">
+        <label class="blank__title" :for="props.options.id">
             {{ props.options.title }}
         </label>
         <textarea 
@@ -8,7 +8,9 @@
             :name="props.options.name" 
             :placeholder="props.options.placeholder"
             :value="modelValue"
-            @input="(event) => emit('update:modelValue', event.target.value)"
+            :disabled="props.options.disabled"
+            @input="handleInput"
+            @keydown.enter="handleKeydownEnter"
         ></textarea>
     </div>
 </template>
@@ -16,6 +18,8 @@
 <script setup>
     import './Textarea.scss';
 
+    const textareaRef = ref(null)
+    
     const emit = defineEmits([
         'update:modelValue'
     ])
@@ -26,10 +30,33 @@
                  id: 0,
                  title: '',
                  name: '',
+                 disabled: false,
+                 preventEnter: false,
                  placeholder: ''
             },
             type: Object
         },
         modelValue: String
     })
+
+    const handleInput = (event) => {
+        if (props.options.preventEnter) {
+            const newValue = event.target.value;
+            if (newValue.includes('\n') && !props.modelValue?.includes('\n')) {
+                event.target.value = props.modelValue || '';
+                return;
+            }
+        }
+        emit('update:modelValue', event.target.value);
+    }
+
+    const handleKeydownEnter = (event) => {
+        if (props.options.preventEnter) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    }
+
+
+    defineExpose({ textareaRef });
 </script>

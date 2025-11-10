@@ -70,22 +70,4 @@
 
 .settings__list {
     overflow-x: hidden;
-
-    &.settings__list_check {
-        .popup__option {
-            padding: 0px;
-
-            .form__item_checkbox {
-                width: 100%;
-                height: 100%;
-
-                label {
-                    padding: 10px;
-                    width: 100%;
-                    height: 100%;
-                    max-width: none;
-                }
-            }
-        }
-    }
 }

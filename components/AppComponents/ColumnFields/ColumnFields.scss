@@ -1,0 +1,33 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+.column-fields {
+    grid-gap: 25px;
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+}
+
+.column-fields__column {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+
+    &:last-child {
+        .popup {
+            .popup__content {
+                right: 0px;
+            }
+        }
+    }
+}
+
+.column-fields__button {
+    &.button_text {
+        color: variables.$color-icon;
+        text-decoration: none;
+
+        &:hover {
+            color: variables.$color-icon-active;
+        }
+    }
+}

@@ -62,7 +62,7 @@
                         placeholder: '' 
                     }"
                     v-model="cell.useCellModel(row.index, column).value"
-                    @clickLink="id => table.open({id})"
+                    @clickLink="id => table.open({id, slug: column.related_table})"
                     @create="item => table.create(item)"
                 />
 
@@ -140,6 +140,7 @@
                             list: column.options,
                             name: column.key,
                             relation: null,
+                            edit: table.body[row.index] && table.body[row.index].edit,
                             required: false,
                             isHaveNull: true,
                             placeholder: '' 
@@ -168,7 +169,7 @@
                 </template>
 
                 <div class="table__cell-content" v-else-if="table.body[row.index] && !table.body[row.index].edit" >
-                    <span class="table__text text" v-if="column.type == 'text' && (!column.is_external_link || !table.body[row.index][column.key].external_link)">
+                    <span class="table__text text" v-if="column.type == 'text' && (!column.is_external_link || !table.body[row.index][column.key]?.external_link)">
                         {{ cell.useCellModel(row.index, column).value }}
                     </span>
 
@@ -201,6 +202,7 @@
                             id: `${row.index}_${column.key}`,
                             title: null,
                             type: column.type,
+                            edit: table.body[row.index] && table.body[row.index].edit,
                             list: column.options,
                             name: column.key,
                             required: false,
@@ -243,7 +245,7 @@
         const el = elem?.getAttribute ? elem : (elem?.currentTarget || elem?.target)
         const rowIndex = el?.getAttribute ? el.getAttribute('data-index') : null
         if (rowIndex != null) {
-            table.value.open(table.value.body[rowIndex])
+            table.value.open(table.value.body[rowIndex], table.value.slug)
         }
     })
 

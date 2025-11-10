@@ -19,8 +19,8 @@
                 </div>
 
                 <!-- Enable -->
-                <div class="settings__list settings__list_check" v-else-if="settings.nest.active.value == 'isCheck'">
-                    <div class="settings__item popup__option" v-for="field in isInitGroup ? settings.nest.templateField.list : list" :key="field.id">
+                <div class="settings__list" v-else-if="settings.nest.active.value == 'isCheck'">
+                    <div class="settings__item popup__option popup__option_checkbox" v-for="field in isInitGroup ? settings.nest.templateField.list : list" :key="field.id">
                         <AppCheckbox 
                             v-model="field.enabled"
                             :options="{
@@ -32,8 +32,8 @@
                 </div>
 
                 <!-- Fixed -->
-                <div class="settings__list settings__list_check" v-else-if="settings.nest.active.value == 'isFixed'">
-                    <div class="settings__item popup__option" v-for="field in isInitGroup ? settings.nest.templateField.list : list" :key="field.id">
+                <div class="settings__list" v-else-if="settings.nest.active.value == 'isFixed'">
+                    <div class="settings__item popup__option popup__option_checkbox" v-for="field in isInitGroup ? settings.nest.templateField.list : list" :key="field.id">
                         <AppCheckbox 
                             v-model="field.fixed"
                             :options="{

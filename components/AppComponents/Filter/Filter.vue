@@ -92,7 +92,7 @@
                     </template>
                     <template #content>
                         <AppCheckbox 
-                            class="popup__option"
+                            class="popup__option popup__option_checkbox"
                             v-for="field in filter.state.fields"
                             v-model="field.enabled"
                             :options="field"
