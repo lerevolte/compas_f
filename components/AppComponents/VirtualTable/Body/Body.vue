@@ -169,7 +169,7 @@
                 </template>
 
                 <div class="table__cell-content" v-else-if="table.body[row.index] && !table.body[row.index].edit" >
-                    <span class="table__text text" v-if="column.type == 'text' && (!column.is_external_link || !table.body[row.index][column.key]?.external_link)">
+                    <span class="table__text text" v-if="['text', 'number'].includes(column.type) && (!column.is_external_link || !table.body[row.index][column.key]?.external_link)">
                         {{ cell.useCellModel(row.index, column).value }}
                     </span>
 

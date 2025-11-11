@@ -98,8 +98,11 @@ html {
     overflow-x: hidden;
     @include mixins.scrollBar();
 
-    main {
+    main:not(:has(.detail)) {
         padding: 25px;
+    }
+
+    main {
         display: flex;
         flex-direction: column;
     }
@@ -137,7 +140,8 @@ html {
     position: relative;
 }
 
-.ibg img {
+.ibg img,
+.ibg svg {
     position: absolute;
     top: 0;
     left: 0;

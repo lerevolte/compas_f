@@ -3,6 +3,14 @@
 
 .detail {
     height: calc(100% - 150px);
+
+    & > *:not(.detail__actions) {
+        padding: 0px 25px;
+    }
+
+    & > *:first-child {
+        padding-top: 25px;
+    }
 }
 
 .detail-page__header {
@@ -40,4 +48,10 @@
             aspect-ratio: 25/19;
         }
     }
+}
+
+.detail__actions {
+    position: sticky;
+    width: 100%;
+    bottom: 0px;
 }

@@ -1,5 +1,5 @@
 <template>
-    <figure class='icon__file'>
+    <figure class='ibg icon__file'>
         <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="0.5" y="0.5" width="99" height="99" rx="3.5" fill="#FCFCFC" stroke="#B3B3B3"
                 stroke-dasharray="5 5" />
@@ -19,3 +19,11 @@
         </svg>
     </figure>
 </template>
+
+<style lang="scss">
+    .icon__file {
+        width: 100px;
+        aspect-ratio: 1;
+        height: auto;
+    }
+</style>

@@ -21,11 +21,13 @@
                     class="column-fields__item column-section"
                     :section="section"
                     :options="{
-                        isDisableFooter: props.options.isDisableFooter
+                        isDisableFooter: props.options.isDisableFooter,
+                        isGlobalEdit: props.options.isGlobalEdit,
+                        sectionModal: props.options.modal.sections
                     }"
+                    :edit="props.edit"
                     :listSection="columns.listSection"
                     :pageId="props.pageId"
-                    :isGlobalEdit="props.isGlobalEdit"
                     :hiddenFields="columns.hiddenFields"
                     @update:hiddenFields="fields => columns.hiddenFields = fields"
                     @update:visibilityField="field => emit('action', {action: 'showField', value: field})"
@@ -55,7 +57,7 @@
                     actionTitle: columns.modal.actionTitle,
                     template: 'slot'
                 }"
-                :loading="props.options.modal.loading"
+                :loading="props.options.modal.columns.loading"
                 @delete="columns.delete()"
                 @create="columns.create()"
                 @close="columns.modal.state = false"
@@ -119,10 +121,17 @@
         options: {
             default: {
                 modal: {
-                    state: false,
-                    loading: false
+                    columns: {
+                        state: false,
+                        loading: false
+                    },
+                    sections: {
+                        state: false,
+                        loading: false
+                    }
                 },
                 isHaveHistory: true,
+                isGlobalEdit: false,
                 isDisableFooter: false
             },
             type: Object
@@ -131,9 +140,14 @@
             default: null,
             type: [Number, String]
         },
-        isGlobalEdit: {
-            default: false,
-            type: Boolean
+        edit: {
+            default: {
+                action: 'cancel',
+                state: false,
+                backups: [],
+                fields: []
+            },
+            type: Object
         }
     })
 
@@ -175,9 +189,7 @@
             this.hiddenFields = JSON.parse(JSON.stringify(props.hiddenFields))
         }
 
-        dragStart() {
-
-        }
+        dragStart() {}
 
         dragEnd() {
 
@@ -256,12 +268,41 @@
 
         // Создание поля
         createField(field) {
-            console.log('Создание поля', field);
+            emit('action', { 
+                action: 'createField', 
+                value: field
+            })
         }
 
         // Обновление поля
         updateField(field) {
-            console.log('Обновление поля', field);
+            emit('action', { 
+                action: 'updateField', 
+                value: field
+            })
+        }
+
+        // Инициализация редактирования полей
+        initEditFields(fields = []) {
+            emit('action', { 
+                action: 'initEditFields', 
+                value: fields
+            })
+        }
+
+        // Отмена редактирования секции
+        cancelSection(fields = []) {
+            emit('action', {
+                action: 'cancelSection',
+                value: fields
+            })
+        }
+
+        getSectionValidate(response) {
+            emit('action', {
+                action: 'getSectionValidate',
+                value: response
+            })
         }
     }
 
@@ -271,11 +312,11 @@
         columns.value.get()
     })
 
-    watch(() => props.options.modal, () => {
+    watch(() => props.options.modal.columns, () => {
         columns.value.modal = {
             ...columns.value.modal,
-            state: props.options.modal.state,
-            loading: props.options.modal.loading
+            state: props.options.modal.columns.state,
+            loading: props.options.modal.columns.loading
         }
     })
 

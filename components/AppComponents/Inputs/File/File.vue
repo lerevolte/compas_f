@@ -1,5 +1,5 @@
 <template>
-    <div class="form__item form__item_file">
+    <div class="form__item form__item_file" :class="{'error': props.error.state}">
         <label class="blank__title" :for="props.options.id" v-if="props.options.title && props.options.title != ''">
             {{ props.options.title }}
         </label>
@@ -19,7 +19,7 @@
                     fallback-class="draggable-fallback"
                     :filter="'.show-more, .show-more *'"
                     @end="fileManager.dragEnd()"
-                    :draggable="false"
+                    :draggable="props.options.isDraggable ? '.file__image' : ''"
                 >
                     <template #item="{ element: item }">
                         <div class="file__image">
@@ -66,6 +66,9 @@
                 </div>
             </FansyBox>
         </div>
+        <AppError v-show="props.error.state">
+            {{ props.error.text }}
+        </AppError>
 
 
         <teleport to="#menu__overlay" v-if="fileManager.modal.state">
@@ -119,6 +122,7 @@
     import FansyBox from '@AppComponents/FansyBox/FansyBox.vue'
     import FansyBoxItem from '@AppComponents/FansyBox/Item/Item.vue'
     import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'
+    import AppError from '@AppComponents/Error/Error.vue'
 
     import { useUserStore } from '@/stores/userStore.js'
     const userStore = useUserStore()    
@@ -133,12 +137,20 @@
                  placeholder: '',
                  multiple: false,
                  isModal: false,
+                 isDraggable: false,
                  accept: ['*'],
                  query: {}
             },
             type: Object
         },
-        modelValue: [Array, Object]
+        modelValue: [Array, Object],
+        error: {
+            default: {
+                state: false,
+                text: ''
+            },
+            type: Object
+        }
     })
 
     const emit = defineEmits([

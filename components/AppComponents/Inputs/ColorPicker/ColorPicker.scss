@@ -1,0 +1,109 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+.form__item_colorpicker {
+    @include mixins.blankGap();
+}
+
+.colorpicker {
+    .popup__content {
+        padding: 5px;
+    }
+
+    .colorpicker__summary,
+    .colorpicker__preview {
+        position: relative;
+        height: 50px;
+    
+        &::after,
+        &::before {
+            overflow: hidden;
+            position: absolute;
+            @include mixins.position(0px, 0px);
+            @include mixins.resolution(100%, 100%);
+        }
+    
+        
+        &::after {
+            content: '';
+            background: var(--colorValue);
+        }
+    
+        &::before {
+            content: url('/public/icons/empty_background.png');
+        }
+    }
+
+    .colorpicker__summary {
+        width: 25px;
+        height: auto;
+        aspect-ratio: 1;
+        border-radius: 5px;
+        background: var(--colorValue);
+        cursor: pointer;
+        overflow: hidden;
+    }
+    
+
+    .vacp-color-picker {
+        padding: 0px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .vacp-color-input-label-text,
+    .vacp-range-input-label-text,
+    .vacp-actions {
+        display: none;
+    }
+
+    input[type=range] {
+        outline: none;
+
+        &::-webkit-slider-runnable-track {
+            border-radius: 10px/100%;
+            height: 7px;
+        }
+
+        &::-webkit-slider-thumb {
+            border-radius: 50%;
+            cursor: pointer;
+            width:15px;
+            height: 15px;
+            background: variables.$color-white;
+            -webkit-appearance: none;
+            margin-top: -5px;
+        }
+    }
+
+    .colorpicker__button {
+        width: 95%;
+        margin: 10px 5px 0px;
+    }
+
+    .vacp-color-input {
+        &:focus {
+            outline: none;
+            color: #000;
+            border: 1px solid variables.$color-icon-active;
+        }
+    }
+    
+    .vacp-color-input-label {
+        font-size: variables.$font-size-default;
+        gap: 5px;
+        display: flex;
+        flex-direction: column-reverse;
+    }
+
+    .vacp-range-input--alpha {
+        background: transparent;
+    }
+
+    .vacp-range-input {
+        border: 0px;
+        padding: 0px;
+        height: 20px;
+        min-height: 20px;
+    }
+}

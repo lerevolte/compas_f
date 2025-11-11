@@ -23,7 +23,7 @@
                 <IconEdit v-show="!section.editTitle" @click="section.initEditTitle()"/>
             </div>
 
-            <div class="tile-section__actions" v-if="!props.isGlobalEdit">
+            <div class="tile-section__actions" v-if="!props.options.isGlobalEdit">
                 <AppButton class="button_text" v-if="section.fields.list.find(item => item.edit)" @click="section.fields.cancelEditAll()">
                     Отмена
                 </AppButton>
@@ -72,7 +72,7 @@
                     :class="{ 
                         'tile-section__field_hidden': !field.edit && section.fields.checkVisible(field),
                         'tile-section__field_static': !field.can_edit,
-                        'tile-section__field_required': field.required
+                        'blank_required': field.required
                     }"
                     @click="e => section.fields.initChangeField(e.target, field)"
                 >
@@ -94,10 +94,12 @@
 
                     <AppFile 
                         v-else-if="field.type == 'file'"
+                        :error="field.error"
                         :options="{
                             ...field,
                             multiple: true,
                             edit: field.edit,
+                            isDraggable: true,
                             query: {
                                 field_id: field.id,
                                 page_id: props.pageId ?? null
@@ -109,6 +111,7 @@
                     <AppRelation  
                         v-else-if="field.type == 'relation'"
                         :parentContainer="sectionRef"
+                        :error="field.error"
                         :options="{
                             id: field.id,
                             title: field.title,
@@ -145,17 +148,20 @@
                         <AppDate 
                             v-if="field.type == 'date'"
                             :options="field"
+                            :error="field.error"
                             v-model="field.value"
                         />
                         <AppTextarea 
                             v-else-if="field.type == 'text' && field.is_plural"
                             :options="field"
+                            :error="field.error"
                             v-model="field.value"
                         />
 
                         <div class="section__field-group" v-else-if="field.type == 'text'">
                             <AppInput 
                                 :options="field"
+                                :error="field.error"
                                 v-model="section.fields.setFieldValue(field, 'value').value"
                             />
                             <AppInput 
@@ -173,11 +179,13 @@
                         <AppInput 
                             v-else-if="['number', 'password'].includes(field.type)"
                             :options="field"
+                            :error="field.error"
                             v-model="field.value"
                         />
 
                         <AppSelect 
                             v-else-if="field.type == 'select_dropdown'"
+                            :error="field.error"
                             :options="{
                                 ...field,
                                 list: field.options,
@@ -295,6 +303,7 @@
             :listSection="props.listSection"
             @delete="id => section.fields.delete(id)"
             @create="field => section.fields.create(field)"
+            @update="field => section.fields.update(field)"
         />
     </div>
 </template>
@@ -323,6 +332,7 @@
     import AppTextarea from '@AppComponents/Inputs/Textarea/Textarea.vue';
     import AppCheckbox from '@AppComponents/Inputs/Checkbox/Checkbox.vue'
     import AppRelation from '@AppComponents/Inputs/Relation/Relation.vue'
+    import { Validator } from '@AppHelpers/classes.js'
 
     const emit = defineEmits([
         'update:hiddenFields',
@@ -355,13 +365,23 @@
         },
         options: {
             default: {
-                isDisableFooter: false
+                isDisableFooter: false,
+                isGlobalEdit: false,
+                sectionModal: {
+                    state: false,
+                    section: null
+                }
             },
             type: Object
         },
-        isGlobalEdit: {
-            default: false,
-            type: Boolean
+        edit: {
+            default: {
+                action: 'cancel',
+                state: false,
+                backups: [],
+                fields: []
+            },
+            type: Object
         }
     })
 
@@ -432,6 +452,7 @@
                 content: {},
                 text: null
             }
+            this.validator = new Validator()
         }
 
         // Перетаскивание полей
@@ -442,20 +463,23 @@
 
         // Редактирование всех полей в секции
         editAll() {
-            this.backup = JSON.parse(JSON.stringify(this.list.filter(field => field.can_edit).map(item => {
+            this.backup = JSON.parse(JSON.stringify(this.list.filter(field => field.can_edit && !field.edit).map(item => {
                 return {
                     id: item.id,
                     value: item.value
                 }
             })))
-            this.list.filter(field => field.can_edit).forEach(element => {
+            emit('action', {action: 'initEditFields', value: this.list.filter(field => field.can_edit && !field.edit)})
+            this.list.filter(field => field.can_edit && !field.edit).forEach(element => {
                 element.edit = true
             });
         }
 
         // Отмена редактирования всех полей
-        cancelEditAll() {
+        cancelEditAll(isWatch = false) {
             let findedField = null
+
+
             this.list.forEach((field) => {
                 findedField = this.backup.find(f => f.id == field.id)
                 if (findedField) {
@@ -463,6 +487,15 @@
                     field.edit = false
                 }
             })
+
+            if (!isWatch) {
+                emit('action', {
+                    action: 'cancelSection',
+                    value: this.backup
+                })
+            }
+
+            this.backup = []
         }
 
         // Показать поле
@@ -657,6 +690,26 @@
                 this.backup.push(JSON.parse(JSON.stringify(field)))
                 field.edit = true
             }
+
+            emit('action', {action: 'initEditFields', value: [field]})
+        }
+
+        checkFields() {
+            const fields = section.value.fields.list.filter(field => field.edit)
+            section.value.fields.validator.check(fields)
+
+            for (let field of this.list) {
+                field.error = {
+                    state: section.value.fields.validator.errors[field.key] ?? false,
+                    text: section.value.fields.validator.errors[field.key] ?? null
+                }
+            }
+
+            emit('action', {action: 'getSectionValidate', value: {
+                section_id: section.value.id,
+                fields: fields,
+                state: section.value.fields.validator.state
+            }})
         }
     }
 
@@ -673,8 +726,29 @@
     onMounted(async () => {
         await section.value.get()
 
-        if (props.isGlobalEdit) {
+        if (props.options.isGlobalEdit) {
             section.value.fields.editAll()
+        }
+    })
+
+    watch(() => props.options.sectionModal, () => {
+        if (!props.options.sectionModal.state) {
+            section.value.fields.modal.state = false
+            section.value.fields.modal.loading = false
+        } else {
+            section.value.fields.modal.loading = props.options.sectionModal.state
+        }
+    })
+
+    watch(() => props.edit.state, () => {
+        if (!props.edit.state) {
+            section.value.fields.cancelEditAll(true)
+        }
+    })
+
+    watch(() => props.edit.action, () => {
+        if (props.edit.action == 'save') {
+            section.value.fields.checkFields()
         }
     })
 </script>

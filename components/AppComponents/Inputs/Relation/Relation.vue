@@ -1,5 +1,5 @@
 <template>
-    <div class="form__item form__item_select">
+    <div class="form__item form__item_select" :class="{'error': props.error.state}">
         <label class="blank__title" :for="props.options.id" v-if="props.options.title && props.options.title != ''">
             {{ props.options.title }}
         </label>
@@ -102,15 +102,18 @@
             </div>
         </div>
         
-        <!-- Кнопка добавления нового селекта -->
-            <AppButton 
-                v-if="props.options.edit !== false"
-                class="button_text"
-                :disabled="props.options.edit === false"
-                @click="addNewSelect"
-            >
-                + Добавить
-            </AppButton>
+        <AppError v-show="props.error.state">
+            {{ props.error.text }}
+        </AppError>
+
+        <AppButton 
+            v-if="props.options.edit !== false"
+            class="button_text"
+            :disabled="props.options.edit === false"
+            @click="addNewSelect"
+        >
+            + Добавить
+        </AppButton>
     </div>
 </template>
 
@@ -123,6 +126,7 @@
     import IconWarning from '@AppIcons/Warning.vue';
     import api from '@/helpers/api.js'
     import throttle from 'lodash/throttle'
+    import AppError from '@AppComponents/Error/Error.vue'
 
     const selectRefs = ref([])
     const selectInstances = ref([])
@@ -396,7 +400,14 @@
             },
             type: Object
         },
-        modelValue: null
+        modelValue: null,
+        error: {
+            default: {
+                state: false,
+                text: ''
+            },
+            type: Object
+        }
     })
 
     // Инициализация экземпляров селектов

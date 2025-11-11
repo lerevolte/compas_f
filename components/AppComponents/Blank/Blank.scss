@@ -16,6 +16,10 @@
         &.blank__text_empty {
             color: variables.$color-border;
 
+            &.blank__text_default {
+                color: variables.$color-border;
+            }
+
             &::after {
                 content: 'не заполнено'
             }
@@ -37,6 +41,24 @@
         &.blank__text_default {
             text-decoration: none;
             color: variables.$color-default;
+        }
+    }
+}
+
+.blank_required {
+    .blank__title {
+        position: relative;
+        max-width: max-content;
+
+        &::after {
+            content: '*';
+            top: -7px;
+            right: -9px;
+            height: 8px;
+            font-size: 24px;
+            position: absolute;
+            line-height: normal;
+            color: variables.$color-red;
         }
     }
 }

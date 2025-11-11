@@ -12,7 +12,17 @@
   </section>
 
   <teleport to="#mass-action-container" v-if="isClient">
-    <MassAction />
+    <MassAction 
+      :isChoosed="isChoosed"
+      :actions="{
+        save: table.state == 'edit',
+        edit: table.state != 'edit',
+        cancel: true,
+        delete: table.state != 'edit'
+      }"
+      :loading="table.saving"
+      @action="action => table[action.action](action.value)"
+    />
   </teleport>
 
   <teleport to="#menu__overlay" v-if="table.deleteBuffer.state">
@@ -68,7 +78,7 @@
   import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'
   import TableHeader from '@AppComponents/VirtualTable/Header/Header.vue'
   import TableFooter from '@AppComponents/VirtualTable/Footer/Footer.vue'
-  import MassAction from '@AppComponents/VirtualTable/MassAction/MassAction.vue'
+  import MassAction from '@AppComponents/MassAction/MassAction.vue'
   import ScrollButtons from '@AppComponents/VirtualTable/ScrollButtons/ScrollButtons.vue'
   
   const props = defineProps({
@@ -96,6 +106,10 @@
 
   const table = ref(new Table(tableRef, props.slug, emit))
   const common = new Common()
+
+  const isChoosed = computed(() => {
+        return table.value.body.filter(item => item.isChoose).length > 0
+    })
 
   onMounted(async () => {
     isClient.value = true

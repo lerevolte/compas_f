@@ -40,6 +40,10 @@
             &.select_disabled {
                 &.select_empty {
                     opacity: 1;
+
+                    figcaption {
+                        color: variables.$color-border;    
+                    }
                 }
             }
         }
@@ -104,23 +108,6 @@
     &.tile-section__field_static {
         .blank__title {
             color: variables.$color-border;
-        }
-    }
-
-    &.tile-section__field_required {
-        .blank__title {
-            position: relative;
-
-            &::after {
-                content: '*';
-                top: -7px;
-                right: -9px;
-                height: 8px;
-                font-size: 24px;
-                position: absolute;
-                line-height: normal;
-                color: variables.$color-red;
-            }
         }
     }
 

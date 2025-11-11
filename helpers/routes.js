@@ -50,6 +50,9 @@ export default {
         hidden_fields: '/field/hide_batch',
         delete_section: '/field_sections/${id}',
         show_field: '/field/${id}',
-        module: '/objects/${slug}/${id}/${tab}/compose'
+        module: '/objects/${slug}/${id}/${tab}/compose',
+        create_field: '/field',
+        edit_fields: '/objects/${slug}/batch',
+        update_field: '/field/${id}',
     }
 }

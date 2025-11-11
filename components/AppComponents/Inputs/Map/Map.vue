@@ -1,5 +1,5 @@
 <template>
-    <div class="form__item form__item_select">
+    <div class="form__item form__item_select" :class="{'error': props.error.state}">
         <label class="blank__title" :for="props.options.id">
             {{ props.options.title }}
         </label>
@@ -71,6 +71,10 @@
                 </div>
             </div>
         </div>
+
+        <AppError v-show="props.error.state">
+            {{ props.error.text }}
+        </AppError>
     </div>
 </template>
 
@@ -83,6 +87,7 @@
     import IconWarning from '@AppIcons/Warning.vue';
     import api from '@/helpers/api.js'
     import throttle from 'lodash/throttle'
+    import AppError from '@AppComponents/Error/Error.vue'
 
     const selectRef = ref(null)
     const selectValuesRef = ref(null)
@@ -196,7 +201,14 @@
             default: false,
             type: Boolean
         },
-        modelValue: null
+        modelValue: null,
+        error: {
+            default: {
+                state: false,
+                text: ''
+            },
+            type: Object
+        }
     })
 
     onMounted(() => {

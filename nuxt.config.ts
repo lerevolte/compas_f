@@ -10,6 +10,26 @@ export default defineNuxtConfig({
     'pinia-plugin-persistedstate/nuxt',
   ],
   vite: {
+    cacheDir: 'node_modules/.vite',
+    resolve: {
+      dedupe: ['vue']
+    },
+    optimizeDeps: {
+      include: [
+        '@fancyapps/ui',
+        'axios',
+        'date-fns',
+        '@vuepic/vue-datepicker',
+        'vue3-toastify',
+        'maska',
+        'vuedraggable',
+        '@tanstack/vue-virtual'
+      ],
+      exclude: [
+        'nuxt/app',
+        'vue-demi'
+      ]
+    },
     css: {
       preprocessorOptions: {
         scss: {

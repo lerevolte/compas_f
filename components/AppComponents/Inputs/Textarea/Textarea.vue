@@ -1,5 +1,5 @@
 <template>
-    <div class="form__item form__item_textarea" ref="textareaRef">
+    <div class="form__item form__item_textarea" ref="textareaRef" :class="{'error': props.error.state}">
         <label class="blank__title" :for="props.options.id">
             {{ props.options.title }}
         </label>
@@ -12,11 +12,15 @@
             @input="handleInput"
             @keydown.enter="handleKeydownEnter"
         ></textarea>
+        <AppError v-show="props.error.state">
+            {{ props.error.text }}
+        </AppError>
     </div>
 </template>
 
 <script setup>
     import './Textarea.scss';
+    import AppError from '@AppComponents/Error/Error.vue'
 
     const textareaRef = ref(null)
     
@@ -36,7 +40,14 @@
             },
             type: Object
         },
-        modelValue: String
+        modelValue: String,
+        error: {
+            default: {
+                state: false,
+                text: ''
+            },
+            type: Object
+        }
     })
 
     const handleInput = (event) => {

@@ -579,6 +579,11 @@ export class Table {
         })
     }
 
+    // Инициализация редактирования
+    initEdit() {
+        this.edit(this.body.filter(item => item.isChoose))
+    }
+
     // Редактировать строку (батчами для избежания зависаний)
     async edit(rows = []) {
         rows = Array.isArray(rows) ? rows : [rows]
@@ -598,7 +603,6 @@ export class Table {
         }
     }
 
-    // Копировать строку 
     copy(row) {
         this.emit('openModal', {
             ...row,
@@ -608,6 +612,8 @@ export class Table {
 
     // Инициализация удаления
     initDelete(rows = []) {
+        rows = rows.length == 0 ? this.body.filter(item => item.isChoose) : rows 
+
         this.deleteBuffer = {
             list: Array.isArray(rows) ? rows : [rows],
             state: true
@@ -827,5 +833,84 @@ export class Filter {
             is_hidden: false,
             fields: filter.fields
         })
+    }
+}
+
+export class Validator {
+    constructor () {
+        this.state = false
+        this.fields = []
+        this.errors = {}
+        this.common = new Common()
+    }
+
+    // Установка значения для поля
+    setFieldValue(field, slug = 'value') {
+        if (!field.value) return null 
+
+        if (field.type == 'address') {
+            return field.value
+        } else if (Array.isArray(field.value)) {
+            return field.value
+        } else if (field.type == 'relation') {
+            return field ?? null
+        } else {
+            return typeof field.value === 'object' && field.value !== null ? field.value[slug] : field.value
+        }
+    }
+
+    // Получение значений для выпадающих списков
+    getSelectValue(field) {
+        // Проверяем что строка существует
+        if (!field.value) return null
+        
+        let response = null
+        if (Array.isArray(field.value)) response = field.options.filter(option => field.value.includes(option.value)).map(option => option.label)
+        else if (typeof field.value == 'object' && field.value !== null) response = field.options.filter(option => option.value == field.value).map(option => option.label)
+        else response = field.options.filter(option => option.value == field.value).map(option => option.label)
+    
+        if (field.type == 'select_dropdown') {
+            return response.join(', ')
+        } 
+        return response
+    }
+
+    // Валидация
+    validate(field) {
+        if (field.type == 'select_dropdown') {
+            return !(this.getSelectValue(field) != null && this.getSelectValue(field).length > 0)
+        } else {
+            const value = this.setFieldValue(field)
+            if (typeof value == 'string') {
+                return value == ''
+            } else if (value == null) {
+                return true
+            } else if (Array.isArray(value)) {
+                return !(value.filter(v => v != null && v != '').length > 0)
+            } else if (typeof value == 'object') {
+                if (value.value) {
+                    return !(value.value.value ? value.value.value.filter(p => p).length > 0 : value.value.filter(p => p).length > 0)
+                }
+                return !(value.value && value.value.value != null && value.value.value.length > 0)
+            }
+            return false
+        }
+    }
+
+    // Проверка полей
+    check(fields) {
+        this.fields = fields.filter(field => field.required)
+        this.state = false
+        this.errors = {}
+
+        this.fields.forEach(field => {
+            if (this.validate(field)) {
+                this.state = true
+                this.errors = {
+                    ...this.errors,
+                    [field.key]: 'Поле обязательно к заполнению'
+                }
+            }
+        });
     }
 }

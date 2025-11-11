@@ -1,5 +1,5 @@
 <template>
-    <div class="form__item form__item_input">
+    <div class="form__item form__item_input" :class="{'blank_required': props.options.required, 'error': props.error.state}">
         <label class="blank__title" :for="props.options.id" v-if="props.options.title && props.options.title != ''">
             <span>{{ props.options.title }}</span>
         </label>
@@ -23,6 +23,9 @@
             @input="onInput"
             @blur="event => emit('blur', event)"
         >
+        <AppError v-show="props.error.state">
+            {{ props.error.text }}
+        </AppError>
         <slot></slot>
     </div>
 </template>
@@ -31,6 +34,7 @@
     import './Input.scss';
 
     import { vMaska } from "maska/vue"
+    import AppError from '@AppComponents/Error/Error.vue'
 
     const emit = defineEmits([
         'update:modelValue',
@@ -46,7 +50,15 @@
                  name: '',
                  autocomplete: 'on',
                  placeholder: '',
-                 mask: null
+                 mask: null,
+                 required: false
+            },
+            type: Object
+        },
+        error: {
+            default: {
+                state: false,
+                text: ''
             },
             type: Object
         },

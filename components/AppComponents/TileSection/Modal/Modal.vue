@@ -7,8 +7,10 @@
                 actionTitle: modal.body.actionTitle,
                 template: 'slot'
             }"
+            :loading="modal.body.loading"
             @delete="emit('delete', modal.body.content.id)"
-            @create="emit('create', modal.field)"
+            @create="modal.save()"
+            @update="modal.save()"
             @close="modal.body.state = false"
         >
             <template v-if="modal.body.action == 'delete'">
@@ -52,7 +54,11 @@
                 <AppInput 
                     :options="{
                         title: 'Название поля',
-                        required: true
+                        required: true,
+                    }"
+                    :error="{
+                        state: modal.validator.state,
+                        text: modal.validator.errors?.title
                     }"
                     v-model="modal.field.title"
                 />
@@ -87,12 +93,35 @@
                                     class="icon_drag-field"
                                 />
     
-                                <AppInput 
-                                    :options="{
-                                        title: null
-                                    }"
-                                    v-model="option.label"
-                                />
+                                <div class="modal__option-field">
+                                    <template v-if="modal.field.type == 'status'">
+                                        <AppColorPicker v-model="option.color">
+                                            <template #icon>
+                                                <IconPipette />
+                                            </template>
+                                        </AppColorPicker>
+                                        <AppFile 
+                                            class="modal__file_icon"
+                                            :options="{
+                                                id: 0,
+                                                multiple: false,
+                                                edit: true,
+                                                isDraggable: false,
+                                                query: {
+                                                    field_id: null,
+                                                    page_id: null
+                                                }
+                                            }"
+                                            v-model="option.file"
+                                        />
+                                    </template>
+                                    <AppInput 
+                                        :options="{
+                                            title: null
+                                        }"
+                                        v-model="option.label"
+                                    />
+                                </div>
                                 <IconClose 
                                     @click="modal.removeOption(option)"
                                 />
@@ -184,14 +213,18 @@
     
     import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'
 
+    import { Validator } from '@AppHelpers/classes.js'
     import draggable from 'vuedraggable'; 
     import IconClose from '@AppIcons/Close.vue'
     import IconDrag from '@AppIcons/Actions/Drag.vue'
     import AppBlank from '@AppComponents/Blank/Blank.vue'
-    import AppInput from '@AppComponents/Inputs/Input/Input.vue';
     import AppButton from '@AppComponents/Button/Button.vue'
+    import AppFile from '@AppComponents/Inputs/File/File.vue'
+    import AppInput from '@AppComponents/Inputs/Input/Input.vue';
     import AppSelect from '@AppComponents/Inputs/Select/Select.vue';
     import AppCheckbox from '@AppComponents/Inputs/Checkbox/Checkbox.vue'
+    import AppColorPicker from '@AppComponents/Inputs/ColorPicker/ColorPicker.vue';
+    import IconPipette from '@AppIcons/Input/Pipette.vue'
 
     import { useUserStore } from '@/stores/userStore.js'
     const userStore = useUserStore()
@@ -250,7 +283,7 @@
                     section_id: '',
                     title: '',
                     required: 0,
-                    visible_always: 0,
+                    visible_always: 1,
                     has_roles_read: 0,
                     roles_read: [],
                     has_roles_write: 0,
@@ -286,10 +319,13 @@
             }
 
             this.field = {}
+            this.validator = new Validator()
         }
 
         // Изменение типа поля
         changeType() {
+            this.field = Object.assign(this.field, this.fields[this.field.type])
+
             if (['select_dropdown', 'status'].includes(this.field.type)) {
                 this.field.options = [
                     {
@@ -306,6 +342,14 @@
                     }
                 ]
             }
+
+            const allKeys = Object.keys(Object.assign({}, this.fields.default, this.fields[this.field.type]))
+
+            for (let key in this.field) {
+                if (!allKeys.includes(key)) {
+                    delete this.field[key]
+                }
+            }
         }
 
         // Добавление опции
@@ -320,15 +364,51 @@
         removeOption(option) {
             this.field.options = this.field.options.filter(p => p.value != option.value)
         }
+
+        // Сохранение
+        save() {
+            const request = JSON.parse(JSON.stringify(this.field))
+
+            if (this.field.type == 'status') {
+                request.options = request.options.map((option, index) => {
+                    return {
+                        label: {
+                            id: option.value,
+                            sort: index,
+                            file: option.file ? option.file[0]?.url ?? null : null,
+                            is_hidden: 0,
+                            field_id: request.id,
+                            color: request.color ?? '#B6B6B6',
+                            text: option.label
+                        },
+                        value: option.value
+                    }
+                })
+            }
+
+            this.validator.check([{
+                title: 'Название поля',
+                key: 'title',
+                required: true,
+                value: request.title
+            }])
+
+            if (this.validator.state) return
+            if (this.body.action == 'create') {
+                delete request.id
+            }
+
+            emit(this.body.action == 'create' ? 'create' : 'update', request)
+        }
     }
 
     const modal = ref(new Modal())
 
-    watch(() => props.modal, () => {
+    watch(() => props.modal.state, () => {
         if (props.modal.action == 'create') {
             modal.value.field = {
                 ...modal.value.fields.default,
-                ...modal.value.fields[props.modal.content.type],
+                ...modal.value.fields.text,
                 type: 'text',
                 section_id: props.modal.content.section_id
             }
@@ -338,5 +418,9 @@
             }
         }
         modal.value.body = props.modal
+    })
+
+    watch(() => props.modal.loading, () => {
+        modal.value.body.loading = props.modal.loading    
     })
 </script>

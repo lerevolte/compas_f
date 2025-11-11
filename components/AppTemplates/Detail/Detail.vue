@@ -44,18 +44,19 @@
             :key="tabs.active"
             :role="tabs.active"
             :columns="module.columns.list"
+            :edit="module.columns.edit"
             :hiddenFields="module.columns.hiddenFields"
             :options="{
                 isDisableFooter: true,
                 isHaveHistory: true,
-                modal: module.columns.modal
+                isGlobalEdit: props.isGlobalEdit,
+                modal: module.columns.modal.columns
             }"
             :history="{
                 fields: module.history.events,
                 loading: module.history.loading
             }"
             :pageId="module.id"
-            :isGlobalEdit="props.isGlobalEdit"
             @action="item => module.columns[item.action](item.value)"
             @openModal="item => module.openModal(item)"
             @showMoreHistory="page => module.history.update(page, module.tabs.active)"
@@ -73,11 +74,15 @@
             
             <ColumnFields 
                 v-else-if="tabs.active == 'order'"
+                :key="`column-fields_${detail.keyChange}`"
+                :role="`column-fields_${detail.keyChange}`"
                 :columns="detail.columns.list"
+                :edit="detail.columns.edit"
                 :hiddenFields="detail.columns.hiddenFields"
                 :options="{
                     isDisableFooter: props.isGlobalEdit,
                     isHaveHistory: true,
+                    isGlobalEdit: props.isGlobalEdit,
                     modal: detail.columns.modal
                 }"
                 :history="{
@@ -85,7 +90,6 @@
                     loading: detail.history.loading
                 }"
                 :pageId="detail.id"
-                :isGlobalEdit="props.isGlobalEdit"
                 @action="item => detail.columns[item.action](item.value)"
                 @openModal="item => detail.openModal(item)"
                 @showMoreHistory="page => detail.history.update(page, tabs.active)"
@@ -103,6 +107,20 @@
                 @openModal="item => emit('openModal', item)"
             />
         </template>
+
+        <div class="detail__actions" :key="detail.actionChange">
+            <MassAction 
+                :isChoosed="detail.columns.edit.state"
+                :actions="{
+                    save: detail.columns.edit.state,
+                    edit: false,
+                    cancel: true,
+                    delete: false
+                }"
+                :loading="detail.columns.edit.loading"
+                @action="action => detail.columns[action.action](action.value)"
+            />
+        </div>
     </div>
 </template>
 
@@ -117,9 +135,11 @@
 	import AppH1 from '@AppComponents/Headers/H1/H1.vue';
     import AppHistory from '@AppComponents/History/History.vue'; 
     import AppShowMore from '@AppComponents/ShowMore/ShowMore.vue';
+    import MassAction from '@AppComponents/MassAction/MassAction.vue'
     import AppTextarea from '@AppComponents/Inputs/Textarea/Textarea.vue';
     import ColumnFields from '@AppComponents/ColumnFields/ColumnFields.vue';
     import AppVirtualTable from '@AppComponents/VirtualTable/VirtualTable.vue';
+    import debounce from 'lodash/debounce'
 
     const textareaRef = ref(null)
     const detailHeaderRef = ref(null)
@@ -164,6 +184,8 @@
     class Detail {
         constructor(is_module = false) {
             this.is_module = is_module
+            this.keyChange = 1
+            this.actionChange = 1
             this.slug = ''
             this.id = ''
             this.loading = !is_module
@@ -197,6 +219,18 @@
                 }
 
                 this.columns.list = response.data.detail.columns
+
+
+                this.columns.edit.errorSections = {
+                    state: false,
+                    sections: {}
+                }
+
+                for (let column in this.columns.list) {
+                    this.columns.list[column].forEach(section => {
+                        this.columns.edit.errorSections.sections[section.id] = false
+                    });
+                } 
                 this.history.get(response.data)
             } catch (error) {
                 console.log(error);
@@ -377,10 +411,29 @@
         constructor() {
             this.list = {}
             this.modal = {
-                state: false,
-                loading: false
+                columns: {
+                    state: false,
+                    loading: false
+                },
+                sections: {
+                    state: false,
+                    loading: false
+                }
             }
             this.hiddenFields = []
+            this.edit = {
+                action: 'cancel',
+                loading: false,
+                state: false,
+                backups: [],
+                fields: [],
+                errorSections: {
+                    state: false,
+                    sections: {}
+                }
+            }
+
+            this.saveFields = debounce(this.saveFields.bind(this), 100)
         }
 
         // Создание секции
@@ -451,6 +504,186 @@
                 console.log(error);
             }
         }
+
+        // Создание поля
+        async createField(field) {
+            try {
+                this.modal.sections = {
+                    state: true,
+                    section: field.section_id
+                }
+                field.entity = detail.value.slug
+                const response = await api.callMethod('POST', routes.detail.create_field, field)
+
+                for (let column in this.list) {
+                    this.list[column] = this.list[column].map(section => {
+                        if (section.id == field.section_id) {
+                            section.fields.push(response.data)
+                        }
+                        return section
+                    })
+                }
+
+                detail.value.keyChange++
+            } catch (error) {
+                console.log(error);
+            } finally {
+                this.modal.sections = {
+                    state: false,
+                    section: field.section_id
+                }
+            }
+        }
+
+        // Обновление поля
+        async updateField(field) {
+            try {
+                const findSection = (field) => {
+                    for (let column in this.list) {
+                        for (let section of this.list[column]) {
+                            for (let localField of section.fields) {
+                                if (field.id == localField.id) {
+                                    return section
+                                    
+                                }                            
+                            }
+                        }
+                    }
+                }
+
+                this.modal.sections = {
+                    state: true,
+                    section: field.section_id
+                }
+                field.entity = detail.value.slug
+                const response = await api.callMethod('PUT', routes.detail.update_field.replace('${id}', field.id), field)
+                let findedFieldIndex = null 
+                let findedSection = findSection(field)
+                response.data = Object.assign(response.data, field)
+                
+                if (findedSection.id == field.section_id) {
+                    findedFieldIndex = findedSection.fields.findIndex(item => item.id == field.id)
+                    findedSection.fields[findedFieldIndex] = response.data
+                } else {
+                    findedSection.fields = findedSection.fields.filter(item => item.id != field.id)
+                    for (let column in this.list) {
+                        for (let section of this.list[column]) {
+                            if (section.id == field.section_id) {
+                                section.fields.push(response.data)
+                            }
+                        }
+                    }
+                }
+
+                detail.value.keyChange++
+            } catch (error) {
+                console.log(error);
+            } finally {
+                this.modal.sections = {
+                    state: false,
+                    section: field.section_id
+                }
+            }
+        }
+
+        // Инициализация редактирования полей
+        initEditFields(fields = []) {
+            this.edit.state = true
+            this.edit.backups = [...this.edit.backups, ...JSON.parse(JSON.stringify(fields))]
+            this.edit.fields = [...this.edit.fields, ...fields]
+        }
+
+        // Отмена редактирования определенной секции
+        cancelSection(fields) {
+            this.edit.backups = this.edit.backups.filter(item => fields.findIndex(field => field.id == item.id) == -1)
+
+            if (this.edit.backups.length == 0) {
+                this.setSavedFields()
+            }
+        }
+
+        // Отмена редактирования полей
+        cancel() {
+            this.setSavedFields()
+        }
+
+        // Инициализация сохранения полей
+        save() {
+            this.edit.action = null
+            nextTick(() => {
+                this.edit.action = 'save'
+                this.edit.errorSections.state = false
+            })
+        }
+
+        // Сохранение полей
+        async saveFields() {
+            try {
+                if (this.edit.errorSections.state) return
+                detail.value.actionChange++
+                this.edit.loading = true
+                let request = Object.assign({}, ...this.edit.fields.map(field => {
+                    return {
+                        [field.key]: field.value
+                    }
+                }))
+                this.setSavedFields(true)
+                await api.callMethod('POST', routes.detail.edit_fields.replace('${slug}', detail.value.slug), {
+                    rows: [{
+                        ...request,
+                        id: detail.value.id
+                    }]
+                })
+            } catch (error) {
+                console.log(error);
+            } finally {
+                this.edit.loading = false
+                detail.value.actionChange++
+            }
+        }
+
+        // Проверка валидности секции
+        getSectionValidate(response) {
+            if (response.state) {
+                this.edit.errorSections.state = true
+            }
+            this.saveFields()
+        }
+
+        // Обновление сохраняемых полей
+        setSavedFields(isUpdate = false) {
+
+            if (isUpdate) {
+                let findedField = null
+    
+                for (let column in this.list) {
+                    for (let section of this.list[column]) {
+                        for (let field of section.fields) {
+                            field.edit = false
+                            findedField = this.edit.fields.find(item => item.id == field.id)
+                            if (findedField) {
+                                field.value = findedField.value
+                            }
+                        }
+                    }
+                }
+            }
+
+            this.edit = {
+                action: 'cancel',
+                loading: false,
+                state: false,
+                backups: [],
+                fields: [],
+                errorSections: {
+                    state: false,
+                    sections: {}
+                }
+            }
+
+            detail.value.keyChange++
+            detail.value.actionChange++
+        }
     }
 
     // Проверка клика вне заголовка при его редактировании
@@ -465,7 +698,6 @@
     const module = ref(new Detail(true))
     const common = new Common()
     const tabs = ref(new Tabs())
-
 
     onMounted(() => {
         detail.value.get()
