@@ -1,5 +1,7 @@
 import axios from "axios";
+import { Common } from "@/helpers/classes.js";
 import { useUserStore } from '@/stores/userStore.js'
+const common = new Common()
 
 export default {
     call(type, url, params, headers) {
@@ -20,7 +22,9 @@ export default {
                 }).catch((error) => {
                     if (error.response.status == 401) {
                         userStore.token = null
-                        navigateTo('/auth')
+                        window.location.href = '/auth'
+                    } else {
+                        common.showNotification({title: 'Ошибка', description: error.response.data.message})
                     }
 
                     return error.response

@@ -200,22 +200,20 @@
                 title: 'Настройки раздела',
                 actionTitle: 'Сохранить',
                 action: 'update',
-                content: {
-                    title: tab.title,
-                    has_roles_read: tab.has_roles_read,
-                    roles_read: tab.roles_read
-                },
+                content: tab,
             }
         }
 
         update() {
+            this.modal.content = {
+                ...this.modal.content,
+                roles_read: this.modal.content.has_roles_read ? this.modal.content.roles_read : [],
+                has_roles_read: this.modal.content.roles_read.length > 0 ? this.modal.content.has_roles_read : false
+            }
+
             emit('action', { 
                 action: 'updateSettings', 
-                value: {
-                    roles_read: this.modal.content.has_roles_read ? this.modal.content.roles_read : [],
-                    title: this.modal.content.title,
-                    has_roles_read: this.modal.content.roles_read.length > 0 ? this.modal.content.has_roles_read : false
-                } 
+                value: this.modal.content
             })
         }
 

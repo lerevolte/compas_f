@@ -62,7 +62,7 @@
                         placeholder: '' 
                     }"
                     v-model="cell.useCellModel(row.index, column).value"
-                    @clickLink="id => table.open({id, slug: column.related_table})"
+                    @clickLink="id => table.open({id, related_table: column.related_table})"
                     @create="item => table.create(item)"
                 />
 

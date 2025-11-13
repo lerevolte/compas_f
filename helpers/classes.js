@@ -326,6 +326,10 @@ export class Table {
             loading: false,
             link: null
         }
+        this.dependences = {
+            state: false,
+            query: null
+        }
     }
 
     // Получение данных для таблицы
@@ -346,10 +350,10 @@ export class Table {
     }
 
     // Получение данных для таблицы с параметрами
-    async getWithQuery(query, setURL = true) {
+    async getWithQuery(query) {
         try {
             this.loading = true
-            let response = await this.filter.get([], query, setURL)
+            let response = await this.filter.get([], query)
             this.filter.setSaves(response.filters)
             this.filter.set(response.fields)
             this.getHeader(response.table)
@@ -571,10 +575,10 @@ export class Table {
     }
 
     // Открыть строку
-    open(row, slug) {
+    open(row, slug = null) {
         this.emit('openModal', {
             ...row, 
-            slug,
+            slug: slug ?? row.related_table,
             type: 'open'
         })
     }
@@ -606,13 +610,14 @@ export class Table {
     copy(row) {
         this.emit('openModal', {
             ...row,
+            slug: row.related_table,
             type: 'copy',
         })
     }
 
     // Инициализация удаления
     initDelete(rows = []) {
-        rows = rows.length == 0 ? this.body.filter(item => item.isChoose) : rows 
+        rows = typeof rows == 'boolean' || rows.length == 0 ? this.body.filter(item => item.isChoose) : rows 
 
         this.deleteBuffer = {
             list: Array.isArray(rows) ? rows : [rows],
@@ -626,6 +631,7 @@ export class Table {
             this.deleteBuffer.loading = true
             let request = this.deleteBuffer.list.map(p => p.id)
             this.body = this.body.filter(row => this.deleteBuffer.list.findIndex(item => item.id == row.id) == -1)
+            
             await api.callMethod('DELETE', routes.table.delete.replace('${slug}', this.slug), {
                 ids: request
             })
@@ -718,26 +724,27 @@ export class Filter {
     }
 
     // Фильтрация
-    async get(fields = [], saved_query = {}, setURL = true) {
+    async get(fields = [], saved_query = {}) {
         // Установка фильтра
         const setFilter = (fields, saved_query) => {
             let response = []
 
-            response.push(`per_page=${saved_query.per_page ?? this.setter.pages.limit}`)
-            response.push(`page=${saved_query.page ?? this.setter.pages.current}`)
-            response.push(`sort_field=${saved_query.sort_field ?? this.setter.sortItem.sort_field}`)
-            response.push(`sort_order=${saved_query.sort_order ?? this.setter.sortItem.sort_order}`)
-            
-            const otherKeys = Object.keys(saved_query).filter(key => key != 'per_page' && key != 'page' && key != 'sort_field' && key != 'sort_order')
+            if (saved_query) {
+                response.push(`per_page=${saved_query.per_page ?? this.setter.pages.limit}`)
+                response.push(`page=${saved_query.page ?? this.setter.pages.current}`)
+                response.push(`sort_field=${saved_query.sort_field ?? this.setter.sortItem.sort_field}`)
+                response.push(`sort_order=${saved_query.sort_order ?? this.setter.sortItem.sort_order}`)
+            }
 
-            if (otherKeys.length) {
+            if (this.setter.dependences.state) {
+                const otherKeys = Object.keys(this.setter.dependences.query)
                 for (let key of otherKeys) {
-                    if (Array.isArray(saved_query[key])) {
-                        for (let value of saved_query[key]) {
+                    if (Array.isArray(this.setter.dependences.query[key])) {
+                        for (let value of this.setter.dependences.query[key]) {
                             response.push(`filter[${key}][]=${value}`)
                         }
                     } else {
-                        response.push(`filter[${key}]=${saved_query[key]}`)
+                        response.push(`filter[${key}]=${this.setter.dependences.query[key]}`)
                     }
                 }
             }
@@ -760,7 +767,7 @@ export class Filter {
             this.query = setFilter(fields, saved_query)
             let response = await api.callMethod("GET", routes.table.get.replace('${slug}', this.setter.slug) + `${this.query ? '?' + this.query : ''}`)
             this.setter.set(response.data)
-            if (setURL) {
+            if (!this.setter.dependences.state) {
                 this.setter.common.setQueryUrl(this.query ? '?' + this.query : '')
             }
             return response.data

@@ -58,12 +58,14 @@
 
     openModal(item) {
       item.slug = item.slug ?? router.params.slug
-      console.log(item);
 
-      if (this.modal.length >= 11 && !['create', 'copy'].includes(item.type)) {
+      console.log();
+      
+
+      if ((this.modal.length >= 11 || window.screen.width <= 990) && !['create', 'copy'].includes(item.type)) {
         this.modal = []
         this.addresses = []
-        navigateTo(`/objects/${item.slug}/${item.id}`)
+        window.location.href = `/objects/${item.slug}/${item.id}`
       } else {
         this.modal.push(item)
         this.addresses.push({

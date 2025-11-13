@@ -10,17 +10,17 @@
             :loading="modal.body.loading"
             @delete="emit('delete', modal.body.content.id)"
             @create="modal.save()"
-            @update="modal.save()"
-            @close="modal.body.state = false"
-        >
+            @updateField="modal.save()"
+            @close="modal.close()"
+            >
             <template v-if="modal.body.action == 'delete'">
                 <p class="warning__text">
                     {{ modal.body.text }}
                 </p>
             </template>
-            <div class="modal__fields" v-else-if="['update', 'create'].includes(modal.body.action)">
+            <div class="modal__fields" v-else-if="['updateField', 'create'].includes(modal.body.action)">
                 <AppBlank 
-                    v-if="modal.body.action == 'update'"
+                    v-if="modal.body.action == 'updateField'"
                     :item="{
                         title: 'Тип поля',
                         text: modal.types[modal.field.type]
@@ -32,7 +32,7 @@
                     :options="{
                         title: 'Тип поля',
                         isHaveNull: false,
-                        list: Object.keys(modal.types).map(p => {
+                        list: Object.keys(modal.types).filter(p => p != 'relation').map(p => {
                             return {
                                 value: p,
                                 label: modal.types[p]
@@ -138,7 +138,7 @@
                     v-if="modal.fields[modal.field.type] && typeof modal.fields[modal.field.type].is_plural != 'undefined'"
                     v-model="modal.field.is_plural"
                     :options="{
-                        disabled: modal.body.action == 'update',
+                        disabled: modal.body.action == 'updateField',
                         title: 'Множественное',
                     }"
                 />
@@ -235,7 +235,7 @@
                 state: false,
                 title: 'Настройки поля',
                 actionTitle: 'Сохранить',
-                action: 'update',
+                action: 'updateField',
                 content: {
                     id: 0,
                     type: '',
@@ -261,7 +261,7 @@
     const emit = defineEmits([
         'delete',
         'create',
-        'update',
+        'updateField',
     ])
 
     class Modal {
@@ -270,7 +270,7 @@
                 state: false,
                 title: 'Настройки поля',
                 actionTitle: 'Сохранить',
-                action: 'update',
+                action: 'updateField',
                 content: {},
                 text: null
             }
@@ -315,6 +315,7 @@
                 select_dropdown: 'Список',
                 status: 'Статус',
                 file: 'Файл',
+                relation: 'Программное',
                 date: 'Дата'
             }
 
@@ -378,7 +379,7 @@
                             file: option.file ? option.file[0]?.url ?? null : null,
                             is_hidden: 0,
                             field_id: request.id,
-                            color: request.color ?? '#B6B6B6',
+                            color: option.color ?? '#B6B6B6',
                             text: option.label
                         },
                         value: option.value
@@ -397,8 +398,14 @@
             if (this.body.action == 'create') {
                 delete request.id
             }
+            emit(this.body.action == 'create' ? 'create' : 'updateField', request)
+        }
 
-            emit(this.body.action == 'create' ? 'create' : 'update', request)
+        close() {
+            this.body.state = false
+            this.field = {}
+            this.validator.state = false
+            this.validator.errors = {}
         }
     }
 
@@ -412,9 +419,17 @@
                 type: 'text',
                 section_id: props.modal.content.section_id
             }
-        } else if (props.modal.action == 'update') {
+        } else if (props.modal.action == 'updateField') {
             modal.value.field = {
-                ...props.modal.content
+                ...props.modal.content,
+                options: props.modal.content.type == 'status' ? props.modal.content.options.map(option => {
+                    return {
+                        label: option.label.text,
+                        value: option.label.id,
+                        color: option.label.color,
+                        file: option.label.file ? [{url: option.label.file}] : null
+                    }
+                }) : props.modal.content.options
             }
         }
         modal.value.body = props.modal

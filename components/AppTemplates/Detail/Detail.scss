@@ -2,7 +2,9 @@
 @use '@/assets/mixins.scss' as mixins;
 
 .detail {
-    height: calc(100% - 150px);
+    display: grid;
+    grid-template-rows: repeat(2, auto) 1fr;
+    height: 100%;
 
     & > *:not(.detail__actions) {
         padding: 0px 25px;
@@ -10,6 +12,10 @@
 
     & > *:first-child {
         padding-top: 25px;
+    }
+
+    &:has(.column-fields_dragging) {
+        @include mixins.userSelect(none);
     }
 }
 
@@ -54,4 +60,5 @@
     position: sticky;
     width: 100%;
     bottom: 0px;
+    z-index: 10;
 }

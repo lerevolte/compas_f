@@ -117,10 +117,14 @@
     // Ждем пока tableRef будет доступен
     await nextTick()
 
-    if (common.getQueryUrl()) {
+    if (props.options.isHaveQuery) {
+      table.value.dependences = {
+        state: true,
+        query: props.options.query
+      }
       table.value.getWithQuery(common.getQueryUrl())
-    } else if (props.options.isHaveQuery) {
-      table.value.getWithQuery(props.options.query, false)
+    } else if (common.getQueryUrl()) {
+      table.value.getWithQuery(common.getQueryUrl())
     } else {
       table.value.get()
     }

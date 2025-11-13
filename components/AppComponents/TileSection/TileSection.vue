@@ -64,6 +64,7 @@
             drag-class="draggable-drag"
             ghost-class="draggable-ghost"
             fallback-class="draggable-fallback"
+            @start="event => section.fields.dragStart(event)"
             @end="event => section.fields.dragEnd(event)"
         >
             <template #item="{ element: field }">
@@ -106,6 +107,7 @@
                             }
                         }"
                         v-model="field.value"
+                        @update:model-value="section.fields.initChangeFieldOption(field)"
                     />
 
                     <AppRelation  
@@ -249,13 +251,13 @@
                             <IconSettings />
                         </template>
                         <template #content>
-                            <div class="popup__option" @click="field.edit = true">
+                            <div class="popup__option" v-show="field.can_edit && !field.edit" @click="(e) => section.fields.initChangeFieldOption(field)">
                                 Изменить
                             </div>
                             <div class="popup__option" @click="section.fields.initEdit(field)">
                                 Настроить
                             </div>
-                            <div class="popup__option popup__option_checkbox">
+                            <div class="popup__option popup__option_checkbox" v-if="field.type != 'text_group'">
                                 <AppCheckbox 
                                     v-model="field.visible_always"
                                     :options="{
@@ -264,7 +266,10 @@
                                     @update:model-value="section.fields.updateVisibleAlways(field)"
                                 />
                             </div>
-                            <div class="popup__option popup__option_red" @click="section.fields.initDelete(field)">
+                            <div class="popup__option" v-show="field.type != 'text_group'" @click="section.fields.hide(field)">
+                                Скрыть
+                            </div>
+                            <div class="popup__option popup__option_red" v-show="!field.is_permanent" @click="section.fields.initDelete(field)">
                                 Удалить
                             </div>
                         </template>
@@ -303,7 +308,7 @@
             :listSection="props.listSection"
             @delete="id => section.fields.delete(id)"
             @create="field => section.fields.create(field)"
-            @update="field => section.fields.update(field)"
+            @updateField="field => section.fields.updateField(field)"
         />
     </div>
 </template>
@@ -336,7 +341,7 @@
 
     const emit = defineEmits([
         'update:hiddenFields',
-        'update:fieldSettings',
+        'update:visibilityField',
         'action'
     ])
 
@@ -367,7 +372,7 @@
             default: {
                 isDisableFooter: false,
                 isGlobalEdit: false,
-                sectionModal: {
+                modal: {
                     state: false,
                     section: null
                 }
@@ -406,6 +411,7 @@
             this.name = response.name
             this.is_short = response.is_short
             this.fields.list = response.fields
+            this.isLocalShort = response.is_short
         }
  
         // Редактирование заголовка
@@ -426,11 +432,22 @@
             nextTick(() => {
                 this.name = this.name.replaceAll('\n', '')
             })
+
+            emit('action', {action: 'updateSection', value: {
+                name: this.name,
+                is_short: this.is_short ?? false,
+                id: this.id
+            }})
         }
 
         // Обновление секции
         hideSection() {
             this.isLocalShort = this.is_short
+            emit('action', {action: 'updateSection', value: {
+                name: this.name,
+                is_short: this.is_short ?? false,
+                id: this.id
+            }})
         }
 
         // Установка локального состояния
@@ -453,14 +470,36 @@
                 text: null
             }
             this.validator = new Validator()
+            this.dragger = null
         }
 
-        // Перетаскивание полей
+        // Начало перетаскивания поля
+        dragStart(event) {
+            this.dragger = event.target.closest('.column-fields')
+
+            if (this.dragger) {
+                this.dragger.classList.add('column-fields_dragging-field')
+            }
+        }
+
+        // Конец перетаскивания поля
         dragEnd(event) {
-            console.log(event);
-            
-        }
+            if (this.dragger) {
+                this.dragger.classList.remove('column-fields_dragging-field')
+                this.dragger = null
+            }
 
+            emit('action', {action: 'changeSortField', value: {
+                id: event.item._underlying_vm_.id,
+                section_id: event.to.__draggable_component__.itemKey,
+                fields: event.to.__draggable_component__.modelValue.map((p, index) => {
+                    return {
+                        id: p.id,
+                        sort: index
+                    }
+                })
+            }})
+        }
         // Редактирование всех полей в секции
         editAll() {
             this.backup = JSON.parse(JSON.stringify(this.list.filter(field => field.can_edit && !field.edit).map(item => {
@@ -505,6 +544,18 @@
             emit('update:visibilityField', {
                 id: field.id,
                 is_hidden: false,
+                change_section: true,
+                section_id: section.value.id
+            })
+        }
+
+        // Скрыть поле
+        hide(field) {
+            section.value.fields.list = section.value.fields.list.filter(f => f.id != field.id)
+            emit('update:hiddenFields', [...props.hiddenFields, field])
+            emit('update:visibilityField', {
+                id: field.id,
+                is_hidden: true,
                 change_section: true,
                 section_id: section.value.id
             })
@@ -598,10 +649,10 @@
 
         // Обновление видимости
         updateVisibleAlways(field) {
-            emit('update:fieldSettings', {
-                id: field.id,
-                visible_always: field.visible_always
-            })
+            emit('action', {action: 'updateField', value: {
+                field: field,
+                update_columns: false
+            }})
         }
 
         // Инициализация редактирования
@@ -610,7 +661,7 @@
                 state: true,
                 title: 'Настройки поля',
                 actionTitle: 'Сохранить',
-                action: 'update',
+                action: 'updateField',
                 content: JSON.parse(JSON.stringify({
                     ...field,
                     section_id: section.value.id
@@ -620,8 +671,11 @@
         }
 
         // Обновление
-        update(field) {
-            emit('action', {action: 'updateField', value: field})
+        updateField(field) {
+            emit('action', {action: 'updateField', value: {
+                field: field,
+                update_columns: this.modal.state
+            }})
         }
 
         // Инициализация редактирования
@@ -659,6 +713,7 @@
 
         // Удаление
         delete(id) {
+            section.value.fields.list = section.value.fields.list.filter(field => field.id != id)
             emit('action', {action: 'deleteField', value: id})
         }
 
@@ -689,11 +744,19 @@
                 if (field.edit || (!target.classList.contains('file'))) return
                 this.backup.push(JSON.parse(JSON.stringify(field)))
                 field.edit = true
-            }
-
+            }   
+            
+            emit('action', {action: 'initEditFields', value: [field]})
+        }
+        
+        initChangeFieldOption(field) {
+            if (!field.can_edit) return 
+            this.backup.push(JSON.parse(JSON.stringify(field)))
+            field.edit = true
             emit('action', {action: 'initEditFields', value: [field]})
         }
 
+        // Проверка полей
         checkFields() {
             const fields = section.value.fields.list.filter(field => field.edit)
             section.value.fields.validator.check(fields)
@@ -718,8 +781,8 @@
     // Проверка клика вне заголовка при его редактировании
     const checkClick = (e) => {
         if (!headerRef.value.contains(e.target)) {
-            section.value.editTitle = false
             document.removeEventListener('click', checkClick);
+            section.value.setTitle(e)
         } 
     }
 
@@ -731,12 +794,12 @@
         }
     })
 
-    watch(() => props.options.sectionModal, () => {
-        if (!props.options.sectionModal.state) {
+    watch(() => props.options.modal, () => {
+        if (!props.options.modal.state) {
             section.value.fields.modal.state = false
             section.value.fields.modal.loading = false
         } else {
-            section.value.fields.modal.loading = props.options.sectionModal.state
+            section.value.fields.modal.loading = props.options.modal.state
         }
     })
 

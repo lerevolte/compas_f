@@ -33,6 +33,13 @@
                     :value="option.value" 
                     @click="status.changeValue(option)"
                 >
+                    <figure class="status__value">
+                        <div class="status__rect">
+                            <img class="status__value-rect" v-if="option.label.file != '' && option.label.file != null" :src="option.label.file" />
+                            <div class="status__value-rect" v-else :style="`--bgColor: ${option.label.color}`"></div>
+                        </div>
+                    </figure>
+
                     <span class="value__text">
                         {{ option.label.text ? option.label.text : option.label }} 
                     </span>

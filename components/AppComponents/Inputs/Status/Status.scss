@@ -127,9 +127,23 @@
     box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.25);
     overflow: auto;
     @include mixins.scrollBar();
+    max-width: 200px;
 
     &.popup__content_top {
         bottom: calc(100% + 5px);
+    }
+
+    .status__option {
+        gap: 10px;
+        justify-content: start;
+
+        .status__value-rect {
+            border-radius: 5px;
+
+            &:not(img)::before {
+                border-radius: 5px;
+            }
+        }
     }
 }
 

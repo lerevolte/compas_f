@@ -39,28 +39,42 @@
             @action="item => tabs[item.action](item.value)"
         />
 
-        <ColumnFields 
-            v-if="tabs.is_module"
-            :key="tabs.active"
-            :role="tabs.active"
-            :columns="module.columns.list"
-            :edit="module.columns.edit"
-            :hiddenFields="module.columns.hiddenFields"
-            :options="{
-                isDisableFooter: true,
-                isHaveHistory: true,
-                isGlobalEdit: props.isGlobalEdit,
-                modal: module.columns.modal.columns
-            }"
-            :history="{
-                fields: module.history.events,
-                loading: module.history.loading
-            }"
-            :pageId="module.id"
-            @action="item => module.columns[item.action](item.value)"
-            @openModal="item => module.openModal(item)"
-            @showMoreHistory="page => module.history.update(page, module.tabs.active)"
-        />
+        <template v-if="tabs.is_module">
+            <ColumnFields 
+                :key="tabs.active"
+                :role="tabs.active"
+                :columns="module.columns.list"
+                :edit="module.columns.edit"
+                :hiddenFields="module.columns.hiddenFields"
+                :options="{
+                    isDisableFooter: true,
+                    isHaveHistory: true,
+                    isGlobalEdit: props.isGlobalEdit,
+                    modal: module.columns.modal
+                }"
+                :history="{
+                    fields: module.history.events,
+                    loading: module.history.loading
+                }"
+                :pageId="module.id"
+                @action="item => module.columns[item.action](item.value)"
+                @openModal="item => module.openModal(item)"
+                @showMoreHistory="page => module.history.update(page, module.tabs.active)"
+            />
+            <div class="detail__actions" :key="module.actionChange">
+                <MassAction 
+                    :isChoosed="module.columns.edit.state"
+                    :actions="{
+                        save: module.columns.edit.state,
+                        edit: false,
+                        cancel: true,
+                        delete: false
+                    }"
+                    :loading="module.columns.edit.loading"
+                    @action="action => module.columns[action.action](action.value)"
+                />
+            </div>
+        </template>
 
         <template v-else>
             <AppHistory 
@@ -106,21 +120,20 @@
                 :slug="tabs.list.find(item => item.tab == tabs.active).slug"
                 @openModal="item => emit('openModal', item)"
             />
+            <div class="detail__actions" :key="detail.actionChange">
+                <MassAction 
+                    :isChoosed="detail.columns.edit.state"
+                    :actions="{
+                        save: detail.columns.edit.state,
+                        edit: false,
+                        cancel: true,
+                        delete: false
+                    }"
+                    :loading="detail.columns.edit.loading"
+                    @action="action => detail.columns[action.action](action.value)"
+                />
+            </div>
         </template>
-
-        <div class="detail__actions" :key="detail.actionChange">
-            <MassAction 
-                :isChoosed="detail.columns.edit.state"
-                :actions="{
-                    save: detail.columns.edit.state,
-                    edit: false,
-                    cancel: true,
-                    delete: false
-                }"
-                :loading="detail.columns.edit.loading"
-                @action="action => detail.columns[action.action](action.value)"
-            />
-        </div>
     </div>
 </template>
 
@@ -278,6 +291,14 @@
 
             nextTick(() => {
                 this.name = this.name.replaceAll('\n', '')
+                const findedField = detail.value.columns.findField('name')
+                
+                if (findedField) {
+                    typeof findedField.value == 'object' && findedField.value != null ? findedField.value.value = this.name : findedField.value = this.name
+                    detail.value.keyChange++
+                    detail.value.columns.edit.fields = [findedField]
+                    detail.value.columns.saveFields(false)
+                }
             })
         }
     }
@@ -287,6 +308,7 @@
         constructor() {
             this.active = "order"
             this.is_module = false
+            this.module_state = false
             this.queryTab = {}
             this.list = []
             this.modal = {
@@ -301,6 +323,9 @@
                 this.active = tab.tab  
                 module.value.get()
             } else if (['order', 'history', 'module'].includes(tab.tab)) {
+                if (this.is_module && tab.tab == 'order') {
+                    detail.value.get()
+                }
                 this.queryTab = {}
                 this.active = tab.tab
             } else {
@@ -336,18 +361,18 @@
         // Обновление табов
         async updateTabs(value) {
             const route = routes.detail.update_tabs.replace('${slug}', detail.value.slug)
-            await api.callMethod('PUT', value.role ? `${route}/${value.role}` : route, {menu: value.list})
+            await api.callMethod('PUT', value.role ? `${route}/role/${value.role}` : route, {menu: value.list})
         }
 
         // Обновление настроек табов
-        async updateSettings(value) {
+        async updateSettings(tab) {
             try {
                 this.modal = {
                     state: true,
                     loading: true
                 }
                 const route = routes.detail.settings_tabs.replace('${slug}', detail.value.slug)
-                await api.callMethod('PUT', route, {menu: value})
+                await api.callMethod('PUT', route, {menu: this.list.map(item => item.tab == tab.tab ? {...item, ...tab} : item)})
             } catch (error) {
                 console.log(error);
             } finally {
@@ -411,11 +436,11 @@
         constructor() {
             this.list = {}
             this.modal = {
-                columns: {
+                field: {
                     state: false,
                     loading: false
                 },
-                sections: {
+                section: {
                     state: false,
                     loading: false
                 }
@@ -439,7 +464,7 @@
         // Создание секции
         async createSection(section) {
             try {
-                this.modal = {
+                this.modal.section = {
                     state: true,
                     loading: true
                 }
@@ -447,7 +472,7 @@
                 const response = await api.callMethod('POST', routes.detail.create_section, {
                     name: section.name, 
                     column_id: section.key.replace('column_', ''),
-                    slug: detail.value.slug
+                    slug: tabs.value.is_module ? module.value.slug : detail.value.slug
                 })
 
                 const createdSection = {
@@ -462,7 +487,7 @@
             } catch (error) {
                 console.log(error);
             } finally {
-                this.modal = {
+                this.modal.section = {
                     state: false,
                     loading: false
                 }
@@ -472,28 +497,42 @@
         // Удаление секции
         async deleteSection(section) {
             try {
-                this.modal = {
+                this.modal.section = {
                     state: true,
                     loading: true
                 }
 
                 this.hiddenFields = section.fields
-                await this.setHiddenFields()
+                await this.setHiddenFields(this.hiddenFields)
                 await api.callMethod('DELETE', routes.detail.delete_section.replace('${id}', section.id))
                 this.list[section.key] = this.list[section.key].filter(item => item.id != section.id)
             } catch (error) {
                 console.log(error);
             } finally {
-                this.modal = {
+                this.modal.section = {
                     state: false,
                     loading: false
                 }
             }
         }
 
+        // Обновление настроек секции
+        async updateSection(section) {
+            await api.callMethod('PUT', routes.detail.update_section.replace('${id}', section.id), {
+                ...section, 
+                slug: tabs.value.is_module ? module.value.slug : detail.value.slug
+            })
+        }
+
         // Установка скрытых полей
-        async setHiddenFields() {
+        async setHiddenFields(fields = []) {
+            this.hiddenFields = fields
             await api.callMethod('POST', routes.detail.hidden_fields, {ids: this.hiddenFields.map(p => p.id)})
+        }
+
+        // Изменение порядка секций
+        async changeOrderSection(request) {
+            await api.callMethod('POST', routes.detail.change_order_section, request)
         }
 
         // Показать поле
@@ -508,11 +547,11 @@
         // Создание поля
         async createField(field) {
             try {
-                this.modal.sections = {
+                this.modal.field = {
                     state: true,
                     section: field.section_id
                 }
-                field.entity = detail.value.slug
+                field.entity = tabs.value.is_module ? module.value.slug : detail.value.slug
                 const response = await api.callMethod('POST', routes.detail.create_field, field)
 
                 for (let column in this.list) {
@@ -523,12 +562,11 @@
                         return section
                     })
                 }
-
-                detail.value.keyChange++
+                tabs.value.is_module ? module.value.keyChange++ : detail.value.keyChange++
             } catch (error) {
                 console.log(error);
             } finally {
-                this.modal.sections = {
+                this.modal.field = {
                     state: false,
                     section: field.section_id
                 }
@@ -536,7 +574,7 @@
         }
 
         // Обновление поля
-        async updateField(field) {
+        async updateField({field, update_columns = true}) {
             try {
                 const findSection = (field) => {
                     for (let column in this.list) {
@@ -551,35 +589,38 @@
                     }
                 }
 
-                this.modal.sections = {
+                this.modal.field = {
                     state: true,
                     section: field.section_id
                 }
-                field.entity = detail.value.slug
+
+                field.entity = tabs.value.is_module ? module.value.slug : detail.value.slug
                 const response = await api.callMethod('PUT', routes.detail.update_field.replace('${id}', field.id), field)
-                let findedFieldIndex = null 
-                let findedSection = findSection(field)
-                response.data = Object.assign(response.data, field)
                 
-                if (findedSection.id == field.section_id) {
-                    findedFieldIndex = findedSection.fields.findIndex(item => item.id == field.id)
-                    findedSection.fields[findedFieldIndex] = response.data
-                } else {
-                    findedSection.fields = findedSection.fields.filter(item => item.id != field.id)
-                    for (let column in this.list) {
-                        for (let section of this.list[column]) {
-                            if (section.id == field.section_id) {
-                                section.fields.push(response.data)
+                if (update_columns) {
+                    let findedFieldIndex = null 
+                    let findedSection = findSection(field)
+                    response.data = Object.assign(response.data, field)
+                    if (findedSection.id == field.section_id) {
+                        findedFieldIndex = findedSection.fields.findIndex(item => item.id == field.id)
+                        findedSection.fields[findedFieldIndex] = response.data
+                    } else {
+                        findedSection.fields = findedSection.fields.filter(item => item.id != field.id)
+                        for (let column in this.list) {
+                            for (let section of this.list[column]) {
+                                if (section.id == field.section_id) {
+                                    section.fields.push(response.data)
+                                }
                             }
                         }
                     }
-                }
 
-                detail.value.keyChange++
+                    tabs.value.is_module ? module.value.keyChange++ : detail.value.keyChange++
+                }
             } catch (error) {
                 console.log(error);
             } finally {
-                this.modal.sections = {
+                this.modal.field = {
                     state: false,
                     section: field.section_id
                 }
@@ -617,28 +658,38 @@
         }
 
         // Сохранение полей
-        async saveFields() {
+        async saveFields(updateTitle = true) {
             try {
+                console.log(tabs.value.is_module);
                 if (this.edit.errorSections.state) return
-                detail.value.actionChange++
                 this.edit.loading = true
+                tabs.value.is_module ? module.value.actionChange++ : detail.value.actionChange++
+
                 let request = Object.assign({}, ...this.edit.fields.map(field => {
                     return {
-                        [field.key]: field.value
+                        [field.key]: field.type == 'relation' ? field.value?.value : field.value
                     }
                 }))
-                this.setSavedFields(true)
+
                 await api.callMethod('POST', routes.detail.edit_fields.replace('${slug}', detail.value.slug), {
                     rows: [{
                         ...request,
-                        id: detail.value.id
+                        id: tabs.value.is_module ? module.value.id : detail.value.id
                     }]
                 })
+
+                if (updateTitle) {
+                    const findedField = this.edit.fields.find(item => item.key == 'name')
+                    
+                    if (findedField) {
+                        detail.value.header.name = typeof findedField.value == 'object' && findedField.value != null ? findedField.value.value : findedField.value
+                    }
+                }
             } catch (error) {
                 console.log(error);
             } finally {
+                this.setSavedFields(true)
                 this.edit.loading = false
-                detail.value.actionChange++
             }
         }
 
@@ -652,10 +703,9 @@
 
         // Обновление сохраняемых полей
         setSavedFields(isUpdate = false) {
-
             if (isUpdate) {
                 let findedField = null
-    
+                
                 for (let column in this.list) {
                     for (let section of this.list[column]) {
                         for (let field of section.fields) {
@@ -680,16 +730,56 @@
                     sections: {}
                 }
             }
+            tabs.value.is_module ? module.value.keyChange++ : detail.value.keyChange++
+            tabs.value.is_module ? module.value.actionChange++ : detail.value.actionChange++
+        }
 
-            detail.value.keyChange++
-            detail.value.actionChange++
+        // Нахождение поля
+        findField(key) {
+            for (let column in this.list) {
+                for (let section of this.list[column]) {
+                    for (let field of section.fields) {
+                        if (field.key == key) {
+                            return field
+                        }
+                    }
+                }
+            }
+            return null
+        }
+
+        // Удаление поля
+        async deleteField({id, index}) {
+            try {
+                this.modal.field = {
+                    state: true,
+                    section: null
+                }
+                await api.callMethod('DELETE', routes.detail.delete_field.replace('${id}', id))
+                this.list[index] = this.list[index].map(section => {
+                    section.fields = section.fields.filter(f => f.id != id)
+                    return section
+                }) 
+            } catch (error) {
+                console.log(error);
+            } finally {
+                this.modal.field = {
+                    state: false,
+                    section: null
+                }
+            }
+        }
+
+        // Изменение порядка полей
+        async changeSortField(value) {
+            await api.callMethod('POST', routes.detail.change_order_field, value)
         }
     }
 
     // Проверка клика вне заголовка при его редактировании
     const checkClick = (e) => {
         if (!detailHeaderRef.value.contains(e.target)) {
-            detail.value.header.editTitle = false
+            detail.value.header.setTitle(e)
             document.removeEventListener('click', checkClick);
         } 
     }

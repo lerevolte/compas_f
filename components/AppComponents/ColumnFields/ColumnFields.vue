@@ -1,20 +1,20 @@
 <template>
-    <div class="column-fields">
+    <div class="column-fields" :class="{'column-fields_dragging': columns.dragger.isDragging}">
         <draggable
             v-for="(column, index) in columns.list"
             tag="div"
             group="columns"
             class="column-fields__column"
             ghost-class="draggable-ghost"
-            drag-class="draggable-drag"
+            drag-class="tile-section_drag"
             v-model="columns.list[index]" 
             item-key="id" 
             fallback-class="draggable-fallback"
             :forceFallback="true"
             :fallbackOnBody="true"
             handle=".icon_drag-section"
-            @start="columns.dragStart()"
-            @end="columns.dragEnd()"
+            @start="e => columns.dragger.dragStart(e)"
+            @end="e => columns.dragger.dragEnd(e)"
             >
             <template #item="{ element: section }">
                 <AppTileSection 
@@ -23,14 +23,14 @@
                     :options="{
                         isDisableFooter: props.options.isDisableFooter,
                         isGlobalEdit: props.options.isGlobalEdit,
-                        sectionModal: props.options.modal.sections
+                        modal: props.options.modal.field
                     }"
                     :edit="props.edit"
                     :listSection="columns.listSection"
                     :pageId="props.pageId"
                     :hiddenFields="columns.hiddenFields"
                     @update:hiddenFields="fields => columns.hiddenFields = fields"
-                    @update:visibilityField="field => emit('action', {action: 'showField', value: field})"
+                    @update:visibilityField="field => columns.changeVisibilityField(field, index)"
                     @action="item => columns[item.action](item.value, index)"
                 />
             </template>
@@ -57,7 +57,7 @@
                     actionTitle: columns.modal.actionTitle,
                     template: 'slot'
                 }"
-                :loading="props.options.modal.columns.loading"
+                :loading="props.options.modal.section.loading"
                 @delete="columns.delete()"
                 @create="columns.create()"
                 @close="columns.modal.state = false"
@@ -121,11 +121,11 @@
         options: {
             default: {
                 modal: {
-                    columns: {
+                    field: {
                         state: false,
                         loading: false
                     },
-                    sections: {
+                    section: {
                         state: false,
                         loading: false
                     }
@@ -181,6 +181,7 @@
                     }
                 })
             })
+            this.dragger = new Drag()
         }
 
         // Получение колонок
@@ -189,17 +190,11 @@
             this.hiddenFields = JSON.parse(JSON.stringify(props.hiddenFields))
         }
 
-        dragStart() {}
-
-        dragEnd() {
-
-        }
-
         // Инициализация удаления секции
         initDelete(section, key) {
             this.modal = {
                 state: true,
-                title: 'Удаление раздела',
+                title: 'Удаление поля',
                 actionTitle: 'Удалить',
                 action: 'delete',
                 content: {
@@ -220,6 +215,20 @@
                     key: this.modal.content.key,
                     fields: [...this.hiddenFields, ...this.modal.content.fields]
                 }
+            })
+        }
+
+        // Обновление настроек секции
+        updateSection(section, column) {
+            this.list[column] = this.list[column].map(item => item.id == section.id ? {
+                ...item,
+                is_short: section.is_short,
+                name: section.name
+            } : item)
+            
+            emit('action', {
+                action: 'updateSection',
+                value: section
             })
         }
 
@@ -262,8 +271,14 @@
         }
 
         // Удаление поля
-        deleteField(field) {
-            console.log('Удаление поля', field);
+        deleteField(id, index) {
+            emit('action', {
+                action: 'deleteField',
+                value: {
+                    id: id,
+                    index: index
+                }
+            })
         }
 
         // Создание поля
@@ -298,11 +313,76 @@
             })
         }
 
+        // Проверка валидности секции
         getSectionValidate(response) {
             emit('action', {
                 action: 'getSectionValidate',
                 value: response
             })
+        }
+
+        // Изменение видимости поля
+        changeVisibilityField(field, index) {
+            if (field.is_hidden) {
+                this.list[index] = this.list[index].map(section => section.id == field.section_id ? {
+                    ...section,
+                    fields: section.fields.filter(f => f.id != field.id)   
+                } : section) 
+
+                emit('action', {
+                    action: 'setHiddenFields',
+                    value: this.hiddenFields
+                })
+            } else {
+                this.list[index] = this.list[index].map(section => section.id == field.section_id ? {
+                    ...section,
+                    fields: [...section.fields, field]
+                } : section) 
+                emit('action', {action: 'showField', value: field})
+            }
+        }
+
+        changeSortField(value) {
+            emit('action', {
+                action: 'changeSortField',
+                value: value
+            })
+        }
+    }
+
+    class Drag {
+        constructor() {
+            this.isDragging = false
+        }
+
+        // Начало перетаскивания
+        dragStart() {
+            this.isDragging = true
+        }
+
+        // Конец перетаскивания
+        async dragEnd() {
+            this.isDragging = false
+            emit('action', {
+                action: 'changeOrderSection',
+                value: {
+                    column_1: columns.value.list.column_1.map(section => section.id),
+                    column_2: columns.value.list.column_2.map(section => section.id),
+                }
+            })
+        }
+
+        // Создание колонки для дататрансфера
+        setDragImage(event) {
+            const setCopy = () => {
+                this.copy = tableRef.value.cloneNode(true);
+                this.copy.classList.add('section_copy')
+                this.copy.id = "section_transfer";
+                document.body.appendChild(this.copy);
+            }
+
+            setCopy()
+            event.dataTransfer.setDragImage(this.copy, event.offsetX, event.offsetY);
         }
     }
 
@@ -312,12 +392,12 @@
         columns.value.get()
     })
 
-    watch(() => props.options.modal.columns, () => {
-        columns.value.modal = {
-            ...columns.value.modal,
-            state: props.options.modal.columns.state,
-            loading: props.options.modal.columns.loading
-        }
+    watch(() => props.options.modal.section, () => {
+        columns.value.modal.state = props.options.modal.section.state
+    })
+
+    watch(() => props.hiddenFields, () => {
+        columns.value.hiddenFields = JSON.parse(JSON.stringify(props.hiddenFields))
     })
 
     watch(props.columns, () => {
