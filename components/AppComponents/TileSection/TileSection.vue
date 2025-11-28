@@ -22,64 +22,41 @@
                 </AppH3>
                 <IconEdit v-show="!section.editTitle" @click="section.initEditTitle()"/>
             </div>
-
-            <div class="tile-section__actions" v-if="!props.options.isGlobalEdit">
-                <AppButton class="button_text" v-if="section.fields.list.find(item => item.edit)" @click="section.fields.cancelEditAll()">
-                    Отмена
-                </AppButton>
-                <AppButton class="button_text"  v-else @click="section.fields.editAll()">
-                    Изменить
-                </AppButton>
-                <AppPopup :isPreventBottom="true">
-                    <template #header>
-                        <IconSettings />
-                    </template>
-                    <template #content>
-                        <div class="popup__option popup__option_checkbox">
-                            <AppCheckbox 
-                                v-model="section.is_short"
-                                :options="{
-                                    title: 'Свернуть'
-                                }"
-                                @update:model-value="section.hideSection()"
-                            />
-                        </div>
-                        <div class="popup__option popup__option_red" @click="emit('action', {action: 'initDelete', value: section})">
-                            Удалить
-                        </div>
-                    </template>
-                </AppPopup>
-            </div>
         </div>
 
         <draggable
             tag="div"
             group="sections"
-            v-model="section.fields.list" 
+            v-model="props.section.fields" 
             :forceFallback="true"
             :fallbackOnBody="true"
-            :item-key="String(section.id)" 
+            :item-key="String(props.section.id)" 
             handle=".icon_drag-field"
             class="tile-section__body"
             drag-class="draggable-drag"
             ghost-class="draggable-ghost"
             fallback-class="draggable-fallback"
-            @start="event => section.fields.dragStart(event)"
-            @end="event => section.fields.dragEnd(event)"
+            @start="event => fieldObject.dragStart(event)"
+            @end="event => fieldObject.dragEnd(event)"
+            @change="emit('action', {
+                action: 'changeOrder',
+                value: section.fields
+            })"
         >
             <template #item="{ element: field }">
                 <div 
-                    class="tile-section__field" 
+                    class="group-field" 
                     :class="{ 
-                        'tile-section__field_hidden': !field.edit && section.fields.checkVisible(field),
-                        'tile-section__field_static': !field.can_edit,
+                        'group-field_hidden': !field.edit && fieldObject.checkVisible(field),
+                        'group-field_static': !field.can_edit,
                         'blank_required': field.required
                     }"
-                    @click="e => section.fields.initChangeField(e.target, field)"
+                    @click="e => fieldObject.initChangeField(field, e.target)"
                 >
                     <IconDrag 
                         class="icon_drag-field"
                     />
+
 
                     <AppStatus 
                         v-if="field.type == 'status'"
@@ -90,7 +67,7 @@
                             list: field.options,
                             isHaveNull: false
                         }"
-                        v-model="section.fields.setFieldValue(field).value"
+                        v-model="fieldObject.setFieldValue(field).value"
                     />
 
                     <AppFile 
@@ -107,7 +84,7 @@
                             }
                         }"
                         v-model="field.value"
-                        @update:model-value="section.fields.initChangeFieldOption(field)"
+                        @update:model-value="fieldObject.initChangeFieldOption(field)"
                     />
 
                     <AppRelation  
@@ -146,6 +123,13 @@
                         })"
                     />
 
+                    <AppMap 
+                        v-else-if="field.type == 'address'"
+                        :options="field"
+                        :error="field.error"
+                        v-model="field.value"
+                    />
+
                     <template v-if="field.edit">
                         <AppDate 
                             v-if="field.type == 'date'"
@@ -164,7 +148,7 @@
                             <AppInput 
                                 :options="field"
                                 :error="field.error"
-                                v-model="section.fields.setFieldValue(field, 'value').value"
+                                v-model="fieldObject.setFieldValue(field, 'value').value"
                             />
                             <AppInput 
                                 v-if="field.is_external_link"
@@ -233,7 +217,6 @@
                             }"
                         />
 
-
                         <AppBlank 
                             v-else-if="field.type == 'select_dropdown'"
                             :options="{
@@ -241,39 +224,10 @@
                             }"
                             :item="{
                                 title: field.title,
-                                text: section.fields.getSelectValue(field).value
+                                text: fieldObject.getSelectValue(field).value
                             }"
                         />
                     </template>
-
-                    <AppPopup class="field__settings" :isPreventBottom="true">
-                        <template #header>
-                            <IconSettings />
-                        </template>
-                        <template #content>
-                            <div class="popup__option" v-show="field.can_edit && !field.edit" @click="(e) => section.fields.initChangeFieldOption(field)">
-                                Изменить
-                            </div>
-                            <div class="popup__option" @click="section.fields.initEdit(field)">
-                                Настроить
-                            </div>
-                            <div class="popup__option popup__option_checkbox" v-if="field.type != 'text_group'">
-                                <AppCheckbox 
-                                    v-model="field.visible_always"
-                                    :options="{
-                                        title: 'Показывать всегда'
-                                    }"
-                                    @update:model-value="section.fields.updateVisibleAlways(field)"
-                                />
-                            </div>
-                            <div class="popup__option" v-show="field.type != 'text_group'" @click="section.fields.hide(field)">
-                                Скрыть
-                            </div>
-                            <div class="popup__option popup__option_red" v-show="!field.is_permanent" @click="section.fields.initDelete(field)">
-                                Удалить
-                            </div>
-                        </template>
-                    </AppPopup>
                 </div>
             </template>
         </draggable> 
@@ -286,63 +240,64 @@
                     </AppButton>
                 </template>
                 <template #content>
-                    <div class="popup__option popup__option_empty" v-if="props.hiddenFields.length == 0"></div>
+                    <div class="popup__option popup__option_empty" v-if="props.hidden.length == 0"></div>
                     <div 
                         class="popup__option" 
-                        v-for="field in props.hiddenFields"
+                        v-for="field in props.hidden"
                         v-else
                         :key="field.id"
-                        @click="section.fields.show(field)"
+                        @click="emit('actionField', {
+                            action: 'show',
+                            value: field
+                        })"
                     >
                         {{ field.title }}
                     </div>
                 </template>
             </AppPopup>
-            <AppButton class="button_text" @click="section.fields.initCreate()">
+            <AppButton class="button_text" @click="emit('actionField', {
+                action: 'initCreate',
+                value: null
+            })">
                 Создать поле
             </AppButton>
         </div>
-
-        <SectionModal 
-            :modal="section.fields.modal"
-            :listSection="props.listSection"
-            @delete="id => section.fields.delete(id)"
-            @create="field => section.fields.create(field)"
-            @updateField="field => section.fields.updateField(field)"
-        />
     </div>
 </template>
 
 <script setup>
     import './TileSection.scss';
     
-    import { format } from 'date-fns';
-
     import draggable from 'vuedraggable'; 
-    import SectionModal from './Modal/Modal.vue'
-    import IconDrag from '@AppIcons/Actions/Drag.vue'
     import IconEdit from '@AppIcons/Actions/Edit.vue';
 	import AppH3 from '@AppComponents/Headers/H3/H3.vue';
     import AppPopup from '@AppComponents/Popup/Popup.vue'
     import AppButton from '@AppComponents/Button/Button.vue'
     import IconSettings from '@AppIcons/Actions/Settings.vue'
     import IconDragDotted from '@AppIcons/Actions/DragDotted.vue'
+    import GroupField from '@AppComponents/GroupField/GroupField.vue'
     
+    import AppTextarea from '@AppComponents/Inputs/Textarea/Textarea.vue';
+    import AppCheckbox from '@AppComponents/Inputs/Checkbox/Checkbox.vue'
+    import { Validator, Field } from '@AppHelpers/classes.js'
+
+    import { format } from 'date-fns'
+    import IconDrag from '@AppIcons/Actions/Drag.vue'
     import AppBlank from '@AppComponents/Blank/Blank.vue'
     import AppFile from '@AppComponents/Inputs/File/File.vue'
     import AppDate from '@AppComponents/Inputs/Date/Date.vue';
     import AppInput from '@AppComponents/Inputs/Input/Input.vue';
     import AppStatus from '@AppComponents/Inputs/Status/Status.vue'
     import AppSelect from '@AppComponents/Inputs/Select/Select.vue';
-    import AppTextarea from '@AppComponents/Inputs/Textarea/Textarea.vue';
-    import AppCheckbox from '@AppComponents/Inputs/Checkbox/Checkbox.vue'
     import AppRelation from '@AppComponents/Inputs/Relation/Relation.vue'
-    import { Validator } from '@AppHelpers/classes.js'
+    import AppMap from '@AppComponents/Inputs/Map/Map.vue'
+
 
     const emit = defineEmits([
-        'update:hiddenFields',
-        'update:visibilityField',
-        'action'
+        'update:hidden',
+        'action',
+        'actionField',
+        'actionSection'
     ])
 
     const props = defineProps({
@@ -356,7 +311,11 @@
             },
             type: Object
         },
-        hiddenFields: {
+        sectionClass: {
+            default: null,
+            type: Object
+        },
+        hidden: {
             default: [],
             type: Array
         },
@@ -394,14 +353,15 @@
     const sectionRef = ref(null)
     const headerRef = ref(null)
     
-    class Section {
+    class TileSection {
         constructor() {
             this.id = 0
             this.name = ''
             this.is_short = 0
             this.isLocalShort = 0
             this.editTitle = false
-            this.fields = new Fields()
+            this.fields = computed(() => props.section.fields)
+            this.validator = new Validator()
         }
 
         // Получение секции
@@ -410,7 +370,6 @@
             this.id = response.id
             this.name = response.name
             this.is_short = response.is_short
-            this.fields.list = response.fields
             this.isLocalShort = response.is_short
         }
  
@@ -433,7 +392,7 @@
                 this.name = this.name.replaceAll('\n', '')
             })
 
-            emit('action', {action: 'updateSection', value: {
+            emit('actionSection', {action: 'update', value: {
                 name: this.name,
                 is_short: this.is_short ?? false,
                 id: this.id
@@ -443,7 +402,7 @@
         // Обновление секции
         hideSection() {
             this.isLocalShort = this.is_short
-            emit('action', {action: 'updateSection', value: {
+            emit('actionSection', {action: 'update', value: {
                 name: this.name,
                 is_short: this.is_short ?? false,
                 id: this.id
@@ -454,329 +413,29 @@
         setLocalShort(state) {
             this.isLocalShort = state
         }
-    }
-
-    // Класс поля
-    class Fields {
-        constructor() {
-            this.list = []
-            this.backup = []
-            this.modal = {
-                state: false,
-                title: 'Настройки поля',
-                actionTitle: 'Сохранить',
-                action: 'update',
-                content: {},
-                text: null
-            }
-            this.validator = new Validator()
-            this.dragger = null
-        }
-
-        // Начало перетаскивания поля
-        dragStart(event) {
-            this.dragger = event.target.closest('.column-fields')
-
-            if (this.dragger) {
-                this.dragger.classList.add('column-fields_dragging-field')
-            }
-        }
-
-        // Конец перетаскивания поля
-        dragEnd(event) {
-            if (this.dragger) {
-                this.dragger.classList.remove('column-fields_dragging-field')
-                this.dragger = null
-            }
-
-            emit('action', {action: 'changeSortField', value: {
-                id: event.item._underlying_vm_.id,
-                section_id: event.to.__draggable_component__.itemKey,
-                fields: event.to.__draggable_component__.modelValue.map((p, index) => {
-                    return {
-                        id: p.id,
-                        sort: index
-                    }
-                })
-            }})
-        }
-        // Редактирование всех полей в секции
-        editAll() {
-            this.backup = JSON.parse(JSON.stringify(this.list.filter(field => field.can_edit && !field.edit).map(item => {
-                return {
-                    id: item.id,
-                    value: item.value
-                }
-            })))
-            emit('action', {action: 'initEditFields', value: this.list.filter(field => field.can_edit && !field.edit)})
-            this.list.filter(field => field.can_edit && !field.edit).forEach(element => {
-                element.edit = true
-            });
-        }
-
-        // Отмена редактирования всех полей
-        cancelEditAll(isWatch = false) {
-            let findedField = null
-
-
-            this.list.forEach((field) => {
-                findedField = this.backup.find(f => f.id == field.id)
-                if (findedField) {
-                    field.value = findedField.value
-                    field.edit = false
-                }
-            })
-
-            if (!isWatch) {
-                emit('action', {
-                    action: 'cancelSection',
-                    value: this.backup
-                })
-            }
-
-            this.backup = []
-        }
-
-        // Показать поле
-        show(field) {
-            section.value.fields.list.push(field)
-            emit('update:hiddenFields', props.hiddenFields.filter(f => f.id != field.id))
-            emit('update:visibilityField', {
-                id: field.id,
-                is_hidden: false,
-                change_section: true,
-                section_id: section.value.id
-            })
-        }
-
-        // Скрыть поле
-        hide(field) {
-            section.value.fields.list = section.value.fields.list.filter(f => f.id != field.id)
-            emit('update:hiddenFields', [...props.hiddenFields, field])
-            emit('update:visibilityField', {
-                id: field.id,
-                is_hidden: true,
-                change_section: true,
-                section_id: section.value.id
-            })
-        }
-
-        // Установка значения для поля
-        setFieldValue(field, slug = 'value') {
-            const response = computed({
-                get() {
-
-                    if (!field.value) return null 
-
-                    if (field.type == 'address') {
-                        return field.value
-                    } else if (Array.isArray(field.value)) {
-                        return field.value
-                    } else if (field.type == 'relation') {
-                        return field ?? null
-                    } else {
-                        return typeof field.value === 'object' && field.value !== null ? field.value[slug] : field.value
-                    }
-                },
-                set(val) {
-                    if (field.type == 'address') {
-                        field.value = val
-                    }  else if (field.type == 'relation') {
-                        field.value = val
-                    }
-                     else if (typeof field.value === 'object' && field.value !== null) {
-                        if (slug in field.value) {
-                            field.value[slug] = val
-                        } else if ('value' in field.value) {
-                            field.value.value = val
-                        } else {
-                            field.value = val
-                        }
-                    } else {
-                        field.value = val
-                    }
-                }
-            })
-            return response
-        }
-
-        // Получение значений для выпадающих списков (с кэшем)
-        getSelectValue(field) {
-            const response = computed({
-                get() {
-                    // Проверяем что строка существует
-                    if (!field.value) return null
-                    
-                    let response = null
-                    if (Array.isArray(field.value)) response = field.options.filter(option => field.value.includes(option.value)).map(option => option.label)
-                    else if (typeof field.value == 'object' && field.value !== null) response = field.options.filter(option => option.value == field.value).map(option => option.label)
-                    else response = field.options.filter(option => option.value == field.value).map(option => option.label)
-                
-                    if (field.type == 'select_dropdown') {
-                        return response.join(', ')
-                    } 
-                    return response
-                }
-            })
-            return response
-        }
-
-        // Проверка видимости
-        checkVisible(field) {
-            if (field.visible_always) {
-                return false
-            } else {
-                if (field.type == 'select_dropdown') {
-                    return !(this.getSelectValue(field).value != null && this.getSelectValue(field).value.length > 0)
-                } else {
-                    const value = this.setFieldValue(field).value
-                    if (typeof value == 'string') {
-                        return !(value != null && value != '')
-                    } else if (value == null) {
-                        return true
-                    } else if (Array.isArray(value)) {
-                        return !(value.filter(v => v != null && v != '').length > 0)
-                    } else if (typeof value == 'object') {
-                        if (value.value) {
-                            return !(value.value.value ? value.value.value.filter(p => p).length > 0 : value.value.filter(p => p).length > 0)
-                        }
-                        return !(value.value && value.value.value != null && value.value.value.length > 0)
-                    }
-                    return false
-                }
-            }
-        }
-
-        // Обновление видимости
-        updateVisibleAlways(field) {
-            emit('action', {action: 'updateField', value: {
-                field: field,
-                update_columns: false
-            }})
-        }
-
-        // Инициализация редактирования
-        initEdit(field) {
-            this.modal = {
-                state: true,
-                title: 'Настройки поля',
-                actionTitle: 'Сохранить',
-                action: 'updateField',
-                content: JSON.parse(JSON.stringify({
-                    ...field,
-                    section_id: section.value.id
-                })),
-                text: null
-            }
-        }
-
-        // Обновление
-        updateField(field) {
-            emit('action', {action: 'updateField', value: {
-                field: field,
-                update_columns: this.modal.state
-            }})
-        }
-
-        // Инициализация редактирования
-        initCreate() {
-            this.modal = {
-                state: true,
-                title: 'Создание поля',
-                actionTitle: 'Создать',
-                action: 'create',
-                content: JSON.parse(JSON.stringify({
-                    section_id: section.value.id
-                })),
-                text: null
-            }
-        }
-
-        // Создание
-        create(field) {
-            emit('action', {action: 'createField', value: field})
-        }
-
-        // Инициализация удаления
-        initDelete(field) {
-            this.modal = {
-                state: true,
-                title: 'Удаление раздела',
-                actionTitle: 'Удалить',
-                action: 'delete',
-                content: {
-                    id: field.id
-                },
-                text: `Будет удалено поле ${field.title}. Продолжить?`
-            }
-        }
-
-        // Удаление
-        delete(id) {
-            section.value.fields.list = section.value.fields.list.filter(field => field.id != id)
-            emit('action', {action: 'deleteField', value: id})
-        }
-
-        // Инициализация изменения поля
-        initChangeField(target, field) {
-            if (!field.can_edit) return 
-            if (target.closest('.icon_drag') || target.closest('.field__settings') || target.closest('.blank__title')) return
-
-            if (['text', 'number', 'date', 'select_dropdown'].includes(field.type)) {
-                if (field.edit || 
-                    target.classList.contains('blank__link') || 
-                    (
-                        target.classList.contains('blank__text') && 
-                        !target.classList.contains('blank__text_empty')
-                    )
-                ) return
-                this.backup.push(JSON.parse(JSON.stringify(field)))
-                field.edit = true
-            } else if (field.type == 'relation') {
-                if (field.edit || (target.classList.contains('value__text_link') || target.classList.contains('select__value-img'))) return
-                this.backup.push(JSON.parse(JSON.stringify(field)))
-                field.edit = true
-            } else if (field.type == 'status') {
-                if (field.edit) return
-                this.backup.push(JSON.parse(JSON.stringify(field)))
-                field.edit = true
-            } else if (field.type == 'file') {
-                if (field.edit || (!target.classList.contains('file'))) return
-                this.backup.push(JSON.parse(JSON.stringify(field)))
-                field.edit = true
-            }   
-            
-            emit('action', {action: 'initEditFields', value: [field]})
-        }
-        
-        initChangeFieldOption(field) {
-            if (!field.can_edit) return 
-            this.backup.push(JSON.parse(JSON.stringify(field)))
-            field.edit = true
-            emit('action', {action: 'initEditFields', value: [field]})
-        }
 
         // Проверка полей
         checkFields() {
             const fields = section.value.fields.list.filter(field => field.edit)
-            section.value.fields.validator.check(fields)
+            section.value.validator.check(fields)
 
             for (let field of this.list) {
                 field.error = {
-                    state: section.value.fields.validator.errors[field.key] ?? false,
-                    text: section.value.fields.validator.errors[field.key] ?? null
+                    state: section.value.validator.errors[field.key] ?? false,
+                    text: section.value.validator.errors[field.key] ?? null
                 }
             }
 
             emit('action', {action: 'getSectionValidate', value: {
                 section_id: section.value.id,
                 fields: fields,
-                state: section.value.fields.validator.state
+                state: section.value.validator.state
             }})
         }
     }
 
-    const section = ref(new Section())
+    const section = ref(new TileSection())
+    const fieldObject = ref(new Field(props.sectionClass, emit))
 
     // Проверка клика вне заголовка при его редактировании
     const checkClick = (e) => {
@@ -788,30 +447,5 @@
 
     onMounted(async () => {
         await section.value.get()
-
-        if (props.options.isGlobalEdit) {
-            section.value.fields.editAll()
-        }
-    })
-
-    watch(() => props.options.modal, () => {
-        if (!props.options.modal.state) {
-            section.value.fields.modal.state = false
-            section.value.fields.modal.loading = false
-        } else {
-            section.value.fields.modal.loading = props.options.modal.state
-        }
-    })
-
-    watch(() => props.edit.state, () => {
-        if (!props.edit.state) {
-            section.value.fields.cancelEditAll(true)
-        }
-    })
-
-    watch(() => props.edit.action, () => {
-        if (props.edit.action == 'save') {
-            section.value.fields.checkFields()
-        }
     })
 </script>

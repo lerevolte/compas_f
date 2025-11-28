@@ -16,16 +16,17 @@
       :isChoosed="isChoosed"
       :actions="{
         save: table.state == 'edit',
-        edit: table.state != 'edit',
+        edit: !props.options.isTrash && table.state != 'edit',
         cancel: true,
-        delete: table.state != 'edit'
+        restore: props.options.isTrash,
+        delete: !props.options.isTrash && table.state != 'edit'
       }"
       :loading="table.saving"
       @action="action => table[action.action](action.value)"
     />
   </teleport>
 
-  <teleport to="#menu__overlay" v-if="table.deleteBuffer.state">
+  <teleport to="#menu__overlay" v-if="table.deleteBuffer.state && table.deleteBuffer.type == 'вудуеу'">
       <AppModalWarning 
           :options="{
               title: 'Удаление',
@@ -39,6 +40,23 @@
       >
           <p class="warning__text">
               Будет удалено {{ table.deleteBuffer.list?.length }} строк. Продолжить?
+          </p>
+      </AppModalWarning>
+  </teleport>
+  <teleport to="#menu__overlay" v-if="table.deleteBuffer.state && table.deleteBuffer.type == 'restore'">
+      <AppModalWarning 
+          :options="{
+              title: 'Восстановление',
+              action: 'restore',
+              actionTitle: 'Восстановить',
+              template: 'slot'
+          }"
+          :loading="table.deleteBuffer.loading"
+          @restore="table.restore()"
+          @close="table.deleteBuffer.state = false"
+      >
+          <p class="warning__text">
+              Будет восстановлено {{ table.deleteBuffer.list?.length }} строк. Продолжить?
           </p>
       </AppModalWarning>
   </teleport>
@@ -90,7 +108,8 @@
         default: {
           isHaveQuery: false,
           query: {},
-          isHaveFilter: true
+          isHaveFilter: true,
+          isTrash: false
         },
         type: Object
       }
@@ -112,11 +131,15 @@
     })
 
   onMounted(async () => {
+    initTable()
+  })
+
+  const initTable = async () => {
     isClient.value = true
 
-    // Ждем пока tableRef будет доступен
     await nextTick()
-
+    if (props.slug == null) return
+    table.value.slug = props.slug
     if (props.options.isHaveQuery) {
       table.value.dependences = {
         state: true,
@@ -128,11 +151,15 @@
     } else {
       table.value.get()
     }
-  })
+  }
 
   provide('table', table)
   provide('filter', table.value.filter)
   provide('tableRef', tableRef)
   provide('sectionRef', sectionRef)
   
+
+  watch(() => props.slug, () => {
+    initTable()
+  })
 </script>

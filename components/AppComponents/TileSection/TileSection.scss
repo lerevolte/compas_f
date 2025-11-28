@@ -110,55 +110,6 @@
     flex-direction: column;
 }
 
-.tile-section__field {
-    padding: 0 15px;
-    min-height: 40px;
-    position: relative;
-
-    &.tile-section__field_hidden {
-        display: none;
-    }
-
-    &.tile-section__field_static {
-        .blank__title {
-            color: variables.$color-border;
-        }
-    }
-
-    .field__settings {
-        position: absolute;
-        top: 0px;
-        right: 15px;
-    }
-
-    .icon_drag,
-    .field__settings {
-        opacity: 0;
-        transition: 0.1s all;
-
-        &.popup_open {
-            opacity: 1;
-        }
-    }
-
-    &:hover {
-        .icon_drag,
-        .field__settings {
-            opacity: 1;
-        }
-    }
-
-    .blank {
-        .blank__text {
-            max-width: max-content;
-        }
-    }
-
-    .blank__title {
-        max-width: max-content;
-    }
-}
-
 .tile-section__actions {
     gap: 10px;
     display: flex;

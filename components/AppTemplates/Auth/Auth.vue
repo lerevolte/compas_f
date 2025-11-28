@@ -78,7 +78,7 @@
                     userStore.token = response.data.token
                     await userStore.get()
                     await menuStore.get()
-                    navigateTo('/')
+                    window.location.href = menuStore.list[0].link
                 }
             } catch (error) {
                 console.log('error', error);

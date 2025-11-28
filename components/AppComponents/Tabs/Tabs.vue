@@ -12,12 +12,12 @@
                             {{ tab.title }}
                         </template>
                         <template #content>
-                            <div class="popup__option" v-for="child in tab.childs" @click="emit('action', { action: 'setTab', value: { tab: child.alias, is_module: true} })">
+                            <div class="popup__option" v-for="child in tab.childs" @click="emit('action', { action: 'set', value: { tab: child.alias, is_module: true} })">
                                 {{ child.title }}
                             </div> 
                         </template>
                     </AppPopup>
-                    <span v-else class="text" @click="emit('action', { action: 'setTab', value: { tab: tab.tab, is_module: false} })">
+                    <span v-else class="text" @click="emit('action', { action: 'set', value: { tab: tab, is_module: false} })">
                         {{ tab.title }}
                     </span>
 
@@ -45,7 +45,7 @@
         <div class="tabs__actions">
             <AppSave 
                 v-show="tabs.isChanged" 
-                @save="(role) => tabs.saveSettings(role)"
+                @save="(role) => tabs.save(role)"
             />
             <AppSettings 
                 v-model:list="tabs.list"
@@ -115,6 +115,7 @@
 <script setup>
     import './Tabs.scss';
     
+    import api from '@/helpers/api.js'
     import AppPopup from '@AppComponents/Popup/Popup.vue'
     import IconActionsSettings from '@AppIcons/Actions/Settings.vue';
     import AppSettings from '@AppComponents/Settings/Settings.vue'
@@ -124,6 +125,7 @@
     import AppBlank from '@AppComponents/Blank/Blank.vue'
     import AppSelect from '@AppComponents/Inputs/Select/Select.vue'
     import IconTriangle from '@AppIcons/Triangle.vue'
+    import routes from '@/helpers/routes.js'
 
     import { useUserStore } from '@/stores/userStore.js'
     const userStore = useUserStore()
@@ -131,6 +133,10 @@
     const popupRef = ref(null)
 
     const props = defineProps({
+        slug: {
+            default: '',
+            type: String
+        },
         tabs: {
             default: [],
             type: Object
@@ -143,10 +149,6 @@
         },
         options: {
             default: {
-                modal: {
-                    state: false,
-                    loading: false
-                },
                 isHaveHistory: true
             },
             type: Object
@@ -168,7 +170,7 @@
             this.actions = [
                 {
                     name: 'Настроить',
-                    action: 'initEdit'
+                    action: 'initUpdate'
                 },
                 {
                     name: 'Скрыть',
@@ -189,12 +191,17 @@
         }
 
         // Вернуть настройки по умолчанию
-        reset() {
-            emit('action', { action: 'resetTabs', value: null })
+        async reset() {
+            try {
+                const response = await api.callMethod('GET', routes.tabs.reset.replace('${slug}', props.slug))
+                this.list = response.data  
+            } catch (error) {
+                console.log(error);
+            } 
         }
 
         // Настройки таба
-        initEdit(tab) {
+        initUpdate(tab) {
             this.modal = {
                 state: true,
                 title: 'Настройки раздела',
@@ -204,17 +211,25 @@
             }
         }
 
-        update() {
-            this.modal.content = {
-                ...this.modal.content,
-                roles_read: this.modal.content.has_roles_read ? this.modal.content.roles_read : [],
-                has_roles_read: this.modal.content.roles_read.length > 0 ? this.modal.content.has_roles_read : false
-            }
+        // Обновление настроек
+        async update() {
+            try {
+                this.modal.content = {
+                    ...this.modal.content,
+                    roles_read: this.modal.content.has_roles_read ? this.modal.content.roles_read : [],
+                    has_roles_read: this.modal.content.roles_read.length > 0 ? this.modal.content.has_roles_read : false
+                }
+                this.modal.loading = true
 
-            emit('action', { 
-                action: 'updateSettings', 
-                value: this.modal.content
-            })
+                const route = routes.tabs.update.replace('${slug}', props.slug)
+                await api.callMethod('PUT', route, {menu: this.list.map(item => item.tab == this.modal.content.tab ? {...item, ...this.modal.content} : item)})
+            } catch (error) {
+                console.log(error);
+            } finally {
+                this.modal.loading = false
+                this.modal.state = false
+                this.modal.content = {}
+            }
         }
 
         // Скрыть таб
@@ -224,9 +239,10 @@
         }
 
         // Сохранение
-        saveSettings(role) {
+        async save(role) {
             this.isChanged = false
-            emit('action', { action: 'updateTabs', value: { list: this.list, role: role } })
+            const route = routes.tabs.save.replace('${slug}', props.slug)
+            await api.callMethod('PUT', role ? `${route}${role == 'all' ? '/all' : '/role/' + role}` : route, {menu: this.list})
         }
     }
 
@@ -238,13 +254,5 @@
 
     watch(() => props.tabs, () => {
         tabs.value.list = JSON.parse(JSON.stringify(props.tabs))
-    })
-
-    watch(() => props.options.modal, () => {
-        tabs.value.modal = {
-            ...tabs.value.modal,
-            state: props.options.modal.state,
-            loading: props.options.modal.loading
-        }
     })
 </script>

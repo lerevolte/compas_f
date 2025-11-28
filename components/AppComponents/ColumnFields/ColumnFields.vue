@@ -1,5 +1,8 @@
 <template>
     <div class="column-fields" :class="{'column-fields_dragging': columns.dragger.isDragging}">
+        <!-- modal: props.options.modal.field
+        :edit="props.edit" -->
+
         <draggable
             v-for="(column, index) in columns.list"
             tag="div"
@@ -16,26 +19,33 @@
             @start="e => columns.dragger.dragStart(e)"
             @end="e => columns.dragger.dragEnd(e)"
             >
-            <template #item="{ element: section }">
+            <template #item="{ element: item }">
                 <AppTileSection 
                     class="column-fields__item column-section"
-                    :section="section"
+                    :section="item"
                     :options="{
                         isDisableFooter: props.options.isDisableFooter,
                         isGlobalEdit: props.options.isGlobalEdit,
-                        modal: props.options.modal.field
                     }"
-                    :edit="props.edit"
+                    :sectionClass="section"
                     :listSection="columns.listSection"
                     :pageId="props.pageId"
-                    :hiddenFields="columns.hiddenFields"
-                    @update:hiddenFields="fields => columns.hiddenFields = fields"
-                    @update:visibilityField="field => columns.changeVisibilityField(field, index)"
-                    @action="item => columns[item.action](item.value, index)"
+                    :hidden="section.hidden"
+                    @update:hidden="fields => section.hidden = fields"
+                    @actionSection="item => section[item.action](item.value, index, props.slug, columns.list)"
+                    @actionField="action => field[action.action]({
+                        field: action.value,
+                        section: item,
+                        hidden: section.hidden,
+                        column_id: index,
+                        slug: props.slug,
+                        columns: columns.list
+                    })"
+                    @action="action => columns[action.action](action.value, index, item)"
                 />
             </template>
             <template #footer>
-                <AppButon class="button_text column-fields__button" @click="columns.initCreate(index)" v-if="!props.options.isDisableFooter">
+                <AppButon class="button_text column-fields__button" @click="section.initCreate(index)" v-if="!props.options.isDisableFooter">
                     Создать раздел 
                 </AppButon>
                 <AppHistory 
@@ -49,27 +59,27 @@
             </template>
         </draggable> 
 
-        <teleport to="#menu__overlay" v-if="columns.modal.state">
+        <teleport to="#menu__overlay" v-if="section.modal.state">
             <AppModalWarning 
                 :options="{
-                    title: columns.modal.title,
-                    action: columns.modal.action,
-                    actionTitle: columns.modal.actionTitle,
+                    title: section.modal.title,
+                    action: section.modal.action,
+                    actionTitle: section.modal.actionTitle,
                     template: 'slot'
                 }"
-                :loading="props.options.modal.section.loading"
-                @delete="columns.delete()"
-                @create="columns.create()"
-                @close="columns.modal.state = false"
+                :loading="section.modal.loading"
+                @delete="section.delete(columns.list)"
+                @create="section.create(columns.list, props.slug)"
+                @close="section.modal.state = false"
             >
-            <template v-if="columns.modal.action == 'delete'">
+            <template v-if="section.modal.action == 'delete'">
                 <p class="warning__text">
-                    {{ columns.modal.text }}
+                    {{ section.modal.text }}
                 </p>
             </template>
-            <template v-else-if="columns.modal.action == 'create'">
+            <template v-else-if="section.modal.action == 'create'">
                 <AppInput 
-                    v-model="columns.modal.content.name"
+                    v-model="section.modal.content.name"
                     :options="{
                         id: 0,
                         title: 'Название раздела',
@@ -80,6 +90,17 @@
             </template>
             </AppModalWarning>
         </teleport>
+        <teleport to="#menu__overlay" v-if="field.modal.state">
+            <FieldModal 
+                :modal="field.modal"
+                :listSection="columns.listSection"
+                @actionField="action => field[action.action]({
+                    columns: columns.list,
+                    field: action.value,
+                    slug: props.slug
+                })"
+            />
+        </teleport>
     </div>
 </template>
 
@@ -87,14 +108,20 @@
     import './ColumnFields.scss';
     
     import draggable from 'vuedraggable';
+    import { Section, Field } from '@AppHelpers/classes.js'
     import AppButon from '@AppComponents/Button/Button.vue';
     import AppHistory from '@AppComponents/History/History.vue';
-    import AppTileSection from '@AppComponents/TileSection/TileSection.vue';
+    import FieldModal from '@AppComponents/GroupField/Modal/Modal.vue'
     import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'
+    import AppTileSection from '@AppComponents/TileSection/TileSection.vue';
 
     import AppInput from '@AppComponents/Inputs/Input/Input.vue';
 
     const props = defineProps({
+        slug: {
+            default: null,
+            type: [String, Object]
+        },
         columns: {
             default: {
                 column_1: [],
@@ -102,7 +129,7 @@
             },
             type: Object
         },
-        hiddenFields: {
+        hidden: {
             default: [],
             type: Array
         },
@@ -120,16 +147,7 @@
         },
         options: {
             default: {
-                modal: {
-                    field: {
-                        state: false,
-                        loading: false
-                    },
-                    section: {
-                        state: false,
-                        loading: false
-                    }
-                },
+                isModule: false,
                 isHaveHistory: true,
                 isGlobalEdit: false,
                 isDisableFooter: false
@@ -164,7 +182,6 @@
                 column_1: [],
                 column_2: []
             }
-            this.hiddenFields = []
             this.modal = {
                 state: false,
                 title: 'Создание раздела',
@@ -181,84 +198,31 @@
                     }
                 })
             })
+            this.section = new Section()
             this.dragger = new Drag()
         }
 
         // Получение колонок
         get() {
+            console.log('asd');
+            
             this.list = JSON.parse(JSON.stringify(props.columns))
-            this.hiddenFields = JSON.parse(JSON.stringify(props.hiddenFields))
+            section.value.hidden = props.hidden 
         }
 
-        // Инициализация удаления секции
-        initDelete(section, key) {
-            this.modal = {
-                state: true,
-                title: 'Удаление поля',
-                actionTitle: 'Удалить',
-                action: 'delete',
-                content: {
-                    id: section.id,
-                    key: key,
-                    fields: section.fields.list
-                },
-                text: 'Все поля раздела скроются. Удалить раздел?'
-            }
+        changeOrder(fields, column_id, section) {
+            console.log(section);
+            this.list[column_id].find(item => item.id == section.id).fields = fields
         }
 
-        // Удаление секции
-        delete() {
-            emit('action', { 
-                action: 'deleteSection', 
-                value: {
-                    id: this.modal.content.id,
-                    key: this.modal.content.key,
-                    fields: [...this.hiddenFields, ...this.modal.content.fields]
-                }
-            })
-        }
 
-        // Обновление настроек секции
-        updateSection(section, column) {
-            this.list[column] = this.list[column].map(item => item.id == section.id ? {
-                ...item,
-                is_short: section.is_short,
-                name: section.name
-            } : item)
-            
-            emit('action', {
-                action: 'updateSection',
-                value: section
-            })
-        }
 
-        // Инициализация создания
-        initCreate(key) {
-            this.modal = {
-                state: true,
-                title: 'Создание раздела',
-                actionTitle: 'Создать',
-                action: 'create',
-                content: {
-                    name: null,
-                    key: key,
-                },
-                text: null
-            }
-        }
 
-        // Создание секции
-        create() {
-            console.log(this.modal.content);
-            
-            emit('action', { 
-                action: 'createSection', 
-                value: {
-                    key: this.modal.content.key,
-                    name: this.modal.content.name
-                }
-            })
-        }
+
+
+
+
+
 
         // Открытие модалки
         openModal(item) {
@@ -268,41 +232,6 @@
         // Создание сущности
         createEntity(item) {
             emit('createEntity', item)
-        }
-
-        // Удаление поля
-        deleteField(id, index) {
-            emit('action', {
-                action: 'deleteField',
-                value: {
-                    id: id,
-                    index: index
-                }
-            })
-        }
-
-        // Создание поля
-        createField(field) {
-            emit('action', { 
-                action: 'createField', 
-                value: field
-            })
-        }
-
-        // Обновление поля
-        updateField(field) {
-            emit('action', { 
-                action: 'updateField', 
-                value: field
-            })
-        }
-
-        // Инициализация редактирования полей
-        initEditFields(fields = []) {
-            emit('action', { 
-                action: 'initEditFields', 
-                value: fields
-            })
         }
 
         // Отмена редактирования секции
@@ -320,36 +249,9 @@
                 value: response
             })
         }
-
-        // Изменение видимости поля
-        changeVisibilityField(field, index) {
-            if (field.is_hidden) {
-                this.list[index] = this.list[index].map(section => section.id == field.section_id ? {
-                    ...section,
-                    fields: section.fields.filter(f => f.id != field.id)   
-                } : section) 
-
-                emit('action', {
-                    action: 'setHiddenFields',
-                    value: this.hiddenFields
-                })
-            } else {
-                this.list[index] = this.list[index].map(section => section.id == field.section_id ? {
-                    ...section,
-                    fields: [...section.fields, field]
-                } : section) 
-                emit('action', {action: 'showField', value: field})
-            }
-        }
-
-        changeSortField(value) {
-            emit('action', {
-                action: 'changeSortField',
-                value: value
-            })
-        }
     }
 
+    // Драггер для секций
     class Drag {
         constructor() {
             this.isDragging = false
@@ -363,12 +265,9 @@
         // Конец перетаскивания
         async dragEnd() {
             this.isDragging = false
-            emit('action', {
-                action: 'changeOrderSection',
-                value: {
-                    column_1: columns.value.list.column_1.map(section => section.id),
-                    column_2: columns.value.list.column_2.map(section => section.id),
-                }
+            section.value.changeOrder({
+                column_1: columns.value.list.column_1.map(section => section.id),
+                column_2: columns.value.list.column_2.map(section => section.id),
             })
         }
 
@@ -387,20 +286,16 @@
     }
 
     const columns = ref(new Columns())
-
+    const section = ref(new Section())
+    const field = ref(new Field())
+    
     onMounted(() => {
+        console.log('asdasd');
+        
         columns.value.get()
     })
 
-    watch(() => props.options.modal.section, () => {
-        columns.value.modal.state = props.options.modal.section.state
-    })
-
-    watch(() => props.hiddenFields, () => {
-        columns.value.hiddenFields = JSON.parse(JSON.stringify(props.hiddenFields))
-    })
-
-    watch(props.columns, () => {
-        columns.value.get()
-    })
+    // watch(props.columns, () => {
+    //     columns.value.get()
+    // })
 </script>

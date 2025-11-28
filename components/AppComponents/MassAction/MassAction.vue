@@ -7,8 +7,15 @@
         >
             <div class="mass-action__group">
                 <AppButton 
+                    class="button_fill" 
+                    v-if="props.actions.restore"
+                    @click="emit('action', {action: 'initRestore', value: true})"
+                >
+                    Восстановить
+                </AppButton>
+                <AppButton 
                     class="button_icon" 
-                    v-if="props.actions.edit"
+                    v-else-if="props.actions.edit"
                     @click="emit('action', {action: 'initEdit', value: true})"
                 >
                     <IconActionEdit />
@@ -57,7 +64,8 @@
                 save: false,
                 edit: false,
                 cancel: false,
-                delete: false
+                delete: false,
+                restore: false
             },
             type: Object
         },

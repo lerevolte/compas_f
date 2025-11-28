@@ -31,7 +31,8 @@ export default {
         download: '/objects/${slug}/export',
         open: '/objects/${slug}/${row_id}/compose',
         copy: '/objects/${slug}/${row_id}/compose?is_copy=1',
-        delete: '/objects/${slug}'
+        delete: '/objects/${slug}',
+        restore: '/objects/${slug}/restore'
     },
     filter: {
         move: '/filters/${slug}/change-sort',
@@ -39,12 +40,21 @@ export default {
         edit: '/filters/${slug}',
         delete: '/filters/${slug}'
     },
-    detail: {
-        get: '/objects/${slug}/${id}/compose',
-        update_title: '/objects/${slug}/batch',
+    tabs: {
         update_tabs: '/entities/${slug}/menu',
         settings_tabs: '/tabs/${slug}/permissions',
         reset_tabs: '/entities/${slug}/menu/reset',
+
+    },
+    tabs: {
+        save: '/entities/${slug}/menu',
+        update: '/tabs/${slug}/permissions',
+        reset: '/entities/${slug}/menu/reset',
+    },
+
+    detail: {
+        get: '/objects/${slug}/${id}/compose',
+        update_title: '/objects/${slug}/batch',
         history: '/history/${slug}/${id}',
         create_section: '/field_sections',
         hidden_fields: '/field/hide_batch',
@@ -58,5 +68,9 @@ export default {
         delete_field: '/field/${id}',
         edit_fields: '/objects/${slug}/batch',
         update_field: '/field/${id}',
+    },
+    trash: {
+        get_tabs: '/tabs/trash',
+        restore: '/objects/${slug}/restore'
     }
 }

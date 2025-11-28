@@ -45,7 +45,7 @@
     import './Header.scss'
     import AppCheckbox from '@AppComponents/Inputs/Checkbox/Checkbox.vue'
     import IconSort from '@AppIcons/Table/Sort.vue'
-    import { throttle } from 'lodash'
+    import throttle from 'lodash/throttle'
     import { Common } from '@/helpers/classes.js'
 
     const table = inject('table')

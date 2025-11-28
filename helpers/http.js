@@ -1,10 +1,10 @@
 import axios from "axios";
 import { Common } from "@/helpers/classes.js";
 import { useUserStore } from '@/stores/userStore.js'
-const common = new Common()
 
 export default {
     call(type, url, params, headers) {
+        const common = new Common()
         let response = null
 
         return new Promise(async function (resolve, reject) {

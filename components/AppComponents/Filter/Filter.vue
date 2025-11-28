@@ -70,6 +70,7 @@
                             :isPreventBottom="true"
                             :options="{
                                 ...field,
+                                edit: true,
                                 list: field.options,
                                 isHaveNull: false,
                             }"

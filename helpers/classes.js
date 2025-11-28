@@ -216,6 +216,32 @@ export class Common {
             return format(field, formatType)
         }
     }
+
+    // Нахождение секции в колонках
+    findColumnSection(columns, id) {
+        for (let column in columns) {
+            for (let section of columns[column]) {
+                if (section.id == id) {
+                    return section
+                }
+            }
+        }
+        return null
+    }
+
+    // Нахождение поля в колонках
+    findColumnField(columns, key) {
+        for (let column in columns) {
+            for (let section of columns[column]) {
+                for (let field of section.fields) {
+                    if (field.key == key) {
+                        return field
+                    }
+                }
+            }
+        }
+        return null
+    }
 }
 
 export class Auth {
@@ -621,7 +647,8 @@ export class Table {
 
         this.deleteBuffer = {
             list: Array.isArray(rows) ? rows : [rows],
-            state: true
+            state: true,
+            type: 'delete'
         }
     }
 
@@ -654,6 +681,49 @@ export class Table {
             this.loading = false
         }
     }
+
+    // Инициализация удаления
+    initRestore(rows = []) {
+        rows = typeof rows == 'boolean' || rows.length == 0 ? this.body.filter(item => item.isChoose) : rows 
+
+        this.deleteBuffer = {
+            list: Array.isArray(rows) ? rows : [rows],
+            state: true,
+            type: 'restore'
+        }
+    }
+
+    // Удалить строку 
+    async restore() {
+        try {
+            this.deleteBuffer.loading = true
+            let request = this.deleteBuffer.list.map(p => p.id)
+            this.body = this.body.filter(row => this.deleteBuffer.list.findIndex(item => item.id == row.id) == -1)
+            
+            await api.callMethod('POST', routes.table.restore.replace('${slug}', this.slug), {
+                ids: request
+            })
+        } catch (error) {
+            console.log('delete', error);
+        } finally {
+            this.deleteBuffer = {
+                list: [],
+                loading: false,
+                state: false
+            }
+        }
+
+        try {
+            this.loading = true
+            await this.filter.get()
+        } catch (error) {
+            console.log('get_table', error);
+        } finally {
+            this.loading = false
+        }
+    }
+
+
 
     // Пагинация
     async changePage(page) {
@@ -739,7 +809,9 @@ export class Filter {
             if (this.setter.dependences.state) {
                 const otherKeys = Object.keys(this.setter.dependences.query)
                 for (let key of otherKeys) {
-                    if (Array.isArray(this.setter.dependences.query[key])) {
+                    if (key == 'trashed') {
+                        response.push(`${key}=${this.setter.dependences.query[key] ? 1 : 0}`)
+                    } else if (Array.isArray(this.setter.dependences.query[key])) {
                         for (let value of this.setter.dependences.query[key]) {
                             response.push(`filter[${key}][]=${value}`)
                         }
@@ -919,5 +991,563 @@ export class Validator {
                 }
             }
         });
+    }
+}
+
+export class History {
+    constructor() {
+        this.events = {
+            data: [],
+            count: 1, 
+            current_page: 1, 
+            last_page: 1, 
+            per_page: 1
+        }
+
+        this.fields = {
+            data: [],
+            count: 1, 
+            current_page: 1, 
+            last_page: 1, 
+            per_page: 1
+        }
+
+        this.loading = false
+    }
+
+    // Получение истории
+    get(response) {
+        this.events = {...this.events, ...response.history_events}
+        this.fields = {...this.events, ...response.history_fields}
+    }
+
+    // Обновление истории
+    async update(page, tab, options = {}) {
+        try {
+            this.loading = true
+            const key = tab == 'order' ? 'events' : 'fields'
+            const response = await api.callMethod('GET', routes.detail.history.replace('${slug}', options.slug).replace('${id}', options.id) + `?page=${page}&filter=${key}`)
+            this[key].data = [...this[key].data, ...response.data.data]
+            this[key].count = response.data.count
+            this[key].current_page = response.data.current_page
+            this[key].last_page = response.data.last_page
+            this[key].per_page = response.data.per_page
+        } catch (error) {
+            console.log(error);
+        } finally {
+            this.loading = false
+        }
+    }
+}
+
+export class HeaderEditable {
+    constructor (columns) {
+        this.id = null
+        this.slug = null
+        this.editTitle = false
+        this.name = ''
+        this.columns = columns ?? []
+        this.common = new Common()
+        this.boundCheckClick = null
+    }
+
+    // Копирование ссылки
+    copyLink() {
+        this.common.copyText(window.location.href)
+    }
+
+    // Копирование внешней ссылки
+    copyExternalLink() {
+        this.common.copyText(window.location.href)
+    }
+
+    // Редактирование заголовка
+    initEditTitle({textarea, columns, slug, id}) {
+        this.columns = columns
+        this.id = id
+        this.slug = slug
+        this.editTitle = true
+        if (!this.boundCheckClick) {
+            this.boundCheckClick = (event) => this.checkClick(event)
+        }
+        nextTick(() => {
+            textarea.focus()
+            document.addEventListener('click', this.boundCheckClick)
+        })
+    }
+
+    // Установка заголовка
+    async setTitle() {
+        this.name = this.name.replaceAll('\n', '')
+        if (this.boundCheckClick) {
+            document.removeEventListener('click', this.boundCheckClick)
+        }
+        const findedField = this.common.findColumnField(this.columns, 'name')
+        
+        if (findedField) {
+            typeof findedField.value == 'object' && findedField.value != null ? findedField.value.value = this.name : findedField.value = this.name
+        }
+        this.editTitle = false
+        await api.callMethod('PUT', routes.detail.edit_fields.replace('${slug}', this.slug), {
+            rows: [{
+                id: this.id,
+                name: findedField.value
+            }]
+        })
+    }
+
+    // Проверка клика вне заголовка при его редактировании
+    checkClick(e) {
+        const target = e.target.closest('.textarea_title') ?? e.target.closest('.icon_edit')
+
+        if (!target) {
+            this.setTitle()
+        }
+    }
+}
+
+// Колонки
+export class Columns {
+    constructor() {
+        this.list = {}
+        this.hidden = []
+    }
+
+    // Получение колонок
+    get(response) {
+        this.list = response.columns
+        this.hidden = response.hidden_fields
+    }
+}
+
+// Секции
+export class Section {
+    constructor() {
+        this.list = []
+        this.hidden = []
+        this.modal = {
+            state: false,
+            title: 'Создание раздела',
+            actionTitle: 'Создать',
+            action: 'create',
+            text: null,
+            content: {
+                name: null,
+                key: null,
+            },
+            loading: false
+        }
+        this.buffer = {
+            backup: [],
+            edits: [],
+            error: {
+                state: false,
+                errors: []
+            }
+        }
+    }
+
+    // Инициализация создания
+    initCreate(column_id) {
+        this.modal = {
+            state: true,
+            title: 'Создание раздела',
+            actionTitle: 'Создать',
+            action: 'create',
+            text: null,
+            content: {
+                name: null,
+                column_id: column_id,
+            },
+            loading: false
+        }
+    }
+
+    // Создание секции
+    async create(columns, slug) {
+        try {
+            this.modal.loading = true
+
+            const response = await api.callMethod('POST', routes.detail.create_section, {
+                name: this.modal.content.name, 
+                column_id: this.modal.content.column_id.replace('column_', ''),
+                slug: slug
+            })
+
+            const createdSection = {
+                children: response.data.children,
+                fields: [],
+                id: response.data.id,
+                is_short: false,
+                name: response.data.name
+            }
+
+            columns[this.modal.content.column_id] = [...columns[this.modal.content.column_id], createdSection]
+        } catch (error) {
+            console.log(error);
+        } finally {
+            this.modal.loading = false
+            this.modal.state = false
+        }
+    }
+
+    // Инициализация удаления секции
+    initDelete(section, column_id) {
+        this.modal = {
+            state: true,
+            title: 'Удаление поля',
+            actionTitle: 'Удалить',
+            action: 'delete',
+            text: 'Все поля раздела скроются. Удалить раздел?',
+            content: {
+                id: section.id,
+                column_id: column_id,
+                fields: section.fields
+            },
+            loading: false
+        }
+    }
+
+    // Удаление секции
+    async delete(columns) {
+        try {
+            this.modal.loading = true
+            this.hidden = [...this.hidden, ...this.modal.content.fields]
+            await this.updateHidden()
+            await api.callMethod('DELETE', routes.detail.delete_section.replace('${id}', this.modal.content.id))
+            columns[this.modal.content.column_id] = columns[this.modal.content.column_id].filter(item => item.id != this.modal.content.id)
+        } catch (error) {
+            console.log(error);
+        } finally {
+            this.modal.state = false
+            this.modal.loading = false
+        }
+    }
+
+    // Обновление настроек секции
+    async update(section, column, slug, columns) {
+        try {
+            await api.callMethod('PUT', routes.detail.update_section.replace('${id}', section.id), {
+                ...section, 
+                slug: slug
+            })
+
+            columns[column] = columns[column].map(item => item.id == section.id ? {
+                ...item,
+                is_short: section.is_short,
+                name: section.name
+            } : item)
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    // Установка скрытых полей
+    async updateHidden() {
+        await api.callMethod('POST', routes.detail.hidden_fields, {ids: this.hidden.map(p => p.id)})
+    }
+
+    // Изменение порядка секций
+    async changeOrder(request) {
+        await api.callMethod('POST', routes.detail.change_order_section, request)
+    }
+}
+
+// Поля
+export class Field {
+    constructor(section, emit) {
+        this.modal = {
+            state: false,
+            title: 'Создание раздела',
+            actionTitle: 'Создать',
+            action: 'create',
+            text: null,
+            content: {
+                name: null,
+                key: null,
+            },
+            loading: false
+        }
+        this.emit = emit
+        this.common = new Common()
+        this.section = section
+        this.dragger = null
+    }
+
+    // Закрытие модального окна
+    close() {
+        this.modal.state = false
+    }
+
+    // Инициализация редактирования
+    initCreate({section}) {
+        this.modal = {
+            state: true,
+            title: 'Создание поля',
+            actionTitle: 'Создать',
+            action: 'create',
+            content: JSON.parse(JSON.stringify({
+                section_id: section.id
+            })),
+            text: null,
+            loading: false
+        }
+    }
+
+    // Создание
+    async create({field, slug, columns}) {
+        try {
+            this.modal.loading = true
+            field.entity = slug
+            const findedSection = this.common.findColumnSection(columns, field.section_id)
+            const response = await api.callMethod('POST', routes.detail.create_field, field)
+            findedSection.fields.push(response.data)
+        } catch (error) {
+            console.log(error);
+        } finally {
+            this.modal.loading = false
+            this.modal.state = false
+        }
+    }
+
+    // Инициализация обновления
+    initUpdate({field, section}) {
+        this.modal = {
+            state: true,
+            title: 'Настройки поля',
+            actionTitle: 'Сохранить',
+            action: 'updateField',
+            content: JSON.parse(JSON.stringify({
+                ...field,
+                section_id: section.id
+            })),
+            text: null
+        }
+    }
+
+    // Обновление
+    async update({field, columns, slug}) {
+        try {
+            this.modal.loading = true
+            field.entity = slug
+            const fromSection = this.common.findColumnSection(columns, field.section_id)
+            const toSection = this.common.findColumnSection(columns, field.section_id)
+            
+            if (this.modal.content.section_id != field.section_id) {
+                fromSection.fields = fromSection.fields.filter(p => p.id != field.id)
+                toSection.fields.push(field)
+            } else {
+                const index = toSection.fields.findIndex(p => p.id == field.id)
+                if (index !== -1) toSection.fields.splice(index, 1, field)
+            }
+            
+            await api.callMethod('PUT', routes.detail.update_field.replace('${id}', field.id), field)
+        } catch (error) {
+            console.log(error);
+        } finally {
+            this.modal.loading = false
+            this.modal.state = false
+        }
+    }
+
+    // Инициализация удаления
+    initDelete({field, section}) {
+        this.modal = {
+            state: true,
+            title: 'Удаление раздела',
+            actionTitle: 'Удалить',
+            action: 'delete',
+            content: {
+                ...field,
+                section_id: section.id
+            },
+            text: `Будет удалено поле ${field.title}. Продолжить?`,
+            loading: false
+        }
+    }
+
+    // Удаление поля
+    async delete({columns}) {
+        try {
+            this.modal.loading = true
+            await api.callMethod('DELETE', routes.detail.delete_field.replace('${id}', this.modal.content.id))
+            const findedSection = this.common.findColumnSection(columns, this.modal.content.section_id)
+            const index = findedSection.fields.findIndex(p => p.id == this.modal.content.id)
+            if (index !== -1) findedSection.fields.splice(index, 1)
+        } catch (error) {
+            console.log(error);
+        } finally {
+            this.modal.loading = false
+            this.modal.state = false
+        }
+    }
+
+    // Изменение видимости поля
+    async changeVisibleAlways({field}) {
+        await api.callMethod('PUT', routes.detail.update_field.replace('${id}', field.id), field)
+    }
+
+    // Показать поле
+    async show({field, section, hidden}) {
+        field.is_hidden = false
+        section.fields.push(field)
+        const index = hidden.findIndex(p => p.id == field.id)
+        if (index !== -1) hidden.splice(index, 1)
+        await api.callMethod('PUT', routes.detail.show_field.replace('${id}', field.id), {
+            change_section: 1,
+            id: field.id,
+            section_id: section.id,
+            is_hidden: 0
+        })
+    }
+
+    // Скрыть поле
+    async hide({field, section, hidden}) {
+        field.is_hidden = true
+        hidden.push(field)
+        const index = section.fields.findIndex(p => p.id == field.id)
+        if (index !== -1) section.fields.splice(index, 1)
+        await api.callMethod('POST', routes.detail.hidden_fields, {ids: hidden.map(p => p.id)})
+    }
+
+    // Проверка видимости
+    checkVisible(field) {
+        if (field.visible_always) {
+            return false
+        } else {
+            if (field.type == 'select_dropdown') {
+                return !(this.getSelectValue.value != null && this.getSelectValue.value.length > 0)
+            } else {
+                const value = this.setFieldValue.value
+                if (typeof value == 'string') {
+                    return !(value != null && value != '')
+                } else if (value == null) {
+                    return true
+                } else if (Array.isArray(value)) {
+                    return !(value.filter(v => v != null && v != '').length > 0)
+                } else if (typeof value == 'object') {
+                    if (value.value) {
+                        return !(value.value.value ? value.value.value.filter(p => p).length > 0 : value.value.filter(p => p).length > 0)
+                    }
+                    return !(value.value && value.value.value != null && value.value.value.length > 0)
+                }
+                return false
+            }
+        }
+    }
+
+    // Установка значения для поля
+    setFieldValue(field, slug = 'value') {
+        const response = computed({
+            get() {
+                console.log('121212');
+                
+                if (!field) return null 
+
+                if (field.type == 'address') {
+                    return field
+                } else if (Array.isArray(field)) {
+                    return field
+                } else if (field.type == 'relation') {
+                    return field ?? null
+                } else {
+                    return typeof field === 'object' && field !== null ? field.value : field
+                }
+            },
+            set(val) {
+                if (field.type == 'address') {
+                    field = val
+                }  else if (field.type == 'relation') {
+                    field = val
+                }
+                    else if (field !== null && typeof field.value === 'object') {
+                    if (field.value) {
+                        field.value = val
+                    } else {
+                        field = val
+                    }
+                } else {
+                    field = val
+                }
+            }
+        })
+        return response
+    }
+    
+    // Получение значений для выпадающих списков (с кэшем)
+    getSelectValue(field) {
+        const response = computed({
+            get() {
+                // Проверяем что строка существует
+                if (!field.value) return null
+                
+                let response = null
+                if (Array.isArray(field.value)) response = field.options.filter(option => field.value.includes(option.value)).map(option => option.label)
+                else if (typeof field.value == 'object' && field.value !== null) response = field.options.filter(option => option.value == field.value).map(option => option.label)
+                else response = field.options.filter(option => option.value == field.value).map(option => option.label)
+            
+                if (field.type == 'select_dropdown') {
+                    return response.join(', ')
+                } 
+                return response
+            }
+        })
+        return response
+    }
+    
+    // Инициализация изменения поля
+    initChangeField(field, target, type = 'target') {
+        if (!field.can_edit) return 
+
+        if (type == 'target') {
+            if (target.closest('.icon_drag') || target.closest('.field__settings') || target.closest('.blank__title')) return
+    
+            if (['text', 'number', 'date', 'select_dropdown'].includes(field.type)) {
+                if (field.edit || 
+                    target.classList.contains('blank__link') || 
+                    (
+                        target.classList.contains('blank__text') && 
+                        !target.classList.contains('blank__text_empty')
+                    )
+                ) return
+            } else if (field.type == 'relation') {
+                if (field.edit || (target.classList.contains('value__text_link') || target.classList.contains('select__value-img'))) return
+            } else if (field.type == 'status') {
+                if (field.edit) return
+            } else if (field.type == 'file') {
+                if (field.edit || (!target.classList.contains('file'))) return
+            }   
+        }
+
+        this.section.buffer.backup.push(JSON.parse(JSON.stringify(field)))
+        field.edit = true
+    }
+
+    // Начало перетаскивания поля
+    dragStart(event) {
+        this.dragger = event.target.closest('.column-fields')
+
+        if (this.dragger) {
+            this.dragger.classList.add('column-fields_dragging-field')
+        }
+    }
+
+    // Конец перетаскивания поля
+    async dragEnd(event) {
+        if (this.dragger) {
+            this.dragger.classList.remove('column-fields_dragging-field')
+            this.dragger = null
+        }
+
+        // await api.callMethod('POST', routes.detail.change_order_field, {
+        //     id: event.item._underlying_vm_.id,
+        //     section_id: event.to.__draggable_component__.itemKey,
+        //     fields: event.to.__draggable_component__.modelValue.map((p, index) => {
+        //         return {
+        //             id: p.id,
+        //             sort: index
+        //         }
+        //     })
+        // })
     }
 }

@@ -124,6 +124,13 @@ html {
     gap: 100px;
     align-items: center;
     margin-bottom: 25px;
+
+    &.page__header_table {
+        h1 {
+            width: 100%;
+            max-width: 250px;
+        }
+    }
 }
 
 .container {

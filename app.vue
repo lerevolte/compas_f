@@ -1,7 +1,7 @@
 <template>
   <div class="wrapper">
-      <div class="page" :class="{ 'page_auth': router.path.includes('/auth') }">
-        <AppMenu v-if="!router.path.includes('/auth')"/>
+      <div class="page" :class="{ 'page_auth': getRoute }">
+        <AppMenu v-if="!getRoute"/>
         <NuxtPage 
           :entity="entity"
           :slug="router.params.slug"
@@ -91,6 +91,10 @@
       })
     }
   }
+
+  const getRoute = computed(() => {
+    return router.path.includes('/auth')
+  })
 
   const entity = ref(new Entity())
 </script>

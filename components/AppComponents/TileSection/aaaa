@@ -1,0 +1,179 @@
+<!-- <div 
+                    class="group-field" 
+                    :class="{ 
+                        'group-field_hidden': !field.edit && fieldObject.checkVisible(field),
+                        'group-field_static': !field.can_edit,
+                        'blank_required': field.required
+                    }"
+                    @click="e => fieldObject.initChangeField(e.target, field)"
+                >
+                    <IconDrag 
+                        class="icon_drag-field"
+                    />
+
+
+                    <AppStatus 
+                        v-if="field.type == 'status'"
+                        :parentContainer="sectionRef"
+                        :options="{
+                            ...field,
+                            edit: field.edit,
+                            list: field.options,
+                            isHaveNull: false
+                        }"
+                        v-model="fieldObject.setFieldValue(field).value"
+                    />
+
+                    <AppFile 
+                        v-else-if="field.type == 'file'"
+                        :error="field.error"
+                        :options="{
+                            ...field,
+                            multiple: true,
+                            edit: field.edit,
+                            isDraggable: true,
+                            query: {
+                                field_id: field.id,
+                                page_id: props.pageId ?? null
+                            }
+                        }"
+                        v-model="field.value"
+                        @update:model-value="fieldObject.initChangeFieldOption(field)"
+                    />
+
+                    <AppRelation  
+                        v-else-if="field.type == 'relation'"
+                        :parentContainer="sectionRef"
+                        :error="field.error"
+                        :options="{
+                            id: field.id,
+                            title: field.title,
+                            edit: field.edit ?? false,
+                            type: field.type,
+                            list: field.options.filter(p => p),
+                            name: field.key,
+                            relation: field.id,
+                            searchable: true,
+                            required: false,
+                            isHaveNull: true,
+                            isSetDefault: true,
+                            multiple: field.is_plural,
+                            placeholder: '' 
+                        }"
+                        v-model="field.value"
+                        @clickLink="id => emit('action', {
+                            action: 'openModal', 
+                            value: {
+                                id, 
+                                slug: field.related_table
+                            }
+                        })"
+                        @create="item => emit('action', {
+                            action: 'createEntity', 
+                            value: {
+                                item, 
+                                slug: field.related_table
+                            }
+                        })"
+                    />
+
+                    <template v-if="field.edit">
+                        <AppDate 
+                            v-if="field.type == 'date'"
+                            :options="field"
+                            :error="field.error"
+                            v-model="field.value"
+                        />
+                        <AppTextarea 
+                            v-else-if="field.type == 'text' && field.is_plural"
+                            :options="field"
+                            :error="field.error"
+                            v-model="field.value"
+                        />
+
+                        <div class="section__field-group" v-else-if="field.type == 'text'">
+                            <AppInput 
+                                :options="field"
+                                :error="field.error"
+                                v-model="fieldObject.setFieldValue(field, 'value').value"
+                            />
+                            <AppInput 
+                                v-if="field.is_external_link"
+                                :options="{
+                                    id: `${field.id}_external_link`,
+                                    title: 'Внешняя ссылка',
+                                    type: 'text',
+                                    name: 'external_link'
+                                }"
+                                v-model="field.value.external_link"
+                            />
+                        </div>
+
+                        <AppInput 
+                            v-else-if="['number', 'password'].includes(field.type)"
+                            :options="field"
+                            :error="field.error"
+                            v-model="field.value"
+                        />
+
+                        <AppSelect 
+                            v-else-if="field.type == 'select_dropdown'"
+                            :error="field.error"
+                            :options="{
+                                ...field,
+                                list: field.options,
+                                multiple: field.is_plural
+                            }"
+                            v-model="field.value"
+                        />
+                    </template>
+                    <template v-else>
+                        <AppBlank 
+                            v-if="field.type == 'date'"
+                            :options="{
+                                isCheckEmpty: true
+                            }"
+                            :item="{
+                                title: field.title,
+                                text: field.value ? format(field.value, 'dd.MM.yyyy') : null
+                            }"
+                        />
+
+                        <AppBlank 
+                            v-else-if="['text', 'number'].includes(field.type)"
+                            :options="{
+                                isCheckEmpty: true,
+                                isLink: field.is_external_link
+                            }"
+                            :item="{
+                                title: field.title,
+                                link: field.is_external_link ? field.value.external_link ?? null : null,
+                                text: field.is_external_link ? field.value.value ?? field.value : field.value
+                            }"
+                        />
+
+                        <AppBlank 
+                            v-else-if="field.type == 'password'"
+                            :options="{
+                                isCheckEmpty: false,
+                                isLink: false
+                            }"
+                            :item="{
+                                title: field.title,
+                                text: '••••••••••'
+                            }"
+                        />
+
+                        <AppBlank 
+                            v-else-if="field.type == 'select_dropdown'"
+                            :options="{
+                                isCheckEmpty: true
+                            }"
+                            :item="{
+                                title: field.title,
+                                text: fieldObject.getSelectValue(field).value
+                            }"
+                        />
+                    </template>
+                </div> -->
+           

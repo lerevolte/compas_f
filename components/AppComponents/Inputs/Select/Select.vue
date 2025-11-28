@@ -156,7 +156,7 @@
                 }
             } else {
                 this.toggleOptions()
-                emit('update:modelValue', String(option.value))
+                emit('update:modelValue', props.options.type == 'address' ? option.value : String(option.value))
             }
         }
 
