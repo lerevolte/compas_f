@@ -326,4 +326,7 @@
         fileManager.value.get()
     })
 
+    watch(() => props.modelValue, () => {
+        fileManager.value.get()
+    })
 </script>

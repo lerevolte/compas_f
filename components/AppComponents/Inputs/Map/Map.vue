@@ -23,6 +23,12 @@
             }"
         />
 
+        <AppButton 
+            v-show="props.modelValue && props.modelValue.text" 
+            class="button_text button_copy" 
+            @click="event => copyText(props.modelValue?.text, event.target)"
+        />
+
         <MapFrame 
             :points="[props.modelValue?.coords]"
             :options="{
@@ -37,7 +43,11 @@
 
     import AppSelect from '@AppComponents/Inputs/Select/Select.vue';
     import AppBlank from '@AppComponents/Blank/Blank.vue';
+    import AppButton from '@AppComponents/Button/Button.vue';
     import MapFrame from './Frame.vue'
+    import { Common } from '@/helpers/classes.js'
+
+    const common = new Common()
 
     const emit = defineEmits([
         'update:modelValue',
@@ -83,4 +93,14 @@
         get: () => props.modelValue,
         set: (val) => emit('update:modelValue', val)
     })
+
+    const copyText = (value, buttonRef) => {
+        buttonRef.classList.add('button_copy_active')
+        common.copyText(value)
+
+        setTimeout(() => {
+            buttonRef.classList.remove('button_copy_active')
+        }, 3000);
+    } 
+
 </script>

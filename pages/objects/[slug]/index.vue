@@ -2,7 +2,7 @@
     <main>
 		<div class="page__header">
 			<AppH1 id="mobile-menu-target">
-				{{ props.entity.active?.title }}
+				{{ metaJSON[props.slug]?.title }}
 			</AppH1>
 
 			<div id="filter-container"></div>
@@ -18,7 +18,8 @@
 		</div>
 
 		<AppVirtualTable 
-			:slug="props.slug"
+			:slug="router.params.slug"
+			:key="router.path"
 			@openModal="item => emit('openModal', item)"
 		/>
     </main>
@@ -36,6 +37,8 @@
 	const emit = defineEmits([
 		'openModal'
 	])
+
+	const router = useRoute()
 
 	const props = defineProps({
 		entity: {

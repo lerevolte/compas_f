@@ -310,7 +310,4 @@
 
     const field = ref(new Field(props.field, props.sectionClass, emit))
 
-    const logLocale = computed(() => {
-        console.log('asdasdasd');
-    })
 </script>

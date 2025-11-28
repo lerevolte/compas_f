@@ -101,6 +101,20 @@
                 })"
             />
         </teleport>
+
+        <div class="detail__actions">
+            <MassAction 
+                :isChoosed="section.buffer.backup.length > 0"
+                :actions="{
+                    save: section.buffer.backup.length > 0,
+                    edit: false,
+                    cancel: true,
+                    delete: false
+                }"
+                :loading="section.buffer.loading"
+                @action="action => section[action.action](action.value, columns.list, pageId, props.slug, emit)"
+            />
+        </div>
     </div>
 </template>
 
@@ -114,6 +128,7 @@
     import FieldModal from '@AppComponents/GroupField/Modal/Modal.vue'
     import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'
     import AppTileSection from '@AppComponents/TileSection/TileSection.vue';
+    import MassAction from '@AppComponents/MassAction/MassAction.vue'
 
     import AppInput from '@AppComponents/Inputs/Input/Input.vue';
 
@@ -166,6 +181,10 @@
                 fields: []
             },
             type: Object
+        },
+        headerName: {
+            default: '',
+            type: String
         }
     })
 
@@ -204,25 +223,9 @@
 
         // Получение колонок
         get() {
-            console.log('asd');
-            
             this.list = JSON.parse(JSON.stringify(props.columns))
             section.value.hidden = props.hidden 
         }
-
-        changeOrder(fields, column_id, section) {
-            console.log(section);
-            this.list[column_id].find(item => item.id == section.id).fields = fields
-        }
-
-
-
-
-
-
-
-
-
 
         // Открытие модалки
         openModal(item) {
@@ -232,22 +235,6 @@
         // Создание сущности
         createEntity(item) {
             emit('createEntity', item)
-        }
-
-        // Отмена редактирования секции
-        cancelSection(fields = []) {
-            emit('action', {
-                action: 'cancelSection',
-                value: fields
-            })
-        }
-
-        // Проверка валидности секции
-        getSectionValidate(response) {
-            emit('action', {
-                action: 'getSectionValidate',
-                value: response
-            })
         }
     }
 
@@ -290,12 +277,10 @@
     const field = ref(new Field())
     
     onMounted(() => {
-        console.log('asdasd');
-        
         columns.value.get()
     })
 
-    // watch(props.columns, () => {
-    //     columns.value.get()
-    // })
+    watch(() => props.columns, () => {
+        columns.value.get()
+    })
 </script>

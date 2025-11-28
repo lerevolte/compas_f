@@ -131,7 +131,9 @@
     })
 
   onMounted(async () => {
-    initTable()
+    nextTick(() => {
+      initTable()
+    })
   })
 
   const initTable = async () => {
@@ -157,9 +159,4 @@
   provide('filter', table.value.filter)
   provide('tableRef', tableRef)
   provide('sectionRef', sectionRef)
-  
-
-  watch(() => props.slug, () => {
-    initTable()
-  })
 </script>

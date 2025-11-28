@@ -41,7 +41,7 @@
                     </figure>
 
                     <span class="value__text">
-                        {{ option.label.text ? option.label.text : option.label }} 
+                        {{ option.label?.text }} 
                     </span>
                 </div>
             </div>

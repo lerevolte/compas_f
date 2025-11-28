@@ -22,6 +22,34 @@
                 </AppH3>
                 <IconEdit v-show="!section.editTitle" @click="section.initEditTitle()"/>
             </div>
+
+            <div class="tile-section__actions" v-if="!props.options.isGlobalEdit">
+                <AppButton class="button_text" v-if="section.fields.find(item => item.edit)" @click="fieldObject.section.cancelEditAll(props.section)">
+                    Отмена
+                </AppButton>
+                <AppButton class="button_text"  v-else @click="fieldObject.section.editAll(props.section)">
+                    Изменить
+                </AppButton>
+                <AppPopup :isPreventBottom="true">
+                    <template #header>
+                        <IconSettings />
+                    </template>
+                    <template #content>
+                        <div class="popup__option popup__option_checkbox">
+                            <AppCheckbox 
+                                v-model="section.is_short"
+                                :options="{
+                                    title: 'Свернуть'
+                                }"
+                                @update:model-value="section.hideSection()"
+                            />
+                        </div>
+                        <div class="popup__option popup__option_red" @click="emit('actionSection', {action: 'initDelete', value: section})">
+                            Удалить
+                        </div>
+                    </template>
+                </AppPopup>
+            </div>
         </div>
 
         <draggable
@@ -38,10 +66,6 @@
             fallback-class="draggable-fallback"
             @start="event => fieldObject.dragStart(event)"
             @end="event => fieldObject.dragEnd(event)"
-            @change="emit('action', {
-                action: 'changeOrder',
-                value: section.fields
-            })"
         >
             <template #item="{ element: field }">
                 <div 
@@ -56,7 +80,6 @@
                     <IconDrag 
                         class="icon_drag-field"
                     />
-
 
                     <AppStatus 
                         v-if="field.type == 'status'"
@@ -84,7 +107,7 @@
                             }
                         }"
                         v-model="field.value"
-                        @update:model-value="fieldObject.initChangeFieldOption(field)"
+                        @update:model-value="fieldObject.initChangeField(field, null, 'option')"
                     />
 
                     <AppRelation  
@@ -158,7 +181,7 @@
                                     type: 'text',
                                     name: 'external_link'
                                 }"
-                                v-model="field.value.external_link"
+                                v-model="fieldObject.setFieldValue(field, 'external_link').value"
                             />
                         </div>
 
@@ -228,6 +251,61 @@
                             }"
                         />
                     </template>
+
+                    <AppPopup class="field__settings" :isPreventBottom="true">
+                        <template #header>
+                            <IconSettings />
+                        </template>
+                        <template #content>
+                            <div class="popup__option" v-show="field.can_edit && !field.edit" @click="(e) => fieldObject.initChangeField(field, null, 'option')">
+                                Изменить
+                            </div>
+                            <div 
+                                class="popup__option" 
+                                @click="emit('actionField', {
+                                    action: 'initUpdate',
+                                    value: field
+                                })"
+                            >
+                                Настроить
+                            </div>
+                            <div class="popup__option popup__option_checkbox" v-if="field.type != 'text_group'">
+                                <AppCheckbox 
+                                    v-model="field.visible_always"
+                                    :options="{
+                                        title: 'Показывать всегда'
+                                    }"
+                                    @update:model-value="() => emit('actionField', {
+                                        action: 'update',
+                                        value: {
+                                            ...field,
+                                            section_id: props.section.id,
+                                        }
+                                    })"
+                                />
+                            </div>
+                            <div 
+                                class="popup__option" 
+                                v-show="field.type != 'text_group'" 
+                                @click="emit('actionField', {
+                                    action: 'hide',
+                                    value: field
+                                })"
+                            >
+                                Скрыть
+                            </div>
+                           <div 
+                                class="popup__option popup__option_red" 
+                                v-show="!field.is_permanent" 
+                                @click="emit('actionField', {
+                                    action: 'initDelete',
+                                    value: field
+                                })"
+                            >
+                                Удалить
+                            </div>
+                        </template>
+                    </AppPopup>
                 </div>
             </template>
         </draggable> 
@@ -279,7 +357,7 @@
     
     import AppTextarea from '@AppComponents/Inputs/Textarea/Textarea.vue';
     import AppCheckbox from '@AppComponents/Inputs/Checkbox/Checkbox.vue'
-    import { Validator, Field } from '@AppHelpers/classes.js'
+    import { Field } from '@AppHelpers/classes.js'
 
     import { format } from 'date-fns'
     import IconDrag from '@AppIcons/Actions/Drag.vue'
@@ -361,7 +439,6 @@
             this.isLocalShort = 0
             this.editTitle = false
             this.fields = computed(() => props.section.fields)
-            this.validator = new Validator()
         }
 
         // Получение секции
@@ -401,7 +478,7 @@
 
         // Обновление секции
         hideSection() {
-            this.isLocalShort = this.is_short
+            this.setLocalShort(this.is_short)
             emit('actionSection', {action: 'update', value: {
                 name: this.name,
                 is_short: this.is_short ?? false,
@@ -412,25 +489,6 @@
         // Установка локального состояния
         setLocalShort(state) {
             this.isLocalShort = state
-        }
-
-        // Проверка полей
-        checkFields() {
-            const fields = section.value.fields.list.filter(field => field.edit)
-            section.value.validator.check(fields)
-
-            for (let field of this.list) {
-                field.error = {
-                    state: section.value.validator.errors[field.key] ?? false,
-                    text: section.value.validator.errors[field.key] ?? null
-                }
-            }
-
-            emit('action', {action: 'getSectionValidate', value: {
-                section_id: section.value.id,
-                fields: fields,
-                state: section.value.validator.state
-            }})
         }
     }
 

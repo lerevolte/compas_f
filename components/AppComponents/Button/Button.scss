@@ -92,4 +92,26 @@ button {
             text-decoration: none;
         }
     }
+
+    &.button_copy {
+        white-space: nowrap;
+        color: variables.$color-icon;
+        text-decoration: none;
+        justify-content: start;
+        font-weight: 400;
+  
+        &::after {
+          content: 'Скопировать адрес'
+        }
+  
+        &.button_copy_active {
+          &::after {
+            content: 'Скопировано'
+          }
+        }
+  
+        &:hover {
+          color: variables.$color-link;
+        }
+      }
 }

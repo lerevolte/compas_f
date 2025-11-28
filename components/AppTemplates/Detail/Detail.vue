@@ -61,6 +61,7 @@
                 isGlobalEdit: props.isGlobalEdit
             }"
             :updateComponent="detail.updateComponent"
+            :headerName="detail.header.name"
             @action="item => detail[item.action](item.value)"
         />
     </div>
@@ -68,8 +69,6 @@
 
 <script setup>
     import './Detail.scss'
-    import api from '@/helpers/api.js'
-    import routes from '@/helpers/routes.js'
     import { Common, HeaderEditable } from '@/helpers/classes.js'
     import IconEdit from '@AppIcons/Actions/Edit.vue';
     import AppTabs from '@AppComponents/Tabs/Tabs.vue';
@@ -122,6 +121,7 @@
 
         // Установка активного таба
         set({tab, is_module}) {
+            console.log(tab);
             if (is_module) {
                 this.active = tab  
                 detail.value.updateComponent++
@@ -182,122 +182,6 @@
         // Обновление метаданных страницы
         updateMetaHeader(meta) {
             emit('updateMetaHeader', meta)
-        }
-    }
-
-    // Колонки
-    class Columns {
-        constructor() {
-            this.edit = {
-                action: 'cancel',
-                loading: false,
-                state: false,
-                backups: [],
-                fields: [],
-                errorSections: {
-                    state: false,
-                    sections: {}
-                }
-            }
-
-            this.saveFields = debounce(this.saveFields.bind(this), 100)
-        }
-
-        // Отмена редактирования определенной секции
-        cancelSection(fields) {
-            this.edit.backups = this.edit.backups.filter(item => fields.findIndex(field => field.id == item.id) == -1)
-
-            if (this.edit.backups.length == 0) {
-                this.setSavedFields()
-            }
-        }
-
-        // Отмена редактирования полей
-        cancel() {
-            this.setSavedFields()
-        }
-
-        // Инициализация сохранения полей
-        save() {
-            this.edit.action = null
-            nextTick(() => {
-                this.edit.action = 'save'
-                this.edit.errorSections.state = false
-            })
-        }
-
-        // Сохранение полей
-        async saveFields(updateTitle = true) {
-            try {
-                console.log(tabs.value.is_module);
-                if (this.edit.errorSections.state) return
-                this.edit.loading = true
-
-                let request = Object.assign({}, ...this.edit.fields.map(field => {
-                    return {
-                        [field.key]: field.type == 'relation' ? field.value?.value : field.value
-                    }
-                }))
-
-                await api.callMethod('POST', routes.detail.edit_fields.replace('${slug}', detail.value.slug), {
-                    rows: [{
-                        ...request,
-                        id: tabs.value.is_module ? module.value.id : detail.value.id
-                    }]
-                })
-
-                if (updateTitle) {
-                    const findedField = this.edit.fields.find(item => item.key == 'name')
-                    
-                    if (findedField) {
-                        detail.value.header.name = typeof findedField.value == 'object' && findedField.value != null ? findedField.value.value : findedField.value
-                    }
-                }
-            } catch (error) {
-                console.log(error);
-            } finally {
-                this.setSavedFields(true)
-                this.edit.loading = false
-            }
-        }
-
-        // Проверка валидности секции
-        getSectionValidate(response) {
-            if (response.state) {
-                this.edit.errorSections.state = true
-            }
-            this.saveFields()
-        }
-
-        // Обновление сохраняемых полей
-        setSavedFields(isUpdate = false) {
-            if (isUpdate) {
-                let findedField = null
-                
-                for (let column in this.list) {
-                    for (let section of this.list[column]) {
-                        for (let field of section.fields) {
-                            field.edit = false
-                            findedField = this.edit.fields.find(item => item.id == field.id)
-                            if (findedField) {
-                                field.value = findedField.value
-                            }
-                        }
-                    }
-                }
-            }
-
-            this.edit = {
-                action: 'cancel',
-                loading: false,
-                state: false,
-                backups: [],
-                fields: [],
-                errorSections: {
-                    state: false,
-                    sections: {}
-                }
-            }
         }
     }
 

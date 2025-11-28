@@ -32,6 +32,8 @@
     display: flex;
     flex-direction: column;
     gap: 25px;
+    position: relative;
+    z-index: 1;
 
     &:last-child {
         .popup {

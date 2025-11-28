@@ -46,12 +46,6 @@ export default {
         reset_tabs: '/entities/${slug}/menu/reset',
 
     },
-    tabs: {
-        save: '/entities/${slug}/menu',
-        update: '/tabs/${slug}/permissions',
-        reset: '/entities/${slug}/menu/reset',
-    },
-
     detail: {
         get: '/objects/${slug}/${id}/compose',
         update_title: '/objects/${slug}/batch',

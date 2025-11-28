@@ -12,7 +12,7 @@
                             {{ tab.title }}
                         </template>
                         <template #content>
-                            <div class="popup__option" v-for="child in tab.childs" @click="emit('action', { action: 'set', value: { tab: child.alias, is_module: true} })">
+                            <div class="popup__option" v-for="child in tab.childs" @click="emit('action', { action: 'set', value: { tab: {...child, tab: child.alias}, is_module: true} })">
                                 {{ child.title }}
                             </div> 
                         </template>

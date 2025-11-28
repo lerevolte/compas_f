@@ -4,7 +4,6 @@
       <figure
         class="scroll-button"
         :class="{ 'scroll-button_disabled': isAtStart }"
-        @mouseover="() => {console.log('asdasdasdasd')}"
         @mousedown.prevent="buttonScroll.start('left')"
         @touchstart.prevent="buttonScroll.start('left')"
         @mouseleave="buttonScroll.stop"

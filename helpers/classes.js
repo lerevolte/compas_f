@@ -636,7 +636,7 @@ export class Table {
     copy(row) {
         this.emit('openModal', {
             ...row,
-            slug: row.related_table,
+            slug: this.slug,
             type: 'copy',
         })
     }
@@ -1138,13 +1138,11 @@ export class Section {
             loading: false
         }
         this.buffer = {
+            loading: false,
             backup: [],
-            edits: [],
-            error: {
-                state: false,
-                errors: []
-            }
+            edits: []
         }
+        this.validator = new Validator()
     }
 
     // Инициализация создания
@@ -1250,6 +1248,105 @@ export class Section {
     // Изменение порядка секций
     async changeOrder(request) {
         await api.callMethod('POST', routes.detail.change_order_section, request)
+    }
+
+    // Редактирование полей в секции
+    editAll(section) {
+        for (let field of section.fields) {
+            if (!field.edit) {
+                this.section.buffer.backup.push(JSON.parse(JSON.stringify(field)))
+                field.edit = true
+            }
+        }
+    }
+
+    // Отмена редактирования полей в секции
+    cancelEditAll(section) {
+        let findedField = null
+        
+        for (let field of section.fields) {
+            findedField = this.buffer.backup.find(f => f.id == field.id)
+            
+            if (findedField) {
+                field.value = findedField.value
+                field.edit = false
+                this.buffer.backup = this.buffer.backup.filter(f => f.id != field.id)
+            }
+        }
+    }
+
+    // Массовое отменение изменения значений во всех секциях
+    cancel(value, columns) {
+        for (let column in columns) {
+            for (let section of columns[column]) {
+                this.cancelEditAll(section)
+            }
+        }
+    }
+
+    // Сохранение изменений
+    async save(value, columns, pageId, slug, emit) {
+        let isError = false
+        let fields = []
+        this.buffer.edits = []
+        
+        for (let column in columns) {
+            for (let section of columns[column]) {
+                fields = section.fields.filter(field => field.edit)
+                this.validator.check(fields)
+                isError = isError ? isError : Object.keys(this.validator.errors).length > 0
+                this.buffer.edits = [...this.buffer.edits, ...fields]
+                
+                for (let field of fields) {
+                    field.error = {
+                        state: this.validator.errors[field.key] ?? false,
+                        text: this.validator.errors[field.key] ?? null
+                    }
+                }
+            }
+        }
+
+
+        if (isError) return
+
+        try {
+            this.buffer.loading = true
+            const request = {
+                id: pageId,
+                ...this.buffer.edits.reduce((obj, field) => {
+                    obj[field.key] = field.value
+                    return obj
+                }, {})
+            }
+
+            if (request.name) {
+                emit('action', {
+                    action: 'getTitle',
+                    value: typeof request.name == 'object' ? request.name.value : request.name
+                })
+            }
+
+            await api.callMethod('POST', routes.detail.edit_fields.replaceAll('${slug}', slug), {
+                rows: [
+                    request
+                ]
+            })
+    
+            for (let column in columns) {
+                for (let section of columns[column]) {
+                    for (let field of section.fields) {
+                        if (field.edit) {
+                            field.edit = false
+                            this.buffer.backup = this.buffer.backup.filter(f => f.id != field.id)
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.log(error);
+        } finally {
+            this.buffer.loading = false
+        }
     }
 }
 
@@ -1416,9 +1513,9 @@ export class Field {
             return false
         } else {
             if (field.type == 'select_dropdown') {
-                return !(this.getSelectValue.value != null && this.getSelectValue.value.length > 0)
+                return !(this.getSelectValue(field).value != null && this.getSelectValue(field).value.length > 0)
             } else {
-                const value = this.setFieldValue.value
+                const value = this.setFieldValue(field).value
                 if (typeof value == 'string') {
                     return !(value != null && value != '')
                 } else if (value == null) {
@@ -1440,8 +1537,6 @@ export class Field {
     setFieldValue(field, slug = 'value') {
         const response = computed({
             get() {
-                console.log('121212');
-                
                 if (!field) return null 
 
                 if (field.type == 'address') {
@@ -1450,8 +1545,10 @@ export class Field {
                     return field
                 } else if (field.type == 'relation') {
                     return field ?? null
+                } else if (field.type == 'status') {
+                    return field.value
                 } else {
-                    return typeof field === 'object' && field !== null ? field.value : field
+                    return typeof field.value === 'object' && field.value !== null ? field.value[slug] : field.value
                 }
             },
             set(val) {
@@ -1459,13 +1556,13 @@ export class Field {
                     field = val
                 }  else if (field.type == 'relation') {
                     field = val
-                }
-                    else if (field !== null && typeof field.value === 'object') {
-                    if (field.value) {
-                        field.value = val
-                    } else {
-                        field = val
-                    }
+                }  else if (field.type == 'status') {
+                    field.value = val
+                } else if (field.value !== null && typeof field.value === 'object') {
+                    field.value[slug] = val
+                } else if (field.type == 'text') {
+                    field.value = {}
+                    field.value[slug] = val
                 } else {
                     field = val
                 }
@@ -1516,7 +1613,9 @@ export class Field {
                 if (field.edit) return
             } else if (field.type == 'file') {
                 if (field.edit || (!target.classList.contains('file'))) return
-            }   
+            } else if (field.type == 'address') {
+                if (field.edit || (target.classList.contains('blank__text') || target.classList.contains('button_copy') || target.classList.contains('map__frame-map'))) return
+            }
         }
 
         this.section.buffer.backup.push(JSON.parse(JSON.stringify(field)))
@@ -1539,15 +1638,15 @@ export class Field {
             this.dragger = null
         }
 
-        // await api.callMethod('POST', routes.detail.change_order_field, {
-        //     id: event.item._underlying_vm_.id,
-        //     section_id: event.to.__draggable_component__.itemKey,
-        //     fields: event.to.__draggable_component__.modelValue.map((p, index) => {
-        //         return {
-        //             id: p.id,
-        //             sort: index
-        //         }
-        //     })
-        // })
+        await api.callMethod('POST', routes.detail.change_order_field, {
+            id: event.item._underlying_vm_.id,
+            section_id: event.to.__draggable_component__.itemKey,
+            fields: event.to.__draggable_component__.modelValue.map((field, index) => {
+                return {
+                    id: field.id,
+                    sort: index
+                }
+            })
+        })
     }
 }
