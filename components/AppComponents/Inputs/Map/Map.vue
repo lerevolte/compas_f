@@ -22,6 +22,13 @@
                 isCheckEmpty: true
             }"
         />
+
+        <MapFrame 
+            :points="[props.modelValue?.coords]"
+            :options="{
+                defaultZoom: 17
+            }"
+        />
     </div>
 </template>
 
@@ -30,6 +37,7 @@
 
     import AppSelect from '@AppComponents/Inputs/Select/Select.vue';
     import AppBlank from '@AppComponents/Blank/Blank.vue';
+    import MapFrame from './Frame.vue'
 
     const emit = defineEmits([
         'update:modelValue',
