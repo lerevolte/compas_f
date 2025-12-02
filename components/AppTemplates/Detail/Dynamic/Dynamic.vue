@@ -16,7 +16,7 @@
         }"
         :pageId="props.id"
         :headerName="props.headerName"
-        @action="action => emit('action', action)"
+        @action="action => action.action == 'get' ? detail.get() : emit('action', action)"
         @showMoreHistory="page => detail.history.update(page, props.tabs.active?.tab)"
         @openModal="item => emit('action', {
             action: 'openModal',

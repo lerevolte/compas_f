@@ -26,6 +26,18 @@
             }
         }
     }
+
+    @media (max-width: 1300px) {
+        grid-template-columns: 1fr;
+
+        .detail__actions {
+            grid-column: 1/2;
+        }
+
+        .history {
+            max-width: none;
+        }
+    }
 }
 
 .column-fields__column {
@@ -34,6 +46,10 @@
     gap: 25px;
     position: relative;
     z-index: 1;
+
+    &:first-child {
+        z-index: 2;
+    }
 
     &:last-child {
         .popup {

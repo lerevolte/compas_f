@@ -195,6 +195,7 @@
             try {
                 const response = await api.callMethod('GET', routes.tabs.reset.replace('${slug}', props.slug))
                 this.list = response.data  
+                this.isChanged = true
             } catch (error) {
                 console.log(error);
             } 
@@ -221,7 +222,7 @@
                 }
                 this.modal.loading = true
 
-                const route = routes.tabs.update.replace('${slug}', props.slug)
+                const route = routes.tabs.settings.replace('${slug}', props.slug)
                 await api.callMethod('PUT', route, {menu: this.list.map(item => item.tab == this.modal.content.tab ? {...item, ...this.modal.content} : item)})
             } catch (error) {
                 console.log(error);
@@ -241,7 +242,7 @@
         // Сохранение
         async save(role) {
             this.isChanged = false
-            const route = routes.tabs.save.replace('${slug}', props.slug)
+            const route = routes.tabs.update.replace('${slug}', props.slug)
             await api.callMethod('PUT', role ? `${route}${role == 'all' ? '/all' : '/role/' + role}` : route, {menu: this.list})
         }
     }

@@ -1,14 +1,13 @@
 <template>
   <section class="section-table" ref="sectionRef">
-    <TableTop />
-
-    <div ref="tableRef" class="table">
+    <TableTop v-if="props.options?.isHaveTopHeader" />
+    <div ref="tableRef" class="table" :class="{'table_permanent-edit': props.options.isPermanentEdit}">
       <TableHeader />
       <TableBody />
       <IconLoader v-if="table.loading"/>
       <ScrollButtons />
     </div>
-    <TableFooter />
+    <TableFooter v-if="props.options?.isHaveFooter" />
   </section>
 
   <teleport to="#mass-action-container" v-if="isClient">
@@ -25,7 +24,6 @@
       @action="action => table[action.action](action.value)"
     />
   </teleport>
-
   <teleport to="#menu__overlay" v-if="table.deleteBuffer.state && table.deleteBuffer.type == 'вудуеу'">
       <AppModalWarning 
           :options="{
@@ -82,7 +80,6 @@
       :filter="table.filter"
     />
   </teleport>
-
 </template>
 
 <script setup>
@@ -104,12 +101,20 @@
           default: '',
           type: String
       },
+      path: {
+          default: '',
+          type: String
+      },
       options: {
         default: {
           isHaveQuery: false,
           query: {},
           isHaveFilter: true,
-          isTrash: false
+          isPermanentEdit: false,
+          isTrash: false,
+          isHaveTopHeader: true,
+          isHaveFooter: true,
+          updatingCount: 0
         },
         type: Object
       }
@@ -123,7 +128,7 @@
   const tableRef = ref(null)
   const sectionRef = ref(null)
 
-  const table = ref(new Table(tableRef, props.slug, emit))
+  const table = ref(new Table({tableRef, slug: props.slug, path: props.path, options: props.options, emit}))
   const common = new Common()
 
   const isChoosed = computed(() => {
@@ -140,8 +145,9 @@
     isClient.value = true
 
     await nextTick()
-    if (props.slug == null) return
+    if (props.slug == null && props.path == null) return
     table.value.slug = props.slug
+    table.value.path = props.path
     if (props.options.isHaveQuery) {
       table.value.dependences = {
         state: true,
@@ -154,6 +160,13 @@
       table.value.get()
     }
   }
+
+  watch(() => props.options.updatingCount, () => {
+    if (props.options.updatingCount) {
+      table.value.path = props.path
+      table.value.get()
+    }
+  }, {deep: true})
 
   provide('table', table)
   provide('filter', table.value.filter)

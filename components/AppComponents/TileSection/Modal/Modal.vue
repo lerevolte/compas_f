@@ -68,6 +68,22 @@
                 }"
                 v-model="modal.field.unit"
             />
+            <AppSelect 
+                v-if="modal.field.type == 'text_group'"
+                :isPreventBottom="true"
+                :options="{
+                    title: 'Поля в группе',
+                    list: [...modal.getFields(), ...modal.field?.fields ?? []].map(field => {
+                        return {
+                            label: field.title,
+                            value: field.id
+                        }
+                    }),
+                    multiple: true
+                }"
+                v-model="modal.field.subfields"
+                @update:modelValue="modal.changeSubfields()"
+            />
 
             <div class="modal__field-group" v-if="['select_dropdown', 'status'].includes(modal.field.type)">
                 <span class="blank__title">
@@ -133,75 +149,77 @@
                 </AppButton>
             </div>
 
-            <AppCheckbox 
-                v-if="modal.fields[modal.field.type] && typeof modal.fields[modal.field.type].is_plural != 'undefined'"
-                v-model="modal.field.is_plural"
-                :options="{
-                    disabled: props.modal.action == 'updateField',
-                    title: 'Множественное',
-                }"
-            />
-            <AppCheckbox 
-                v-if="modal.fields[modal.field.type] && typeof modal.fields[modal.field.type].is_external_link != 'undefined'"
-                v-model="modal.field.is_external_link"
-                :options="{
-                    title: 'Внешняя ссылка',
-                }"
-            />
-            <AppCheckbox 
-                v-model="modal.field.required"
-                :options="{
-                    title: 'Обязательное поле',
-                }"
-            />
-            <AppCheckbox 
-                v-model="modal.field.visible_always"
-                :options="{
-                    title: 'Показывать всегда',
-                }"
-            />
-            <AppCheckbox 
-                v-model="modal.field.has_roles_read"
-                :options="{
-                    title: 'Ограничить видимость поля',
-                }"
-            />
-            <AppSelect 
-                v-show="modal.field.has_roles_read"
-                v-model="modal.field.roles_read"
-                :isPreventBottom="true"
-                :options="{
-                    title: 'Роли',
-                    list: userStore.roles.map(p => {
-                        return {
-                            value: p.id,
-                            label: p.label
-                        }
-                    }),
-                    multiple: true
-                }"
-            />
-            <AppCheckbox 
-                v-model="modal.field.has_roles_write"
-                :options="{
-                    title: 'Ограничить редактирование поля',
-                }"
-            />
-            <AppSelect 
-                v-show="modal.field.has_roles_write"
-                v-model="modal.field.roles_write"
-                :isPreventBottom="true"
-                :options="{
-                    title: 'Роли',
-                    list: userStore.roles.map(p => {
-                        return {
-                            value: p.id,
-                            label: p.label
-                        }
-                    }),
-                    multiple: true
-                }"
-            />
+            <template v-if="modal.field.type != 'text_group'">
+                <AppCheckbox 
+                    v-if="modal.fields[modal.field.type] && typeof modal.fields[modal.field.type].is_plural != 'undefined'"
+                    v-model="modal.field.is_plural"
+                    :options="{
+                        disabled: props.modal.action == 'updateField',
+                        title: 'Множественное',
+                    }"
+                />
+                <AppCheckbox 
+                    v-if="modal.fields[modal.field.type] && typeof modal.fields[modal.field.type].is_external_link != 'undefined'"
+                    v-model="modal.field.is_external_link"
+                    :options="{
+                        title: 'Внешняя ссылка',
+                    }"
+                />
+                <AppCheckbox 
+                    v-model="modal.field.required"
+                    :options="{
+                        title: 'Обязательное поле',
+                    }"
+                />
+                <AppCheckbox 
+                    v-model="modal.field.visible_always"
+                    :options="{
+                        title: 'Показывать всегда',
+                    }"
+                />
+                <AppCheckbox 
+                    v-model="modal.field.has_roles_read"
+                    :options="{
+                        title: 'Ограничить видимость поля',
+                    }"
+                />
+                <AppSelect 
+                    v-show="modal.field.has_roles_read"
+                    v-model="modal.field.roles_read"
+                    :isPreventBottom="true"
+                    :options="{
+                        title: 'Роли',
+                        list: userStore.roles.map(p => {
+                            return {
+                                value: p.id,
+                                label: p.label
+                            }
+                        }),
+                        multiple: true
+                    }"
+                />
+                <AppCheckbox 
+                    v-model="modal.field.has_roles_write"
+                    :options="{
+                        title: 'Ограничить редактирование поля',
+                    }"
+                />
+                <AppSelect 
+                    v-show="modal.field.has_roles_write"
+                    v-model="modal.field.roles_write"
+                    :isPreventBottom="true"
+                    :options="{
+                        title: 'Роли',
+                        list: userStore.roles.map(p => {
+                            return {
+                                value: p.id,
+                                label: p.label
+                            }
+                        }),
+                        multiple: true
+                    }"
+                />
+            </template>
         </div>
     </AppModalWarning>
 </template>
@@ -254,6 +272,10 @@
         listSection: {
             default: [],
             type: Array
+        },
+        columns: {
+            default: {},
+            type: Object
         }
     })
 
@@ -263,7 +285,6 @@
 
     class Modal {
         constructor() {
-
             // Поля для создания и редактирования
             this.fields = {
                 default: {
@@ -295,6 +316,9 @@
                 },
                 status: {
                     options: [],
+                },
+                text_group: {
+                    options: [],
                 }
             }
             // Типы полей для создания и редактирования
@@ -305,7 +329,8 @@
                 status: 'Статус',
                 file: 'Файл',
                 relation: 'Программное',
-                date: 'Дата'
+                date: 'Дата',
+                text_group: 'Группа полей',
             }
 
             this.field = {}
@@ -355,6 +380,22 @@
             this.field.options = this.field.options.filter(p => p.value != option.value)
         }
 
+        // Добавление подполей
+        changeSubfields() {
+            const list = this.getFields()
+            let findedField = null
+
+            for (let id of this.field.subfields) {
+                findedField = list.find(f => f.id == id)
+                if (findedField) {
+                    this.field.fields = this.field.fields ?? []
+                    this.field.fields.push(findedField)
+                }
+            }
+
+            console.log(this.field.fields);
+        }
+
         // Сохранение
         save() {
             const request = JSON.parse(JSON.stringify(this.field))
@@ -383,10 +424,13 @@
                 value: request.title
             }])
 
+
             if (this.validator.state) return
+
             if (props.modal.action == 'create') {
                 delete request.id
             }
+
             emit('actionField', {action: props.modal.action == 'updateField' ? 'update' : 'create', value: request})
         }
 
@@ -395,6 +439,18 @@
             this.field = {}
             this.validator.state = false
             this.validator.errors = {}
+        }
+
+        getFields() {
+            let response = []
+
+            for (let key in props.columns) {
+                for (let section of props.columns[key]) {
+                    response.push(...section.fields.filter(item => item.type != 'text_group'))
+                }
+            }
+
+            return response
         }
     }
 

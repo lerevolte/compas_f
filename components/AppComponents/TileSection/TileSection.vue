@@ -1,7 +1,11 @@
 <template>
-    <div class="tile-section" ref="sectionRef" :class="{ 'tile-section_short': section.isLocalShort }">
+    <div class="tile-section" ref="sectionRef" :class="{ 'tile-section_short': section.isLocalShort, 'tile-section_field': props.options.type == 'field' }">
         <div class="tile-section__header" ref="headerRef" >
-            <div class="tile-section__title">
+            <span class="blank__title" v-if="props.options.type == 'field'">
+                {{ section.name }}
+            </span>
+
+            <div class="tile-section__title" v-else>
                 <IconDragDotted class="icon_drag-section" />
                 <AppH3 class="textarea_title">
                     <p 
@@ -23,8 +27,8 @@
                 <IconEdit v-show="!section.editTitle" @click="section.initEditTitle()"/>
             </div>
 
-            <div class="tile-section__actions" v-if="!props.options.isGlobalEdit">
-                <AppButton class="button_text" v-if="section.fields.find(item => item.edit)" @click="fieldObject.section.cancelEditAll(props.section)">
+            <div class="tile-section__actions" v-if="!props.options.isGlobalEdit && props.options.type != 'field'">
+                <AppButton class="button_text" v-if="section.fields.find(item => item.edit || (item.type == 'text_group' && item.fields.find(item => item.edit)))" @click="fieldObject.section.cancelEditAll(props.section)">
                     Отмена
                 </AppButton>
                 <AppButton class="button_text"  v-else @click="fieldObject.section.editAll(props.section)">
@@ -54,7 +58,7 @@
 
         <draggable
             tag="div"
-            group="sections"
+            :group="props.options.type == 'field' ? 'field' : 'section'"
             v-model="props.section.fields" 
             :forceFallback="true"
             :fallbackOnBody="true"
@@ -65,14 +69,14 @@
             ghost-class="draggable-ghost"
             fallback-class="draggable-fallback"
             @start="event => fieldObject.dragStart(event)"
-            @end="event => fieldObject.dragEnd(event)"
+            @end="event => fieldObject.dragEnd(event, {type: props.options.type})"
         >
             <template #item="{ element: field }">
                 <div 
-                    class="group-field" 
+                    class="field" 
                     :class="{ 
-                        'group-field_hidden': !field.edit && fieldObject.checkVisible(field),
-                        'group-field_static': !field.can_edit,
+                        'field_hidden': !field.edit && fieldObject.checkVisible(field),
+                        'field_static': !field.can_edit,
                         'blank_required': field.required
                     }"
                     @click="e => fieldObject.initChangeField(field, e.target)"
@@ -119,7 +123,7 @@
                             title: field.title,
                             edit: field.edit ?? false,
                             type: field.type,
-                            list: field.options.filter(p => p),
+                            list: field.options ? field.options.filter(p => p) : [],
                             name: field.key,
                             relation: field.id,
                             searchable: true,
@@ -151,6 +155,30 @@
                         :options="field"
                         :error="field.error"
                         v-model="field.value"
+                    />
+
+                    <TileSectionComponent 
+                        v-else-if="field.type == 'text_group'"
+                        class="column-fields__item column-section"
+                        :section="{
+                            id: field.id,
+                            name: field.title,
+                            is_short: false,
+                            fields: field.fields
+                        }"
+                        :options="{
+                            type: 'field',
+                            isDisableFooter: true,
+                            isGlobalEdit: props.options.isGlobalEdit,
+                        }"
+                        :sectionClass="props.sectionClass"
+                        :listSection="props.listSection"
+                        :pageId="props.pageId"
+                        :hidden="props.hidden"
+                        @action="action => emit('action', action)"
+                        @actionField="action => emit('actionField', action)"
+                        @update:hidden="fields => emit('update:hidden', fields)"
+                        @actionSection="action => emit('actionSection', action)"
                     />
 
                     <template v-if="field.edit">
@@ -279,6 +307,7 @@
                                         action: 'update',
                                         value: {
                                             ...field,
+                                            section_type: props.options.type,
                                             section_id: props.section.id,
                                         }
                                     })"
@@ -353,7 +382,7 @@
     import AppButton from '@AppComponents/Button/Button.vue'
     import IconSettings from '@AppIcons/Actions/Settings.vue'
     import IconDragDotted from '@AppIcons/Actions/DragDotted.vue'
-    import GroupField from '@AppComponents/GroupField/GroupField.vue'
+    import TileSectionComponent from '@AppComponents/TileSection/TileSection.vue'
     
     import AppTextarea from '@AppComponents/Inputs/Textarea/Textarea.vue';
     import AppCheckbox from '@AppComponents/Inputs/Checkbox/Checkbox.vue'
@@ -409,6 +438,7 @@
             default: {
                 isDisableFooter: false,
                 isGlobalEdit: false,
+                type: 'section',
                 modal: {
                     state: false,
                     section: null

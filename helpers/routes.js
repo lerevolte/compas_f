@@ -25,9 +25,11 @@ export default {
     },
     table: {
         get: '/objects/${slug}/compose',
+        get_path: '${path}',
         reset: '/tables/${slug}/reset',
         save_settings: '/tables/${slug}',
         save: '/objects/${slug}/batch',
+        save_path: '${path}',
         download: '/objects/${slug}/export',
         open: '/objects/${slug}/${row_id}/compose',
         copy: '/objects/${slug}/${row_id}/compose?is_copy=1',
@@ -41,9 +43,9 @@ export default {
         delete: '/filters/${slug}'
     },
     tabs: {
-        update_tabs: '/entities/${slug}/menu',
-        settings_tabs: '/tabs/${slug}/permissions',
-        reset_tabs: '/entities/${slug}/menu/reset',
+        update: '/entities/${slug}/menu',
+        settings: '/tabs/${slug}/permissions',
+        reset: '/entities/${slug}/menu/reset',
 
     },
     detail: {
@@ -66,5 +68,26 @@ export default {
     trash: {
         get_tabs: '/tabs/trash',
         restore: '/objects/${slug}/restore'
+    },
+    roles: {
+        get: '/roles',
+        create: '/roles',
+        update: '/roles/${id}',
+        delete: '/roles/${id}'
+    },
+    settings: {
+        common: {
+            get: '/settings/account',
+            save: '/settings/account'
+        },
+        entities: {
+            get: '/entities'
+        },
+        modules: {
+            logistics: {
+                get: '/modules/logistic/settings',
+                save: '/modules/logistic'
+            }
+        }
     }
 }

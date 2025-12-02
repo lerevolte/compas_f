@@ -133,6 +133,31 @@ html {
     }
 }
 
+.page .page_categories {
+    gap: 0px 20px;
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    grid-template-rows: auto 1fr;
+
+    .page__header {
+        grid-column: 1/3;
+    }
+}
+
+.page__section {
+    .tile-section__header {
+        * {
+            pointer-events: none !important;
+        }
+
+        .icon_drag,
+        .icon_edit,
+        .tile-section__actions {
+            display: none;
+        }
+    }
+}
+
 .container {
     /*Пишется max-width*/
     max-width: variables.$container-width;

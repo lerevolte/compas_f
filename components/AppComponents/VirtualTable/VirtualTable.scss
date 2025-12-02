@@ -43,6 +43,16 @@
       position: relative;
     }
   }
+
+  &:not(.table_permanent-edit) {
+    .table__body {
+      &.table__body_choose {
+        .table__row:not(.table__row_choose) {
+          filter: opacity(0.2);
+        }
+      }
+    }
+  }
 }
 
 
@@ -184,17 +194,15 @@
   &.table__row_active {
     z-index: 10;
   }
+
+  &:has(.select_open) {
+    z-index: 10;
+  }
 }
 
 .table__body {
   width: 100%;
   position: relative;
-
-  &.table__body_choose {
-    .table__row:not(.table__row_choose) {
-      filter: opacity(0.2);
-    }
-  }
 
   &.table__body_edit {
     .table__row:not(.table__row_choose) {

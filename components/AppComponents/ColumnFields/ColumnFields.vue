@@ -1,8 +1,5 @@
 <template>
     <div class="column-fields" :class="{'column-fields_dragging': columns.dragger.isDragging}">
-        <!-- modal: props.options.modal.field
-        :edit="props.edit" -->
-
         <draggable
             v-for="(column, index) in columns.list"
             tag="div"
@@ -92,10 +89,12 @@
         </teleport>
         <teleport to="#menu__overlay" v-if="field.modal.state">
             <FieldModal 
+                :columns="columns.list"
                 :modal="field.modal"
                 :listSection="columns.listSection"
                 @actionField="action => field[action.action]({
                     columns: columns.list,
+                    emit: emit,
                     field: action.value,
                     slug: props.slug
                 })"
@@ -125,7 +124,7 @@
     import { Section, Field } from '@AppHelpers/classes.js'
     import AppButon from '@AppComponents/Button/Button.vue';
     import AppHistory from '@AppComponents/History/History.vue';
-    import FieldModal from '@AppComponents/GroupField/Modal/Modal.vue'
+    import FieldModal from '@AppComponents/TileSection/Modal/Modal.vue'
     import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'
     import AppTileSection from '@AppComponents/TileSection/TileSection.vue';
     import MassAction from '@AppComponents/MassAction/MassAction.vue'
@@ -200,14 +199,6 @@
             this.list = {
                 column_1: [],
                 column_2: []
-            }
-            this.modal = {
-                state: false,
-                title: 'Создание раздела',
-                actionTitle: 'Удалить',
-                action: 'delete',
-                content: {},
-                text: 'Все поля раздела скроются. Удалить раздел?'
             }
             this.listSection = computed(() => {
                 return [...this.list.column_1, ...this.list.column_2].map(section => {

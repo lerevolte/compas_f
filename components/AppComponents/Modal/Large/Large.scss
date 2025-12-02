@@ -82,5 +82,11 @@
                 margin-right: 0px;
             }
         }
+
+        @media (max-width: 990px) {
+            & > .modal__content {
+                width: 100%;
+            }
+        }
     }
 }

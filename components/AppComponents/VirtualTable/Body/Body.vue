@@ -82,7 +82,7 @@
                     </AppFansyBox>
                 </div>
 
-                <template v-else-if="table.body[row.index] && table.body[row.index].edit" >
+                <template v-else-if="table.body[row.index] && !column.read_only && (table.body[row.index].edit || table.options?.isPermanentEdit)" >
                     <AppInput
                         v-if="column.type == 'text'" 
                         :model-value="cell.useCellModel(row.index, column).value"
@@ -106,7 +106,7 @@
                             list: column.options,
                             name: column.key,
                             relation: null,
-                            edit: table.body[row.index].edit,
+                            edit: table.body[row.index] && !column.read_only && (table.body[row.index].edit || table.options?.isPermanentEdit),
                             searchable: false,
                             required: false,
                             isHaveNull: true,
@@ -114,6 +114,7 @@
                             placeholder: '' 
                         }"
                         v-model="cell.useCellModel(row.index, column).value"
+                        @update:prevValue="val => cell.checkEditting(table.body[row.index], {value: val, key: column.key})"
                     />
 
                     <AppDate 
@@ -140,7 +141,7 @@
                             list: column.options,
                             name: column.key,
                             relation: null,
-                            edit: table.body[row.index] && table.body[row.index].edit,
+                            edit: table.body[row.index] && !column.read_only && (table.body[row.index].edit || table.options?.isPermanentEdit),
                             required: false,
                             isHaveNull: true,
                             placeholder: '' 
@@ -168,7 +169,7 @@
                     />
                 </template>
 
-                <div class="table__cell-content" v-else-if="table.body[row.index] && !table.body[row.index].edit" >
+                <div class="table__cell-content" v-else-if="table.body[row.index] && (!table.body[row.index].edit || column.read_only)">
                     <span class="table__text text" v-if="['text', 'number'].includes(column.type) && (!column.is_external_link || !table.body[row.index][column.key]?.external_link)">
                         {{ cell.useCellModel(row.index, column).value }}
                     </span>
@@ -406,6 +407,14 @@
             cellEl.classList.add('table__cell_active')
             cellEl.closest('.table__row').classList.add('table__row_active')
             this.activeCell = cellEl
+        }
+
+        checkEditting(row, prevValue) {
+            if (row.isChoose) return
+            table.value.backup.body = JSON.parse(JSON.stringify([...table.value.backup.body, row]))
+            row.isChoose = true
+            row.edit = true
+            table.value.state = 'edit'
         }
     }
 

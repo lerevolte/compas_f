@@ -76,7 +76,6 @@
     import AppShowMore from '@AppComponents/ShowMore/ShowMore.vue';
     import AppTextarea from '@AppComponents/Inputs/Textarea/Textarea.vue';
     import DetailDynamic from './Dynamic/Dynamic.vue';
-    import debounce from 'lodash/debounce'
 
     const textareaRef = ref(null)
     const detailHeaderRef = ref(null)
@@ -121,7 +120,6 @@
 
         // Установка активного таба
         set({tab, is_module}) {
-            console.log(tab);
             if (is_module) {
                 this.active = tab  
                 detail.value.updateComponent++

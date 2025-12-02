@@ -315,11 +315,13 @@ export class Auth {
 }
 
 export class Table {
-    constructor(tableRef, slug, emit) {
+    constructor({tableRef, slug, options, path, emit}) {
         this.common = new Common()
         this.filter = new Filter(this)
         this.slug = slug
+        this.path = path
         this.emit = emit
+        this.options = options
 
         this.isChanged = false
         this.tableRef = tableRef
@@ -362,10 +364,21 @@ export class Table {
     async get() {
         try {
             this.loading = true
-            const response = await api.callMethod('GET', routes.table.get.replace('${slug}', this.slug))
+            let response = null
+
+            if (this.slug) {
+                response = await api.callMethod('GET', routes.table.get.replace('${slug}', this.slug))
+            } else {
+                response = await api.callMethod('GET', routes.table.get_path.replace('${path}', this.path))
+            }
+
             this.set(response.data, true)
-            this.filter.setSaves(response.data.filters)
-            this.filter.set(response.data.fields)
+
+            if (this.options.isHaveFilter) {
+                this.filter.setSaves(response.data.filters)
+                this.filter.set(response.data.fields)
+            }
+            
             this.getHeader(response.data.table)
             await this.initVirtualizer()
         } catch (error) {
@@ -421,7 +434,7 @@ export class Table {
 
     // Установка таблицы
     async set(response, skip = false) {
-        this.getBody(response.list.data)
+        this.getBody(response.list.data ?? response.list)
         this.setSortItem({
             sort_field: response.list.sort_field,
             sort_order: response.list.sort_order
@@ -484,7 +497,7 @@ export class Table {
             let requestRow = {}
             let isEdit = false
             let column = null
-
+            
             for (let backupRow of this.backup.body) {
                 requestRow = {}
                 isEdit = false
@@ -515,9 +528,16 @@ export class Table {
             }
 
             if (request.length == 0) return
-            await api.callMethod('POST', routes.table.save.replace('${slug}', this.slug), {
-                rows: request
-            })
+
+            if (this.slug) {
+                await api.callMethod('POST', routes.table.save.replace('${slug}', this.slug), {
+                    rows: request
+                })
+            } else {
+                await api.callMethod('PUT', routes.table.save_path.replace('${path}', this.path), {
+                    rows: request
+                })
+            }
         } catch (error) {
             console.log('get_table', error);
         } finally {
@@ -554,7 +574,9 @@ export class Table {
         }
 
         let isChooseAll = this.header.find(column => column.key == 'isChoose')
-        isChooseAll.value = false
+        if (isChooseAll) {
+            isChooseAll.value = false
+        }
         this.state = null
         this.backup.body = []
     }
@@ -568,6 +590,22 @@ export class Table {
             let request = this.header.filter(p => p.key != 'isChoose' && p.key != 'actions' && p.enabled).map(p => {
                 return `fields[]=${p.key}`
             })
+
+            if (this.dependences.state) {
+                const otherKeys = Object.keys(this.dependences.query)
+                for (let key of otherKeys) {
+                    if (key == 'trashed') {
+                        request.push(`${key}=${this.dependences.query[key] ? 1 : 0}`)
+                    } else if (Array.isArray(this.dependences.query[key])) {
+                        for (let value of this.dependences.query[key]) {
+                            request.push(`filter[${key}][]=${value}`)
+                        }
+                    } else {
+                        request.push(`filter[${key}]=${this.dependences.query[key]}`)
+                    }
+                }
+            }
+
             response = await api.callMethod('GET', routes.table.download.replace('${slug}', this.slug) + `?${request.join('&')}`)
         } catch (error) {
             console.log('error_download_excel', error);
@@ -956,10 +994,12 @@ export class Validator {
 
     // Валидация
     validate(field) {
-        if (field.type == 'select_dropdown') {
+        const value = this.setFieldValue(field)
+        if (field.type == 'select_dropdown' && field.subtype != 'map_suggest') {
             return !(this.getSelectValue(field) != null && this.getSelectValue(field).length > 0)
+        } else if (field.type == 'address') {
+            return value == '' || !value
         } else {
-            const value = this.setFieldValue(field)
             if (typeof value == 'string') {
                 return value == ''
             } else if (value == null) {
@@ -1263,14 +1303,27 @@ export class Section {
     // Отмена редактирования полей в секции
     cancelEditAll(section) {
         let findedField = null
-        
+
+        const clearField = (field) => {
+            field.value = findedField.value
+            field.edit = false
+            this.buffer.backup = this.buffer.backup.filter(f => f.id != field.id)
+        }
+
         for (let field of section.fields) {
-            findedField = this.buffer.backup.find(f => f.id == field.id)
-            
-            if (findedField) {
-                field.value = findedField.value
-                field.edit = false
-                this.buffer.backup = this.buffer.backup.filter(f => f.id != field.id)
+            if (field.type == 'text_group') {
+                for (let subfield of field.fields) {
+                    findedField = this.buffer.backup.find(f => f.id == subfield.id)
+                    if (findedField) {
+                        clearField(subfield)
+                    }
+                }
+            } else {
+                findedField = this.buffer.backup.find(f => f.id == field.id)
+
+                if (findedField) {
+                    clearField(field)
+                }
             }
         }
     }
@@ -1292,7 +1345,21 @@ export class Section {
         
         for (let column in columns) {
             for (let section of columns[column]) {
-                fields = section.fields.filter(field => field.edit)
+                fields = section.fields.reduce((arr, field) => {
+                    if (field.type === 'text_group') {
+                        field.fields.forEach(subfield => {
+                            if (subfield.edit) {
+                                arr.push(subfield)
+                            }
+                        })
+                    } else {
+                        if (field.edit) {
+                            arr.push(field)
+                        }
+                    }
+                
+                    return arr
+                }, [])
                 this.validator.check(fields)
                 isError = isError ? isError : Object.keys(this.validator.errors).length > 0
                 this.buffer.edits = [...this.buffer.edits, ...fields]
@@ -1314,7 +1381,7 @@ export class Section {
             const request = {
                 id: pageId,
                 ...this.buffer.edits.reduce((obj, field) => {
-                    obj[field.key] = field.value
+                    obj[field.key] = field.type == 'relation' ? field.value?.value : field.value
                     return obj
                 }, {})
             }
@@ -1335,7 +1402,14 @@ export class Section {
             for (let column in columns) {
                 for (let section of columns[column]) {
                     for (let field of section.fields) {
-                        if (field.edit) {
+                        if (field.type == 'text_group') {
+                            for (let subfield of field.fields) {
+                                if (subfield.edit) {
+                                    subfield.edit = false
+                                    this.buffer.backup = this.buffer.backup.filter(f => f.id != subfield.id)
+                                }
+                            }
+                        } else if (field.edit) {
                             field.edit = false
                             this.buffer.backup = this.buffer.backup.filter(f => f.id != field.id)
                         }
@@ -1392,13 +1466,21 @@ export class Field {
     }
 
     // Создание
-    async create({field, slug, columns}) {
+    async create({field, slug, columns, emit}) {
         try {
             this.modal.loading = true
             field.entity = slug
             const findedSection = this.common.findColumnSection(columns, field.section_id)
             const response = await api.callMethod('POST', routes.detail.create_field, field)
-            findedSection.fields.push(response.data)
+
+            if (field.type == 'text_group') {
+                emit('action', {
+                    action: 'get',
+                    data: null
+                })
+            } else {
+                findedSection.fields.push(response.data)
+            }
         } catch (error) {
             console.log(error);
         } finally {
@@ -1423,22 +1505,33 @@ export class Field {
     }
 
     // Обновление
-    async update({field, columns, slug}) {
+    async update({field, columns, slug, emit}) {
         try {
             this.modal.loading = true
             field.entity = slug
-            const fromSection = this.common.findColumnSection(columns, field.section_id)
-            const toSection = this.common.findColumnSection(columns, field.section_id)
-            
-            if (this.modal.content.section_id != field.section_id) {
-                fromSection.fields = fromSection.fields.filter(p => p.id != field.id)
-                toSection.fields.push(field)
-            } else {
-                const index = toSection.fields.findIndex(p => p.id == field.id)
-                if (index !== -1) toSection.fields.splice(index, 1, field)
+
+            if (field.section_type != 'field') {
+                const fromSection = this.common.findColumnSection(columns, field.section_id)
+                const toSection = this.common.findColumnSection(columns, field.section_id)
+                
+                if (this.modal.content.section_id != field.section_id) {
+                    fromSection.fields = fromSection.fields.filter(p => p.id != field.id)
+                    toSection.fields.push(field)
+                } else {
+                    const index = toSection.fields.findIndex(p => p.id == field.id)
+                    if (index !== -1) toSection.fields.splice(index, 1, field)
+                }
             }
-            
-            await api.callMethod('PUT', routes.detail.update_field.replace('${id}', field.id), field)
+
+            const { fields, ...request } = field;
+            await api.callMethod('PUT', routes.detail.update_field.replace('${id}', field.id), request)
+
+            if (field.type == 'text_group') {
+                emit('action', {
+                    action: 'get',
+                    data: null
+                })
+            }
         } catch (error) {
             console.log(error);
         } finally {
@@ -1464,13 +1557,20 @@ export class Field {
     }
 
     // Удаление поля
-    async delete({columns}) {
+    async delete({columns, emit}) {
         try {
             this.modal.loading = true
             await api.callMethod('DELETE', routes.detail.delete_field.replace('${id}', this.modal.content.id))
             const findedSection = this.common.findColumnSection(columns, this.modal.content.section_id)
             const index = findedSection.fields.findIndex(p => p.id == this.modal.content.id)
             if (index !== -1) findedSection.fields.splice(index, 1)
+
+            if (this.modal.content.type == 'text_group') {
+                emit('action', {
+                    action: 'get',
+                    data: null
+                })
+            }
         } catch (error) {
             console.log(error);
         } finally {
@@ -1502,8 +1602,27 @@ export class Field {
     async hide({field, section, hidden}) {
         field.is_hidden = true
         hidden.push(field)
-        const index = section.fields.findIndex(p => p.id == field.id)
-        if (index !== -1) section.fields.splice(index, 1)
+        let index = null
+
+        index = section.fields.findIndex(p => p.id == field.id)
+
+        if (index != -1) {
+            section.fields.splice(index, 1)
+        } else {
+            for (let item of section.fields) {
+                if (item.type == 'text_group') {
+                    index = item.fields.findIndex(p => p.id == field.id)
+                    if (index != -1) {
+                        item.fields.splice(index, 1)
+                        await api.callMethod('PUT', routes.detail.update_field.replace('${id}', item.id), {
+                            id: item.id,
+                            subfields: item.fields.map(p => p.id)
+                        })
+                    }
+                }
+            }
+        }
+
         await api.callMethod('POST', routes.detail.hidden_fields, {ids: hidden.map(p => p.id)})
     }
 
@@ -1541,7 +1660,7 @@ export class Field {
 
                 if (field.type == 'address') {
                     return field
-                } else if (Array.isArray(field)) {
+                } else if (Array.isArray(field.value)) {
                     return field
                 } else if (field.type == 'relation') {
                     return field ?? null
@@ -1594,7 +1713,7 @@ export class Field {
     
     // Инициализация изменения поля
     initChangeField(field, target, type = 'target') {
-        if (!field.can_edit) return 
+        if (!field.can_edit || field.type == 'text_group') return 
 
         if (type == 'target') {
             if (target.closest('.icon_drag') || target.closest('.field__settings') || target.closest('.blank__title')) return
@@ -1632,11 +1751,13 @@ export class Field {
     }
 
     // Конец перетаскивания поля
-    async dragEnd(event) {
+    async dragEnd(event, options = {type: 'section'}) {
         if (this.dragger) {
             this.dragger.classList.remove('column-fields_dragging-field')
             this.dragger = null
         }
+
+        if (options && options.type == 'field') return
 
         await api.callMethod('POST', routes.detail.change_order_field, {
             id: event.item._underlying_vm_.id,
@@ -1650,3 +1771,249 @@ export class Field {
         })
     }
 }
+
+export class Settings {
+    constructor({category, title}) {
+        this.category = category
+        this.section = {
+            name: title,
+            fields: []
+        }
+        this.options = {
+            isDisableFooter: true,
+            isGlobalEdit: false,
+        }
+        this.buffer = {
+            loading: false,
+            backup: [],
+            edits: []
+        }
+        this.validator = new Validator()
+    }
+
+    // Получение данных
+    async get() {
+        if (this.category == 'common') {
+            this.section.fields = [
+                {
+                    id: 0,
+                    title: "Название портала",
+                    key: "name",
+                    type: "text",
+                    is_plural: 0,
+                    is_external_link: 0,
+                    required: 1,
+                    read_only: 1,
+                    value: null,
+                    visible_always: 1,
+                    can_read: 1,
+                    can_edit: 0,
+                },
+                {
+                    id: 1,
+                    title: "Часовой пояс",
+                    key: "timezone",
+                    type: "select_dropdown",
+                    is_plural: 0,
+                    required: 1,
+                    value: null,
+                    filterable: true,
+                    searchable: false,
+                    visible_always: 1,
+                    can_read: 1,
+                    can_edit: 1,
+                    options: []
+                },
+                {
+                    id: 2,
+                    title: "Город",
+                    key: "city",
+                    type: "select_dropdown",
+                    subtype: 'map_suggest',
+                    is_plural: 0,
+                    required: 1,
+                    value: null,
+                    searchable: true,
+                    visible_always: 1,
+                    can_read: 1,
+                    can_edit: 1,
+                    options: []
+                },
+                {
+                    id: 3,
+                    title: "Сколько дней хранить историю входа",
+                    key: "login_days",
+                    type: "select_dropdown",
+                    is_plural: 0,
+                    required: 1,
+                    value: null,
+                    can_read: 1,
+                    visible_always: 1,
+                    can_edit: 1,
+                    options: Array.from({length: 12}, (_, i) => ({label: String((i+1)*30), value: (i+1)*30}))
+                },
+                {
+                    id: 4,
+                    title: "Отображение подсказок",
+                    key: "hints",
+                    type: "select_dropdown",
+                    is_plural: 0,
+                    required: 1,
+                    visible_always: 1,
+                    value: null,
+                    can_read: 1,
+                    can_edit: 1,
+                    options: [
+                        {
+                            label: 'Включено',
+                            value: '1'
+                        },
+                        {
+                            label: 'Отключено',
+                            value: '0'
+                        }
+                    ]
+                }
+            ]
+    
+            const response = await api.callMethod('GET', routes.settings.common.get)
+            for (let field of this.section.fields) {
+                field.value = field.key == 'hints' ? String(response.data.common[field.key]) : response.data.common[field.key]
+            }
+    
+            this.section.fields[this.section.fields.findIndex(f => f.key == 'timezone')].options = response.data.timezones
+            this.section.fields[this.section.fields.findIndex(f => f.key == 'city')].options = [
+                {
+                    label: JSON.parse(JSON.stringify(response.data.common.city)),
+                    value: JSON.parse(JSON.stringify(response.data.common.city))
+                }
+            ]
+        } else {
+            const response = await api.callMethod('GET', routes.settings.modules[this.category].get)
+            this.section.fields = response.data
+        }
+
+    }
+
+    // Сохранение изменений
+    async save() {
+        let isError = false
+        let fields = []
+        this.buffer.edits = []
+        
+
+        fields = this.section.fields.reduce((arr, field) => {
+            if (field.type === 'text_group') {
+                field.fields.forEach(subfield => {
+                    if (subfield.edit) {
+                        arr.push(subfield)
+                    }
+                })
+            } else {
+                if (field.edit) {
+                    arr.push(field)
+                }
+            }
+        
+            return arr
+        }, [])
+
+        this.validator.check(fields)
+        isError = isError ? isError : Object.keys(this.validator.errors).length > 0
+        this.buffer.edits = [...this.buffer.edits, ...fields]
+        
+        for (let field of fields) {
+            field.error = {
+                state: this.validator.errors[field.key] ?? false,
+                text: this.validator.errors[field.key] ?? null
+            }
+        }
+
+        if (isError) return
+
+        try {
+            this.buffer.loading = true
+            const request = this.buffer.edits.reduce((obj, field) => {
+                obj[field.key] = field.type == 'relation' ? field.value?.value : field.value
+                return obj
+            }, {})
+
+            if (this.category == 'common') {
+                await api.callMethod('PUT', routes.settings.common.save, request)
+            } else {
+                await api.callMethod('PUT', routes.settings.modules[this.category].save, request)
+            }
+
+            for (let field of this.section.fields) {
+                if (field.type == 'text_group') {
+                    for (let subfield of field.fields) {
+                        if (subfield.edit) {
+                            subfield.edit = false
+                            this.buffer.backup = this.buffer.backup.filter(f => f.id != subfield.id)
+                        }
+                    }
+                } else if (field.edit) {
+                    field.edit = false
+                    
+                    if (field.subtype == 'map_suggest') {
+                        field.options = [
+                            {
+                                label: field.value,
+                                value: field.value
+                            }
+                        ]
+                    }
+                    this.buffer.backup = this.buffer.backup.filter(f => f.id != field.id)
+                }
+            }
+        } catch (error) {
+            console.log(error);
+        } finally {
+            this.buffer.loading = false
+        }
+    }
+
+    // Отмена
+    cancel() {
+        let findedField = null
+
+        const clearField = (field) => {
+            field.value = findedField.value
+            field.edit = false
+            this.buffer.backup = this.buffer.backup.filter(f => f.id != field.id)
+        }
+
+        for (let field of this.section.fields) {
+            if (field.type == 'text_group') {
+                for (let subfield of field.fields) {
+                    findedField = this.buffer.backup.find(f => f.id == subfield.id)
+                    if (findedField) {
+                        clearField(subfield)
+                    }
+                }
+            } else {
+                findedField = this.buffer.backup.find(f => f.id == field.id)
+
+                if (findedField) {
+                    clearField(field)
+                }
+            }
+        }
+    }
+}
+
+// название
+// часовой пояс
+// город
+// сколько дней хранить
+// отображение подсказок
+// удалить портал
+
+// {
+//     "name": "opt6",
+//     "timezone": "Europe/Moscow",
+//     "city": "Россия, г Москва",
+//     "login_days": "360",
+//     "docs_email": "denis@opt6.ru",
+//     "hints": 1
+// }

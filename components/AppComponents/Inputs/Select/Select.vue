@@ -85,6 +85,7 @@
 
     const emit = defineEmits([
         'update:modelValue',
+        'update:prevValue',
         'update:modelList'
     ])
 
@@ -114,8 +115,13 @@
                     response = await api.callMethod("GET", `/map/geocode?address=${value}`)
                     this.state.list = response.data.map(p => ({ label: p.text, value: JSON.parse(JSON.stringify(p)) }))
                 } else {
-                    response = await api.callMethod("GET", `/objects/search?per_page=12&field_id=${props.options.relation}&q=${value}`)
-                    this.state.list = response.data.map(p => ({ label: p.label, value: p.value }))
+                    if (props.options.subtype == 'map_suggest') {
+                        response = await api.callMethod("GET", `/map/suggest?restrict=city&address=${value}`)
+                        this.state.list = response.data.map(p => ({ label: p, value: p }))
+                    } else {
+                        response = await api.callMethod("GET", `/objects/search?per_page=12&field_id=${props.options.relation}&q=${value}`)
+                        this.state.list = response.data.map(p => ({ label: p.label, value: p.value }))
+                    }
                     emit('update:modelList', this.state.list)
                 }
             }, 100);
@@ -145,17 +151,20 @@
         changeValue(option) {
             if (props.options.multiple) {
                 if (props.modelValue == null) {
-                    console.log('null');
+                    emit('update:prevValue', JSON.parse(JSON.stringify(props.modelValue)))
                     emit('update:modelValue', [option.value])
                 } else {
                     if (props.modelValue.includes(option.value)) {
+                        emit('update:prevValue', JSON.parse(JSON.stringify(props.modelValue)))
                         emit('update:modelValue', props.modelValue.filter(p => p != option.value))
                     } else {
+                        emit('update:prevValue', JSON.parse(JSON.stringify(props.modelValue)))
                         emit('update:modelValue', [...props.modelValue, option.value])
                     }
                 }
             } else {
                 this.toggleOptions()
+                emit('update:prevValue', JSON.parse(JSON.stringify(props.modelValue)))
                 emit('update:modelValue', props.options.type == 'address' ? option.value : String(option.value))
             }
         }
