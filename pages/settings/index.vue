@@ -35,7 +35,7 @@
 		<AppVirtualTable 
 			v-else-if="categories.active == 'entities'"
 			:slug="null"
-			:path="`/entities/compose`"
+			:path="`/entities`"
 			:options="{
 				isHaveQuery: false,
 				query: {},

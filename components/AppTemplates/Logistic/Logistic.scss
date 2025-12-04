@@ -1,0 +1,41 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+.logistic {
+    grid-gap: 25px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+
+    &.logistic_dragging {
+
+    }
+
+    &.logistic_dragging-field {
+        @include mixins.userSelect(none);
+    }
+
+    @media (max-width: 1300px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.logistic__column {
+    max-width: 1125px;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    position: relative;
+    z-index: 1;
+
+    &:first-child {
+        z-index: 2;
+    }
+
+    &:last-child {
+        .popup {
+            .popup__content {
+                right: 0px;
+            }
+        }
+    }
+}

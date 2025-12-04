@@ -1,6 +1,6 @@
 <template>
   <section class="section-table" ref="sectionRef">
-    <TableTop v-if="props.options?.isHaveTopHeader" />
+    <TableTop v-if="props.options?.isHaveTopHeader" :title="props.options?.title ?? null"/>
     <div ref="tableRef" class="table" :class="{'table_permanent-edit': props.options.isPermanentEdit}">
       <TableHeader />
       <TableBody />
@@ -107,6 +107,7 @@
       },
       options: {
         default: {
+          title: null,
           isHaveQuery: false,
           query: {},
           isHaveFilter: true,

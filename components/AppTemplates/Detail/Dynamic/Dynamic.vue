@@ -1,55 +1,59 @@
 <template>
-    <ColumnFields 
-        v-if="props.tabs.active?.tab == 'order' || props.options.isModule"
-        :columns="detail.columns.list"
-        :slug="props.slug"
-        :hidden="detail.columns.hidden"
-        :options="{
-            isModule: props.options.isModule,
-            isDisableFooter: props.options.isGlobalEdit,
-            isHaveHistory: true,
-            isGlobalEdit: props.options.isGlobalEdit,
-        }"
-        :history="{
-            fields: detail.history.events,
-            loading: detail.history.loading
-        }"
-        :pageId="props.id"
-        :headerName="props.headerName"
-        @action="action => action.action == 'get' ? detail.get() : emit('action', action)"
-        @showMoreHistory="page => detail.history.update(page, props.tabs.active?.tab)"
-        @openModal="item => emit('action', {
-            action: 'openModal',
-            value: item
-        })"
-    />
+    <IconLoader v-if="detail.loading"/>
 
-    <AppHistory 
-        v-else-if="props.tabs.active?.tab == 'history'"
-        :title="'История изменений'"
-        :history="detail.history.fields"
-        :loading="detail.history.loading"
-        @showMoreHistory="page => detail.history.update(page, tabs.active.tab, {id: props.id, slug: props.slug})"
-        @openModal="item => emit('action', {
-            action: 'openModal',
-            value: item
-        })"
-    />
-
-    <AppVirtualTable 
-        v-else
-        :key="props.tabs.active?.tab"
-        :options="{
-            isHaveQuery: true,
-            query: props.tabs.queryTab,
-            isHaveFilter: false
-        }"
-        :slug="props.tabs.active?.slug"
-        @openModal="item => emit('action', {
-            action: 'openModal',
-            value: item
-        })"
-    />
+    <template v-else>
+        <ColumnFields 
+            v-if="props.tabs.active?.tab == 'order' || props.options.isModule"
+            :columns="detail.columns.list"
+            :slug="props.slug"
+            :hidden="detail.columns.hidden"
+            :options="{
+                isModule: props.options.isModule,
+                isDisableFooter: props.options.isGlobalEdit,
+                isHaveHistory: true,
+                isGlobalEdit: props.options.isGlobalEdit,
+            }"
+            :history="{
+                fields: detail.history.events,
+                loading: detail.history.loading
+            }"
+            :pageId="props.id"
+            :headerName="props.headerName"
+            @action="action => action.action == 'get' ? detail.get() : emit('action', action)"
+            @showMoreHistory="page => detail.history.update(page, props.tabs.active?.tab)"
+            @openModal="item => emit('action', {
+                action: 'openModal',
+                value: item
+            })"
+        />
+    
+        <AppHistory 
+            v-else-if="props.tabs.active?.tab == 'history'"
+            :title="'История изменений'"
+            :history="detail.history.fields"
+            :loading="detail.history.loading"
+            @showMoreHistory="page => detail.history.update(page, tabs.active.tab, {id: props.id, slug: props.slug})"
+            @openModal="item => emit('action', {
+                action: 'openModal',
+                value: item
+            })"
+        />
+    
+        <AppVirtualTable 
+            v-else
+            :key="props.tabs.active?.tab"
+            :options="{
+                isHaveQuery: true,
+                query: props.tabs.queryTab,
+                isHaveFilter: false
+            }"
+            :slug="props.tabs.active?.slug"
+            @openModal="item => emit('action', {
+                action: 'openModal',
+                value: item
+            })"
+        />
+    </template>
 </template>
 
 <script setup>
@@ -57,8 +61,8 @@
     
     import api from '@/helpers/api.js'
     import routes from '@/helpers/routes.js'
+    import IconLoader from '@AppIcons/Loader.vue'
     import { History, Columns } from '@/helpers/classes.js'
-
     import AppHistory from '@AppComponents/History/History.vue'; 
     import ColumnFields from '@AppComponents/ColumnFields/ColumnFields.vue';
     import AppVirtualTable from '@AppComponents/VirtualTable/VirtualTable.vue';
@@ -107,6 +111,7 @@
 
     class Detail {
         constructor() {
+            this.loading = false
             this.history = new History()
             this.columns = new Columns()
         }
@@ -115,6 +120,8 @@
         async get() {
             try {
                 let response = null
+                this.loading = true
+
                 if (props.options.isModule) {
                     const route = routes.detail.module.replace('${slug}', props.slug).replace('${id}', props.id).replace('${tab}', props.tabs.active.tab)
                     response = await api.callMethod('GET', route)
@@ -133,6 +140,7 @@
             } catch (error) {
                 console.log(error);
             } finally {
+                this.loading = false
             }
         }
         openModal(item) {
