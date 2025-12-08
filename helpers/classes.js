@@ -1803,8 +1803,8 @@ export class Field {
     }
 
     // Проверка видимости
-    checkVisible(field) {
-        if (field.visible_always) {
+    checkVisible(field, state) {
+        if ((state && field.visible_always) || field.type == 'text_group') {
             return false
         } else {
             if (field.type == 'select_dropdown') {
@@ -1815,6 +1815,8 @@ export class Field {
                     return !(value != null && value != '')
                 } else if (value == null) {
                     return true
+                } else if (field.type == 'address') {
+                    return !value.value
                 } else if (Array.isArray(value)) {
                     return !(value.filter(v => v != null && v != '').length > 0)
                 } else if (typeof value == 'object') {

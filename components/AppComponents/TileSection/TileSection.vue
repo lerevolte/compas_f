@@ -76,7 +76,8 @@
                 <div 
                     class="field" 
                     :class="{ 
-                        'field_hidden': !field.edit && fieldObject.checkVisible(field),
+                        'field_hidden': !field.edit && fieldObject.checkVisible(field, true),
+                        'field_empty': !field.edit && fieldObject.checkVisible(field, false),
                         'field_static': !field.can_edit,
                         'blank_required': field.required
                     }"

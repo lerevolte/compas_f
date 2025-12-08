@@ -15,8 +15,118 @@
     }
 
     &.tile-section_short {
+        .tile-section__body,
+        .tile-section__body .tile-section__body {
+            gap: 0px;
+            flex-wrap: wrap;
+            flex-direction: row;
+            
+            .field {
+                padding: 0px;
+                min-height: auto;
+
+                .icon_drag,
+                .field__settings,
+                .blank__title,
+                .form__item-title {
+                    display: none;
+                }
+
+                &.field_empty {
+                    display: none;
+                }
+
+                .file__values {
+                    .fancybox-item__img {
+                        width: 25px;
+                    }
+                }
+            }
+
+            .select {
+                &.select_icon {
+                    background: none;
+                    border: none;
+                    padding: 0px;
+
+                    img, 
+                    svg, 
+                    .img-text {
+                        width: 15px;
+                        height: 15px;
+                        min-height: 15px;
+                        min-width: 15px;
+                    }
+
+                    .img-text {
+                        font-size: 10px;
+                    }
+                }
+
+                .form__item_input {
+                    display: none;
+                }
+
+                .select__value {
+                    top: 0px;
+                    left: 0px;
+                    position: relative;
+                    max-width: none;
+
+                    .select__value-icon {
+                        gap: 5px;
+                    }
+                }
+            }
+
+            .form__item_map {
+                .button_copy,
+                .map__frame {
+                    display: none;
+                }
+            }
+        }
+
         .tile-section__body {
-            display: none;
+            padding: 15px;
+
+            & > *:not(:last-child) {
+                display: inline-flex;
+
+                &::after {
+                    content: '•';
+                    color: #8f8f8f;
+                    margin: 0px 5px;
+                }
+
+                &:has(.tile-section) {
+                    &::after {
+                        content: none;
+                    }
+
+                    .tile-section__body {
+                        & > *:last-child {
+                            display: inline-flex;
+
+                            &::after {
+                                content: '•';
+                                color: #8f8f8f;
+                                margin: 0px 5px;
+                            }
+                        }
+                    }
+                }
+            }
+
+            .tile-section__header {
+                display: none;
+            }
+
+            .tile-section__body {
+                background: none;
+                border: none;
+                padding: 0px;
+            }
         }
     }
     
