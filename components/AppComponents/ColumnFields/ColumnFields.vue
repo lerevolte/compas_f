@@ -111,7 +111,7 @@
                     delete: false
                 }"
                 :loading="section.buffer.loading"
-                @action="action => section[action.action](action.value, columns.list, pageId, props.slug, emit)"
+                @action="action => section[action.action](action.value, columns.list, pageId, props.slug, emit, options)"
             />
         </div>
     </div>
@@ -190,6 +190,7 @@
     const emit = defineEmits([
         'showMoreHistory',
         'openModal',
+        'closeDetail',
         'createEntity',
         'action'
     ])
@@ -226,6 +227,10 @@
         // Создание сущности
         createEntity(item) {
             emit('createEntity', item)
+        }
+
+        closeDetail() {
+            emit('closeDetail', true)
         }
     }
 

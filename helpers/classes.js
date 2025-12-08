@@ -4,7 +4,7 @@ import routes from '@/helpers/routes.js'
 import { useVirtualizer } from '@tanstack/vue-virtual'
 import isEqual from 'lodash/isEqual'
 
-import { format } from 'date-fns'
+import { format, startOfMonth, endOfMonth } from 'date-fns'
 import { toast } from 'vue3-toastify';
 import { useUserStore } from '@/stores/userStore.js'
 
@@ -1490,16 +1490,20 @@ export class Section {
     }
 
     // Массовое отменение изменения значений во всех секциях
-    cancel(value, columns) {
+    cancel(value, columns, pageId, slug, emit, options) {
         for (let column in columns) {
             for (let section of columns[column]) {
                 this.cancelEditAll(section)
             }
         }
+
+        if (options?.isGlobalEdit) {
+            emit('closeDetail', true)
+        }
     }
 
     // Сохранение изменений
-    async save(value, columns, pageId, slug, emit) {
+    async save(value, columns, pageId, slug, emit, options) {
         let isError = false
         let fields = []
         this.buffer.edits = []
@@ -1540,7 +1544,7 @@ export class Section {
         try {
             this.buffer.loading = true
             const request = {
-                id: pageId,
+                id: options?.isGlobalEdit ? 0 : pageId,
                 ...this.buffer.edits.reduce((obj, field) => {
                     obj[field.key] = field.type == 'relation' ? field.value?.value : field.value
                     return obj
@@ -1577,6 +1581,7 @@ export class Section {
                     }
                 }
             }
+            emit('action', { action: 'savePage', value: true })
         } catch (error) {
             console.log(error);
         } finally {
@@ -2077,11 +2082,28 @@ export class Settings {
                     value: JSON.parse(JSON.stringify(response.data.common.city))
                 }
             ]
+        } else if (this.category == 'documents') {
+            const response = await api.callMethod('GET', routes.settings.common.get)
+            this.section.fields = [
+                {
+                    id: 0,
+                    title: "E-mail для получения документов",
+                    key: "docs_email",
+                    type: "text",
+                    is_plural: 0,
+                    is_external_link: 0,
+                    required: 1,
+                    read_only: 0,
+                    value: response.data.common.docs_email,
+                    visible_always: 1,
+                    can_read: 1,
+                    can_edit: 1,
+                }
+            ]
         } else {
             const response = await api.callMethod('GET', routes.settings.modules[this.category].get)
             this.section.fields = response.data
         }
-
     }
 
     // Сохранение изменений
@@ -2123,12 +2145,14 @@ export class Settings {
         try {
             this.buffer.loading = true
             const request = this.buffer.edits.reduce((obj, field) => {
-                obj[field.key] = field.type == 'relation' ? field.value?.value : field.value
+                obj[field.key] = field.type == 'relation' ? field.value?.value : field.type == 'text' ? field.value.value ?? field.value : field.value
                 return obj
             }, {})
 
             if (this.category == 'common') {
                 await api.callMethod('PUT', routes.settings.common.save, request)
+            } else if (this.category == 'documents') {
+                await api.callMethod('PUT', routes.settings.documents.save, request)
             } else {
                 await api.callMethod('PUT', routes.settings.modules[this.category].save, request)
             }
@@ -2187,6 +2211,55 @@ export class Settings {
                     clearField(field)
                 }
             }
+        }
+    }
+}
+
+export class Tariffs {
+    constructor() {
+        this.balance = {
+            tariffs: {
+                current: null,
+                options: [],
+                changed: false
+            },
+            payers: {
+                balance: 0,
+                sum: 0,
+                company: {
+                    value: null,
+                    options: []
+                }
+            },
+            actions: {
+                total_sum: 0,
+                date: null,
+                table: {
+                    header: [],
+                    body: []
+                }
+            }
+        }
+    }
+
+    async getBalance() {
+        const response = await api.callMethod('GET', routes.tariffs.get_balance)
+        this.balance.tariffs = {
+            current: response.data.current_tariff,
+            options: response.data.tariffs,
+            changed: false
+        }
+        this.balance.payers = {
+            balance: response.data.balance,
+            sum: 0,
+            company: {
+                value: null,
+                options: response.data.payers
+            }
+        }
+        this.balance.actions = {
+            total_sum: response.data.total_sum,
+            date: [format(startOfMonth(new Date()), 'yyyy-MM-dd'), format(endOfMonth(new Date()), 'yyyy-MM-dd')],
         }
     }
 }

@@ -38,6 +38,13 @@
             }
         }
     }
+
+    &:has(.loader) {
+        .detail-page__header,
+        .tabs {
+            display: none !important;
+        }
+    }
 }
 
 .detail-page__header {

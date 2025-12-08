@@ -21,6 +21,10 @@
             :headerName="props.headerName"
             @action="action => action.action == 'get' ? detail.get() : emit('action', action)"
             @showMoreHistory="page => detail.history.update(page, props.tabs.active?.tab)"
+            @closeDetail="() => emit('action', {
+                action: 'closeDetail',
+                value: item
+            })"
             @openModal="item => emit('action', {
                 action: 'openModal',
                 value: item
@@ -95,6 +99,7 @@
 
     const emit = defineEmits([
         'action',
+        'closeDetail',
         'openModal'
     ])
 

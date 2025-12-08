@@ -23,6 +23,7 @@
             :slug="modal.slug"
             :isGlobalEdit="['create', 'copy'].includes(modal.type)"
             :isCopy="modal.type === 'copy'"
+            @close="entity.modal.pop()"
             @closeDetail="() => entity.closeDetail()"
             @updateMetaHeader="item => entity.updateMetaHeader(item)"
             @openModal="item => entity.openModal(item)"
@@ -58,10 +59,6 @@
 
     openModal(item) {
       item.slug = item.slug ?? router.params.slug
-
-      console.log();
-      
-
       if ((this.modal.length >= 11 || window.screen.width <= 990) && !['create', 'copy'].includes(item.type)) {
         this.modal = []
         this.addresses = []
@@ -85,10 +82,12 @@
 
     closeDetail() {
       const prevAddress = this.addresses.pop()
-      window.history.replaceState({}, document.title, prevAddress.link);
-      useHead({
-        title: prevAddress.title
-      })
+      if (prevAddress?.link) {
+        window.history.replaceState({}, document.title, prevAddress?.link);
+        useHead({
+          title: prevAddress.title
+        })
+      }
     }
   }
 

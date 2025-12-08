@@ -44,7 +44,7 @@
             :tabs="tabs.list"
             :activeTab="tabs.active?.tab"
             :isModule="tabs.is_module"
-            :disableAll="props.isGlobalEdit"
+            :disableAll="detail.isGlobalEdit"
             :slug="detail.slug"
             :options="{
                 modal: tabs.modal
@@ -58,7 +58,7 @@
             :options="{
                 isModule: tabs.is_module,
                 isCopy: props.isCopy,
-                isGlobalEdit: props.isGlobalEdit
+                isGlobalEdit: detail.isGlobalEdit
             }"
             :updateComponent="detail.updateComponent"
             :headerName="detail.header.name"
@@ -148,11 +148,13 @@
             this.header = new HeaderEditable()
             this.updateComponent = 0
             this.columns = {}
+            this.isGlobalEdit = false
         }
 
         // Получение данных
         get() {
             this.id = props.id ?? router.params.id
+            this.isGlobalEdit = props.isGlobalEdit
             this.slug = props.slug ?? router.params.slug
             this.updateComponent++
         }
@@ -177,6 +179,15 @@
             emit('openModal', item)
         }
 
+        closeDetail() {
+            emit('close', true)
+            emit('closeDetail', true)
+        }
+
+        savePage() {
+            this.isGlobalEdit = false
+        }
+        
         // Обновление метаданных страницы
         updateMetaHeader(meta) {
             emit('updateMetaHeader', meta)

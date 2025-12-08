@@ -4,12 +4,16 @@
   Options -Multiviews
 
   # Serve existing files/directories as-is
-  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -s [OR]
+  RewriteCond %{REQUEST_FILENAME} -l [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
+  # Internal rewrite for SPA deep links; keeps URL (no redirect)
+  RewriteRule ^objects/.*$ index.html [L]
+
   # Fallback all other requests to index.html (SPA routing)
-  RewriteRule ^ index.html [L]
+  RewriteRule . index.html [L]
 </IfModule>
 
 # If mod_rewrite is not available, try FallbackResource (if supported)

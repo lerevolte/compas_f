@@ -480,6 +480,12 @@
             this.name = response.name
             this.is_short = response.is_short
             this.isLocalShort = response.is_short
+
+            if (props.options?.isGlobalEdit) {
+                for (let field of response.fields) {
+                    fieldObject.value.initChangeField(field, null, 'option')
+                }
+            }
         }
  
         // Редактирование заголовка

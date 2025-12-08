@@ -12,11 +12,9 @@
         display: flex;
     }
 
-    button {
-        .icon_plus {
-            svg {
-                @include mixins.resolution(18px, 18px);
-            }
+    .icon_plus {
+        svg {
+            @include mixins.resolution(18px, 18px);
         }
     }
 </style>

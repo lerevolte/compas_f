@@ -83,6 +83,9 @@ export default {
             get: '/settings/account',
             save: '/settings/account'
         },
+        documents: {
+            save: '/settings/account'
+        },
         entities: {
             get: '/entities'
         },
@@ -92,5 +95,8 @@ export default {
                 save: '/modules/logistic'
             }
         }
+    },
+    tariffs: {
+        get_balance: '/balance',
     }
 }

@@ -223,6 +223,7 @@
 	const route = useRoute()
 
     // Загружаем данные самыми первыми на сайте
+    await userStore.get()
     await menuStore.get()
     await userStore.getRoles()
     

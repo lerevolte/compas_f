@@ -1,6 +1,6 @@
 <template>
     <div class="table-calc">
-        <AppButton class="button_fill" @click="table.addLocalRow()">
+        <AppButton class="button_fill button_small" @click="table.addLocalRow()">
             <AppIconPlus />
             Добавить строку
         </AppButton>

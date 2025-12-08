@@ -392,3 +392,19 @@ section {
         pointer-events: all;
     }
 }
+
+
+.tariffs__group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    .section-table {
+        margin-bottom: 0px;
+    }   
+}
+
+.tariffs__group-header {
+    display: flex;
+    justify-content: end;
+}
