@@ -1,4 +1,8 @@
 <template>
+  <TableCalc 
+    v-if="table.slug == 'products'"
+  />
+  
   <section class="section-table" ref="sectionRef">
     <TableTop v-if="props.options?.isHaveTopHeader" :title="props.options?.title ?? null"/>
     <div ref="tableRef" class="table" :class="{'table_permanent-edit': props.options.isPermanentEdit}">
@@ -24,7 +28,7 @@
       @action="action => table[action.action](action.value)"
     />
   </teleport>
-  <teleport to="#menu__overlay" v-if="table.deleteBuffer.state && table.deleteBuffer.type == 'вудуеу'">
+  <teleport to="#menu__overlay" v-if="table.deleteBuffer.state && table.deleteBuffer.type == 'delete'">
       <AppModalWarning 
           :options="{
               title: 'Удаление',
@@ -94,9 +98,14 @@
   import TableHeader from '@AppComponents/VirtualTable/Header/Header.vue'
   import TableFooter from '@AppComponents/VirtualTable/Footer/Footer.vue'
   import MassAction from '@AppComponents/MassAction/MassAction.vue'
+  import TableCalc from './Calc/Calc.vue'
   import ScrollButtons from '@AppComponents/VirtualTable/ScrollButtons/ScrollButtons.vue'
   
   const props = defineProps({
+      pageId: {
+        default: null,
+        type: [Number, String]
+      },
       slug: {
           default: '',
           type: String
@@ -108,6 +117,7 @@
       options: {
         default: {
           title: null,
+          isLocalTable: false,
           isHaveQuery: false,
           query: {},
           isHaveFilter: true,
@@ -118,18 +128,25 @@
           updatingCount: 0
         },
         type: Object
+      },
+      table: {
+        default: {
+          header: [],
+          body: []
+        }
       }
   })
 
   const emit = defineEmits([
-      'openModal'
+      'openModal',
+      'getData'
   ])
 
   const isClient = ref(false)
   const tableRef = ref(null)
   const sectionRef = ref(null)
 
-  const table = ref(new Table({tableRef, slug: props.slug, path: props.path, options: props.options, emit}))
+  const table = ref(new Table({tableRef, slug: props.slug, path: props.path, pageId: props.pageId, options: props.options, emit}))
   const common = new Common()
 
   const isChoosed = computed(() => {
@@ -137,6 +154,8 @@
     })
 
   onMounted(async () => {
+    console.log(props.pageId);
+    
     nextTick(() => {
       initTable()
     })
@@ -149,7 +168,9 @@
     if (props.slug == null && props.path == null) return
     table.value.slug = props.slug
     table.value.path = props.path
-    if (props.options.isHaveQuery) {
+    if (props.options?.isLocalTable) {
+      table.value.getLocalTable(props.table)
+    } else if (props.options.isHaveQuery) {
       table.value.dependences = {
         state: true,
         query: props.options.query
@@ -164,8 +185,7 @@
 
   watch(() => props.options.updatingCount, () => {
     if (props.options.updatingCount) {
-      table.value.path = props.path
-      table.value.get()
+      initTable()
     }
   }, {deep: true})
 

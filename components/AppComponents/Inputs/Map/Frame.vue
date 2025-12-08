@@ -3,15 +3,6 @@
         <div ref="mapContainer" class="map__frame-map"></div>
 
         <div class="map__frame-controls">
-            <button 
-                v-if="props.options.enableRoute" 
-                class="map__frame-btn"
-                :disabled="!canBuildRoute"
-                @click="buildRoute()"
-            >
-                {{ routeLayer ? 'Перестроить маршрут' : 'Построить маршрут' }}
-            </button>
-
             <button
                 v-if="props.options.enableSelection"
                 class="map__frame-btn"
@@ -118,12 +109,6 @@
             .filter(Boolean);
     });
 
-    /**
-     * Проверяет, можно ли построить маршрут
-     * Маршрут можно построить если включена опция, есть минимум 2 точки и карта инициализирована
-     * @returns {Boolean} true если можно построить маршрут
-     */
-    const canBuildRoute = computed(() => props.options.enableRoute && normalizedPoints.value.length >= 2 && Boolean(mapInstance.value));
 
     /**
      * Проверяет, используется ли кастомная иконка для маркеров
@@ -547,7 +532,8 @@
         renderMarkers(normalizedPoints.value);
         focusMapOnPoints(normalizedPoints.value);
 
-        if (routeLayer.value) {
+        if (routeLayer.value || props.options) {
+            clearRoute();
             buildRoute(true);
         }
     };

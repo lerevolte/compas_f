@@ -34,7 +34,10 @@ export default {
         open: '/objects/${slug}/${row_id}/compose',
         copy: '/objects/${slug}/${row_id}/compose?is_copy=1',
         delete: '/objects/${slug}',
-        restore: '/objects/${slug}/restore'
+        restore: '/objects/${slug}/restore',
+        update_products: '/tables/order_products',
+        reset_products: '/tables/order_products/reset',
+        set_products: '/logistic_tasks/${page_id}/set_products'
     },
     filter: {
         move: '/filters/${slug}/change-sort',

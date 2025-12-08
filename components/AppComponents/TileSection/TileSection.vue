@@ -68,6 +68,7 @@
             drag-class="draggable-drag"
             ghost-class="draggable-ghost"
             fallback-class="draggable-fallback"
+            @change="event => fieldObject.dragChange(event, {type: props.options.type}, props.section)"
             @start="event => fieldObject.dragStart(event)"
             @end="event => fieldObject.dragEnd(event, {type: props.options.type})"
         >

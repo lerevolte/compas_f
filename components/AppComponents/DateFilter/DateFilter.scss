@@ -1,0 +1,58 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+.date-fitler {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.date-fitler__item {
+    border: 1px solid #bcbcbc;
+    border-radius: 5px;
+    color: #8f8f8f;
+    cursor: pointer;
+    min-width: 75px;
+    padding: 10px 15px;
+    white-space: nowrap;
+    display: grid;
+    place-items: center;
+    @include mixins.userSelect(none);
+
+    &.date-fitler__item_active {
+        border: 1px solid #0584fe;
+        color: #000;
+        min-width: 110px;
+        cursor: default;
+    }
+}
+
+
+.date-fitler__date {
+    margin-left: 5px;
+    width: 155px;
+
+    .dp__input_wrap {
+        cursor: pointer;
+    
+        &::after {
+            content: "Выбрать день";
+            position: absolute;
+            @include mixins.position(10px, 40px);
+        }
+    
+        &::before {
+            content: url("/icons/calendar.svg");
+            position: absolute;
+            @include mixins.position(10px, 15px);
+        }
+    }
+
+    .dp__input {
+        font-size: 0;
+    }
+
+    .dp--clear-btn {
+        display: none;
+    }
+}

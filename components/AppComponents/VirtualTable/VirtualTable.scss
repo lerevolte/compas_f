@@ -215,6 +215,10 @@
     }
   }
 
+  &.table__body_dragging {
+    @include mixins.userSelect(none);
+  }
+
   .table__row {
     &:nth-child(-n+12) {
       .popup {
@@ -241,6 +245,30 @@
 
     &[data-column-key="isChoose"] {
       padding: 0px;
+    }
+
+    &[data-column-key="product_id"] {
+      .select__value {
+        display: flex;
+        height: 30px;
+        align-items: center;
+      }
+
+      .select.select_icon {
+        .form__item_input {
+          padding-left: 0px;
+        }
+
+        figcaption {
+
+          padding-left: 10px;
+        }
+
+        img,
+        .img-text {
+          display: none;
+        }
+      }
     }
   
     .form__item_checkbox {
@@ -287,5 +315,20 @@
     .table__label {
       display: block;
     }
+  }
+}
+
+.table__icon-drag,
+.table__icon-delete {
+  padding: 0px 5px;
+}
+
+.table__icon-delete {
+  cursor: pointer;
+  position: relative;
+
+  svg {
+    aspect-ratio: 1;
+    width: 12px;
   }
 }

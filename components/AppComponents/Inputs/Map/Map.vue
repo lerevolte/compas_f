@@ -1,27 +1,29 @@
 <template>
     <div class="form__item form__item_map map">
-        <AppSelect 
-            v-if="props.options.edit"
-            :parentContainer="props.parentContainer"
-            :isPreventBottom="props.isPreventBottom"
-            :options="{
-                ...props.options,
-                searchable: true
-            }"
-            v-model="setModelValue"
-        />
-
-        <AppBlank 
-            v-else
-            :item="{
-                title: props.options.title,
-                text: props.modelValue ? props.modelValue?.text ?? null : null
-            }"
-            :options="{
-                isLink: false,
-                isCheckEmpty: true
-            }"
-        />
+        <template v-if="props.options.showSelect || props.options.showSelect == undefined">
+            <AppSelect 
+                v-if="props.options.edit"
+                :parentContainer="props.parentContainer"
+                :isPreventBottom="props.isPreventBottom"
+                :options="{
+                    ...props.options,
+                    searchable: true
+                }"
+                v-model="setModelValue"
+            />
+    
+            <AppBlank 
+                v-else
+                :item="{
+                    title: props.options.title,
+                    text: props.modelValue ? props.modelValue?.text ?? null : null
+                }"
+                :options="{
+                    isLink: false,
+                    isCheckEmpty: true
+                }"
+            />
+        </template>
 
         <AppButton 
             v-show="props.modelValue && props.modelValue.text" 
@@ -30,8 +32,9 @@
         />
 
         <MapFrame 
-            :points="[props.modelValue?.coords]"
+            :points="props.points ?? [props.modelValue?.coords]"
             :options="{
+                ...props.frameOptions,
                 defaultZoom: 17
             }"
         />
@@ -75,9 +78,18 @@
                 isHaveNull: false,
                 multiple: false,
                 type: 'select',
-                placeholder: '' 
+                placeholder: '',
+                showSelect: true
             },
             type: Object
+        },
+        points: {
+            default: null,
+            type: Array
+        },
+        frameOptions: {
+            enableRoute: false,
+            enableSelection: false,
         },
         modelValue: null,
         error: {

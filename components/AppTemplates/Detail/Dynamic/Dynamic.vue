@@ -39,8 +39,34 @@
             })"
         />
     
+        <div class="dynamin__group" v-else-if="props.tabs.active?.tab == 'products'">
+            <AppVirtualTable 
+                :pageId="props.id"
+                :options="{
+                    draggableTarget: '.icon_drag',
+                    isDraggable: true,
+                    isLocalTable: true,
+                    isHaveQuery: false,
+                    query: {},
+                    isHaveFilter: false,
+                    isPermanentEdit: true,
+                    isTrash: false,
+                    isHaveTopHeader: true,
+                    isHaveFooter: false,
+                    updatingCount: 0
+                }"
+                :table="detail.products"
+                :slug="'products'"
+                @openModal="item => emit('action', {
+                    action: 'openModal',
+                    value: item
+                })"
+            />
+        </div>
+
         <AppVirtualTable 
             v-else
+            :pageId="props.id"
             :key="props.tabs.active?.tab"
             :options="{
                 isHaveQuery: true,
@@ -112,6 +138,10 @@
     class Detail {
         constructor() {
             this.loading = false
+            this.products = {
+                table: [],
+                list: []
+            }
             this.history = new History()
             this.columns = new Columns()
         }
@@ -133,6 +163,8 @@
                     emit('action', { action: 'updateMetaHeader', value: response.data.detail.header_title })
                 }
                 
+                this.products.table = response.data.table.tableKeys
+                this.products.list = response.data.table.tableBody
                 this.history.get(response.data)
                 this.columns.get(response.data.detail)
                 

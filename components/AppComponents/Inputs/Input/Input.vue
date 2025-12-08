@@ -37,6 +37,7 @@
     import AppError from '@AppComponents/Error/Error.vue'
 
     const emit = defineEmits([
+        'update:prevValue',
         'update:modelValue',
         'blur'
     ])
@@ -75,6 +76,7 @@
             emitRafId = null
         }
         emitRafId = requestAnimationFrame(() => {
+            emit('update:prevValue', JSON.parse(JSON.stringify(props.modelValue)))
             emit('update:modelValue', target.value)
             emitRafId = null
         })

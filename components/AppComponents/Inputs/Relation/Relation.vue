@@ -107,7 +107,7 @@
         </AppError>
 
         <AppButton 
-            v-if="props.options.edit !== false"
+            v-if="props.options.edit !== false && props.options.isCanAdd"
             class="button_text"
             :disabled="props.options.edit === false"
             @click="addNewSelect"
@@ -134,6 +134,7 @@
     const emit = defineEmits([
         'update:modelValue',
         'clickLink',
+        'update:prevValue',
         'create'
     ])
 
@@ -163,7 +164,13 @@
             // Объявляем `throttle` один раз
             this.throttledFilter = throttle(async (value) => {
                 let response = null
-                response = await api.callMethod("GET", `/objects/search?per_page=12&field_id=${props.options.relation}&q=${value}`)
+
+                if (props.options?.relation_type) {
+                    response = await api.callMethod("GET", `/objects/search?entity=${props.options?.relation_type}&q=${value}`)
+                } else {
+                    response = await api.callMethod("GET", `/objects/search?per_page=12&field_id=${props.options.relation}&q=${value}`)
+                }
+
                 this.state.list = response.data.map(p => ({ label: p.label, value: p.value }))
             }, 100);
         }
@@ -309,7 +316,7 @@
         
         // Обновляем внутренние данные
         normalizedModelValue.value = { value: newValueArray, localOptions: newLocalOptionsArray };      
-        
+        emit('update:prevValue', JSON.parse(JSON.stringify(props.modelValue)))
         emit('update:modelValue', { 
             value: newValueArray, 
             localOptions: newLocalOptionsArray 
@@ -333,7 +340,7 @@
         
         // Обновляем внутренние данные
         normalizedModelValue.value = { value: newValueArray, localOptions: newLocalOptionsArray };
-        
+        emit('update:prevValue', JSON.parse(JSON.stringify(props.modelValue)))
         emit('update:modelValue', { 
             value: newValueArray, 
             localOptions: newLocalOptionsArray 
@@ -394,6 +401,7 @@
                 required: false,
                 isSetDefault: false,
                 isHaveNull: false,
+                relation_type: null,
                 multiple: false,
                 type: 'select',
                 placeholder: '' 

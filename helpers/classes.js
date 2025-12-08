@@ -315,12 +315,14 @@ export class Auth {
 }
 
 export class Table {
-    constructor({tableRef, slug, options, path, emit}) {
+    constructor({tableRef, slug, pageId, options, path, emit}) {
         this.common = new Common()
         this.filter = new Filter(this)
         this.slug = slug
         this.path = path
         this.emit = emit
+        this.isDragging = false
+        this.pageId = pageId,
         this.options = options
 
         this.isChanged = false
@@ -381,8 +383,31 @@ export class Table {
             
             this.getHeader(response.data.table)
             await this.initVirtualizer()
+            this.emit('getData', response.data.list.data)
         } catch (error) {
             console.log('get_table', error);
+        } finally {
+            this.loading = false
+        }
+    }
+
+    async getLocalTable(response) {
+        try {
+            if (response.list.data.length > 0) {
+                response.list.data = response.list.data.map((item, index) => {
+                    return {
+                        ...item,
+                        local_id: index
+                    }
+                })
+            }
+            this.loading = true
+            this.set(response, true)
+            this.getHeader(response.table)
+            await this.initVirtualizer()
+            this.emit('getData', response.list.data)
+        } catch (error) {
+            console.log(error);
         } finally {
             this.loading = false
         }
@@ -397,6 +422,7 @@ export class Table {
             this.filter.set(response.fields)
             this.getHeader(response.table)
             await this.initVirtualizer()
+            this.emit('getData', response.list.data)
         } catch (error) {
             console.log('get_table', error);
         } finally {
@@ -433,7 +459,7 @@ export class Table {
     }
 
     // Установка таблицы
-    async set(response, skip = false) {
+    async set(response) {
         this.getBody(response.list.data ?? response.list)
         this.setSortItem({
             sort_field: response.list.sort_field,
@@ -472,7 +498,8 @@ export class Table {
         try {
             this.loading = true
             this.isChanged = true
-            const response = await api.callMethod('GET', routes.table.reset.replace('${slug}', this.slug))
+            const route = this.slug == 'products' ? routes.table.reset_products : routes.table.reset.replace('${slug}', this.slug)
+            const response = await api.callMethod('GET', route)
 
             if (response.data.fields) {
                 this.setSortItem({
@@ -497,42 +524,73 @@ export class Table {
             let requestRow = {}
             let isEdit = false
             let column = null
-            
-            for (let backupRow of this.backup.body) {
-                requestRow = {}
-                isEdit = false
 
-                let row = rawRequest.find(item => item.id == backupRow.id)
-
-                if (row) {
-                    for (let key in row) {
-                        if (!isEqual(row[key], backupRow[key]) && ['isChoose', 'edit'].indexOf(key) == -1) {
-                            column = this.header.find(column => column.key == key)
-                            requestRow[key] = JSON.parse(JSON.stringify(row[key]))
-
-                            if (column.type == 'relation') {
-                                row[key].value = row[key].value.filter(p => p != null)
-                                row[key].localOptions = row[key].localOptions.filter(p => p != null && p.value != null)
-                                requestRow[key] = requestRow[key].value.filter(p => p != null)
+            if (this.slug == 'products') {
+                this.body = this.body.filter(row => row.id)
+                request = JSON.parse(JSON.stringify(this.body))
+                request = request.map(row => {
+                    return ({
+                        id: row['id'],
+                        name: row['name'],
+                        product_id: row['product_id'],
+                        product_name: row['product_name'],
+                        product_price: row['product_price'],
+                        product_count: row['product_count'],
+                        product_weight: row['product_weight'],
+                        product_sum: row['product_sum']
+                    })
+                })
+                
+                nextTick(() => {
+                    this.initVirtualizer()
+                })
+            } else {
+                for (let backupRow of this.backup.body) {
+                    requestRow = {}
+                    isEdit = false
+    
+                    let row = rawRequest.find(item => item.id == backupRow.id)
+    
+                    if (row) {
+                        for (let key in row) {
+                            if (!isEqual(row[key], backupRow[key]) && ['isChoose', 'edit'].indexOf(key) == -1) {
+                                column = this.header.find(column => column.key == key)
+                                requestRow[key] = JSON.parse(JSON.stringify(row[key]))
+    
+                                if (column.type == 'relation') {
+                                    row[key].value = row[key].value.filter(p => p != null)
+                                    row[key].localOptions = row[key].localOptions.filter(p => p != null && p.value != null)
+                                    requestRow[key] = requestRow[key].value.filter(p => p != null)
+                                }
+    
+                                isEdit = true
                             }
-
-                            isEdit = true
                         }
-                    }
-
-                    if (isEdit) {
-                        requestRow.id = row.id
-                        request.push(requestRow)
+    
+                        if (isEdit) {
+                            requestRow.id = row.id
+                            request.push(requestRow)
+                        }
                     }
                 }
             }
+            
 
             if (request.length == 0) return
 
             if (this.slug) {
-                await api.callMethod('POST', routes.table.save.replace('${slug}', this.slug), {
-                    rows: request
-                })
+                if (this.slug == 'products') {
+
+                    console.log(request);
+                    
+                    await api.callMethod('PUT', routes.table.set_products.replace('${page_id}', this.pageId), {
+                        products: request
+                    })
+                } else {
+                    await api.callMethod('POST', routes.table.save.replace('${slug}', this.slug), {
+                        rows: request
+                    })
+                }
             } else {
                 await api.callMethod('PUT', routes.table.save_path.replace('${path}', this.path), {
                     rows: request
@@ -555,14 +613,20 @@ export class Table {
 
     // Отмена редактирования
     cancel() {
-        let backupRow = null
-        for (let i = 0; i < this.body.length; i++) {
-            backupRow = this.backup.body.find(item => item.id == this.body[i].id)
-            if (backupRow) {
-                this.body[i] = backupRow
+        if (this.slug == 'products') {
+            this.body = this.backup.body
+            nextTick(() => {
+                this.initVirtualizer()
+            })
+        } else {
+            let backupRow = null
+            for (let i = 0; i < this.body.length; i++) {
+                backupRow = this.backup.body.find(item => item.id == this.body[i].id)
+                if (backupRow) {
+                    this.body[i] = backupRow
+                }
             }
         }
-
         this.clear()
     }
 
@@ -688,6 +752,7 @@ export class Table {
             state: true,
             type: 'delete'
         }
+        
     }
 
     // Удалить строку 
@@ -719,6 +784,51 @@ export class Table {
             this.loading = false
         }
     }
+
+    // Локальное удаление строк
+    localDelete(deletedRow) {
+        this.backupLocalBody()
+        this.state = 'edit'
+        this.body = this.body.filter(row => deletedRow.local_id != row.local_id)
+        this.body = this.body.map((row) => {
+            return {
+                ...row,
+                edit: true,
+                isChoose: true
+            }
+        })
+
+        nextTick(() => {
+            this.initVirtualizer()
+        })
+    }
+
+    // Бэкап локальных строк
+    backupLocalBody(localBody = null) {{
+        if (this.backup.body.length == 0) {
+            this.backup.body = JSON.parse(JSON.stringify(localBody ?? this.body))
+        } else {
+            if (localBody) {
+                this.backup.body = JSON.parse(JSON.stringify(localBody.map(row => {
+                    let backupRow = this.backup.body.find(item => item.id == row.id)
+                    if (backupRow) {
+                        return backupRow
+                    } else {
+                        return row
+                    }
+                })))
+            } else {
+                this.backup.body = JSON.parse(JSON.stringify(this.body.map(row => {
+                    let backupRow = this.backup.body.find(item => item.id == row.id)
+                    if (backupRow) {
+                        return backupRow
+                    } else {
+                        return row
+                    }
+                })))
+            }
+        }
+    }}
 
     // Инициализация удаления
     initRestore(rows = []) {
@@ -761,7 +871,33 @@ export class Table {
         }
     }
 
+    dragStart(event) {
+        this.isDragging = true
+        if (this.slug == 'products' && !this.state) {
+            this.backupLocalBody(event.from.__draggable_component__.modelValue.map(row => {
+                return {
+                    ...row.original
+                }
+            }))
+        }
+    }
 
+    // Конец перетаскивания
+    dragEnd(event) {
+        this.isDragging = false
+        if (this.slug == 'products') {
+            this.state = 'edit'
+            this.body = this.body.map(row => {
+                return {
+                    ...row,
+                    edit: true,
+                    isChoose: true
+                }
+            })
+        }
+
+        this.emit('getData', this.body)
+    }
 
     // Пагинация
     async changePage(page) {
@@ -797,7 +933,7 @@ export class Table {
 
     // Сохранение настроек
     async saveSettings(role) {
-        let method = routes.table.save_settings.replace('${slug}', this.slug)
+        let method = this.slug == 'products' ? routes.table.update_products : routes.table.save_settings.replace('${slug}', this.slug)
 
         await api.callMethod('POST', role ? `${method}/${role}` : method, {
             sort_field: this.sortItem.sort_field,
@@ -819,6 +955,31 @@ export class Table {
         } finally {
             this.loading = false
         }
+    }
+
+    // Добавление локальной строки
+    addLocalRow() {
+        if (!this.state) {
+            this.backupLocalBody()
+        }
+        
+        this.state = 'edit'
+        this.body = this.body.map(row => {
+            return {
+                ...row,
+                edit: true,
+                isChoose: true
+            }
+        })
+        const newObj = this.header.reduce((acc, item) => {
+            acc[item.key] = item.type == 'number' ? 0 : null
+            return acc;
+        }, {});
+        newObj.local_id = this.body.length + 1
+        this.body.push(newObj)
+        nextTick(() => {
+            this.initVirtualizer()
+        })
     }
 }
 
@@ -853,7 +1014,7 @@ export class Filter {
                         for (let value of this.setter.dependences.query[key]) {
                             response.push(`filter[${key}][]=${value}`)
                         }
-                    } else {
+                    } else if (this.setter.dependences.query[key]) {
                         response.push(`filter[${key}]=${this.setter.dependences.query[key]}`)
                     }
                 }
@@ -1422,6 +1583,21 @@ export class Section {
             this.buffer.loading = false
         }
     }
+
+    async dragGroupField(item, column_key, slug, columns) {
+        for (let section of columns[column_key]) {
+            for (let field of section.fields) {
+                if (field.id == item.groupField.id) {
+                    field.fields = item.groupField.fields
+                }
+            }
+        }
+
+        await api.callMethod('PUT', routes.detail.update_field.replace('${id}', item.groupField.id), {
+            id: item.groupField.id,
+            subfields: item.groupField.fields.map(p => p.id)
+        })
+    }
 }
 
 // Поля
@@ -1770,6 +1946,17 @@ export class Field {
             })
         })
     }
+
+    dragChange(event, options = {type: 'section'}, groupField) {
+        if (this.dragger) {
+            this.dragger.classList.remove('column-fields_dragging-field')
+            this.dragger = null
+        }
+        
+        if (options && options.type == 'field') {
+            this.emit('actionSection', {action: 'dragGroupField', value: {groupField, event}})
+        }
+    }
 }
 
 export class Settings {
@@ -2001,19 +2188,3 @@ export class Settings {
         }
     }
 }
-
-// название
-// часовой пояс
-// город
-// сколько дней хранить
-// отображение подсказок
-// удалить портал
-
-// {
-//     "name": "opt6",
-//     "timezone": "Europe/Moscow",
-//     "city": "Россия, г Москва",
-//     "login_days": "360",
-//     "docs_email": "denis@opt6.ru",
-//     "hints": 1
-// }

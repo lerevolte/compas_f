@@ -143,7 +143,7 @@
             },
             type: Object
         },
-        modelValue: [Array, Object],
+        modelValue: [Array, Object, String],
         error: {
             default: {
                 state: false,

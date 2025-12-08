@@ -17,6 +17,27 @@
     &:has(.column-fields_dragging) {
         @include mixins.userSelect(none);
     }
+
+    .section-table {
+        padding: 0px;
+        margin: 0px 25px;
+        max-height: calc(100% - 40px);
+    }
+    
+    .dynamin__group {
+        padding: 0px;
+        margin: 0px 25px;
+        max-height: calc(100% - 160px);
+
+        .section-table {
+            margin: 0px;
+            max-height: none;
+
+            .show-more {
+                display: none;
+            }
+        }
+    }
 }
 
 .detail-page__header {
