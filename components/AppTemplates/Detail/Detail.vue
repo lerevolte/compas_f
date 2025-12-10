@@ -57,7 +57,7 @@
             :slug="detail.slug"
             :options="{
                 isModule: tabs.is_module,
-                isCopy: props.isCopy,
+                isCopy: detail.isCopy,
                 isGlobalEdit: detail.isGlobalEdit
             }"
             :updateComponent="detail.updateComponent"
@@ -131,9 +131,19 @@
                 this.active = tab
             } else {
                 const findedField = common.findColumnField(detail.value.columns, tab.tab)
+                let request = null
+
+                if (findedField && findedField.value) {
+                    if (findedField.value.value && findedField.value.value.length > 0) {
+                        request = findedField.value.value
+                    } else {
+                        request = null
+                    }
+                }
+                
                 this.queryTab = {
                     is_slug: true,
-                    id: findedField && findedField.value && findedField.value.value ? findedField.value.value : 'null'
+                    id: request
                 }
                 this.active = tab
             }
@@ -149,12 +159,14 @@
             this.updateComponent = 0
             this.columns = {}
             this.isGlobalEdit = false
+            this.isCopy = false
         }
 
         // Получение данных
         get() {
             this.id = props.id ?? router.params.id
             this.isGlobalEdit = props.isGlobalEdit
+            this.isCopy = props.isCopy
             this.slug = props.slug ?? router.params.slug
             this.updateComponent++
         }
@@ -184,8 +196,23 @@
             emit('closeDetail', true)
         }
 
-        savePage() {
-            this.isGlobalEdit = false
+        savePage(response) {
+            const item = response.data
+
+            if (this.isGlobalEdit) {
+                this.isGlobalEdit = false
+                this.updateComponent++
+                this.isCopy = false
+                this.id = item.id
+                emit('updateMetaHeader', {
+                    title: item.header_title,
+                    href: {
+                        id: item.id,
+                        slug: detail.value.slug
+                    },
+                })
+            }
+
         }
         
         // Обновление метаданных страницы

@@ -17,7 +17,7 @@
 
     const updateMetaHeader = (item) => {
       useHead({
-        title: item
+        title: item?.title
       })
     }
 

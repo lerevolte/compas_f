@@ -10,6 +10,7 @@
             />
             <AppShowMore 
                 :options="showMore"
+                :isPreventBottom="true"
                 @initClick="action => table[action]()"
             />
             <AppSettings 

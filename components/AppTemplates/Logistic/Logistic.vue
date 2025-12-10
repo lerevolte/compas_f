@@ -12,12 +12,13 @@
                             route_id: null
                         },
                         isDraggable: true,
+                        isCheckClicked: true,
                         draggableTarget: '.table__row',
                         isHaveFilter: false,
                         isPermanentEdit: false,
                         isTrash: false,
                         isHaveTopHeader: true,
-                        isHaveFooter: true,
+                        isHaveFooter: false,
                         updatingCount: logistic.logistic_tasks.updatingCount
                     }"
                     @openModal="item => emit('openModal', item)"
@@ -36,12 +37,14 @@
                         },
                         isHaveFilter: false,
                         isPermanentEdit: false,
+                        isCheckClicked: true,
                         isTrash: false,
                         isHaveTopHeader: true,
-                        isHaveFooter: true,
+                        isHaveFooter: false,
                         updatingCount: logistic.routes.updatingCount
                     }"
                     @openModal="item => emit('openModal', item)"
+                    @choseRow="data => logistic.choseRoute(data)"
                 />
             </AppResize>
         </div>
@@ -52,9 +55,12 @@
                             showSelect: false
                     }"
                     :frameOptions="{
+                        enableHeader: true,
+                        enableSelection: true,
                         enableRoute: true
                     }"
                     :points="logistic.map"
+                    @getSelectedPoints="data => logistic.getSelectedPoints(data)"
                 />
             </AppResize>
             <AppResize :options="{height: '525px', width: '100%'}">
@@ -66,15 +72,18 @@
                         isDraggable: true,
                         draggableTarget: '.table__row',
                         isHaveQuery: true,
+                        isCheckClicked: true,
                         query: {
-                            route_id: logistic.machine_tasks.route_id,
+                            route_id: String(logistic.machine_tasks.route_id),
                             delivery_date: logistic.activeDate
                         },
                         isHaveFilter: false,
                         isPermanentEdit: false,
                         isTrash: false,
                         isHaveTopHeader: true,
-                        isHaveFooter: true,
+                        isHaveFooter: false,
+                        isHaveLocalFilter: true,
+                        localFilter: logistic.machine_tasks.selectedAddresses,
                         updatingCount: logistic.machine_tasks.updatingCount
                     }"
                     @openModal="item => emit('openModal', item)"
@@ -118,6 +127,7 @@
             }
             this.machine_tasks = {
                 route_id: 0,
+                selectedAddresses: [],
                 updatingCount: 0
             }
             this.activeDate = format(activeDate, 'yyyy-MM-dd')
@@ -129,17 +139,30 @@
             this.map = data.map(row => row.address?.coords ?? [])
         }
 
+        // Обновление активной даты
         updateActiveDate() {
             this.activeDate = format(props.activeDate, 'yyyy-MM-dd')
             this.machine_tasks.updatingCount++
             this.routes.updatingCount++
         }
 
+
+        // Обновление активного маршрута
         updateActiveRoute() {
             this.routes.id = props.activeRoute?.value[0]
             this.machine_tasks.route_id = props.activeRoute?.value[0]
             this.routes.updatingCount++
             this.machine_tasks.updatingCount++
+        }
+
+        // Выбор маршрута из таблицы
+        choseRoute(row) {
+            this.machine_tasks.route_id = row.id
+            this.machine_tasks.updatingCount++
+        }
+
+        getSelectedPoints(data) {
+            this.machine_tasks.selectedAddresses = data
         }
     }
 

@@ -7,7 +7,9 @@
     <TableTop v-if="props.options?.isHaveTopHeader" :title="props.options?.title ?? null"/>
     <div ref="tableRef" class="table" :class="{'table_permanent-edit': props.options.isPermanentEdit}">
       <TableHeader />
-      <TableBody />
+      <TableBody 
+        @choseRow="row => emit('choseRow', row)"
+      />
       <IconLoader v-if="table.loading"/>
       <ScrollButtons />
     </div>
@@ -117,6 +119,7 @@
       options: {
         default: {
           title: null,
+          isCheckClicked: false,
           isLocalTable: false,
           isHaveQuery: false,
           query: {},
@@ -125,6 +128,8 @@
           isTrash: false,
           isHaveTopHeader: true,
           isHaveFooter: true,
+          isHaveLocalFilter: false,
+          localFilter: [],
           updatingCount: 0
         },
         type: Object
@@ -134,12 +139,14 @@
           header: [],
           body: []
         }
-      }
+      },
+      
   })
 
   const emit = defineEmits([
       'openModal',
-      'getData'
+      'getData',
+      'choseRow'
   ])
 
   const isClient = ref(false)
@@ -154,8 +161,6 @@
     })
 
   onMounted(async () => {
-    console.log(props.pageId);
-    
     nextTick(() => {
       initTable()
     })
@@ -187,7 +192,13 @@
     if (props.options.updatingCount) {
       initTable()
     }
-  }, {deep: true})
+  })
+
+  watch(() => props.options.localFilter, () => {
+    if (props.options.isHaveLocalFilter) {
+      table.value.options.localFilter = props.options.localFilter
+    }
+  })
 
   provide('table', table)
   provide('filter', table.value.filter)

@@ -26,7 +26,7 @@
 						multiple: false,
 						type: 'select',
 						isSetDefault: false,
-						placeholder: '' 
+						placeholder: 'Поиск по маршруту' 
 					}"
 				/>
 			</div>

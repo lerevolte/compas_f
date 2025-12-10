@@ -143,7 +143,7 @@ export class Common {
     }
 
 
-    useDoubleClick(callback, delay = 300) {
+    useDoubleClick(callback, alternativeCallBack = null, delay = 300) {
         let lastClickTime = 0
         let lastEl = null
 
@@ -156,6 +156,9 @@ export class Common {
                 lastClickTime = 0
                 lastEl = null
             } else {
+                if (alternativeCallBack) {
+                    alternativeCallBack(el, event)
+                }
                 lastClickTime = now
                 lastEl = el
             }
@@ -480,7 +483,26 @@ export class Table {
 
     // Получнеие шапки
     getHeader(data) {
-        this.header = data
+        if (this.options.isCheckClicked) {
+            this.header = [{
+                "id": 0,
+                "title": "Выбранная строка",
+                "key": "clicked",
+                "width": "44px",
+                "enabled": true,
+                "hover": false,
+                "sort_order": null,
+                "type": "checkbox",
+                "fixed": true,
+                "fixTarget": "0px",
+                "index": 1,
+                "mask": null,
+                "left": 0,
+                "value": false
+            }, ...data]
+        } else {
+            this.header = data
+        }
     }
 
     // Получение контента
@@ -605,9 +627,11 @@ export class Table {
     }
 
     // Создание
-    create() {
+    create(slug) {
         this.emit('openModal', {
-            type: 'create'
+            type: 'create',
+            slug: slug,
+            id: 0
         })
     }
 
@@ -882,6 +906,11 @@ export class Table {
         }
     }
 
+    // Обновление таблицы при перетаскивании строки
+    changeDrag(event) {
+        console.log(event);
+    }
+
     // Конец перетаскивания
     dragEnd(event) {
         this.isDragging = false
@@ -1014,6 +1043,8 @@ export class Filter {
                         for (let value of this.setter.dependences.query[key]) {
                             response.push(`filter[${key}][]=${value}`)
                         }
+                    } else if (key == 'is_slug') {
+                        response.push(`is_slug=${this.setter.dependences.query[key]}`)
                     } else if (this.setter.dependences.query[key]) {
                         response.push(`filter[${key}]=${this.setter.dependences.query[key]}`)
                     }
@@ -1454,9 +1485,13 @@ export class Section {
     // Редактирование полей в секции
     editAll(section) {
         for (let field of section.fields) {
-            if (!field.edit) {
-                this.section.buffer.backup.push(JSON.parse(JSON.stringify(field)))
-                field.edit = true
+            if (field.type == 'text_group') {
+                this.editAll(field)
+            } else {
+                if (!field.edit && field.can_edit) {
+                    this.buffer.backup.push(JSON.parse(JSON.stringify(field)))
+                    field.edit = true
+                }
             }
         }
     }
@@ -1546,7 +1581,11 @@ export class Section {
             const request = {
                 id: options?.isGlobalEdit ? 0 : pageId,
                 ...this.buffer.edits.reduce((obj, field) => {
-                    obj[field.key] = field.type == 'relation' ? field.value?.value : field.value
+                    if (field.type == 'relation') {
+                        obj[field.key] = field.value?.value
+                    } else {
+                        obj[field.key] = field.value
+                    }
                     return obj
                 }, {})
             }
@@ -1558,7 +1597,7 @@ export class Section {
                 })
             }
 
-            await api.callMethod('POST', routes.detail.edit_fields.replaceAll('${slug}', slug), {
+            const response = await api.callMethod('POST', routes.detail.edit_fields.replaceAll('${slug}', slug), {
                 rows: [
                     request
                 ]
@@ -1581,7 +1620,7 @@ export class Section {
                     }
                 }
             }
-            emit('action', { action: 'savePage', value: true })
+            emit('action', { action: 'savePage', value: response })
         } catch (error) {
             console.log(error);
         } finally {
@@ -1861,10 +1900,16 @@ export class Field {
                 }  else if (field.type == 'status') {
                     field.value = val
                 } else if (field.value !== null && typeof field.value === 'object') {
-                    field.value[slug] = val
-                } else if (field.type == 'text') {
-                    field.value = {}
-                    field.value[slug] = val
+                    if (field.type == 'text') {
+                        if (field.value.external_link) {
+                            field.value[slug] = val
+                        } else {
+                            field.value.external_link = ''
+                            field.value[slug] = val
+                        }
+                    } else {
+                        field.value[slug] = val
+                    }
                 } else {
                     field = val
                 }
@@ -1969,6 +2014,7 @@ export class Field {
 export class Settings {
     constructor({category, title}) {
         this.category = category
+        this.loading = false
         this.section = {
             name: title,
             fields: []
@@ -1987,122 +2033,129 @@ export class Settings {
 
     // Получение данных
     async get() {
-        if (this.category == 'common') {
-            this.section.fields = [
-                {
-                    id: 0,
-                    title: "Название портала",
-                    key: "name",
-                    type: "text",
-                    is_plural: 0,
-                    is_external_link: 0,
-                    required: 1,
-                    read_only: 1,
-                    value: null,
-                    visible_always: 1,
-                    can_read: 1,
-                    can_edit: 0,
-                },
-                {
-                    id: 1,
-                    title: "Часовой пояс",
-                    key: "timezone",
-                    type: "select_dropdown",
-                    is_plural: 0,
-                    required: 1,
-                    value: null,
-                    filterable: true,
-                    searchable: false,
-                    visible_always: 1,
-                    can_read: 1,
-                    can_edit: 1,
-                    options: []
-                },
-                {
-                    id: 2,
-                    title: "Город",
-                    key: "city",
-                    type: "select_dropdown",
-                    subtype: 'map_suggest',
-                    is_plural: 0,
-                    required: 1,
-                    value: null,
-                    searchable: true,
-                    visible_always: 1,
-                    can_read: 1,
-                    can_edit: 1,
-                    options: []
-                },
-                {
-                    id: 3,
-                    title: "Сколько дней хранить историю входа",
-                    key: "login_days",
-                    type: "select_dropdown",
-                    is_plural: 0,
-                    required: 1,
-                    value: null,
-                    can_read: 1,
-                    visible_always: 1,
-                    can_edit: 1,
-                    options: Array.from({length: 12}, (_, i) => ({label: String((i+1)*30), value: (i+1)*30}))
-                },
-                {
-                    id: 4,
-                    title: "Отображение подсказок",
-                    key: "hints",
-                    type: "select_dropdown",
-                    is_plural: 0,
-                    required: 1,
-                    visible_always: 1,
-                    value: null,
-                    can_read: 1,
-                    can_edit: 1,
-                    options: [
-                        {
-                            label: 'Включено',
-                            value: '1'
-                        },
-                        {
-                            label: 'Отключено',
-                            value: '0'
-                        }
-                    ]
+        try {
+            this.loading = true
+            if (this.category == 'common') {
+                this.section.fields = [
+                    {
+                        id: 0,
+                        title: "Название портала",
+                        key: "name",
+                        type: "text",
+                        is_plural: 0,
+                        is_external_link: 0,
+                        required: 1,
+                        read_only: 1,
+                        value: null,
+                        visible_always: 1,
+                        can_read: 1,
+                        can_edit: 0,
+                    },
+                    {
+                        id: 1,
+                        title: "Часовой пояс",
+                        key: "timezone",
+                        type: "select_dropdown",
+                        is_plural: 0,
+                        required: 1,
+                        value: null,
+                        filterable: true,
+                        searchable: false,
+                        visible_always: 1,
+                        can_read: 1,
+                        can_edit: 1,
+                        options: []
+                    },
+                    {
+                        id: 2,
+                        title: "Город",
+                        key: "city",
+                        type: "select_dropdown",
+                        subtype: 'map_suggest',
+                        is_plural: 0,
+                        required: 1,
+                        value: null,
+                        searchable: true,
+                        visible_always: 1,
+                        can_read: 1,
+                        can_edit: 1,
+                        options: []
+                    },
+                    {
+                        id: 3,
+                        title: "Сколько дней хранить историю входа",
+                        key: "login_days",
+                        type: "select_dropdown",
+                        is_plural: 0,
+                        required: 1,
+                        value: null,
+                        can_read: 1,
+                        visible_always: 1,
+                        can_edit: 1,
+                        options: Array.from({length: 12}, (_, i) => ({label: String((i+1)*30), value: (i+1)*30}))
+                    },
+                    {
+                        id: 4,
+                        title: "Отображение подсказок",
+                        key: "hints",
+                        type: "select_dropdown",
+                        is_plural: 0,
+                        required: 1,
+                        visible_always: 1,
+                        value: null,
+                        can_read: 1,
+                        can_edit: 1,
+                        options: [
+                            {
+                                label: 'Включено',
+                                value: '1'
+                            },
+                            {
+                                label: 'Отключено',
+                                value: '0'
+                            }
+                        ]
+                    }
+                ]
+        
+                const response = await api.callMethod('GET', routes.settings.common.get)
+                for (let field of this.section.fields) {
+                    field.value = field.key == 'hints' ? String(response.data.common[field.key]) : response.data.common[field.key]
                 }
-            ]
-    
-            const response = await api.callMethod('GET', routes.settings.common.get)
-            for (let field of this.section.fields) {
-                field.value = field.key == 'hints' ? String(response.data.common[field.key]) : response.data.common[field.key]
+        
+                this.section.fields[this.section.fields.findIndex(f => f.key == 'timezone')].options = response.data.timezones
+                this.section.fields[this.section.fields.findIndex(f => f.key == 'city')].options = [
+                    {
+                        label: JSON.parse(JSON.stringify(response.data.common.city)),
+                        value: JSON.parse(JSON.stringify(response.data.common.city))
+                    }
+                ]
+            } else if (this.category == 'documents') {
+                const response = await api.callMethod('GET', routes.settings.common.get)
+                this.section.fields = [
+                    {
+                        id: 0,
+                        title: "E-mail для получения документов",
+                        key: "docs_email",
+                        type: "text",
+                        is_plural: 0,
+                        is_external_link: 0,
+                        required: 1,
+                        read_only: 0,
+                        value: response.data.common.docs_email,
+                        visible_always: 1,
+                        can_read: 1,
+                        can_edit: 1,
+                    }
+                ]
+            } else {
+                const response = await api.callMethod('GET', routes.settings.modules[this.category].get)
+                this.section.fields = response.data
             }
-    
-            this.section.fields[this.section.fields.findIndex(f => f.key == 'timezone')].options = response.data.timezones
-            this.section.fields[this.section.fields.findIndex(f => f.key == 'city')].options = [
-                {
-                    label: JSON.parse(JSON.stringify(response.data.common.city)),
-                    value: JSON.parse(JSON.stringify(response.data.common.city))
-                }
-            ]
-        } else if (this.category == 'documents') {
-            const response = await api.callMethod('GET', routes.settings.common.get)
-            this.section.fields = [
-                {
-                    id: 0,
-                    title: "E-mail для получения документов",
-                    key: "docs_email",
-                    type: "text",
-                    is_plural: 0,
-                    is_external_link: 0,
-                    required: 1,
-                    read_only: 0,
-                    value: response.data.common.docs_email,
-                    visible_always: 1,
-                    can_read: 1,
-                    can_edit: 1,
-                }
-            ]
-        } else {
-            const response = await api.callMethod('GET', routes.settings.modules[this.category].get)
-            this.section.fields = response.data
+        } catch (error) {
+            console.log(error);
+        } finally {
+            this.loading = false
         }
     }
 
@@ -2221,11 +2274,13 @@ export class Tariffs {
             tariffs: {
                 current: null,
                 options: [],
-                changed: false
+                changed: false,
+                loading: false
             },
             payers: {
                 balance: 0,
                 sum: 0,
+                loading: false,
                 company: {
                     value: null,
                     options: []
@@ -2233,7 +2288,7 @@ export class Tariffs {
             },
             actions: {
                 total_sum: 0,
-                date: null,
+                date: [format(startOfMonth(new Date()), 'yyyy-MM-dd'), format(endOfMonth(new Date()), 'yyyy-MM-dd')],
                 table: {
                     header: [],
                     body: []
@@ -2247,19 +2302,56 @@ export class Tariffs {
         this.balance.tariffs = {
             current: response.data.current_tariff,
             options: response.data.tariffs,
-            changed: false
+            changed: false,
+            loading: false
         }
         this.balance.payers = {
             balance: response.data.balance,
-            sum: 0,
+            sum: 10000,
+            loading: false,
+            changed: false,
             company: {
-                value: null,
+                value: response.data.payers[0]?.value ?? null,
                 options: response.data.payers
             }
         }
-        this.balance.actions = {
-            total_sum: response.data.total_sum,
-            date: [format(startOfMonth(new Date()), 'yyyy-MM-dd'), format(endOfMonth(new Date()), 'yyyy-MM-dd')],
+        this.balance.actions.total_sum = response.data.total_sum
+    }
+
+    // Фильтрация расхода диапазона
+    async filterBalance() {
+        const response = await api.callMethod('GET', `${routes.tariffs.get_balance}?date_start=${this.balance.actions.date[0]}&date_end=${this.balance.actions.date[1]}`)
+        this.balance.actions.total_sum = response.data.total_sum
+    }
+
+    async updateTariffs() {
+        try {
+            this.balance.tariffs.loading = true
+            await api.callMethod('PUT', routes.tariffs.update_tariff.replace('${id}', this.balance.tariffs.current))
+        } catch (error) {
+            console.log(error);
+        } finally {
+            this.balance.tariffs.loading = false
+            this.balance.tariffs.changed = false
+        }
+    }
+
+    async updateBalance() {
+        try {
+            this.balance.payers.loading = true
+            const request = {
+                payer: this.balance.payers.company.value,
+                sum: this.balance.payers.sum
+            }
+
+            await api.callMethod("PUT", routes.tariffs.update_balance, request);
+            const response = await api.callMethod("POST", routes.tariffs.get_balance_url, request);
+            window.open(response.data.url, '_blank')
+        } catch (error) {
+            console.log(error);
+        } finally {
+            this.balance.payers.loading = false
+            this.balance.payers.changed = false
         }
     }
 }

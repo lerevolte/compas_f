@@ -1,35 +1,24 @@
 <template>
     <div class="map__frame">
-        <div ref="mapContainer" class="map__frame-map"></div>
-
-        <div class="map__frame-controls">
-            <button
+        <div class="map__frame-header" v-if="props.options?.enableHeader">
+            <div class="map__frame-title">
+                Карта
+            </div>
+            <IconLaso 
+                class="map__frame-selection"
+                :class="{'map__frame-selection_active': selectionActive}"
                 v-if="props.options.enableSelection"
-                class="map__frame-btn"
-                :class="{ 'map__frame-btn_active': selectionActive }"
                 @click="toggleSelectionMode"
-            >
-                {{ selectionActive ? 'Отменить выделение' : 'Выделить территорию' }}
-            </button>
+            />
         </div>
 
-        <p v-if="selectionActive" class="map__frame-hint">
-            Удерживайте левую кнопку мыши и обведите область. Отпустите кнопку чтобы завершить.
-        </p>
+        <div ref="mapContainer" class="map__frame-map"></div>
     </div>
 </template>
 
 <script setup>
-    import {
-        computed,
-        nextTick,
-        onBeforeUnmount,
-        onMounted,
-        ref,
-        watch
-    } from 'vue';
-
     import './Map.scss';
+    import IconLaso from '@AppIcons/Laso.vue';
 
     // Leaflet будет загружен динамически только на клиенте
     let L = null;
@@ -37,7 +26,7 @@
     const emit = defineEmits([
         'map-ready',
         'route-built',
-        'area-selected'
+        'getSelectedPoints'
     ]);
 
     const props = defineProps({
@@ -377,7 +366,7 @@
      * Завершает процесс выделения области
      * Проверяет что нарисовано минимум 3 точки для создания полигона
      * Вычисляет какие точки из normalizedPoints попадают внутрь выделенной области
-     * Эмитит событие area-selected с массивом точек внутри области
+     * Эмитит событие getSelectedPoints с массивом точек внутри области
      */
     const finishSelection = () => {
         if (!isDrawingPath.value) {
@@ -440,7 +429,7 @@
                 .filter(({ coords }) => isPointInPolygon(coords, polygonLatLngs))
                 .map(({ raw }) => raw);
 
-            emit('area-selected', insidePoints);
+            emit('getSelectedPoints', {value: insidePoints, state: true});
         }
 
         stopSelectionMode(true);
@@ -492,6 +481,7 @@
         }
 
         if (selectionActive.value) {
+            emit('getSelectedPoints', {value: [], state: false});
             stopSelectionMode(false);
             return;
         }

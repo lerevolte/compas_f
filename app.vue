@@ -74,7 +74,8 @@
     }
 
     updateMetaHeader(item) {
-      this.currentTitle = item
+      this.currentTitle = item.title
+      window.history.replaceState({}, document.title, window.location.origin +  `/objects/${item.href?.slug}/${item.href?.id}`);
       useHead({
         title: item
       })

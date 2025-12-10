@@ -1,5 +1,12 @@
 <template>
-    <div class="tile-section" ref="sectionRef" :class="{ 'tile-section_short': section.isLocalShort, 'tile-section_field': props.options.type == 'field' }">
+    <div 
+        class="tile-section" 
+        ref="sectionRef" 
+        :class="{ 
+            'tile-section_editting': section.fields.find(item => item.edit || (item.type == 'text_group' && item.fields.find(item => item.edit))),
+            'tile-section_short': section.isLocalShort, 
+            'tile-section_field': props.options.type == 'field' 
+        }">
         <div class="tile-section__header" ref="headerRef" >
             <span class="blank__title" v-if="props.options.type == 'field'">
                 {{ section.name }}
@@ -132,21 +139,23 @@
                             required: false,
                             isHaveNull: true,
                             isSetDefault: true,
+                            isCanAdd: true,
                             multiple: field.is_plural,
                             placeholder: '' 
                         }"
                         v-model="field.value"
+                        @create="item =>  emit('action', {
+                            action: 'openModal', 
+                            value: {
+                                id: 0, 
+                                type: 'create',
+                                slug: field.related_table
+                            }
+                        })"
                         @clickLink="id => emit('action', {
                             action: 'openModal', 
                             value: {
                                 id, 
-                                slug: field.related_table
-                            }
-                        })"
-                        @create="item => emit('action', {
-                            action: 'createEntity', 
-                            value: {
-                                item, 
                                 slug: field.related_table
                             }
                         })"

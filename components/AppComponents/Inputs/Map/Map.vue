@@ -37,6 +37,7 @@
                 ...props.frameOptions,
                 defaultZoom: 17
             }"
+            @getSelectedPoints="data => emit('getSelectedPoints', data)"
         />
     </div>
 </template>
@@ -54,6 +55,7 @@
 
     const emit = defineEmits([
         'update:modelValue',
+        'getSelectedPoints',
         'update:modelList'
     ])
     
@@ -88,6 +90,7 @@
             type: Array
         },
         frameOptions: {
+            enableHeader: false,
             enableRoute: false,
             enableSelection: false,
         },

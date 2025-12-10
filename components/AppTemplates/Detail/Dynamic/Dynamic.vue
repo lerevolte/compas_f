@@ -1,5 +1,5 @@
 <template>
-    <IconLoader v-if="detail.loading"/>
+    <IconLoader class="detail_loader" v-if="detail.loading"/>
 
     <template v-else>
         <ColumnFields 
@@ -165,7 +165,7 @@
                     response = await api.callMethod('GET', `${route}${props.options.isCopy ? '?is_copy=1' : ''}`)
                     emit('action', { action: 'getTabs', value: response.data.tabs })
                     emit('action', { action: 'getTitle', value: response.data.detail.title?.name })
-                    emit('action', { action: 'updateMetaHeader', value: response.data.detail.header_title })
+                    emit('action', { action: 'updateMetaHeader', value: {title: response.data.detail.header_title, href: {slug: props.slug, id: props.id}} })
                 }
                 
                 this.products.table = response.data.table.tableKeys

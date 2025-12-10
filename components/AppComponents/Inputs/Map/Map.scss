@@ -8,6 +8,9 @@
 }
 
 .map__frame {
+    display: flex;
+    flex-direction: column;
+    z-index: 0;
     position: relative;
     width: 100%;
     min-height: 360px;
@@ -23,6 +26,13 @@
     min-height: 360px;
 }
 
+.map__frame-header {
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
 .map__frame-controls {
     position: absolute;
     top: 15px;
@@ -33,47 +43,17 @@
     z-index: 5;
 }
 
-.map__frame-btn {
-    border: 1px solid variables.$color-border;
-    border-radius: 8px;
-    background: rgba(variables.$color-white, 0.95);
-    color: variables.$color-focus;
-    font-size: 13px;
-    padding: 8px 14px;
+.map__frame-selection {
     cursor: pointer;
-    transition: 0.2s ease;
-    box-shadow: variables.$box-shadow;
+    aspect-ratio: 1;
+    width: 15px;
 
-    &:disabled {
-        opacity: 0.55;
-        cursor: not-allowed;
-        box-shadow: none;
-    }
-
-    &:not(:disabled):hover {
-        border-color: variables.$button-fill;
-    }
-
-    &.map__frame-btn_active {
-        background: variables.$button-fill;
-        border-color: variables.$button-fill;
-        color: variables.$color-white;
+    &:hover svg *,
+    &.map__frame-selection_active svg * {
+        fill: #1253a2;
     }
 }
 
-.map__frame-hint {
-    position: absolute;
-    left: 15px;
-    bottom: 15px;
-    padding: 10px 14px;
-    max-width: 320px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: variables.$box-shadow;
-    font-size: 13px;
-    line-height: 1.3;
-    z-index: 5;
-}
 
 // Стили для контролов Leaflet в стиле Яндекс.Карт
 .map__frame-map {

@@ -21,7 +21,8 @@
             :move="onMoveCheck"
             @start="event => {draggableRow = event.item; table.dragStart(event)}"
             @end="event => dragEnd(event)"
-        >
+            @change="event => table.changeDrag(event)"
+            >
             <template #item="{ element: row, index }">
                 <div 
                     :key="row.key" 
@@ -31,11 +32,13 @@
                     :data-height="row.size"
                     :style="`--row-start: ${row.start}px; --color-row: ${row.index % 2 === 0  ? '#f7fbff' : '#FFF'};`"
                     :class="{
+                        'table__row_hidden': table.options?.isHaveLocalFilter && !checkEnabledRow(table.body[row.index]),
+                        'table__row_clicked': table.body[row.index] && table.body[row.index].clicked, 
                         'table__row_edit': table.body[row.index] && table.body[row.index].edit, 
                         'table__row_choose': table.body[row.index] && table.body[row.index].isChoose
                     }"
                     @click="(event) => doubleClick(event)"
-                >
+                    >
                     <div 
                         v-for="column in table.header" 
                         class="table__cell" 
@@ -56,10 +59,14 @@
                             v-if="column.key == 'isChoose' && table.body[row.index]"
                             v-model="table.body[row.index].isChoose"
                         />
+                        <AppCheckbox 
+                            v-else-if="column.key == 'clicked' && table.body[row.index]"
+                            v-model="table.body[row.index].clicked"
+                        />
                         <AppShowMore 
                             v-else-if="column.key == 'actions' && table.body[row.index]"
-                            :options="table.body[row.index].edit ? cell.actions.edit : cell.actions.default"
-                            @initClick="action => table[action](table.body[row.index])"
+                            :options="table.options.isTrash ? cell.actions.trash : table.body[row.index].edit ? cell.actions.edit : cell.actions.default"
+                            @initClick="action => table[action](table.body[row.index], table.slug)"
                         />
 
                         <template v-else-if="column.key == 'iconDrag'">
@@ -81,7 +88,7 @@
                             :options="{
                                 id: `${row.index}_${column.key}`,
                                 title: null,
-                                edit: table.body[row.index] && !column.read_only && (table.body[row.index]?.edit || table.options?.isPermanentEdit),
+                                edit: table.body[row.index] && !column.read_only && (table.body[row.index]?.edit || table.options.isPermanentEdit),
                                 type: column.type,
                                 relation_type: table.slug == 'products' ? 'products' : null,
                                 list: column.options,
@@ -95,7 +102,7 @@
                             }"
                             v-model="cell.useCellModel(row.index, column).value"
                             @clickLink="id => table.open({id, related_table: column.related_table})"
-                            @create="item => table.create(item)"
+                            @create="item => table.create(column.related_table)"
                             @update:model-value="val => table.slug == 'products' && getRow(val, table.body[row.index])"
                             @update:prevValue="val => cell.checkEditting(table.body[row.index], {value: val, key: column.key})"
                         />
@@ -233,6 +240,8 @@
                                 {{ cell.useCellSelectModel(row.index, column).value }}
                             </span>
 
+                            <span class="table__text text" v-else-if="column.type == 'json'" v-html="cell.useCellModel(row.index, column).value"></span>
+
                             <AppStatus 
                                 v-else-if="column.type == 'status'"
                                 :options="{
@@ -273,12 +282,17 @@
     import IconClose from '@AppIcons/Close.vue'
     import { Common } from '@/helpers/classes.js'
     import { format } from 'date-fns'
+    import isEqual from 'lodash/isEqual'
 
     const table = inject('table')
     const sectionRef = inject('sectionRef')
     const common = new Common()
     const draggableRow = ref(null)
     const tableRef = inject('tableRef')
+
+    const emit = defineEmits([
+        'choseRow'
+    ])
 
     const doubleClick = common.useDoubleClick((elem, event) => {
         let cell = event.target.closest('.table__cell')
@@ -290,7 +304,24 @@
         if (rowIndex != null) {
             table.value.open(table.value.body[rowIndex], table.value.slug)
         }
-    })
+    }, (elem, event) => {
+        let cell = event.target.closest('.table__cell')
+        if (table.value.state == 'edit' || table.value.options?.isPermanentEdit || ['isChoose', 'actions'].includes(cell.getAttribute('data-column-key'))) return
+        const el = elem?.getAttribute ? elem : (elem?.currentTarget || elem?.target)
+        const rowIndex = el?.getAttribute ? el.getAttribute('data-index') : null
+
+        table.value.body = table.value.body.map((item, index) => {
+            return {
+                ...item,
+                clicked: table.value.body[rowIndex]?.id == item.id ? true : false
+            }
+        })
+        
+        emit('choseRow', {
+            ...table.value.body[rowIndex],
+            slug: table.value.slug
+        })
+    }, 200, emit)
 
     class Cell {
         constructor() {
@@ -326,6 +357,16 @@
                         name: 'Удалить',
                         action: 'initDelete'
                     }
+                ],
+                trash: [
+                    {
+                        name: 'Открыть',
+                        action: 'open'
+                    },    
+                    {
+                        name: 'Восстановить',
+                        action: 'initRestore'
+                    },
                 ]
             }
             this.activeCell = null
@@ -550,7 +591,14 @@
         row.name = activeOption.text
         row.product_name = activeOption.text
     }
-        
+    
+    const checkEnabledRow = (row) => {
+        if (table.value.options.localFilter.state) {
+            return table.value.options.localFilter.value.find(option => isEqual(option, row.address?.coords))
+        } else {
+            return true
+        }
+    }
 
     // Очищаем кэш при изменении данных таблицы
     watch(() => table.value.body, () => {

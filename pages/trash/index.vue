@@ -1,5 +1,8 @@
 <template>
-    <main>
+    <IconLoader 
+        v-if="tabs.loading"
+    />
+    <main v-else>
         <AppTabs 
             :tabs="tabs.list"
             :activeTab="tabs.active ? tabs.active.tab : null"
@@ -17,14 +20,16 @@
 
 		<AppVirtualTable 
             :options="{
+                updatingCount: tabs.updatingCount,
                 isHaveQuery: true,
+                isPermanentEdit: false,
                 query: {
                     trashed: true
                 },
                 isHaveFilter: true,
                 isTrash: true
             }"
-			:slug="tabs.active ? tabs.active.tab : null"
+			:slug="tabs.active?.tab"
 			@openModal="item => emit('openModal', item)"
 		/>
     </main>
@@ -35,6 +40,7 @@
 
     import api from '@/helpers/api.js'
     import routes from '@/helpers/routes.js'
+    import IconLoader from '@AppIcons/Loader.vue';
     import AppTabs from '@AppComponents/Tabs/Tabs.vue';
     import AppVirtualTable from '@AppComponents/VirtualTable/VirtualTable.vue';
 
@@ -62,6 +68,8 @@
         constructor() {
             this.active = null
             this.list = []
+            this.updatingCount = 0
+            this.loading = true
             this.modal = {
                 state: false,
                 loading: false
@@ -69,24 +77,31 @@
         }
 
         async get() {
-            const response = await api.callMethod('GET', routes.trash.get_tabs)
-            this.list = response.data.filter(p => p.enabled)
-            this.active = this.list[0] ?? null
+            try {
+                this.loading = true
+                const response = await api.callMethod('GET', routes.trash.get_tabs)
+                this.list = response.data.filter(p => p.enabled)
+                this.active = this.list[0] ?? null
+            } catch (error) {
+                console.log(error);
+            } finally {
+                this.loading = false
+            }
         }
 
         // Установка активного таба
-        setTab(tab) {
+        set(tab) {
             this.active = tab.tab
-            console.log(this.active);
+            this.updatingCount++
         }
     }
 
     const tabs = ref(new Tabs())
     
-	onMounted(() => {
+	onMounted(async () => {
 		useHead({
 			title: `Корзина | Compas.pro`
 		})
-        tabs.value.get()
+        await tabs.value.get()
 	})
 </script>

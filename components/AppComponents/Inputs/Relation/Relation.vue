@@ -61,10 +61,14 @@
                     </figure>
 
                     <figure class='select__value-icon' v-else>
-                        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="20" cy="20" r="20" fill="#404040"/>
-                            <path d="M24.6 13H26.06V27H24.6V13ZM15.84 27H14.36V13H15.84V27ZM24.74 20.54H15.68V19.24H24.74V20.54Z" fill="white"/>
-                        </svg>
+                        <div 
+                            class="img-text" 
+                            :style="{ 
+                                '--bgColor': '#a6b7d4'
+                            }"
+                        >
+                            Н
+                        </div>
                         <figcaption>
                             Не выбрано
                         </figcaption>
@@ -107,7 +111,7 @@
         </AppError>
 
         <AppButton 
-            v-if="props.options.edit !== false && props.options.isCanAdd"
+            v-if="props.options.edit !== false && props.options.isCanAdd && props.options.multiple"
             class="button_text"
             :disabled="props.options.edit === false"
             @click="addNewSelect"
@@ -465,7 +469,7 @@
         nextTick(() => {
             initializeSelects();
         });
-    }, { deep: true });
+    });
 
     watch(() => props.options.list, () => {
         selectInstances.value.forEach(instance => instance.setOptions());

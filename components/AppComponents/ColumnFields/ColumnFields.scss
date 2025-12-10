@@ -51,7 +51,7 @@
         z-index: 2;
     }
 
-    &:last-child {
+    &:nth-child(2) {
         .popup {
             .popup__content {
                 right: 0px;
@@ -61,6 +61,14 @@
 
     & > *:not(.tile-section) {
         order: 1;
+    }
+
+    @media (max-width: 1300px) {
+        .popup {
+            .popup__content {
+                right: 0px;
+            }
+        }
     }
 }
 

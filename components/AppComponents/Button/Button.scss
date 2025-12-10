@@ -12,12 +12,17 @@ button {
     background: #f0f0f0;
     outline: none;
     position: relative;
+    transition: 0.2s all;
     font-size: variables.$font-size-default;
     @include mixins.hoverElem();
 
     &[disabled] {
         cursor: not-allowed;
-        filter: opacity(0.7);
+        filter: opacity(0.5);
+
+        &:hover {
+            filter: opacity(0.5) !important;
+        }
     }
 
     &.button_fill {
@@ -77,6 +82,7 @@ button {
         gap: 7px;
         justify-content: auto;
         padding: 9px 14px;
+        max-height: max-content;
     }
 
     &.button_icon {

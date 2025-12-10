@@ -203,6 +203,10 @@
     z-index: 10;
   }
 
+  &.table__row_hidden {
+    display: none;
+  }
+
   &:has(.select_open) {
     z-index: 10;
   }
@@ -215,6 +219,7 @@
   &.table__body_edit {
     .table__row:not(.table__row_choose) {
       .table__cell {
+        &[data-column-key="clicked"],
         &[data-column-key="isChoose"],
         &[data-column-key="actions"] {
           pointer-events: none;
@@ -251,8 +256,25 @@
     align-items: start;
     background: var(--color-row);
 
+    &[data-column-key="clicked"],
     &[data-column-key="isChoose"] {
       padding: 0px;
+    }
+
+    &[data-column-key="clicked"] {
+      pointer-events: none;
+
+      .form__item_checkbox {
+        .checkbox__custom {
+          width: 17px;
+          height: 17px;
+          border-radius: 50%;
+
+          &::after {
+            left: 0px;
+          }
+        }
+      }
     }
 
     &[data-column-key="product_id"] {
@@ -289,6 +311,12 @@
         height: 100%;
         padding: 10px 0 10px 10px;
         align-items: start;
+      }
+
+      @media (max-width: 990px) {
+        label {
+          padding: 0px;
+        }
       }
     }
   }

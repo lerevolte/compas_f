@@ -98,5 +98,9 @@ export default {
     },
     tariffs: {
         get_balance: '/balance',
+        update_tariff: '/tariffs/${id}',
+        update_balance: '/settings/account',
+        get_balance_url: '/balance/payment',
+        get_operations: '/balance_operations/compose'
     }
 }

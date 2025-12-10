@@ -5,7 +5,7 @@
             {{ props.item.title }}
         </span>
         <a 
-            v-if="props.options.isLink"
+            v-if="props.options.isLink && props.item.link"
             :href="props.item.link" 
             target="_blank" 
             class="blank__link" 

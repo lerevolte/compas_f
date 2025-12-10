@@ -39,7 +39,7 @@
         }
     }
 
-    &:has(.loader) {
+    &:has(.detail_loader) {
         .detail-page__header,
         .tabs {
             display: none !important;
