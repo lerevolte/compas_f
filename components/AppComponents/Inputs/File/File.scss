@@ -50,6 +50,10 @@
                 fill: variables.$color-icon-active;
             }
         }
+
+        .file__upload-text {
+            color: variables.$color-default;
+        }
     }
 }
 
@@ -57,7 +61,7 @@
     gap: 8px;
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
+    // align-items: center;
 
     .fancybox-item__img {
         width: 100px;
@@ -92,6 +96,14 @@
 
         &.popup_open {
             opacity: 1;
+        }
+    }
+
+    &.draggable-ghost {
+        max-height: 100px;
+
+        .file__name {
+            display: none;
         }
     }
 
@@ -137,4 +149,13 @@
     margin-top: 5px;
     word-break: break-all;
     @include mixins.textVerticalHidden(2)
+}
+
+.file__upload-text {
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    @include mixins.textVerticalHidden(2);
+    color: variables.$color-border;
 }

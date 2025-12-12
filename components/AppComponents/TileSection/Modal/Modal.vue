@@ -159,6 +159,16 @@
                 </AppButton>
             </div>
 
+
+            <div class="modal__field-group" v-else-if="modal.field.type == 'file'">
+                <AppInput 
+                    :options="{
+                        title: 'Название кнопки'
+                    }"
+                    v-model="modal.field.button_name"
+                />
+            </div>
+
             <template v-if="modal.field.type != 'text_group'">
                 <AppCheckbox 
                     v-if="modal.fields[modal.field.type] && typeof modal.fields[modal.field.type].show_file_name != 'undefined'"
@@ -182,6 +192,19 @@
                         title: 'Внешняя ссылка',
                     }"
                 />
+                <AppColorPicker 
+                    v-if="modal.fields[modal.field.type] && modal.fields[modal.field.type].set_color != undefined"
+                    v-model="modal.field.color" 
+                >
+                    <template #icon>
+                        <AppCheckbox 
+                            v-model="modal.field.set_color"
+                            :options="{
+                                title: 'Выбрать цвет',
+                            }"
+                        />
+                    </template>
+                </AppColorPicker>
                 <AppCheckbox 
                     v-model="modal.field.required"
                     :options="{
@@ -236,19 +259,6 @@
                         multiple: true
                     }"
                 />
-                <AppColorPicker 
-                    v-model="modal.field.color" 
-                    v-if="modal.fields[modal.field.type] && modal.fields[modal.field.type].set_color != undefined"
-                >
-                    <template #icon>
-                        <AppCheckbox 
-                            v-model="modal.field.set_color"
-                            :options="{
-                                title: 'Показывать название',
-                            }"
-                        />
-                    </template>
-                </AppColorPicker>
             </template>
         </div>
     </AppModalWarning>
@@ -356,7 +366,9 @@
                     subfields: []
                 },
                 file: {
-                    show_file_name: false
+                    button_name: null,
+                    show_file_name: false,
+
                 }
             }
             // Типы полей для создания и редактирования
@@ -539,6 +551,7 @@
                 }
             } else {
                 modal.value.field = props.modal.content
+                console.log(modal.value.field);
             }
         }
     })

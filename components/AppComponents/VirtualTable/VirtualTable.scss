@@ -53,6 +53,10 @@
       }
     }
   }
+
+  .loader {
+    z-index: 30;
+  }
 }
 
 
@@ -62,7 +66,7 @@
   display: flex;
   align-items: center;
   min-height: 50px;
-  padding: 10px 0 10px 10px;
+  padding: 10px;
 
   &.table__cell_fixed {
     position: sticky;
@@ -227,18 +231,6 @@
         }
       }
     }
-
-    .table__row {
-      &.table__row_choose {
-        .select {
-          &.select_icon {
-            .select__value {
-              max-width: calc(100% - 50px);
-            }
-          }
-        }
-      }
-    }
   }
 
   &.table__body_dragging {
@@ -331,6 +323,10 @@
           padding: 0px;
         }
       }
+    }
+
+    .form__item_input {
+      width: 100%;
     }
 
     .select {

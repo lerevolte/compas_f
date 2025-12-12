@@ -71,6 +71,14 @@
             pointer-events: none;
         }
     }
+
+    &.draggable-drag {
+        .modal__option-field {
+            .form__item_input {
+                width: 100%;
+            }
+        }
+    }
 }
 
 .modal__option-field {
@@ -173,6 +181,10 @@
 
             .file__image {
                 z-index: 2;
+
+                & + .file__upload {
+                    opacity: 0;
+                }
             }
         }
     }

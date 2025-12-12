@@ -239,6 +239,28 @@ export class Common {
             for (let section of columns[column]) {
                 if (section.id == id) {
                     return section
+                } else {
+                    for (let field of section.fields) {
+                        if (field.id == id) {
+                            return field
+                        }
+                    }
+                }
+            }
+        }
+        return null
+    }
+
+    // Нахождение секции в колонках
+    findColumnSectionByField(columns, id) {
+        let group_field = null
+        for (let column in columns) {
+            for (let section of columns[column]) {
+                for (let section_field of section.fields) {
+                    if (section_field.type == 'text_group') {
+                        group_field = section_field.fields.find(p => p.id == id)
+                        if (group_field) return section_field
+                    }
                 }
             }
         }
@@ -257,6 +279,16 @@ export class Common {
             }
         }
         return null
+    }
+
+    // Копирование ссылки
+    copyLink(link) {
+        this.copyText(link)
+    }
+
+    // Копирование внешней ссылки
+    copyExternalLink(link) {
+        this.copyText(link)
     }
 }
 
@@ -784,6 +816,14 @@ export class Table {
         })
     }
 
+    copyLink(row) {
+        this.common.copyLink(`${window.location.hostname}/${this.slug}/${row.id}`)
+    }
+
+    copyExternalLink(row) {
+        this.common.copyExternalLink(`${window.location.hostname}/${this.slug}/${row.id}`)
+    }
+
     // Инициализация удаления
     initDelete(rows = []) {
         rows = typeof rows == 'boolean' || rows.length == 0 ? this.body.filter(item => item.isChoose) : rows 
@@ -1056,6 +1096,8 @@ export class Filter {
                 for (let key of otherKeys) {
                     if (key == 'trashed') {
                         response.push(`${key}=${this.setter.dependences.query[key] ? 1 : 0}`)
+                    } else if (key == 'trash_tab') {
+                        continue
                     } else if (Array.isArray(this.setter.dependences.query[key])) {
                         for (let value of this.setter.dependences.query[key]) {
                             response.push(`filter[${key}][]=${value}`)
@@ -1087,8 +1129,17 @@ export class Filter {
             
             let response = await api.callMethod("GET", routes.table.get.replace('${slug}', this.setter.slug) + `${this.query ? '?' + this.query : ''}`)
             this.setter.set(response.data)
+            
             if (!this.setter.dependences.state) {
                 this.setter.common.setQueryUrl(this.query ? '?' + this.query : '')
+            } else if (this.setter.dependences.query.trashed) {
+                this.query = this.query.split('&').filter(p => !p.includes('trashed'))
+                if (this.setter.dependences.query.trash_tab) {
+                    this.query.push(`trash_tab=${this.setter.dependences.query.trash_tab}`)
+                }
+                this.query = this.query.join('&')
+                this.setter.common.setQueryUrl(this.query ? '?' + this.query : '')
+                
             }
             return response.data
         } catch (error) {
@@ -1291,24 +1342,37 @@ export class History {
 }
 
 export class HeaderEditable {
-    constructor (columns) {
+    constructor ({columns, emit}) {
         this.id = null
         this.slug = null
         this.editTitle = false
         this.name = ''
+        this.emit = emit
         this.columns = columns ?? []
         this.common = new Common()
         this.boundCheckClick = null
+        this.modal = {
+            state: false,
+            title: 'Создание раздела',
+            actionTitle: 'Создать',
+            action: 'create',
+            text: null,
+            content: {
+                name: null,
+                key: null,
+            },
+            loading: false
+        }
     }
 
     // Копирование ссылки
     copyLink() {
-        this.common.copyText(window.location.href)
+        this.common.copyLink(window.location.href)
     }
 
     // Копирование внешней ссылки
     copyExternalLink() {
-        this.common.copyText(window.location.href)
+        this.common.copyExternalLink(window.location.href)
     }
 
     // Редактирование заголовка
@@ -1353,6 +1417,56 @@ export class HeaderEditable {
         if (!target) {
             this.setTitle()
         }
+    }
+
+    copy({slug, id, emit}) {
+        emit('openModal', {
+            id: id,
+            slug: slug,
+            type: 'copy',
+        })
+    }
+
+    // Инициализация удаления объекта
+    initDelete({id, slug, is_modal}) {
+        this.modal = {
+            state: true,
+            title: 'Удаление',
+            actionTitle: 'Удалить',
+            action: 'delete',
+            text: 'Вы действительно хотите удалить объект?',
+            content: {
+                id: id,
+                slug: slug,
+                is_modal: is_modal
+            },
+            loading: false
+        }
+    }
+
+    // Удаление объекта
+    async delete() {
+        try {
+            this.modal.loading = true
+            await api.callMethod('DELETE', routes.table.delete.replace('${slug}', this.modal.content.slug), {
+                ids: [this.modal.content.id]
+            })
+            if (this.modal.content.is_modal) {
+                this.emit('close', true)
+            } else {
+                navigateTo(`/objects/${this.modal.content.slug}`)
+            }
+        } catch (error) {
+            console.log(error);
+        } finally {
+            this.modal.state = false
+            this.modal.loading = false
+        }
+    }
+
+
+    edit({isGlobalEdit}) {
+        isGlobalEdit = true
     }
 }
 
@@ -1510,6 +1624,14 @@ export class Section {
                     this.buffer.backup.push(JSON.parse(JSON.stringify(field)))
                     field.edit = true
                 }
+            }
+        }
+    }
+
+    editAllSections(columns) {
+        for (let column in columns) {
+            for (let section of columns[column]) {
+                this.cancelEditAll(section)
             }
         }
     }
@@ -1749,6 +1871,23 @@ export class Field {
         try {
             this.modal.loading = true
             field.entity = slug
+            let group_field = null
+
+            if (field.type == 'text_group') {
+                for (let column in columns) {
+                    for (let section of columns[column]) {
+                        section.fields = section.fields.filter(p => !field.fields.find(q => q.id == p.id))
+                    }
+                }
+            } else {
+                group_field = this.common.findColumnSectionByField(columns, field.id)
+                if (group_field) {
+                    await api.callMethod('PUT', routes.detail.update_field.replace('${id}', group_field.id), {
+                        ...group_field,
+                        subfields: group_field.subfields.filter(p => p != field.id)
+                    })
+                }
+            }
 
             if (field.section_type != 'field') {
                 const fromSection = this.common.findColumnSection(columns, field.section_id)
@@ -1765,8 +1904,7 @@ export class Field {
 
             const { fields, ...request } = field;
             await api.callMethod('PUT', routes.detail.update_field.replace('${id}', field.id), request)
-
-            if (field.type == 'text_group') {
+            if (field.type == 'text_group' || group_field) {
                 emit('action', {
                     action: 'get',
                     data: null
@@ -1954,9 +2092,13 @@ export class Field {
                         } else {
                             if (!field.value[slug]) {
                                 const prevVal = field.value
-                                field.value = {
-                                    value: prevVal,
-                                    [slug]: val
+                                if (typeof prevVal === 'object' && prevVal !== null) {
+                                    field.value[slug] = val
+                                } else {
+                                    field.value = {
+                                        value: prevVal,
+                                        [slug]: val
+                                    }
                                 }
                             } else {
                                 field.value[slug] = val

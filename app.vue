@@ -21,7 +21,9 @@
         >
           <AppDetail 
             :id="modal.id"
+            :tab_slug="modal.tab_slug"
             :slug="modal.slug"
+            :is_modal="true"
             :isGlobalEdit="['create', 'copy'].includes(modal.type)"
             :isCopy="modal.type === 'copy'"
             @close="entity.modal.pop()"
@@ -60,6 +62,8 @@
 
     openModal(item) {
       item.slug = item.slug ?? router.params.slug
+      item.tab_slug = item.tab_slug ?? null
+ 
       if ((this.modal.length >= 9 || window.screen.width <= 990) && !['create', 'copy'].includes(item.type)) {
         this.modal = []
         this.addresses = []

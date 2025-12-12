@@ -72,10 +72,6 @@
     }
 
     &.select_icon {
-        .form__item_input {
-            padding-left: 50px;
-        }
-
         .select__value  {
             width: 100%;
             top: 5px;
@@ -106,7 +102,10 @@
         &.select_disabled {
             .relation__arrow {
                 display: none;
+            }
 
+            .select__content-abs {
+                display: none;
             }
 
             .select__content {
@@ -174,7 +173,12 @@
         }
 
         &.value__text_id {
+            padding-left: 5px;
+            white-space: nowrap;
             color: variables.$color-border;
+            margin-right: 50px;
+            position: relative;
+            z-index: 2;
         }
     }
 }
@@ -234,6 +238,7 @@
 
     &.select__value_single {
         pointer-events: none;
+        z-index: 2;
         overflow: hidden;
         max-width: calc(100% - 50px);
         white-space: nowrap;
@@ -352,4 +357,42 @@
     // &:last-child {
     //     margin-bottom: 0;
     // }
+}
+
+.select__actions {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.select__content-container {
+    position: relative;
+    overflow: hidden;
+    left: 50px;
+    max-width: calc(100% - 50px);
+}
+
+
+.select__content-abs {
+    height: 100%;
+    gap: 5px;
+    top: 0px;
+    right: 0px;
+    position: absolute;
+    display: flex;
+    align-items: center;
+    z-index: 2;
+    
+    &::before {
+        content: '';
+        position: absolute;
+        top: 1px;
+        right: 0px;
+        width: 100%;
+        height: calc(100% - 2px);
+        border-radius: 4px;
+        background: variables.$color-white;
+        border-right: 1px solid variables.$color-border;
+    }
 }

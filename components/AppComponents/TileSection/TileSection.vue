@@ -96,7 +96,6 @@
 
                     <AppStatus 
                         v-if="field.type == 'status'"
-                        :parentContainer="sectionRef"
                         :options="{
                             ...field,
                             focus: !localGlobalEdit,
@@ -126,7 +125,6 @@
 
                     <AppRelation  
                         v-else-if="field.type == 'relation'"
-                        :parentContainer="sectionRef"
                         :error="field.error"
                         :options="{
                             id: field.id,
@@ -147,6 +145,7 @@
                             placeholder: '' 
                         }"
                         v-model="field.value"
+                        @showAll="() => props.tabs.set({tab: props.tabs.list.find(p => p.slug == field.related_table), is_module: false})"
                         @create="item =>  emit('action', {
                             action: 'openModal', 
                             value: {
@@ -327,15 +326,25 @@
                             <IconSettings />
                         </template>
                         <template #content>
-                            <div class="popup__option" v-show="field.can_edit && !field.edit" @click="(e) => fieldObject.initChangeField(field, null, 'option')">
+                            <div 
+                                class="popup__option" 
+                                v-show="field.can_edit && !field.edit" 
+                                @click="(e) => {
+                                    fieldObject.initChangeField(field, null, 'option');
+                                    e.target?.closest('.popup')?.classList.remove('popup_open');
+                                }"
+                            >
                                 Изменить
                             </div>
                             <div 
                                 class="popup__option" 
-                                @click="emit('actionField', {
-                                    action: 'initUpdate',
-                                    value: field
-                                })"
+                                @click="() => {
+                                    emit('actionField', {
+                                        action: 'initUpdate',
+                                        value: field
+                                    });
+                                    e.target?.closest('.popup')?.classList.remove('popup_open');
+                                }"
                             >
                                 Настроить
                             </div>
@@ -358,20 +367,26 @@
                             <div 
                                 class="popup__option" 
                                 v-show="field.type != 'text_group'" 
-                                @click="emit('actionField', {
-                                    action: 'hide',
-                                    value: field
-                                })"
+                                @click="() => {
+                                    emit('actionField', {
+                                        action: 'hide',
+                                        value: field
+                                    });
+                                    e.target?.closest('.popup')?.classList.remove('popup_open');
+                                }"
                             >
                                 Скрыть
                             </div>
                            <div 
                                 class="popup__option popup__option_red" 
                                 v-show="!field.is_permanent" 
-                                @click="emit('actionField', {
-                                    action: 'initDelete',
-                                    value: field
-                                })"
+                                @click="() => {
+                                    emit('actionField', {
+                                        action: 'initDelete',
+                                        value: field
+                                    });
+                                    e.target?.closest('.popup')?.classList.remove('popup_open');
+                                }"
                             >
                                 Удалить
                             </div>
@@ -464,6 +479,17 @@
             default: null,
             type: Object
         },
+        tabs: {
+            default: {
+                active: {
+                    tab: "order"
+                },
+                is_module: false,
+                queryTab: {},
+                list: []
+            },
+            type: Object
+        },
         hidden: {
             default: [],
             type: Array
@@ -498,6 +524,7 @@
             type: Object
         }
     })
+
 
     const textareaRef = ref(null)
     const sectionRef = ref(null)

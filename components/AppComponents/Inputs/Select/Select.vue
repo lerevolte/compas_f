@@ -210,7 +210,7 @@
         checkPosition() {
             if (!contentRef.value || !selectRef.value) return;
 
-            const parentRect = props.parentContainer ? props.parentContainer.getBoundingClientRect() : selectRef.value.getBoundingClientRect();
+            const parentRect = props.parentContainer ? props.parentContainer.getBoundingClientRect() : {bottom: window.innerHeight};
             const contentRect = contentRef.value.getBoundingClientRect();
             
             this.state.isTop = props.isPreventBottom ? false : contentRect.bottom > parentRect.bottom;

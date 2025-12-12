@@ -17,6 +17,7 @@
                 </clipPath>
             </defs>
         </svg>
+        <slot></slot>
     </figure>
 </template>
 

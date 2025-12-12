@@ -19,7 +19,7 @@
                     fallback-class="draggable-fallback"
                     :filter="'.show-more, .show-more *'"
                     @end="fileManager.dragEnd()"
-                    :draggable="props.options.isDraggable ? '.file__image' : ''"
+                    :draggable="props.options.isDraggable ? '.file__image' : '.'"
                 >
                     <template #item="{ element: item }">
                         <div class="file__image">
@@ -45,7 +45,11 @@
                     <template #footer>
                         <div class="file__upload">
                             <input type="file" @change="fileManager.onFileChange" :multiple="props.options.multiple" :accept="props.options.accept ? props.options.accept.join(', ') : ['*']" />
-                            <IconFile class="file__preview"/>
+                            <IconFile class="file__preview">
+                                <div class="file__upload-text" v-if="props.options.button_name">
+                                    {{ props.options.button_name }}
+                                </div>
+                            </IconFile>
                         </div>
                     </template>
                 </draggable>

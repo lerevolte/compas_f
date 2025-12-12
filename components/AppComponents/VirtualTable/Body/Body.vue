@@ -104,6 +104,7 @@
                             v-model="cell.useCellModel(row.index, column).value"
                             @clickLink="id => table.open({id, related_table: column.related_table})"
                             @create="item => table.create(column.related_table)"
+                            @showAll="() => table.open({id: table.body[row.index].id, tab_slug: column.related_table})"
                             @update:model-value="val => table.slug == 'products' && getRow(val, table.body[row.index])"
                             @update:prevValue="val => cell.checkEditting(table.body[row.index], {value: val, key: column.key})"
                         />
@@ -339,6 +340,14 @@
                     {
                         name: 'Скопировать',
                         action: 'copy'
+                    },
+                    {
+                        name: 'Скопировать ссылку',
+                        action: 'copyLink'
+                    },
+                    {
+                        name: 'Скопировать внешнюю ссылку',
+                        action: 'copyExternalLink'
                     },
                     {
                         name: 'Удалить',

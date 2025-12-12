@@ -24,6 +24,7 @@
                         isDisableFooter: props.options.isDisableFooter,
                         isGlobalEdit: props.options.isGlobalEdit,
                     }"
+                    :tabs="props.tabs"
                     :sectionClass="section"
                     :listSection="columns.listSection"
                     :pageId="props.pageId"
@@ -136,6 +137,17 @@
         slug: {
             default: null,
             type: [String, Object]
+        },
+        tabs: {
+            default: {
+                active: {
+                    tab: "order"
+                },
+                is_module: false,
+                queryTab: {},
+                list: []
+            },
+            type: Object
         },
         columns: {
             default: {
@@ -280,4 +292,13 @@
     watch(() => props.columns, () => {
         columns.value.get()
     })
+
+    watch(() => props.options.isGlobalEdit, (next, prev) => {
+
+        console.log(props.options.isGlobalEdit);
+        
+        if (next) {
+            section.value.editAllSections()
+        }
+    }, {immediate: true})
 </script>

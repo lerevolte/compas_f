@@ -7,6 +7,7 @@
             :columns="detail.columns.list"
             :slug="props.slug"
             :hidden="detail.columns.hidden"
+            :tabs="props.tabs"
             :options="{
                 isModule: props.options.isModule,
                 isDisableFooter: props.options.isGlobalEdit,

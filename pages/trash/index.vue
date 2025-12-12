@@ -24,6 +24,7 @@
                 isHaveQuery: true,
                 isPermanentEdit: false,
                 query: {
+                    trash_tab: tabs.active?.tab,
                     trashed: true
                 },
                 isHaveFilter: true,
@@ -42,6 +43,7 @@
     import routes from '@/helpers/routes.js'
     import IconLoader from '@AppIcons/Loader.vue';
     import AppTabs from '@AppComponents/Tabs/Tabs.vue';
+    import { Common }  from '@/helpers/classes.js'
     import AppVirtualTable from '@AppComponents/VirtualTable/VirtualTable.vue';
 
 	const emit = defineEmits([
@@ -81,7 +83,13 @@
                 this.loading = true
                 const response = await api.callMethod('GET', routes.trash.get_tabs)
                 this.list = response.data.filter(p => p.enabled)
-                this.active = this.list[0] ?? null
+                const query = common.getQueryUrl()
+                if (query && query.trash_tab) {
+                    this.active = this.list.find(p => p.tab == query.trash_tab)
+                } else {
+                    this.active = this.list[0] ?? null
+                }
+
             } catch (error) {
                 console.log(error);
             } finally {
@@ -97,6 +105,7 @@
     }
 
     const tabs = ref(new Tabs())
+    const common = new Common()
     
 	onMounted(async () => {
 		useHead({

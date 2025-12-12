@@ -27,17 +27,14 @@
                 })"/>
                 <AppShowMore 
                     :isPreventBottom="true"
-                    :options="[
-                        {
-                            name: 'Скопировать ссылку',
-                            action: 'copyLink'
-                        },
-                        {
-                            name: 'Скопировать внешнюю ссылку',
-                            action: 'copyExternalLink'
-                        }
-                    ]"
-                    @initClick="action => detail.header[action]()"
+                    :options="detail.actions.default"
+                    @initClick="action => detail.header[action]({
+                        columns: detail.columns,
+                        is_modal: props.is_modal,
+                        isGlobalEdit: detail.isGlobalEdit,
+                        slug: detail.slug,
+                        id: detail.id
+                    })"
                 />
             </div>
         </header>
@@ -65,6 +62,26 @@
             :headerName="detail.header.name"
             @action="item => detail[item.action](item.value)"
         />
+
+        <teleport to="#menu__overlay" v-if="detail.header.modal.state">
+            <AppModalWarning 
+                :options="{
+                    title: detail.header.modal.title,
+                    action: detail.header.modal.action,
+                    actionTitle: detail.header.modal.actionTitle,
+                    template: 'slot'
+                }"
+                :loading="detail.header.modal.loading"
+                @delete="detail.header.delete()"
+                @close="detail.header.modal.state = false"
+            >
+            <template v-if="detail.header.modal.action == 'delete'">
+                <p class="warning__text">
+                    {{ detail.header.modal.text }}
+                </p>
+            </template>
+            </AppModalWarning>
+        </teleport>
     </div>
 </template>
 
@@ -78,6 +95,7 @@
     import AppTextarea from '@AppComponents/Inputs/Textarea/Textarea.vue';
     import DetailDynamic from './Dynamic/Dynamic.vue';
     import IconArrowBack from '@AppIcons/ArrowBack.vue';
+    import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'
 
     const textareaRef = ref(null)
     const detailHeaderRef = ref(null)
@@ -91,8 +109,16 @@
     ])
 
     const props = defineProps({
+        is_modal: {
+            default: false,
+            type: Boolean
+        },
         slug: {
             default: '',
+            type: String
+        },
+        tab_slug: {
+            default: null,
             type: String
         },
         id: {
@@ -157,11 +183,41 @@
         constructor() {
             this.id = null
             this.slug = null
-            this.header = new HeaderEditable()
+            this.header = new HeaderEditable({columns: this.columns, emit: emit})
             this.updateComponent = 0
             this.columns = {}
             this.isGlobalEdit = false
             this.isCopy = false
+            this.actions = {
+                default: [
+                    {
+                        name: 'Скопировать',
+                        action: 'copy'
+                    },
+                    {
+                        name: 'Скопировать ссылку',
+                        action: 'copyLink'
+                    },
+                    {
+                        name: 'Скопировать внешнюю ссылку',
+                        action: 'copyExternalLink'
+                    },
+                    {
+                        name: 'Удалить',
+                        action: 'initDelete'
+                    }
+                ],
+                trash: [
+                    {
+                        name: 'Скопировать ссылку',
+                        action: 'copyLink'
+                    },
+                    {
+                        name: 'Скопировать внешнюю ссылку',
+                        action: 'copyExternalLink'
+                    }
+                ]
+            }
         }
 
         // Получение данных
@@ -176,6 +232,17 @@
         // Получение табов
         getTabs(list) {
             tabs.value.list = list
+
+            if (props.tab_slug) {
+                setTimeout(() => {
+                    tabs.value.set({tab: tabs.value.list.find(p => p.slug == props.tab_slug), is_module: false})
+                }, 100);
+            }
+        }
+
+        // Установка активного таба
+        setTab(tab) {
+            tabs.value.set(tab)
         }
 
         // Обновление заголовка

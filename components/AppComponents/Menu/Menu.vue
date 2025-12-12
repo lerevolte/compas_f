@@ -172,7 +172,7 @@
                 />
             </div>
     
-            <AppPopup class="menu__popup">
+            <AppPopup ref="popupRef" class="menu__popup">
                 <template #header>
                     <div class="menu-user">
                         <figure class='ibg menu-user__avatar' :class="{'skeleton': menu.loading}">
@@ -188,13 +188,13 @@
                     </figure>
                 </template>
                 <template #content>
-                    <NuxtLink class="popup__option" to="/profile">
+                    <NuxtLink class="popup__option" to="/profile" @click="popupRef.popup.popupRef.classList.remove('popup_open');">
                         Настройки
                     </NuxtLink>
-                    <a href="https://compas.pro/auth/entry" class="popup__option">
+                    <a href="https://compas.pro/auth/entry" class="popup__option" @click="popupRef.popup.popupRef.classList.remove('popup_open');">
                         Сменить портал
                     </a>
-                    <div class="popup__option popup__option_red" @click="userStore.logout()">
+                    <div class="popup__option popup__option_red" @click="() => {userStore.logout(); popupRef.popup.popupRef.classList.remove('popup_open');}">
                         Выйти                    
                     </div>
                 </template>
@@ -223,6 +223,7 @@
     const menuHidden = ref(null)
     const isClient = ref(false)
 	const route = useRoute()
+    const popupRef = ref(null)
 
     // Загружаем данные самыми первыми на сайте
     await userStore.get()

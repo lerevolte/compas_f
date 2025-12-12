@@ -5,7 +5,7 @@
         </label>
 
         <div 
-            v-for="(selectItem, index) in normalizedModelValue.value"
+            v-for="(selectItem, index) in normalizedModelValue.value.slice(-5)"
             :key="index"
             class="select select_icon select-container" 
             :ref="el => setSelectRef(el, index)"
@@ -19,21 +19,6 @@
             <div class="select__content" @click="event => selectInstances[index]?.toggleOptions(event)">
                 <IconWarning v-if="props.options.required && !getActiveOption(index)"/>
 
-                <AppInput 
-                    :options="{
-                        id: `${props.options.id}_search_${index}`,
-                        title: '',
-                        type: 'text',
-                        name: '',
-                        mask: null,
-                        autocomplete: 'off',
-                        placeholder: ''
-                    }"
-                    @update:modelValue="(value) => selectInstances[index]?.filterOptions(value)"
-                    :model-value="selectInstances[index]?.state?.search || ''"
-                    @update:model-value="(value) => selectInstances[index]?.state && (selectInstances[index].state.search = value)"
-                />
-    
                 <div class="select__value select__value_single" :class="{ 'select__value_typing': (selectInstances[index]?.state?.search?.length || 0) > 0 }">
                     <figure class='select__value-icon' v-if="getActiveOption(index)">
                         <img 
@@ -55,9 +40,6 @@
                             <span class="value__text value__text_link" @click="() => clickLink(index)">
                                 {{ getActiveOption(index).label?.text }}  
                             </span>
-                            <span class="value__text value__text_id">
-                                ID: {{ getActiveOption(index).label?.id }}  
-                            </span>
                         </figcaption>
                     </figure>
 
@@ -76,11 +58,34 @@
                     </figure>
                 </div>
     
-                <IconSelectArrow />
-
-                <figure class='relation__arrow' @click="() => clickLink(index)" >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="4" height="3" fill="none" viewBox="0 0 4 3"><path fill="#888" d="M0 0h4L2 3z"/></svg>
-                </figure>
+                <div class="select__content-container">
+                    <AppInput 
+                        :options="{
+                            id: `${props.options.id}_search_${index}`,
+                            title: '',
+                            type: 'text',
+                            name: '',
+                            mask: null,
+                            autocomplete: 'off',
+                            placeholder: ''
+                        }"
+                        @update:modelValue="(value) => selectInstances[index]?.filterOptions(value)"
+                        :model-value="selectInstances[index]?.state?.search || ''"
+                        @update:model-value="(value) => selectInstances[index]?.state && (selectInstances[index].state.search = value)"
+                    />
+    
+                    <div class="select__content-abs">
+                        <span class="value__text value__text_id">
+                            ID: {{ getActiveOption(index)?.label?.id }}  
+                        </span>
+    
+                        <IconSelectArrow />
+        
+                        <figure class='relation__arrow' @click="() => clickLink(index)" >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="4" height="3" fill="none" viewBox="0 0 4 3"><path fill="#888" d="M0 0h4L2 3z"/></svg>
+                        </figure>
+                    </div>
+                </div>
             </div>
             <div class="select__options" :class="{ 'popup__content_top': selectInstances[index]?.state?.isTop }">
                 <div class="select__option" :value="null" @click="selectInstances[index]?.changeValue({ value: null }, index)">
@@ -111,14 +116,23 @@
             {{ props.error.text }}
         </AppError>
 
-        <AppButton 
-            v-if="props.options.edit !== false && props.options.isCanAdd && props.options.multiple"
-            class="button_text"
-            :disabled="props.options.edit === false"
-            @click="addNewSelect"
-        >
-            + Добавить
-        </AppButton>
+        <div class="select__actions">
+            <AppButton 
+                v-if="normalizedModelValue.value.length > 5"
+                class="button_text"
+                @click="emit('showAll', true)"
+            >
+                Всего {{normalizedModelValue.value.length}}, посмотреть все
+            </AppButton>
+            <AppButton 
+                v-if="props.options.edit !== false && props.options.isCanAdd && props.options.multiple"
+                class="button_text"
+                :disabled="props.options.edit === false"
+                @click="addNewSelect"
+            >
+                + Добавить
+            </AppButton>
+        </div>
     </div>
 </template>
 
@@ -141,6 +155,7 @@
         'update:modelValue',
         'clickLink',
         'update:prevValue',
+        'showAll',
         'create'
     ])
 
@@ -255,8 +270,9 @@
             
 
             if (!popupRef || !contentRef) return;
-
-            const parentRect = props.parentContainer ? props.parentContainer.getBoundingClientRect() : popupRef.getBoundingClientRect();
+            
+            
+            const parentRect = props.parentContainer ? props.parentContainer.getBoundingClientRect() : {bottom: window.innerHeight};
             const contentRect = contentRef.getBoundingClientRect();
             this.state.isTop = props.isPreventBottom ? false : contentRect.bottom > parentRect.bottom;
         }
@@ -265,6 +281,43 @@
             this.state.list = props.options.list ?? []
         }
     }
+
+    const props = defineProps({
+        parentContainer: {
+            default: null
+        },
+        isPreventBottom: {
+            default: false,
+            type: Boolean
+        },
+        options: {
+            default: {
+                id: 0,
+                title: '',
+                list: [],
+                name: '',
+                edit: true,
+                relation: null,
+                searchable: false,
+                required: false,
+                isSetDefault: false,
+                isHaveNull: false,
+                relation_type: null,
+                multiple: false,
+                type: 'select',
+                placeholder: '' 
+            },
+            type: Object
+        },
+        modelValue: null,
+        error: {
+            default: {
+                state: false,
+                text: ''
+            },
+            type: Object
+        }
+    })
 
     // Функция нормализации modelValue
     const normalizeModelValue = (modelValue) => {
@@ -388,43 +441,6 @@
             }
         }
     };
-
-    const props = defineProps({
-        parentContainer: {
-            default: null
-        },
-        isPreventBottom: {
-            default: false,
-            type: Boolean
-        },
-        options: {
-            default: {
-                id: 0,
-                title: '',
-                list: [],
-                name: '',
-                edit: true,
-                relation: null,
-                searchable: false,
-                required: false,
-                isSetDefault: false,
-                isHaveNull: false,
-                relation_type: null,
-                multiple: false,
-                type: 'select',
-                placeholder: '' 
-            },
-            type: Object
-        },
-        modelValue: null,
-        error: {
-            default: {
-                state: false,
-                text: ''
-            },
-            type: Object
-        }
-    })
 
     // Инициализация экземпляров селектов
     const initializeSelects = () => {
