@@ -60,15 +60,15 @@
         }
     })
 
+    const datepicker = ref(null)
+
     const emit = defineEmits([
         'update:modelValue',
         'open'
     ])
 
     class Datepicker {
-        constructor() {
-
-        }
+        constructor() {}
 
         // Открытие датапикера
         open() {
@@ -80,4 +80,15 @@
     }
 
     const datepickerField = ref(new Datepicker())
+
+    onMounted(() => {
+        nextTick(() => {
+            if (props.options?.focus) {
+                if (datepicker.value) {
+                    datepicker.value.openMenu();
+                }
+            }
+        });
+        datepickerField.value.open()
+    })
 </script>

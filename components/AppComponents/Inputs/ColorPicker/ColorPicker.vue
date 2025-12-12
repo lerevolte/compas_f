@@ -6,7 +6,7 @@
             </span>
         </label>
 
-        <AppPopup class="colorpicker" :style="`--colorValue: ${props.modelValue}`" :isPreventBottom="true">
+        <AppPopup class="colorpicker" :style="`--colorValue: ${props.modelValue}`" :isPreventBottom="true" :ignoreSelectors="['colorpicker']">
             <template #header>
                 <div class="colorpicker__summary">
                     <slot name="icon"></slot>

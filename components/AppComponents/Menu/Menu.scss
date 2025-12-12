@@ -6,10 +6,15 @@
     justify-content: start;
     flex-direction: row-reverse;
     gap: 10px;
-    margin-bottom: 25px;
+
+    @media (max-width: 990px) {
+        margin-bottom: 25px;
+    }
 }
 
 .menu {  
+    top: 0px;
+    position: sticky;
     min-height: 100vh;
 
     .draggable-drag {
@@ -41,6 +46,12 @@
 
         .icon_drag {
             opacity: 0 !important;
+        }
+
+        .settings {
+            .icon_drag {
+                opacity: 1 !important;
+            }
         }
     }
 }

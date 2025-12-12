@@ -16,7 +16,7 @@
   display: flex;
   flex-direction: column;
   max-height: 100%;
-  max-width: calc(100vw - 275px);
+  max-width: calc(100vw - 285px);
   contain: layout paint;
   will-change: scroll-position;
 
@@ -207,8 +207,9 @@
     display: none;
   }
 
-  &:has(.select_open) {
-    z-index: 10;
+  &:has(.select_open),
+  &:has(.popup_open) {
+    z-index: 100;
   }
 }
 
@@ -223,6 +224,18 @@
         &[data-column-key="isChoose"],
         &[data-column-key="actions"] {
           pointer-events: none;
+        }
+      }
+    }
+
+    .table__row {
+      &.table__row_choose {
+        .select {
+          &.select_icon {
+            .select__value {
+              max-width: calc(100% - 50px);
+            }
+          }
         }
       }
     }
@@ -316,6 +329,14 @@
       @media (max-width: 990px) {
         label {
           padding: 0px;
+        }
+      }
+    }
+
+    .select {
+      &.select_icon {
+        .select__value {
+          max-width: calc(100% - 5px);
         }
       }
     }

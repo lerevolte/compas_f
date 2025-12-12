@@ -173,8 +173,10 @@
     margin-top: 20px;
     display: flex;
     justify-content: end;
+    margin-bottom: 65px;
 
     button {
+        height: 40px;
         width: calc(100% - 36px);
     }
 }

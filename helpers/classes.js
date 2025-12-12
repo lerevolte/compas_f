@@ -33,6 +33,19 @@ export class Common {
         }
     }
 
+    // Преобразование имени
+    transformName(name, length) {
+        const dotIndex = name.lastIndexOf('.');
+        if (dotIndex === -1) return name;
+        
+        const response = name.slice(0, dotIndex);
+        const ext = name.slice(dotIndex);
+        
+        return response.length <= length + 3 
+          ? name 
+          : `${response.slice(0, length)}...${response.slice(-3)}${ext}`;
+      };
+
     // Валидация полей
     validate(field, type) {
         const checkText = (text) => {
@@ -675,9 +688,13 @@ export class Table {
         try {
             this.downloadExcelBuffer.state = true
             this.downloadExcelBuffer.loading = true
-            let request = this.header.filter(p => p.key != 'isChoose' && p.key != 'actions' && p.enabled).map(p => {
-                return `fields[]=${p.key}`
-            })
+            let request = [
+                `sort_field=${this.sortItem.sort_field}`,
+                `sort_order=${this.sortItem.sort_order}`,
+                ...this.header.filter(p => p.key != 'isChoose' && p.key != 'actions' && p.enabled).map(p => {
+                    return `fields[]=${p.key}`
+                })
+            ]
 
             if (this.dependences.state) {
                 const otherKeys = Object.keys(this.dependences.query)
@@ -1067,6 +1084,7 @@ export class Filter {
         try {
             this.filtering = true
             this.query = setFilter(fields, saved_query)
+            
             let response = await api.callMethod("GET", routes.table.get.replace('${slug}', this.setter.slug) + `${this.query ? '?' + this.query : ''}`)
             this.setter.set(response.data)
             if (!this.setter.dependences.state) {
@@ -1710,7 +1728,9 @@ export class Field {
     }
 
     // Инициализация обновления
-    initUpdate({field, section}) {
+    initUpdate({field, hidden,section}) {
+        console.log(hidden);
+        
         this.modal = {
             state: true,
             title: 'Настройки поля',
@@ -1888,8 +1908,32 @@ export class Field {
                     return field ?? null
                 } else if (field.type == 'status') {
                     return field.value
+                } else if (field.type == 'json') {
+                    if (field.value) {
+                        return JSON.parse(field.value).map(product => {
+                            return product ? `${product.name}, <b> ${product.count} шт.</b>` : ''
+                        }).join(', ')
+                    } else {
+                        return null
+                    }
+                } else if (field.type == 'text') {
+                    if (field.is_external_link) {
+                        if (slug == 'value') {
+                            return typeof field.value === 'object' && field.value !== null ? field.value[slug] : field.value
+                        } else {
+                            return field.value[slug]
+                        }
+                    } else {
+                        if ((typeof field.value === 'object' && field.value !== null)) {
+                            return field.value[slug]
+                        } else {
+                            return field.value
+                        }
+                    }
+                } else if (field.value !== null && typeof field.value === 'object') {
+                    return field.value[slug]
                 } else {
-                    return typeof field.value === 'object' && field.value !== null ? field.value[slug] : field.value
+                    return field.value
                 }
             },
             set(val) {
@@ -1899,19 +1943,36 @@ export class Field {
                     field = val
                 }  else if (field.type == 'status') {
                     field.value = val
-                } else if (field.value !== null && typeof field.value === 'object') {
-                    if (field.type == 'text') {
-                        if (field.value.external_link) {
-                            field.value[slug] = val
+                } else if (field.type == 'text') {
+                    if (field.is_external_link) {
+                        if (slug == 'value') {
+                            if (typeof field.value === 'object' && field.value !== null) {
+                                field.value[slug] = val
+                            } else {
+                                field.value = val
+                            }
                         } else {
-                            field.value.external_link = ''
-                            field.value[slug] = val
+                            if (!field.value[slug]) {
+                                const prevVal = field.value
+                                field.value = {
+                                    value: prevVal,
+                                    [slug]: val
+                                }
+                            } else {
+                                field.value[slug] = val
+                            }
                         }
                     } else {
-                        field.value[slug] = val
+                        if (typeof field.value === 'object' && field.value !== null) {
+                            field.value[slug] = val
+                        } else {
+                            field.value = val
+                        }
                     }
+                } else if (field.value !== null && typeof field.value === 'object') {
+                    field.value[slug] = val
                 } else {
-                    field = val
+                    field.value = val
                 }
             }
         })
@@ -1959,7 +2020,7 @@ export class Field {
             } else if (field.type == 'status') {
                 if (field.edit) return
             } else if (field.type == 'file') {
-                if (field.edit || (!target.classList.contains('file'))) return
+                if (field.edit || (!target.classList.contains('file') && !target.classList.contains('file__values'))) return
             } else if (field.type == 'address') {
                 if (field.edit || (target.classList.contains('blank__text') || target.classList.contains('button_copy') || target.classList.contains('map__frame-map'))) return
             }

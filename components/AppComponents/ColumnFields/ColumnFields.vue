@@ -91,6 +91,7 @@
             <FieldModal 
                 :columns="columns.list"
                 :modal="field.modal"
+                :hidden="section.hidden"
                 :listSection="columns.listSection"
                 @actionField="action => field[action.action]({
                     columns: columns.list,

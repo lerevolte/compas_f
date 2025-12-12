@@ -10,6 +10,10 @@
         padding: 5px;
     }
 
+    &:has(.form__item_checkbox) {
+        max-width: max-content;
+    }
+
     .colorpicker__summary,
     .colorpicker__preview {
         position: relative;
@@ -42,6 +46,34 @@
         background: var(--colorValue);
         cursor: pointer;
         overflow: hidden;
+
+        &:has(.form__item_checkbox) {
+            width: auto;
+            aspect-ratio: auto;
+            background: none;
+
+            &::before,
+            &::after {
+                content: none
+            }
+
+            .form__item_checkbox {
+                max-width: max-content;
+
+                label {
+                    font-size: variables.$font-size-default;
+                }
+            }
+
+            .checkbox__label {
+                text-decoration: underline;
+                color: var(--colorValue);
+
+                &:hover {
+                    text-decoration: none;
+                }
+            }
+        }
     }
     
 

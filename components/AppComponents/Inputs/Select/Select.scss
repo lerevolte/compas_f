@@ -59,11 +59,47 @@
         .select__value_single {
             opacity: 0.5;
         }
+
+        input {
+            border: 1px solid #0584fe;
+        }
     }
 
     .value__text {
         &.value__text_subtext {
             color: variables.$color-border;
+        }
+    }
+
+    &:has(.select__values) {
+        .form__item_input {
+            top: -4px;
+            position: absolute;
+            height: calc(100% + 8px);
+            width: 100%;
+
+            input {
+                height: 100%;
+            }
+        }
+
+        .icon__arrow {
+            top: 5px;
+        }
+
+        .select__options {
+            margin-top: 10px;
+        }
+
+
+        .select__values {
+            flex-wrap: wrap;
+            min-height: 32px;
+            position: relative;
+        }
+
+        .select__content {
+            margin-top: 5px;
         }
     }
 }

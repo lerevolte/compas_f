@@ -4,6 +4,7 @@
             <span>{{ props.options.title }}</span>
         </label>
         <input 
+            ref="inputRef"
             :id="props.options.id" 
             :name="props.options.name" 
             :type="props.options.type" 
@@ -33,6 +34,7 @@
 <script setup>
     import './Input.scss';
 
+    const inputRef = ref(null)
     import { vMaska } from "maska/vue"
     import AppError from '@AppComponents/Error/Error.vue'
 
@@ -49,6 +51,7 @@
                  title: '',
                  type: '',
                  name: '',
+                 focus: false,
                  autocomplete: 'on',
                  placeholder: '',
                  mask: null,
@@ -76,9 +79,19 @@
             emitRafId = null
         }
         emitRafId = requestAnimationFrame(() => {
-            emit('update:prevValue', JSON.parse(JSON.stringify(props.modelValue)))
+            emit('update:prevValue', props.modelValue ? JSON.parse(JSON.stringify(props.modelValue)) : null)
             emit('update:modelValue', target.value)
             emitRafId = null
         })
     }
+
+    defineExpose({ inputRef })
+
+    onMounted(() => {
+        if (props.options?.focus) {
+            nextTick(() => {
+                inputRef.value.focus()
+            })
+        }
+    })
 </script>

@@ -1,9 +1,19 @@
 <template>
     <div class="filter" ref="filterRef" :class="{ 'filter_open': filter.state.isOpen }">
         <div class="filter__header" :class="{'filter__header_fill': filter.state.activeTabs.length > 0}">
-            <AppInput @click="event => filter.toggleOptions(event)" @keyup.enter="filter.updateInfo()" v-model="filter.state.search" :options="{ id: 0, title: '', type: 'text', name: 'search', placeholder: 'Поиск', autocomplete: 'off' }">
-                <IconSearch />
-            </AppInput>
+            <AppInput 
+                @click="event => filter.toggleOptions(event)" 
+                @keyup.enter="filter.updateInfo()" 
+                v-model="filter.state.search" 
+                :options="{ 
+                    id: 0, 
+                    title: '', 
+                    type: 'text', 
+                    name: 'search', 
+                    placeholder: ' Фильтр + поиск', 
+                    autocomplete: 'off' 
+                }"
+            />
 
             <div class="filter__tabs" v-if="filter.state.activeTabs.length > 0" @click="event => filter.toggleOptions(event)">
                 <div class="filter__tab" v-for="tab in filter.state.activeTabs" :data-key="tab.key" :key="tab.key" >
@@ -16,11 +26,36 @@
         <IconSearch class="filter__mobile-search" @click="event => filter.toggleOptions(event)"/>
 
         <div class="filter__content" v-if="filter.state.fields.length > 0 || filter.state.activeTabs.length > 0">
-            <div class="filter__group">
+            <div class="mobile-filter__header">
                 <div class="filter__info" @click="filter.closeContent(null, true)">
-                    <IconSelectArrow />
-                    Фильтр
+                    <IconArrowBack />
+                    Фильтр + поиск
                 </div>
+
+                <div class="filter__header" :class="{'filter__header_fill': filter.state.activeTabs.length > 0}">
+                    <AppInput 
+                        @keyup.enter="filter.updateInfo()" 
+                        v-model="filter.state.search" 
+                        :options="{ 
+                            id: 0, 
+                            title: '',
+                            type: 'text',
+                            name: 'search', 
+                            placeholder: ' Фильтр + поиск', 
+                            autocomplete: 'off' 
+                        }"
+                    />
+
+                    <div class="filter__tabs" v-if="filter.state.activeTabs.length > 0">
+                        <div class="filter__tab" v-for="tab in filter.state.activeTabs" :data-key="tab.key" :key="tab.key" >
+                            {{ tab.label }}: {{ filter.setTabValue(tab) }}
+                            <IconClose @click="filter.deleteTab(tab)" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter__group">
                 <div class="filter__fields">
                     <div class="filter__field" :class="{'filter__field_disabled': filter.state.activeTabs.length == 0}">
                         <AppInput 
@@ -104,19 +139,19 @@
 
 
                 <div class="filter__actions" v-if="filter.savedFilter.active.state">
-                    <AppButton @click="(event) => filter.savedFilter.cancel()">
-                        Отмена
-                    </AppButton>
                     <AppButton class="button_fill" @click="filter.savedFilter.save()">
                         Сохранить
                     </AppButton>
-                </div>
-                <div class="filter__actions" v-else>
-                    <AppButton @click="(event) => filter.dropUnsavedFields()">
+                    <AppButton @click="(event) => filter.savedFilter.cancel()">
                         Отмена
                     </AppButton>
+                </div>
+                <div class="filter__actions" v-else>
                     <AppButton class="button_fill" @click="filter.updateInfo()">
-                        Поиск
+                        Найти
+                    </AppButton>
+                    <AppButton @click="(event) => filter.dropUnsavedFields()">
+                        Сбросить
                     </AppButton>
                 </div>
             </div>
@@ -186,9 +221,9 @@
     import AppDate from '@AppComponents/Inputs/Date/Date.vue';
     import AppInput from '@AppComponents/Inputs/Input/Input.vue';
     import AppSelect from '@AppComponents/Inputs/Select/Select.vue';
-    import IconSelectArrow from '@AppIcons/Input/SelectArrow.vue';
     import isEqual from 'lodash/isEqual'
     import { Common } from '~/helpers/classes';
+    import IconArrowBack from '@AppIcons/ArrowBack.vue';
 
     const filterRef = ref(null)
     const injectedFilter = inject('filter')
@@ -252,9 +287,6 @@
                         if (type == 'request') {
                             return findedOption?.value
                         } else {
-                            console.log(findedOption.label?.text);
-                            console.log(field);
-                            console.log(findedOption);
                             return field.type == 'status' || field.type == 'relation' ? findedOption.label?.text : findedOption.label
                         }
                     }
@@ -304,6 +336,9 @@
                     value: setValue(key, 'request')
                 }
             ))
+            if (this.state.search) {
+                request.push({ label: 'Поиск', key: 'search', value: this.state.search })
+            }
             injectedFilter.get(request)
         }
 

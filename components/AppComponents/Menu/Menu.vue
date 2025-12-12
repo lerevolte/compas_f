@@ -62,7 +62,7 @@
                                 </summary>
     
                                 <ul class="menu__sublist">
-                                    <li class="menu__item" :class="{'menu__link_active': menu.isActive(item.link)}" v-for="child in item.children" :key="child.id">
+                                    <li class="menu__item" :class="{'menu__link_active': menu.isActive(item.link), 'menu__item_disabled': !child.enabled}" v-for="child in item.children" :key="child.id">
                                         <NuxtLink class="menu__link" :to="child.link ?? '/'">
                                             {{ child.name }}
                                         </NuxtLink>
@@ -155,9 +155,11 @@
                             state: true,
                             name: 'Группы вкладок'
                         },
-                        isHaveDefault: true
+                        isHaveDefault: true,
+                        isHaveHidden: true
                     }"
                     @reset="menu.reset()"
+                    @enableField="field => menu.enableField(field)"
                     @isChanged="menu.isChanged = true"
                     @dragEvent="state => menu.isDragging = state"
                     @update:modelVisible="(val) => menu.visible = val"
@@ -268,6 +270,24 @@
             this.list = menuStore.list
             this.visible = this.list.filter(item => !item.is_hidden)
             this.hidden = this.list.filter(item => item.is_hidden)
+        }
+
+        // Изменение отображения поля
+        enableField(field) {
+            this.visible = this.visible.map(p => {
+                return {
+                    ...p,
+                    children: p.children.map(item => item.id == field.id ? {...item, enabled: field.enabled} : item),
+                    enabled: p.id == field.id ? field.enabled : p.enabled
+                }
+            })
+            this.hidden = this.hidden.map(p => {
+                return {
+                    ...p,
+                    children: p.children.map(item => item.id == field.id ? {...item, enabled: field.enabled} : item),
+                    enabled: p.id == field.id ? field.enabled : p.enabled
+                }
+            })
         }
 
         // Вернуть значение по умолчанию

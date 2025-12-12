@@ -5,7 +5,7 @@
         </label>
 
         <div class="file" v-if="props.options.edit">
-            <FansyBox ref="fansyBoxRef" class="file__values" v-if="fileManager.previewUrl.length > 0">
+            <FansyBox ref="fansyBoxRef" class="file__values">
                 <draggable
                     tag="div"
                     :group="`${props.options.key}_${props.options.id}`"
@@ -31,6 +31,10 @@
                                 }"
                             />
 
+                            <div class="file__name" v-show="props.options.show_file_name">
+                                {{ item.name }}
+                            </div>
+
                             <AppShowMore 
                                 :options="fileManager.actions"
                                 :isPreventBottom="true"
@@ -38,14 +42,14 @@
                             />
                         </div>
                     </template>
+                    <template #footer>
+                        <div class="file__upload">
+                            <input type="file" @change="fileManager.onFileChange" :multiple="props.options.multiple" :accept="props.options.accept ? props.options.accept.join(', ') : ['*']" />
+                            <IconFile class="file__preview"/>
+                        </div>
+                    </template>
                 </draggable>
             </FansyBox>
-            <div class="file__upload">
-                <input type="file" @change="fileManager.onFileChange" :multiple="props.options.multiple" :accept="props.options.accept ? props.options.accept.join(', ') : ['*']" />
-                <figure class='ibg file__preview'>
-                    <IconFile />
-                </figure>
-            </div>
         </div>
 
         <div class="file" :class="{'file_empty': fileManager.previewUrl.length == 0}" v-else>
@@ -58,6 +62,9 @@
                             thumbnail_path: item.url
                         }"
                     />
+                    <div class="file__name" v-show="props.options.show_file_name">
+                        {{ common.transformName(item.name ?? '', 15) }}
+                    </div>
                     <AppShowMore 
                         :options="props.options.isModal ? fileManager.actions.filter(p => p.action != 'showMore') : fileManager.actions"
                         :isPreventBottom="true"
@@ -116,6 +123,7 @@
     import draggable from 'vuedraggable';
     import routes from '@AppHelpers/routes'
     import IconFile from '@AppIcons/Input/File.vue'
+    import { Common } from '@AppHelpers/classes.js'
     import AppBlank from '@AppComponents/Blank/Blank.vue'
     import AppFile from '@AppComponents/Inputs/File/File.vue'
     import AppShowMore from '@AppComponents/ShowMore/ShowMore.vue'
@@ -158,6 +166,7 @@
     ])
 
     const fansyBoxRef = ref(null)
+    const common = new Common()
 
     class FileManager {
         constructor() {

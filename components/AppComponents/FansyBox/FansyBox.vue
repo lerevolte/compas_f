@@ -8,22 +8,21 @@
     import './FansyBox.scss';
     import '@fancyapps/ui/dist/fancybox/fancybox.css';
 
-    import {Fancybox} from "@fancyapps/ui";
+    import { ref, onMounted } from 'vue';
+    import { Fancybox } from '@fancyapps/ui';
 
     const options = {
+        dragToClose: false,
         Carousel: {
-            infinite: false,
-        },
-        idle: false
-    }
+            infinite: true
+        }
+    };
 
     const fansyBoxRef = ref(null);
 
     onMounted(() => {
-        Fancybox.bind(fansyBoxRef.value, '[data-fancybox]', {
-            ...(options || {}),
-        });
+        Fancybox.bind(fansyBoxRef.value, '[data-fancybox]', options);
     });
 
-    defineExpose({ fansyBoxRef })
+    defineExpose({ fansyBoxRef });
 </script>

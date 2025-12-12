@@ -330,6 +330,16 @@
         }
     }
 
+    .field__settings {
+        .icon_settings {
+            svg {
+                aspect-ratio: 1;
+                height: auto;
+                width: 13px;
+            }
+        }
+    }
+
     .blank {
         .blank__text {
             max-width: max-content;

@@ -9,6 +9,7 @@
             :key="index"
             class="select select_icon select-container" 
             :ref="el => setSelectRef(el, index)"
+            :data-id="index"
             :class="{ 
                 'select_open': selectInstances[index]?.state.isOpen, 
                 'select_disabled': props.options.edit == false, 
@@ -38,7 +39,7 @@
                         <img 
                             class="select__value-img"
                             v-if="typeof getActiveOption(index).label?.file == 'string' && getActiveOption(index).label?.file != ''" :src='getActiveOption(index).label?.file' alt=''
-                            @click="emit('clickLink', getActiveOption(index).value)" 
+                            @click="() => clickLink(index)" 
                         >
                         <div 
                             v-else 
@@ -46,12 +47,12 @@
                             :style="{ 
                                 '--bgColor': getActiveOption(index).label?.color == '' || !getActiveOption(index).label?.color? '#a6b7d4' : getActiveOption(index).label?.color 
                             }"
-                            @click="emit('clickLink', getActiveOption(index).value)" 
+                            @click="() => clickLink(index)" 
                         >
                             {{ getActiveOption(index).value ? getActiveOption(index).label?.text.slice(0, 1) : 'Н' }}
                         </div>
                         <figcaption>
-                            <span class="value__text value__text_link" @click="emit('clickLink', getActiveOption(index).value)">
+                            <span class="value__text value__text_link" @click="() => clickLink(index)">
                                 {{ getActiveOption(index).label?.text }}  
                             </span>
                             <span class="value__text value__text_id">
@@ -77,7 +78,7 @@
     
                 <IconSelectArrow />
 
-                <figure class='relation__arrow' @click="emit('clickLink', getActiveOption(index).value)" >
+                <figure class='relation__arrow' @click="() => clickLink(index)" >
                     <svg xmlns="http://www.w3.org/2000/svg" width="4" height="3" fill="none" viewBox="0 0 4 3"><path fill="#888" d="M0 0h4L2 3z"/></svg>
                 </figure>
             </div>
@@ -134,6 +135,7 @@
 
     const selectRefs = ref([])
     const selectInstances = ref([])
+    const clickedItem = ref(null)
 
     const emit = defineEmits([
         'update:modelValue',
@@ -146,6 +148,7 @@
         constructor(index) {
             this.index = index;
             this.selectRef = null;
+            this.clickedItem = null;
 
             this.state = reactive({
                 list: [],
@@ -212,7 +215,8 @@
 
         // Открытие/закрытие опций
         toggleOptions(event) {
-            if (props.options.edit == false) return
+            clickedItem.value = event
+            if (props.options.edit == false || (event && event.target.closest('.relation__arrow'))) return
             
             // Закрываем все другие селекты
             selectInstances.value.forEach((instance, idx) => {
@@ -475,6 +479,23 @@
         selectInstances.value.forEach(instance => instance.setOptions());
     });
 
+    watch(() => props.options?.edit, (next, prev) => {
+        if (next) {
+            if (props.options?.focus) {
+                setTimeout(() => {
+                    const clickedTarget = clickedItem.value.target
+                    const clickedInstance = clickedTarget.closest('.select')
+                    selectInstances.value[clickedInstance.getAttribute('data-id')]?.toggleOptions(clickedItem.value)
+                    clickedInstance.querySelector('input')?.focus()
+                }, 10);
+            }
+        }
+    })
+
+    // Переход по ссылке при клике
+    const clickLink = (index) => {
+        props.options.slug != 'roles' && emit('clickLink', getActiveOption(index).value)
+    }
     onBeforeUnmount(() => {
         selectInstances.value.forEach(instance => {
             document.removeEventListener('click', instance.closeOptions);

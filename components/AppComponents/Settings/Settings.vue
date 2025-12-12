@@ -20,13 +20,20 @@
 
                 <!-- Enable -->
                 <div class="settings__list" v-else-if="settings.nest.active.value == 'isCheck'">
-                    <div class="settings__item popup__option popup__option_checkbox" v-for="field in isInitGroup ? settings.nest.templateField.list : list" :key="field.id">
+                    <div 
+                        class="settings__item popup__option popup__option_checkbox" 
+                        v-for="field in templateListCheck" 
+                        :key="field.id"
+                    >
                         <AppCheckbox 
                             v-model="field.enabled"
                             :options="{
                                 title: field.name ?? field.title
                             }"
-                             @update:modelValue="emit('isChanged', true)"
+                            @update:modelValue="() => {
+                                emit('enableField', field)
+                                emit('isChanged', true)
+                            }"
                         />
                     </div>
                 </div>
@@ -244,6 +251,7 @@
         'update:modelHidden',
         'reset',
         'dragEvent',
+        'enableField',
         'isChanged'
     ])
 
@@ -461,8 +469,10 @@
 
     const templateListCheck = computed({
         get: () => {
-            if (props.options.isHaveHidden) {
-                return isInitGroup.value ? settings.value.nest.templateField.list : visible.value
+            if (isInitGroup.value) {
+                return settings.value.nest.templateField.list
+            } else if (props.options.isHaveHidden) {
+                return [...visible.value, ...hidden.value].filter(p => !p.is_group)
             } else {
                 return list.value
             }

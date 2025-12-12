@@ -19,6 +19,7 @@
 						list: [],
 						name: 'routes',
 						edit: true,
+						slug: 'routes',
 						relation: '3121',
 						searchable: true,
 						required: false,

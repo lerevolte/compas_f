@@ -38,7 +38,7 @@
                 <AppButton class="button_text" v-if="section.fields.find(item => item.edit || (item.type == 'text_group' && item.fields.find(item => item.edit)))" @click="fieldObject.section.cancelEditAll(props.section)">
                     Отмена
                 </AppButton>
-                <AppButton class="button_text"  v-else @click="fieldObject.section.editAll(props.section)">
+                <AppButton class="button_text"  v-else @click="editAll()">
                     Изменить
                 </AppButton>
                 <AppPopup :isPreventBottom="true">
@@ -99,6 +99,7 @@
                         :parentContainer="sectionRef"
                         :options="{
                             ...field,
+                            focus: !localGlobalEdit,
                             edit: field.edit,
                             list: field.options,
                             isHaveNull: false
@@ -132,9 +133,11 @@
                             title: field.title,
                             edit: field.edit ?? false,
                             type: field.type,
+                            slug: field.related_table,
                             list: field.options ? field.options.filter(p => p) : [],
                             name: field.key,
                             relation: field.id,
+                            focus: !localGlobalEdit,
                             searchable: true,
                             required: false,
                             isHaveNull: true,
@@ -163,7 +166,10 @@
 
                     <AppMap 
                         v-else-if="field.type == 'address'"
-                        :options="field"
+                        :options="{
+                            ...field,
+                            focus: !localGlobalEdit
+                        }"
                         :error="field.error"
                         v-model="field.value"
                     />
@@ -180,6 +186,7 @@
                         :options="{
                             type: 'field',
                             isDisableFooter: true,
+                            localGlobalEdit: localGlobalEdit,
                             isGlobalEdit: props.options.isGlobalEdit,
                         }"
                         :sectionClass="props.sectionClass"
@@ -195,20 +202,29 @@
                     <template v-if="field.edit">
                         <AppDate 
                             v-if="field.type == 'date'"
-                            :options="field"
+                            :options="{
+                                ...field,
+                                focus: !localGlobalEdit    
+                            }"
                             :error="field.error"
                             v-model="field.value"
                         />
                         <AppTextarea 
                             v-else-if="field.type == 'text' && field.is_plural"
-                            :options="field"
+                            :options="{
+                                ...field,
+                                focus: !localGlobalEdit
+                            }"
                             :error="field.error"
                             v-model="field.value"
                         />
 
                         <div class="section__field-group" v-else-if="field.type == 'text'">
                             <AppInput 
-                                :options="field"
+                                :options="{
+                                    ...field,
+                                    focus: !localGlobalEdit
+                                }"
                                 :error="field.error"
                                 v-model="fieldObject.setFieldValue(field, 'value').value"
                             />
@@ -226,7 +242,10 @@
 
                         <AppInput 
                             v-else-if="['number', 'password'].includes(field.type)"
-                            :options="field"
+                            :options="{
+                                ...field,
+                                focus: !localGlobalEdit    
+                            }"
                             :error="field.error"
                             v-model="field.value"
                         />
@@ -236,6 +255,7 @@
                             :error="field.error"
                             :options="{
                                 ...field,
+                                focus: !localGlobalEdit,
                                 list: field.options,
                                 multiple: field.is_plural
                             }"
@@ -257,6 +277,7 @@
                         <AppBlank 
                             v-else-if="['text', 'number'].includes(field.type)"
                             :options="{
+                                color: field.set_color ? field.color : '#000',
                                 isCheckEmpty: true,
                                 isLink: field.is_external_link
                             }"
@@ -289,6 +310,16 @@
                                 text: fieldObject.getSelectValue(field).value
                             }"
                         />
+
+                        <div class="blank" v-else-if="field.type == 'json'">
+                            <span class="blank__title">
+                                {{ field.title }}
+                            </span>
+                            <p 
+                                class="blank__text" 
+                                :class="{'blank__text_empty': !fieldObject.setFieldValue(field).value}" 
+                                v-html="fieldObject.setFieldValue(field).value"></p>
+                        </div>
                     </template>
 
                     <AppPopup class="field__settings" :isPreventBottom="true">
@@ -471,6 +502,7 @@
     const textareaRef = ref(null)
     const sectionRef = ref(null)
     const headerRef = ref(null)
+    const localGlobalEdit = ref(false)
     
     class TileSection {
         constructor() {
@@ -550,7 +582,21 @@
         } 
     }
 
+    const editAll = () => {
+        localGlobalEdit.value = true
+        fieldObject.value.section.editAll(props.section)
+
+        setTimeout(() => {
+            localGlobalEdit.value = false
+        }, 200);
+    }
+
+    watch(() => props.options.localGlobalEdit, () => {
+        localGlobalEdit.value = props.options.localGlobalEdit
+    })
+
     onMounted(async () => {
+        localGlobalEdit.value = props.options.isGlobalEdit
         await section.value.get()
     })
 </script>

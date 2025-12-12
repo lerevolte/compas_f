@@ -91,5 +91,11 @@
             display: flex;
             flex-direction: column;
         }
+
+        &:has(.colorpicker.popup_open) {
+            * {
+                @include mixins.userSelect(none);
+            }
+        }
     }
 }

@@ -32,7 +32,7 @@
             width: 100%;
         }    
 
-        @media (max-width: 660px) {
+        @media (max-width: 990px) {
             display: none;
         }
     }
@@ -50,7 +50,7 @@
         border: 1px solid variables.$color-border;
         border-right: none;
 
-        @media (max-width: 660px) {
+        @media (max-width: 990px) {
             display: grid;
         }
     }
@@ -71,9 +71,9 @@
             width: 100%;
         }  
 
-        @media (max-width: 660px) {
+        @media (max-width: 990px) {
             position: fixed;
-            gap: 30px;
+            gap: 0px;
             top: 0px;
             left: 0px;
             margin: 0;
@@ -81,7 +81,11 @@
             border-radius: 0px;
             min-height: 100vh;
             box-shadow: none;
+            grid-template-columns: 1fr;
             grid-template-rows: auto 1fr auto;
+            max-height: 100vh;
+            overflow: auto;
+            @include mixins.scrollBar();
         }
     }
 
@@ -97,7 +101,11 @@
                 .form__item-title,
                 label {
                     max-width: 380px;
-                    @include mixins.textHidden()
+                    @include mixins.textHidden();
+
+                    @media (max-width: 490px) {
+                        max-width: 280px;
+                    }
                 }
             }
         }
@@ -172,6 +180,7 @@
         display: none;
         align-items: center;
         gap: 15px;
+        order: -2;
         font-size: variables.$font-size-h2;
 
         .icon__arrow {
@@ -185,7 +194,7 @@
             }
         }
 
-        @media (max-width: 660px) {
+        @media (max-width: 990px) {
             display: flex;
         }
     }
@@ -202,6 +211,10 @@
         display: grid;
         grid-template-rows: auto 1fr auto;
         border-left: 1px solid variables.$color-border-light;
+
+        @media (max-width: 990px) {
+            order: -1;
+        }
     }
 }
 
@@ -319,5 +332,30 @@ button.button_text.filter__add {
 
     &:hover {
         color: variables.$color-icon-active;
+    }
+}
+
+.mobile-filter__header {
+    order: -2;
+    gap: 15px;
+    display: none;
+    flex-direction: column;
+    padding: 20px 10px 15px;
+
+    .filter__info {
+        font-size: 30px;
+    }
+
+    .filter__header {
+        display: flex;
+
+        .form__item_input {
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 990px) {
+        display: flex;
+        
     }
 }

@@ -1,10 +1,31 @@
 @use '@/assets/variables.scss' as variables;
 @use '@/assets/mixins.scss' as mixins;
 
+.modal__body {
+    @media (max-width: 990px) {
+        .detail {
+            .arrow-back {
+                display: flex !important;
+            }
+        }
+    }
+}
+
 .detail {
     display: grid;
     grid-template-rows: repeat(2, auto) 1fr;
     height: 100%;
+
+    .arrow-back {
+        order: 1;
+        display: none !important;
+    }
+
+    .menu__gambuger {
+        display: flex;
+        align-items: center;
+        order: 3;
+    }
 
     & > *:not(.detail__actions) {
         padding: 0px 25px;
@@ -49,6 +70,7 @@
 
 .detail-page__header {
     max-width: max-content;
+    margin-bottom: 25px;
     
     h1 {
         position: relative;

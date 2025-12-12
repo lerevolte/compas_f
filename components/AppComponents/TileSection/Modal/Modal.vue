@@ -73,12 +73,7 @@
                 :isPreventBottom="true"
                 :options="{
                     title: 'Поля в группе',
-                    list: [...modal.getFields(), ...modal.field?.fields ?? []].map(field => {
-                        return {
-                            label: field.title,
-                            value: field.id
-                        }
-                    }),
+                    list: modal.field.options,
                     multiple: true
                 }"
                 v-model="modal.field.subfields"
@@ -115,20 +110,35 @@
                                             <IconPipette />
                                         </template>
                                     </AppColorPicker>
-                                    <AppFile 
-                                        class="modal__file_icon"
-                                        :options="{
-                                            id: 0,
-                                            multiple: false,
-                                            edit: true,
-                                            isDraggable: false,
-                                            query: {
-                                                field_id: null,
-                                                page_id: null
-                                            }
-                                        }"
-                                        v-model="option.file"
-                                    />
+                                    <div class="modal__file-container">
+                                        <figure 
+                                            v-if="option.file"
+                                            class="ibg icon__close" 
+                                            title="Удалить иконку" 
+                                            @click="option.file = null"
+                                        >
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+                                                <path fill="currentColor"
+                                                    d="M764.288 214.592 512 466.88 259.712 214.592a31.936 31.936 0 0 0-45.12 45.12L466.752 512 214.528 764.224a31.936 31.936 0 1 0 45.12 45.184L512 557.184l252.288 252.288a31.936 31.936 0 0 0 45.12-45.12L557.12 512.064l252.288-252.352a31.936 31.936 0 1 0-45.12-45.184z">
+                                                </path>
+                                            </svg>
+                                        </figure>
+                                        <AppFile 
+                                            class="modal__file_icon"
+                                            :options="{
+                                                id: 0,
+                                                multiple: false,
+                                                edit: true,
+                                                isDraggable: false,
+                                                query: {
+                                                    field_id: null,
+                                                    page_id: null
+                                                }
+                                            }"
+                                            v-model="option.file"
+                                        />
+                                    </div>
                                 </template>
                                 <AppInput 
                                     :options="{
@@ -150,6 +160,13 @@
             </div>
 
             <template v-if="modal.field.type != 'text_group'">
+                <AppCheckbox 
+                    v-if="modal.fields[modal.field.type] && typeof modal.fields[modal.field.type].show_file_name != 'undefined'"
+                    v-model="modal.field.show_file_name"
+                    :options="{
+                        title: 'Показывать название',
+                    }"
+                />
                 <AppCheckbox 
                     v-if="modal.fields[modal.field.type] && typeof modal.fields[modal.field.type].is_plural != 'undefined'"
                     v-model="modal.field.is_plural"
@@ -219,6 +236,19 @@
                         multiple: true
                     }"
                 />
+                <AppColorPicker 
+                    v-model="modal.field.color" 
+                    v-if="modal.fields[modal.field.type] && modal.fields[modal.field.type].set_color != undefined"
+                >
+                    <template #icon>
+                        <AppCheckbox 
+                            v-model="modal.field.set_color"
+                            :options="{
+                                title: 'Показывать название',
+                            }"
+                        />
+                    </template>
+                </AppColorPicker>
             </template>
         </div>
     </AppModalWarning>
@@ -276,6 +306,10 @@
         columns: {
             default: {},
             type: Object
+        },
+        hidden: {
+            default: [],
+            type: Array
         }
     })
 
@@ -319,6 +353,10 @@
                 },
                 text_group: {
                     options: [],
+                    subfields: []
+                },
+                file: {
+                    show_file_name: false
                 }
             }
             // Типы полей для создания и редактирования
@@ -356,6 +394,8 @@
                         value: 2
                     }
                 ]
+            } else if (this.field.type == 'text_group') {
+                this.field.options = this.getTextGroupOptions()
             }
 
             const allKeys = Object.keys(Object.assign({}, this.fields.default, this.fields[this.field.type]))
@@ -392,12 +432,27 @@
                     this.field.fields.push(findedField)
                 }
             }
+        }
 
-            console.log(this.field.fields);
+        // Получение полей для группы
+        getTextGroupOptions() {
+            const list = this.getFields()
+            return list.map(field => {
+                return {
+                    label: field.title,
+                    value: field.id
+                }
+            })
         }
 
         // Сохранение
         save() {
+            if (this.field.has_roles_read && this.field.roles_read.length == 0) {
+                this.field.has_roles_read = 0
+            }
+            if (this.field.has_roles_write && this.field.roles_write.length == 0) {
+                this.field.has_roles_write = 0
+            }
             const request = JSON.parse(JSON.stringify(this.field))
 
             if (this.field.type == 'status') {
@@ -450,7 +505,7 @@
                 }
             }
 
-            return response
+            return [...response, ...props.hidden]
         }
     }
 
@@ -465,16 +520,25 @@
                 section_id: props.modal.content.section_id
             }
         } else if (props.modal.action == 'updateField') {
-            modal.value.field = {
+            if (props.modal.content.type == 'text_group') {
+                modal.value.field = {
                 ...props.modal.content,
-                options: props.modal.content.type == 'status' ? props.modal.content.options.map(option => {
-                    return {
-                        label: option.label.text,
-                        value: option.label.id,
-                        color: option.label.color,
-                        file: option.label.file ? [{url: option.label.file}] : null
-                    }
-                }) : props.modal.content.options
+                options: [...props.modal.content.options, ...modal.value.getTextGroupOptions()]
+            }
+            } else if (props.modal.content.type == 'status') {
+                modal.value.field = {
+                    ...props.modal.content,
+                    options: props.modal.content.options.map(option => {
+                        return {
+                            label: option.label.text,
+                            value: option.label.id,
+                            color: option.label.color,
+                            file: option.label.file ? [{url: option.label.file}] : null
+                        }
+                    })
+                }
+            } else {
+                modal.value.field = props.modal.content
             }
         }
     })

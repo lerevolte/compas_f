@@ -9,8 +9,10 @@
                 <IconWarning v-if="props.options.required && !activeOption"/>
                 <figure class="status__value">
                     <div class="status__rect">
-                        <img class="status__value-rect" v-if="activeOption?.label?.file != '' && activeOption?.label?.file != null" :src="activeOption?.label?.file" />
-                        <div class="status__value-rect" v-else :style="`--bgColor: ${activeOption?.label?.color}`"></div>
+                        <div class="status__rect-container" :style="`--bgColor: ${activeOption?.label?.color}`">
+                            <img class="status__value-rect" v-if="activeOption?.label?.file != '' && activeOption?.label?.file != null" :src="activeOption?.label?.file" />
+                            <div class="status__value-rect" v-else ></div>
+                        </div>
                         <figure class='status__arrow'>
                             <svg xmlns="http://www.w3.org/2000/svg" width="4" height="3" fill="none" viewBox="0 0 4 3"><path fill="#888" d="M0 0h4L2 3z"/></svg>
                         </figure>
@@ -35,8 +37,10 @@
                 >
                     <figure class="status__value">
                         <div class="status__rect">
-                            <img class="status__value-rect" v-if="option.label.file != '' && option.label.file != null" :src="option.label.file" />
-                            <div class="status__value-rect" v-else :style="`--bgColor: ${option.label.color}`"></div>
+                            <div class="status__rect-container" :style="`--bgColor: ${option.label.color}`">
+                                <img class="status__value-rect" v-if="option.label.file != '' && option.label.file != null" :src="option.label.file" />
+                                <div class="status__value-rect" v-else ></div>
+                            </div>
                         </div>
                     </figure>
 
@@ -132,6 +136,7 @@
                 title: '',
                 list: [],
                 name: '',
+                focus: false,
                 edit: true,
                 required: false,
                 isHaveNull: false,
@@ -150,6 +155,16 @@
     watch(() => props.options.list, () => {
         status.state.list = props.options.list ?? []
     })
+
+    watch(() => props.options.edit, (next, prev) => {
+        if (next) {
+            if (props.options?.focus) {
+                setTimeout(() => {
+                    status.toggleOptions()
+                }, 10);
+            }
+        }
+    }, { immediate: true })
 
     onBeforeUnmount(() => {
         document.removeEventListener('click', status.closeOptions);

@@ -92,6 +92,7 @@
                                 type: column.type,
                                 relation_type: table.slug == 'products' ? 'products' : null,
                                 list: column.options,
+                                slug: column.related_table,
                                 name: column.key,
                                 relation: column.id,
                                 searchable: true,

@@ -34,7 +34,8 @@
             this.closeOptions = this.closeOptions.bind(this);
         }
 
-        closeOptions(event) {
+        closeOptions(event) {          
+            
             if (!this.popupRef.value) return;
 
             for (const sel of props.ignoreSelectors) {
@@ -52,9 +53,15 @@
             }
         }
 
-        toggleOptions() {
-            this.state.isOpen = !this.state.isOpen;
+        toggleOptions(event) {
+            if (this.state.isOpen) {
+                const classList = Array.from(event.target.closest('.popup').classList)
+                if (classList.some(className => props.ignoreSelectors.includes(className))) {
+                    return;
+                }
+            }
 
+            this.state.isOpen = !this.state.isOpen;
             if (this.state.isOpen) {
                 document.addEventListener('mousedown', this.closeOptions);
                 nextTick(() => this.checkPosition());
@@ -67,10 +74,8 @@
 
         checkPosition() {
             if (!this.popupRef || !this.contentRef) return;
-
             const parentRect = props.parentContainer ? props.parentContainer.getBoundingClientRect() : this.popupRef.getBoundingClientRect();
             const contentRect = contentRef.value.getBoundingClientRect();
-
             this.state.isTop = props.isPreventBottom ? false : contentRect.bottom > parentRect.bottom;
         }
     }

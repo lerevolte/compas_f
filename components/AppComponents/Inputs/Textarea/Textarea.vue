@@ -4,6 +4,7 @@
             {{ props.options.title }}
         </label>
         <textarea 
+            ref="textareaInputRef"
             :id="props.options.id" 
             :name="props.options.name" 
             :placeholder="props.options.placeholder"
@@ -23,6 +24,7 @@
     import AppError from '@AppComponents/Error/Error.vue'
 
     const textareaRef = ref(null)
+    const textareaInputRef = ref(null)
     
     const emit = defineEmits([
         'update:modelValue'
@@ -34,6 +36,7 @@
                  id: 0,
                  title: '',
                  name: '',
+                 focus: false,
                  disabled: false,
                  preventEnter: false,
                  placeholder: ''
@@ -68,6 +71,13 @@
         }
     }
 
+    onMounted(() => {
+        if (props.options.focus) {
+            nextTick(() => {
+                textareaInputRef.value.focus();
+            })
+        }
+    })
 
     defineExpose({ textareaRef });
 </script>

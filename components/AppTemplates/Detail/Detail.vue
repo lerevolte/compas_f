@@ -1,6 +1,7 @@
 <template>
     <div class="detail">
         <header ref="detailHeaderRef" id="mobile-menu-target" class="detail-page__header">
+            <IconArrowBack @click="detail.closeDetail"/>
             <AppH1 ref="H1Ref" class="textarea_title">
                 <p 
                     class="ghost_text" 
@@ -76,6 +77,7 @@
     import AppShowMore from '@AppComponents/ShowMore/ShowMore.vue';
     import AppTextarea from '@AppComponents/Inputs/Textarea/Textarea.vue';
     import DetailDynamic from './Dynamic/Dynamic.vue';
+    import IconArrowBack from '@AppIcons/ArrowBack.vue';
 
     const textareaRef = ref(null)
     const detailHeaderRef = ref(null)

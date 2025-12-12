@@ -43,6 +43,12 @@
             color: variables.$color-default;
         }
     }
+
+    .blank__text {
+        &:not(.blank__text_empty) {
+            color: var(--colorText);
+        }
+    }
 }
 
 .blank_required {

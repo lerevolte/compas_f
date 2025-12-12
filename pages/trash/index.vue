@@ -8,7 +8,7 @@
             :activeTab="tabs.active ? tabs.active.tab : null"
             @action="item => tabs[item.action](item.value)"
         />
-		<div class="page__header page__header_table">
+		<div class="page__header page__header_trash">
 			<AppH1 id="mobile-menu-target">
 				{{ tabs.active?.title }}
 			</AppH1>

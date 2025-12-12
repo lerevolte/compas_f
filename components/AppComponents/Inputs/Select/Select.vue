@@ -16,6 +16,7 @@
                 <IconWarning v-if="props.options.required && !activeOption"/>
 
                 <AppInput 
+                    ref="searchRef"
                     :options="{
                         id: `${props.options.id}_search`,
                         title: '',
@@ -82,6 +83,7 @@
     const selectRef = ref(null)
     const contentRef = ref(null)
     const selectValuesRef = ref(null)
+    const searchRef = ref(null)
 
     const emit = defineEmits([
         'update:modelValue',
@@ -178,6 +180,9 @@
             if (this.state.isOpen) {
                 document.addEventListener('click', this.closeOptions);
                 nextTick(() => this.checkPosition());
+                if (searchRef.value.inputRef) {
+                    searchRef.value.inputRef.focus();
+                }
             } else {
                 this.state.search = ''
                 this.state.isTop = false
@@ -258,6 +263,17 @@
     watch(() => props.options.list, () => {
         select.setOptions()
     })
+
+    watch(() => props.options?.edit, (next, prev) => {
+        if (next) {
+            if (props.options?.focus) {
+                setTimeout(() => {
+                    select.toggleOptions()
+                }, 10);
+            }
+        }
+    }, { immediate: true })
+
 
     onBeforeUnmount(() => {
         document.removeEventListener('click', select.closeOptions);

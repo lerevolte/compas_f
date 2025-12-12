@@ -5,6 +5,7 @@
         <NuxtPage 
           :entity="entity"
           :slug="router.params.slug"
+          @init="item => entity.init(item)"
           @openModal="item => entity.openModal(item)"
         />
       </div>
@@ -54,12 +55,12 @@
       this.modal = []
       this.active = metaJSON[router.params.slug]
       this.addresses = []
-      this.currentTitle = null
+      this.currentTitle = `${metaJSON[router.params.slug]?.title} | Compas.pro` 
     }
 
     openModal(item) {
       item.slug = item.slug ?? router.params.slug
-      if ((this.modal.length >= 11 || window.screen.width <= 990) && !['create', 'copy'].includes(item.type)) {
+      if ((this.modal.length >= 9 || window.screen.width <= 990) && !['create', 'copy'].includes(item.type)) {
         this.modal = []
         this.addresses = []
         window.location.href = `/objects/${item.slug}/${item.id}`
@@ -77,7 +78,7 @@
       this.currentTitle = item.title
       window.history.replaceState({}, document.title, window.location.origin +  `/objects/${item.href?.slug}/${item.href?.id}`);
       useHead({
-        title: item
+        title: item.title
       })
     }
 

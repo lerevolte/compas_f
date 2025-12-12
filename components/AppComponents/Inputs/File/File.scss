@@ -34,10 +34,20 @@
         cursor: pointer;
     }
 
+    svg {
+        * {
+            transition: 0.1s all;
+        }
+    }
+
     &:hover {
         svg {
-            * {
+            & > rect {
                 stroke: variables.$color-icon-active;
+            }
+
+            g * {
+                fill: variables.$color-icon-active;
             }
         }
     }
@@ -70,6 +80,7 @@
 
 .file__image {
     position: relative;
+    max-width: 100px;
 
     .show-more {
         position: absolute;
@@ -119,4 +130,11 @@
             display: none !important;
         }
     }
+}
+
+.file__name {
+    color: #bcbcbc;
+    margin-top: 5px;
+    word-break: break-all;
+    @include mixins.textVerticalHidden(2)
 }
