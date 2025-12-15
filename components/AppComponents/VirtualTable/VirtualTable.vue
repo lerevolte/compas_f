@@ -9,6 +9,7 @@
       <TableHeader />
       <TableBody 
         @choseRow="row => emit('choseRow', row)"
+        @getData="data => emit('getData', data)"
       />
       <IconLoader v-if="table.loading"/>
       <ScrollButtons />

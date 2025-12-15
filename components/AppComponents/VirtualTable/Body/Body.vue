@@ -7,7 +7,7 @@
             :handle="table.options?.isDraggable ? table.options?.draggableTarget ?? '.table__row' : 'null'"
             :forceFallback="true"
             :fallbackOnBody="true"
-            :item-key="table.slug" 
+            :item-key="getItemKey" 
             class="table__body" 
             drag-class="draggable-drag"
             ghost-class="draggable-ghost"
@@ -27,10 +27,10 @@
                 <div 
                     :key="row.key" 
                     class="table__row"
-                    :ref="el => el && table.rowVirtualizer.measureElement(el)" 
+                    :ref="el => el && !table.isDragging && table.rowVirtualizer.measureElement(el)" 
                     :data-index="row.index"
                     :data-height="row.size"
-                    :style="`--row-start: ${row.start}px; --color-row: ${row.index % 2 === 0  ? '#f7fbff' : '#FFF'};`"
+                    :style="table.isDragging ? `position: relative; top: 0; --color-row: ${row.index % 2 === 0  ? '#f7fbff' : '#FFF'};` : `--row-start: ${row.start}px; --color-row: ${row.index % 2 === 0  ? '#f7fbff' : '#FFF'};`"
                     :class="{
                         'table__row_hidden': table.options?.isHaveLocalFilter && !checkEnabledRow(table.body[row.index]),
                         'table__row_clicked': table.body[row.index] && table.body[row.index].clicked, 
@@ -293,7 +293,8 @@
     const tableRef = inject('tableRef')
 
     const emit = defineEmits([
-        'choseRow'
+        'choseRow',
+        'getData'
     ])
 
     const doubleClick = common.useDoubleClick((elem, event) => {
@@ -522,8 +523,33 @@
 
     const cell = new Cell()
 
+    const getItemKey = (item) => {
+        // Используем original если доступен (реальные данные строки), иначе сам item
+        const rowData = item.original || item
+        // Используем id, local_id или комбинацию slug + index как уникальный ключ
+        return rowData.id ?? rowData.local_id ?? `${table.value.slug}_${item.index ?? item.key}`
+    }
+
     const rows = computed({
         get() {
+            // Во время перетаскивания показываем все элементы для корректного позиционирования
+            if (table.value.isDragging) {
+                // Используем фиксированную высоту для всех элементов во время перетаскивания
+                // Это обеспечит плавное перетаскивание без лагов
+                const estimatedHeight = 50
+                return table.value.body.map((item, index) => {
+                    return {
+                        key: `row-${index}`,
+                        index: index,
+                        start: index * estimatedHeight,
+                        size: estimatedHeight,
+                        original: item
+                    }
+                })
+            }
+            
+            if (!table.value.rowVirtualizer) return []
+            
             return table.value.rowVirtualizer.getVirtualItems().map(virtualItem => {
                 return {
                     ...virtualItem,
@@ -532,21 +558,84 @@
             })
         },
         set(newValue) {
-            if (!table.value.body || !newValue) return
+            // Инициализируем body как массив, если он не существует
+            if (!table.value.body) {
+                table.value.body = []
+            }
             
-            const virtualToReal = new Map()
-            newValue.forEach((virtualItem, newIndex) => {
-                virtualToReal.set(virtualItem.index, newIndex)
-            })
+            // Если newValue пустой и таблица пустая, ничего не делаем
+            if (!newValue || (newValue.length === 0 && table.value.body.length === 0)) return
+            
+            // Обрабатываем перетаскивание внутри таблицы или между таблицами
+            const reorderedBody = []
+            
+            for (const virtualItem of newValue) {
+                let rowData = null
+                
+                // Если есть original, значит это виртуальный элемент из текущей таблицы - используем original
+                if (virtualItem && virtualItem.original !== undefined && virtualItem.original !== null) {
+                    rowData = virtualItem.original
+                }
+                // Проверяем если это реальный объект строки из другой таблицы
+                else if (typeof virtualItem === 'object' && virtualItem !== null) {
+                    // Проверяем наличие полей реальных данных строки (id, local_id и т.д.)
+                    // И отсутствие виртуальных свойств или их наличие только как undefined
+                    const hasRealData = virtualItem.id !== undefined || 
+                                       virtualItem.local_id !== undefined ||
+                                       (Object.keys(virtualItem).length > 0 && 
+                                        Object.keys(virtualItem).some(key => {
+                                            // Игнорируем виртуальные свойства
+                                            if (['index', 'start', 'size', 'key', 'original'].includes(key)) {
+                                                return false
+                                            }
+                                            // Если есть любое другое поле со значением, это данные строки
+                                            return virtualItem[key] !== undefined
+                                        }))
+                    
+                    // Если есть реальные данные и нет original (или original undefined/null), это объект из другой таблицы
+                    if (hasRealData && (virtualItem.original === undefined || virtualItem.original === null)) {
+                        // Убираем виртуальные свойства если они есть
+                        const { index, start, size, key, original, ...cleanData } = virtualItem
+                        rowData = cleanData
+                    }
+                    // Если index есть и соответствует индексу в текущей таблице (перетаскивание внутри таблицы)
+                    else if (virtualItem.index !== undefined && virtualItem.index >= 0 && virtualItem.index < table.value.body.length) {
+                        rowData = table.value.body[virtualItem.index]
+                    }
+                }
+                
+                if (rowData) {
+                    reorderedBody.push(rowData)
+                }
+            }
 
-            const reorderedBody = newValue.map(virtualItem => {
-                return table.value.body[virtualItem.index]
-            }).filter(Boolean)
-
-            if (reorderedBody.length === table.value.body.length) {
-                table.value.body = reorderedBody
-            } else {
-                table.value.body = newValue
+            // Обновляем body только если получили валидные данные
+            if (reorderedBody.length > 0) {
+                // Если количество элементов совпадает с текущим (перетаскивание внутри таблицы)
+                if (reorderedBody.length === table.value.body.length && table.value.body.length > 0) {
+                    // Быстрая проверка, изменился ли порядок
+                    let hasChanged = false
+                    for (let i = 0; i < reorderedBody.length; i++) {
+                        const newId = reorderedBody[i].id ?? reorderedBody[i].local_id
+                        const oldId = table.value.body[i]?.id ?? table.value.body[i]?.local_id
+                        if (newId !== oldId) {
+                            hasChanged = true
+                            break
+                        }
+                    }
+                    if (hasChanged) {
+                        table.value.body = reorderedBody
+                    }
+                } else {
+                    // Если количество изменилось (межтабличное перетаскивание или добавление в пустую таблицу)
+                    table.value.body = reorderedBody
+                    // Обновляем виртуализатор после изменения body
+                    nextTick(() => {
+                        if (table.value.rowVirtualizer) {
+                            table.value.initVirtualizer()
+                        }
+                    })
+                }
             }
         }
     })
@@ -556,32 +645,16 @@
         rows.value = table.value.body.filter(p => p.local_id != row.local_id);
     }
 
-    const onMoveCheck = (evt, originalEvent) => {
-        if (originalEvent) {
-            const hoveredElement = document.elementFromPoint(
-                originalEvent.clientX,
-                originalEvent.clientY
-            );
-            
-            const hoveredRow = hoveredElement.closest('.table__row')
-            const backupRow = JSON.parse(JSON.stringify(draggableRow.value.style.getPropertyValue('--row-start')))
-            draggableRow.value.style.setProperty('--row-start', hoveredRow.style.getPropertyValue('--row-start'))
-            hoveredRow.style.setProperty('--row-start', backupRow)
-        }
-        
-        // Вы можете вернуть true/false для разрешения/запрета перемещения
+    const onMoveCheck = (evt) => {
+        // Разрешаем перемещение - виртуализатор сам управляет позициями
+        // Не нужно вручную менять позиции, это вызывает конфликт с виртуализатором
         return true;
     };
 
     const dragEnd = (event) => {
-        const updatingRows = tableRef.value.querySelectorAll('.table__body .table__row')
-        let offsetHeight = 0 
-        updatingRows.forEach(row => {
-            const rowHeight = Number(row.getAttribute('data-height').replace('px', ''))
-            row.style.setProperty('--row-start', `${offsetHeight}px`)
-            offsetHeight += rowHeight
-        })
-        
+        // Не нужно вручную пересчитывать позиции - виртуализатор сделает это автоматически
+        // через changeDrag -> initVirtualizer() который уже вызывается при изменении порядка
+        draggableRow.value = null
         table.value.dragEnd(event)
     }
 

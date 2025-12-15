@@ -220,6 +220,7 @@
 .table__body {
   width: 100%;
   position: relative;
+  min-height: 50px; // Минимальная высота для пустой таблицы, чтобы vuedraggable мог определить зону drop
 
   &.table__body_edit {
     .table__row:not(.table__row_choose) {
@@ -235,6 +236,11 @@
 
   &.table__body_dragging {
     @include mixins.userSelect(none);
+    
+    .table__row {
+      position: relative !important;
+      top: 0 !important;
+    }
   }
 
   .table__row {

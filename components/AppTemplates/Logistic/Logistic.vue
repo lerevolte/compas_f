@@ -76,11 +76,14 @@
                             title: 'Задачи логистики',
                             isHaveQuery: true,
                             query: {
-                                route_id: null
+                                route_id: null,
+                                per_page: 12 
                             },
+                            overscan: 5,
                             isDraggable: true,
                             isCheckClicked: true,
                             draggableTarget: '.table__row',
+                            group: 'logistic_tasks',
                             isHaveFilter: false,
                             isPermanentEdit: false,
                             isTrash: false,
@@ -99,6 +102,7 @@
                             title: 'Задачи в машине',
                             isDraggable: true,
                             draggableTarget: '.table__row',
+                            group: 'logistic_tasks',
                             isHaveQuery: true,
                             isCheckClicked: true,
                             query: {

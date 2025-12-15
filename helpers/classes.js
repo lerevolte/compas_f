@@ -501,7 +501,7 @@ export class Table {
                 count: this.body.length,
                 estimateSize: () => 50,
                 getScrollElement: () => this.tableRef,
-                overscan: 8,
+                overscan: this.options?.overscan ?? 8,
             })
         })
     }
@@ -965,18 +965,13 @@ export class Table {
 
     // Обновление таблицы при перетаскивании строки
     changeDrag(event) {
-        if (event.add) {
-            this.body.splice(event.add.newIndex, 0, event.add.element)
-        } else if (event.removed) {
-            this.body.splice(event.removed.oldIndex, 1)
+        if (event.added) {
+            this.emit('getData', this.body)
         }
-        nextTick(() => {
-            this.initVirtualizer()
-        })
     }
 
     // Конец перетаскивания
-    dragEnd(event) {
+    async dragEnd(event) {
         this.isDragging = false
         if (this.slug == 'products') {
             this.state = 'edit'
@@ -988,6 +983,10 @@ export class Table {
                 }
             })
         }
+
+        // Обновляем виртуализатор после завершения перетаскивания
+        await nextTick()
+        this.initVirtualizer()
 
         this.emit('getData', this.body)
     }
@@ -1115,6 +1114,8 @@ export class Filter {
                         for (let value of this.setter.dependences.query[key]) {
                             response.push(`filter[${key}][]=${value}`)
                         }
+                    } else if (key == 'per_page') {
+                        response.push(`per_page=${this.setter.dependences.query[key]}`)
                     } else if (key == 'is_slug') {
                         response.push(`is_slug=${this.setter.dependences.query[key]}`)
                     } else if (this.setter.dependences.query[key]) {
