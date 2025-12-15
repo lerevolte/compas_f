@@ -308,7 +308,7 @@
         }
     }, (elem, event) => {
         let cell = event.target.closest('.table__cell')
-        if (table.value.state == 'edit' || table.value.options?.isPermanentEdit || ['isChoose', 'actions'].includes(cell.getAttribute('data-column-key'))) return
+        if (table.value.state == 'edit' || table.value.options?.isPermanentEdit || (cell && ['isChoose', 'actions'].includes(cell.getAttribute('data-column-key')))) return
         const el = elem?.getAttribute ? elem : (elem?.currentTarget || elem?.target)
         const rowIndex = el?.getAttribute ? el.getAttribute('data-index') : null
 

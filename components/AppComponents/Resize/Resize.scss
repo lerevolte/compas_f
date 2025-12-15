@@ -2,6 +2,36 @@
 @use '@/assets/mixins.scss' as mixins;
 
 .resize {
+    position: relative;
     width: var(--widthSection, 100%);
     height: var(--heightSection, 100%);
+
+    .icon__resize {
+        cursor: pointer;
+        background: #fff;
+        bottom: 2px;
+        display: grid;
+        place-items: center;
+        position: absolute;
+        right: 2px;
+        width: 25px;
+        z-index: 100;
+        aspect-ratio: 1;
+        border-radius: 10px;
+
+        svg {
+            position: static;
+            aspect-ratio: 1;
+            width: 15px;
+            height: auto;
+        }
+
+        &:hover {
+            svg {
+                * {
+                    stroke: variables.$color-icon-active;
+                }
+            }
+        }
+    }
 }

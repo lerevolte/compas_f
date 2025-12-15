@@ -7,20 +7,48 @@
     grid-template-columns: repeat(2, 1fr);
 
     &.logistic_dragging {
+        .resize {
+            overflow: hidden;
+            height: 45px;
 
+            .table,
+            .map__frame-map {
+                display: none;
+            }
+        }
+
+        .icon__resize {
+            display: none;
+        }
+
+        .section-table__top {
+            border: none;
+
+            .section-table__top-group:last-child {
+                display: none;
+            }
+        }
+
+        @include mixins.userSelect(none);
     }
 
     &.logistic_dragging-field {
         @include mixins.userSelect(none);
     }
 
-    @media (max-width: 1300px) {
-        grid-template-columns: 1fr;
-    }
-
     .map,
     .map__frame {
         height: 100%;
+    }
+
+    &.logistic_dragging {
+        .resize {
+
+        }
+    }
+
+    @media (max-width: 1300px) {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -40,6 +68,36 @@
         .popup {
             .popup__content {
                 right: 0px;
+            }
+        }
+    }
+
+    .resize {
+        &:has(.map) {
+            .icon__resize {
+                bottom: 1px;
+                right: 0px;
+                border-radius: 0px 0px 10px 0px;
+            }
+        }
+
+        .resize__icon-drag {
+            position: absolute;
+            z-index: 2;
+            top: 12px;
+            left: 5px;
+            opacity: 0;
+        }
+
+        .section-table__top,
+        .map__frame-header {
+            padding-left: 20px;
+        }
+
+        &:has(.section-table__top:hover),
+        &:has(.map__frame-header:hover) {
+            .resize__icon-drag {
+                opacity: 1;
             }
         }
     }

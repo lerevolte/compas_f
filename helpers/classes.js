@@ -965,7 +965,14 @@ export class Table {
 
     // Обновление таблицы при перетаскивании строки
     changeDrag(event) {
-        console.log(event);
+        if (event.add) {
+            this.body.splice(event.add.newIndex, 0, event.add.element)
+        } else if (event.removed) {
+            this.body.splice(event.removed.oldIndex, 1)
+        }
+        nextTick(() => {
+            this.initVirtualizer()
+        })
     }
 
     // Конец перетаскивания
@@ -2555,6 +2562,102 @@ export class Tariffs {
         } finally {
             this.balance.payers.loading = false
             this.balance.payers.changed = false
+        }
+    }
+}
+
+export class Logistic {
+    constructor(activeDate) {
+        this.columns = {
+            column_1: [],
+            column_2: []
+        }
+        this.logistic_tasks = {
+            updatingCount: 0
+        }
+        this.routes = {
+            id: 0,
+            updatingCount: 0
+        }
+        this.machine_tasks = {
+            route_id: 0,
+            selectedAddresses: [],
+            updatingCount: 0
+        }
+        this.activeDate = format(activeDate, 'yyyy-MM-dd')
+        this.map = []
+
+        this.isDragging = false
+    }
+
+    // Получение колонок
+    async getSections() {
+        const response = await api.callMethod('GET', routes.logistic.getSections)
+
+        for (let column of response.data) {
+            this.columns[`column_${column.value.column}`].push({...column, ...column.value})
+            this.columns[`column_${column.value.column}`].sort((a, b) => a.value.position - b.value.position)
+        }
+    }
+
+    // Получение выбранных точек
+    getSelectedPoints(data) {
+        this.machine_tasks.selectedAddresses = data
+    }
+
+    // Получение точек маршрута для карты
+    getRoutes(data) {
+        this.map = data.map(row => row.address?.coords ?? [])
+    }
+
+    // Обновление активной даты
+    updateActiveDate(activeDate) {
+        this.activeDate = format(activeDate, 'yyyy-MM-dd')
+        this.machine_tasks.updatingCount++
+        this.routes.updatingCount++
+    }
+
+    // Обновление активного маршрута
+    updateActiveRoute(activeRoute) {
+        this.routes.id = activeRoute?.value[0]
+        this.machine_tasks.route_id = activeRoute?.value[0]
+        this.routes.updatingCount++
+        this.machine_tasks.updatingCount++
+    }
+
+    // Выбор маршрута из таблицы
+    choseRoute(row) {
+        this.machine_tasks.route_id = row.id
+        this.machine_tasks.updatingCount++
+    }
+
+    // Конец ресайза
+    endResize({section, height}) {
+        section.height = height
+        this.updateSections()
+    }
+
+    // Начало перетаскивания 
+    dragStart() {
+        this.isDragging = true
+    }
+
+    // Конец перетаскивания
+    dragEnd() {
+        this.isDragging = false
+        this.updateSections()
+    }
+
+    // Обновление колонок
+    async updateSections() {
+        for (let column in this.columns) {
+            this.columns[column].map(async (section, index) => {
+                await api.callMethod('PUT', routes.logistic.updateSection.replace('${id}', section.id), {
+                    column: column.replace('column_', ''),
+                    position: index + 1,
+                    height: section.height
+                })  
+            })
         }
     }
 }

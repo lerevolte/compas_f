@@ -102,5 +102,9 @@ export default {
         update_balance: '/settings/account',
         get_balance_url: '/balance/payment',
         get_operations: '/balance_operations/compose'
+    },
+    logistic: {
+        getSections: '/logistic/sections',
+        updateSection: '/logistic/sections/${id}'
     }
 }
