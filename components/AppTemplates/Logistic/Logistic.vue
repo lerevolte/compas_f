@@ -41,6 +41,12 @@
                         v-else-if="section.key == 'routes'"
                         :slug="'routes'"
                         :key="'routes'"
+                        :showMore="[
+                            {
+                                name: 'Создать маршрут',
+                                action: 'initCreateRoute'
+                            }
+                        ]"
                         :options="{
                             title: 'Маршруты',
                             isHaveQuery: true,
@@ -48,6 +54,7 @@
                                 id: logistic.routes.id ?? null,
                                 date: logistic.activeDate
                             },
+                            isEnableCreateOption: false,
                             isHaveFilter: false,
                             isPermanentEdit: false,
                             isCheckClicked: true,
@@ -58,6 +65,7 @@
                         }"
                         @openModal="item => emit('openModal', item)"
                         @choseRow="data => logistic.choseRoute(data)"
+                        @initCreateRoute="logistic.initCreateRoute()"
                     />
 
                     <AppVirtualTable 
@@ -112,6 +120,13 @@
                 </AppResize>
             </template>
         </draggable>
+
+        <teleport to="#menu__overlay" v-if="logistic.modal.state">
+            <LogisticModal 
+                :modal="logistic.modal"
+                @create="content => logistic.createRoute(content)"
+            />
+        </teleport>
     </div>
 </template>
 
@@ -121,6 +136,7 @@
     import AppResize from '@AppComponents/Resize/Resize.vue';
     import AppVirtualTable from '@AppComponents/VirtualTable/VirtualTable.vue';
     import draggable from 'vuedraggable';
+    import LogisticModal from './Modal/Modal.vue'
     import { Logistic } from '@AppHelpers/classes.js'
 
     const emit = defineEmits([

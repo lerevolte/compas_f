@@ -538,6 +538,14 @@ section {
 }
 
 .logistic-header__group {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+
+    h1 {
+        margin-right: 20px;
+    }
+
     .select.select_icon  {
         .select__value {
             display: flex;
@@ -568,6 +576,19 @@ section {
 
         .icon__arrow {
             right: 15px;
+        }
+
+        .select__content-container,
+        .select__options {
+            width: 100%;
+            max-width: none;
+            left: 0px;
+        }
+
+        &.select_empty {
+            .select__value-icon {
+                display: none;
+            }
         }
     }
 }

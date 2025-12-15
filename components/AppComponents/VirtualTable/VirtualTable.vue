@@ -4,7 +4,7 @@
   />
   
   <section class="section-table" ref="sectionRef">
-    <TableTop v-if="props.options?.isHaveTopHeader" :title="props.options?.title ?? null"/>
+    <TableTop v-if="props.options?.isHaveTopHeader" :options="props.options" :showMore="props.showMore" :title="props.options?.title ?? null"/>
     <div ref="tableRef" class="table" :class="{'table_permanent-edit': props.options.isPermanentEdit}">
       <TableHeader />
       <TableBody 
@@ -134,6 +134,10 @@
         },
         type: Object
       },
+      showMore: {
+        default: null,
+        type: Array
+      },
       table: {
         default: {
           header: [],
@@ -146,6 +150,7 @@
   const emit = defineEmits([
       'openModal',
       'getData',
+      'initCreateRoute',
       'choseRow'
   ])
 

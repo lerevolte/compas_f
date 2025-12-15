@@ -40,6 +40,8 @@
                 <div class="select__value select__value_single" :class="{ 'select__value_typing': select.state.search.length > 0 }" v-else>
                     {{ props.options.type == 'relation' ? activeOption?.label.text : activeOption?.label }}
                 </div>
+
+                <slot></slot>
     
                 <IconSelectArrow />
             </div>
@@ -167,7 +169,11 @@
             } else {
                 this.toggleOptions()
                 emit('update:prevValue', JSON.parse(JSON.stringify(props.modelValue)))
-                emit('update:modelValue', props.options.type == 'address' ? option.value : String(option.value))
+                if (props.options?.isFullOption) {
+                    emit('update:modelValue', option)
+                } else {
+                    emit('update:modelValue', props.options.type == 'address' ? option.value : String(option.value))
+                }
             }
         }
 

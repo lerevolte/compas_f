@@ -6,8 +6,11 @@
     gap: 10px;
     align-items: center;
     cursor: pointer;
-    font-family: PT Sans;
     @include mixins.userSelect(none);
+
+    * {
+        font-family: PT Sans;
+    }
 
     &.settings__item_back {
         flex-direction: row-reverse;

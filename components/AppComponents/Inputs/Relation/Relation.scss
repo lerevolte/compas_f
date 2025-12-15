@@ -83,6 +83,20 @@
             width: calc(100% - 50px);
         }
 
+        &.select_empty {
+            .select__content-abs {
+                .value__text_id {
+                    display: none;
+                }
+            }
+
+            .select__content-container {
+                input::placeholder {
+                    opacity: 1;
+                }
+            }
+        }
+
         .select__option {
             &.select__option_active {
                 &::after {
@@ -371,6 +385,10 @@
     overflow: hidden;
     left: 50px;
     max-width: calc(100% - 50px);
+
+    input::placeholder {
+        opacity: 0;
+    }
 }
 
 

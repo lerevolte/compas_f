@@ -51,18 +51,38 @@
         title: {
             default: null,
             type: String
+        },
+        options: {
+            default: {
+                isEnableCreateOption: false
+            }
+        },
+        showMore: {
+            default: null,
+            type: Array
         }
     })
 
-    const showMore = [
-        {
-            name: 'Создать',
-            action: 'create'
-        },
+    const showMore = ref([
         {
             name: 'Скачать Excel',
-            action: 'initDownloadExcel'
+            action: 'initDownloadExcel',
+            enabled: true
         }
-    ]
+    ])
 
+        onMounted(() => {
+            if (props.options?.isEnableCreateOption == undefined || props.options?.isEnableCreateOption) {
+                showMore.value.unshift(
+                    {
+                        name: 'Создать',
+                        action: 'create',
+                        enabled: true
+                    }
+                )
+            }
+            if (props.showMore && props.showMore.length > 0) {
+                showMore.value = [...showMore.value, ...props.showMore]
+            }
+        })
 </script>

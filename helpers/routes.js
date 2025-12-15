@@ -105,6 +105,10 @@ export default {
     },
     logistic: {
         getSections: '/logistic/sections',
-        updateSection: '/logistic/sections/${id}'
+        updateSection: '/logistic/sections/${id}',
+        createRoute: '/objects/routes/batch',
+        getModalCompanies: '/objects/search?field_id=1888&q=',
+        getModalCars: '/objects/search?field_id=2064&q=',
+        getModalEmployees: '/objects/search?field_id=1887&q=',
     }
 }

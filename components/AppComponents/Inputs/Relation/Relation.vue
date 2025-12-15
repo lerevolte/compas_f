@@ -13,7 +13,7 @@
             :class="{ 
                 'select_open': selectInstances[index]?.state.isOpen, 
                 'select_disabled': props.options.edit == false, 
-                'select_empty': getActiveOption(index) == undefined 
+                'select_empty': getActiveOption(index) == undefined || !getActiveOption(index).value
             }"
         >
             <div class="select__content" @click="event => selectInstances[index]?.toggleOptions(event)">
@@ -67,7 +67,7 @@
                             name: '',
                             mask: null,
                             autocomplete: 'off',
-                            placeholder: ''
+                            placeholder: props.options.placeholder,
                         }"
                         @update:modelValue="(value) => selectInstances[index]?.filterOptions(value)"
                         :model-value="selectInstances[index]?.state?.search || ''"

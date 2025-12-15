@@ -1074,6 +1074,12 @@ export class Table {
             this.initVirtualizer()
         })
     }
+
+
+    // Инициализаия создания маршрута
+    initCreateRoute() {
+        this.emit('initCreateRoute', true)
+    }
 }
 
 export class Filter {
@@ -2586,8 +2592,37 @@ export class Logistic {
         }
         this.activeDate = format(activeDate, 'yyyy-MM-dd')
         this.map = []
-
         this.isDragging = false
+        this.modal = {
+            state: false,
+            title: 'Создание раздела',
+            actionTitle: 'Создать маршрут',
+            action: 'create',
+            text: null,
+            content: {
+                entities: {
+                    company: {
+                        active: null,
+                        list: []
+                    },
+                    cars: {
+                        active: null,
+                        list: []
+                    },
+                    employees: {
+                        active: null,
+                        list: []
+                    }
+                },
+                filter: {
+                    q: null,
+                    car: null,
+                    company: null,
+                    employees: null
+                },
+            },
+            loading: false
+        }
     }
 
     // Получение колонок
@@ -2658,6 +2693,47 @@ export class Logistic {
                     height: section.height
                 })  
             })
+        }
+    }
+
+    // Инициализация создания маршрута
+    initCreateRoute() {
+        this.modal.state = true
+    }
+
+    // Создание маршрута
+    async createRoute(content) {
+        try {
+            this.modal.loading = true
+            await api.callMethod('POST', routes.logistic.createRoute, {rows: [content]})
+            this.updateActiveRoute({value: [null]})
+        } catch (error) {
+            console.log(error);
+        } finally {
+            this.modal.loading = false
+            this.modal.state = false
+        }
+        this.modal.content = {
+            entities: {
+                company: {
+                    active: null,
+                    list: []
+                },
+                cars: {
+                    active: null,
+                    list: []
+                },
+                employees: {
+                    active: null,
+                    list: []
+                }
+            },
+            filter: {
+                q: null,
+                car: null,
+                company: null,
+                employees: null
+            },
         }
     }
 }
