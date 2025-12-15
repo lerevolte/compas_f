@@ -70,6 +70,10 @@ html {
             cursor: col-resize;
             user-select: none;
         }
+
+        &.body_unselected {
+            @include mixins.userSelect(none);
+        }
     }
 }
 

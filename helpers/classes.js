@@ -954,6 +954,7 @@ export class Table {
 
     dragStart(event) {
         this.isDragging = true
+        document.body.classList.add('body_unselected')
         if (this.slug == 'products' && !this.state) {
             this.backupLocalBody(event.from.__draggable_component__.modelValue.map(row => {
                 return {
@@ -967,11 +968,26 @@ export class Table {
     changeDrag(event) {
         if (event.added) {
             this.emit('getData', this.body)
+            this.emit('addRow', {
+                list: this.body,
+                row: event.added.element.original
+            })
+        } else if(event.removed) {
+            this.emit('removeRow', {
+                list: this.body,
+                row: event.removed.element.original
+            })
+        } else {
+            this.emit('changePositionRow', {
+                list: this.body,
+                row: event.moved.element.original
+            })
         }
     }
 
     // Конец перетаскивания
     async dragEnd(event) {
+        document.body.classList.remove('body_unselected')
         this.isDragging = false
         if (this.slug == 'products') {
             this.state = 'edit'
@@ -2736,5 +2752,10 @@ export class Logistic {
                 employees: null
             },
         }
+    }
+
+    // Изменение порядка задач
+    async changeRouteTasks(list) {
+        await api.callMethod('POST', routes.logistic.changeRouteTasks, {rows: [{id: this.machine_tasks.route_id, task_id: list.map(item => item.id)}]})
     }
 }

@@ -310,6 +310,11 @@
           display: none;
         }
       }
+
+      .select__content-container {
+        left: 0px;
+        max-width: none;
+      }
     }
   
     .form__item_checkbox {

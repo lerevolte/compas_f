@@ -102,7 +102,7 @@
                             title: 'Задачи в машине',
                             isDraggable: true,
                             draggableTarget: '.table__row',
-                            group: 'logistic_tasks',
+                            group: logistic.machine_tasks.route_id ? 'logistic_tasks' : 'logistic_tasks_empty',
                             isHaveQuery: true,
                             isCheckClicked: true,
                             query: {
@@ -120,6 +120,9 @@
                         }"
                         @openModal="item => emit('openModal', item)"
                         @getData="data => logistic.getRoutes(data)"
+                        @addRow="row => logistic.changeRouteTasks(row.list)"
+                        @removeRow="row => logistic.changeRouteTasks(row.list)"
+                        @changePositionRow="row => logistic.changeRouteTasks(row.list)"
                     />
                 </AppResize>
             </template>

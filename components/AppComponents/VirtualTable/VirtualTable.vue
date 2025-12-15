@@ -8,6 +8,7 @@
     <div ref="tableRef" class="table" :class="{'table_permanent-edit': props.options.isPermanentEdit}">
       <TableHeader />
       <TableBody 
+        :options="props.options"
         @choseRow="row => emit('choseRow', row)"
         @getData="data => emit('getData', data)"
       />
@@ -152,7 +153,10 @@
       'openModal',
       'getData',
       'initCreateRoute',
-      'choseRow'
+      'choseRow',
+      'addRow',
+      'removeRow',
+      'changePositionRow',
   ])
 
   const isClient = ref(false)

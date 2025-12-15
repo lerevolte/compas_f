@@ -2,7 +2,7 @@
         <draggable
             v-if="table.rowVirtualizer"
             tag="div"
-            :group="table.options?.group ?? 'table'"
+            :group="props.options?.group ?? 'table'"
             v-model="rows" 
             :handle="table.options?.isDraggable ? table.options?.draggableTarget ?? '.table__row' : 'null'"
             :forceFallback="true"
@@ -296,6 +296,13 @@
         'choseRow',
         'getData'
     ])
+
+    const props = defineProps({
+        options: {
+            default: {},
+            type: Object
+        }
+    })
 
     const doubleClick = common.useDoubleClick((elem, event) => {
         let cell = event.target.closest('.table__cell')
