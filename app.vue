@@ -19,7 +19,17 @@
           }"
           @close="entity.modal.pop()"
         >
+          <AppAnalyticDetail 
+            v-if="modal.template == 'chart'"
+            :slug="modal.slug"
+            :dateRange="modal.dateRange"
+            @close="entity.modal.pop()"
+            @closeDetail="() => entity.closeDetail()"
+            @updateMetaHeader="item => entity.updateMetaHeader(item)"
+            @openModal="item => entity.openModal(item)"
+          />
           <AppDetail 
+            v-else
             :id="modal.id"
             :tab_slug="modal.tab_slug"
             :slug="modal.slug"
@@ -45,6 +55,7 @@
 
   import AppMenu from '@AppComponents/Menu/Menu.vue';
 	import AppDetail from '@AppTemplates/Detail/Detail.vue';
+  import AppAnalyticDetail from '@AppTemplates/Analytic/Detail/Detail.vue';
 	import AppWarningLarge from '@AppComponents/Modal/Large/Large.vue'
 
   const router = useRoute()
@@ -67,14 +78,23 @@
       if ((this.modal.length >= 9 || window.screen.width <= 990) && !['create', 'copy'].includes(item.type)) {
         this.modal = []
         this.addresses = []
-        window.location.href = `/objects/${item.slug}/${item.id}`
+        if (item.template == 'chart') {
+          window.location.href = `/analytics/${item.slug}`
+        } else {
+          window.location.href = `/objects/${item.slug}/${item.id}`
+        }
       } else {
         this.modal.push(item)
         this.addresses.push({
           title: this.currentTitle,
           link: window.location.href
         })
-        window.history.replaceState({}, document.title, window.location.origin +  `/objects/${item.slug}/${item.id}`);
+
+        if (item.template == 'chart') {
+          window.history.replaceState({}, document.title, window.location.origin +  `/analytics/${item.slug}`);
+        } else {
+          window.history.replaceState({}, document.title, window.location.origin +  `/objects/${item.slug}/${item.id}`);
+        }
       }
     }
 

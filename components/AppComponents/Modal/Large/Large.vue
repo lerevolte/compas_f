@@ -3,7 +3,7 @@
         <div class="modal__background" @click="emit('close', true)"></div>
 
         <div class="modal__content">
-            <div class="modal__close" @click="emit('close', true)" :style="`--closeColor: ${props.options.color}`">
+            <div class="modal__close" @click="emit('close', true)" :style="`--closeColor: ${props.options.color ?? '#2AA7FF'}`">
                 <IconClose />
                 {{ props.options.title_singular ?? 'Закрыть' }}
             </div>

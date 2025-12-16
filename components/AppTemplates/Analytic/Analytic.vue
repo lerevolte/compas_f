@@ -6,13 +6,6 @@
     </div>
     <!-- <AppSelect 
         :options="{
-            title: 'Тип графика',
-            list: select.options,
-        }"
-        v-model="select.value"
-    />
-    <AppSelect 
-        :options="{
             title: 'Период',
             list: selectPeriod.options,
         }"
@@ -22,27 +15,29 @@
 
     <div class="analytics__grid">
         <AppChart 
+            v-for="section in analytics.sections"
+            :key="section.id"
             :options="{
-                slug: 'income',
+                slug: section.key,
                 date_range: {
                     start: Array.isArray(analytics.activeRange) ? analytics.activeRange[0] : analytics.activeRange,
                     end: Array.isArray(analytics.activeRange) ? analytics.activeRange[1] : analytics.activeRange
                 },
-                type: 'income',
-                group: 'account_id',
-                sort: {
-                    field: 'sum',
-                    order: 'desc'
-                }
+                type: section.key
             }"
             :settings="{
                 detail: selectPeriod.value,
-                type: select.value,
+                type: section.config?.type ?? 'line',
                 height: 220,
                 isLabelEnable: false,
-                isShowGrid: true,
+                isShowGrid: false,
                 isEnableRows: true
             }"
+            @click="() => emit('openModal', {
+                slug: section.key,
+                dateRange: analytics.activeRange,
+                template: 'chart'
+            })"
         />
     </div>
 </template>
@@ -57,6 +52,10 @@
     import AppDateFilterRange from '@AppComponents/DateFilter/Range.vue'
     import AppSelect from '@AppComponents/Inputs/Select/Select.vue'
 
+    const emit = defineEmits([
+        'openModal'
+    ])
+
     class Analytics {
         constructor() {
             this.sections = []
@@ -66,36 +65,9 @@
         // Получение всех секций
         async get() {
             const response = await api.callMethod('GET', routes.chart.get)
-            console.log(response.data);
-            
+            this.sections = response.data.sort((a, b) => a.order - b.order)
         }
     }
-
-    const select = ref({
-        value: 'line',
-        options: [
-            {
-                label: 'Линия',
-                value: 'line'
-            },
-            {
-                label: 'Столбцы',
-                value: 'column'
-            },
-            {
-                label: 'Горизонтальные столбцы',
-                value: 'bar'
-            },
-            {
-                label: 'Заливка',
-                value: 'area'
-            },
-            {
-                label: 'Круговая диаграмма',
-                value: 'pie'
-            }
-        ]
-    })
 
     const selectPeriod = ref({
         value: 'day',

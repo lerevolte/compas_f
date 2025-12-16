@@ -6,4 +6,8 @@
     display: grid;
     margin-top: 25px;
     grid-template-columns: repeat(3, 1fr);
+
+    .chart {
+        cursor: pointer;
+    }
 }

@@ -12,6 +12,9 @@
     box-shadow: 0 5px 20px #eeeff1;
     max-width: 100%;
     overflow: hidden;
+    min-height: 262px;
+    display: grid;
+    grid-template-rows: auto 1fr;
 }
 
 .chart__header {
@@ -36,6 +39,24 @@
                     fill: rgb(143, 143, 143);
                 }
             }
+        }
+    }
+}
+
+.chart-container {
+    &.chart-container_empty {
+        height: 100%;
+        display: grid;
+        place-items: center;
+
+
+        &::after {
+            content: 'Нет данных';
+            color: variables.$color-border;
+        }
+
+        .highcharts-container  {
+            display: none;
         }
     }
 }

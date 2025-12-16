@@ -1,0 +1,37 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+.detail_analytics {
+    .status {
+        .status__content {
+            .status__value {
+                .status__rect-container {
+                    min-width: 35px;
+                    border: 1px solid variables.$color-border;
+                    border-right: none;
+                }
+
+                .status__value-rect {
+                    padding: 0px 5px;
+                }
+
+                .status__rect {
+                    height: 40px;
+                }
+            }
+        }
+    }
+}
+
+.analytics__filter {
+    gap: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.analytics__detail-content {
+    display: grid;
+    margin-top: 25px;
+    grid-template-rows: auto 1fr;
+    grid-template-columns: 1fr;
+}

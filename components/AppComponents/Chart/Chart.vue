@@ -5,7 +5,12 @@
         </div>
         <div class="chart__content">
             <IconLoader v-show="chart.loading" />
-            <div v-show="!chart.loading"  class="chart-container" ref="chartRef"></div>
+            <div 
+                v-show="!chart.loading"  
+                class="chart-container"
+                :class="{'chart-container_empty': chart?.data?.legend?.filter(p => p.data.length > 0).length == 0}"
+                ref="chartRef"
+            ></div>
         </div>
     </div>
 </template>
@@ -15,13 +20,18 @@
 
     import { ref, onMounted, watch } from 'vue'
     import api from '@/helpers/api.js'
+    import { Common } from '@/helpers/classes.js'
     import routes from '@/helpers/routes.js'
-    import Highcharts, { color } from 'highcharts'
+    import Highcharts from 'highcharts'
     import IconLoader from '@AppIcons/Loader.vue'
     import { format } from 'date-fns'
     import uniq from 'lodash/uniq'
     
     const chartRef = ref(null)
+
+    const emit = defineEmits([
+        'getTitle'
+    ])
 
     const props = defineProps({
         options: {
@@ -78,6 +88,7 @@
                 this.data = response.data
                 this.title = response.data.title
                 this.set(response.data.legend)
+                emit('getTitle', this.title)
             } catch (error) {
                 console.error('Ошибка загрузки данных графика:', error)
                 this.error = 'Не удалось загрузить данные графика'
@@ -98,7 +109,8 @@
                         color: row.color,
                         data: row.data.map((item) => {
                             categories.push(item[0] ? format(item[0]?.split(' ')[0], 'dd.MM.yy', '') : null)
-                            return item[1]
+                            // return item[1]
+                            return Number(common.transformPrice(item[1], 2)) || item[1]
                         })
                     })
                 }
@@ -110,7 +122,7 @@
                         categories: categories,
                         tickInterval: Math.floor(categories.length / 10),
                     },
-                    series: series
+                    series: JSON.parse(JSON.stringify(series))
                 }, true, true)
             }
         }
@@ -142,7 +154,7 @@
                     // Количество вертикальных линий
                     tickAmount: 7,
                     // Цвет вертикальных линий
-                    gridLineWidth: 1,
+                    gridLineWidth: props.settings?.isShowGrid ? 1 : 0,
                     gridLineColor: '#E5E7EB',
                     gridLineDashStyle: 'Solid',
                     // убираем подписи категорий
@@ -158,7 +170,7 @@
                     // Количество вертикальных линий
                     tickAmount: 7,
                     // Цвет вертикальных линий
-                    gridLineWidth: 1,
+                    gridLineWidth: props.settings?.isShowGrid ? 1 : 0,
                     gridLineColor: '#E5E7EB',
                     gridLineDashStyle: 'Solid',
                     // убираем подписи категорий
@@ -227,6 +239,7 @@
     }
 
     const chart = ref(new Chart())
+    const common = new Common()
 
     onMounted(() => {
         chart.value.init()
@@ -245,5 +258,4 @@
     watch(() => props.options, () => {
         chart.value.get()
     })
-
 </script>
