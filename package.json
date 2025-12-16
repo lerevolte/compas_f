@@ -23,6 +23,7 @@
         "@vueuse/core": "^13.6.0",
         "axios": "^1.11.0",
         "date-fns": "^4.1.0",
+        "highcharts-vue": "^2.0.1",
         "leaflet": "^1.9.4",
         "maska": "^3.2.0",
         "nuxt": "^3.18.1",

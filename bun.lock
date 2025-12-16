@@ -12,6 +12,7 @@
         "@vueuse/core": "^13.6.0",
         "axios": "^1.11.0",
         "date-fns": "^4.1.0",
+        "highcharts-vue": "^2.0.1",
         "leaflet": "^1.9.4",
         "maska": "^3.2.0",
         "nuxt": "^3.18.1",
@@ -922,6 +923,10 @@
     "hasown": ["hasown@2.0.2", "", { "dependencies": { "function-bind": "^1.1.2" } }, "sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ=="],
 
     "he": ["he@1.2.0", "", { "bin": { "he": "bin/he" } }, "sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw=="],
+
+    "highcharts": ["highcharts@12.4.0", "", {}, "sha512-o6UxxfChSUrvrZUbWrAuqL1HO/+exhAUPcZY6nnqLsadZQlnP16d082sg7DnXKZCk1gtfkyfkp6g3qkIZ9miZg=="],
+
+    "highcharts-vue": ["highcharts-vue@2.0.1", "", { "peerDependencies": { "highcharts": ">=5.0.0", "vue": ">=3.0.0" } }, "sha512-7yVaKvsWlx7OgmKFXE2D99fi/0tr2A85H4KUz3jL7CRQhAwvEvXgtDIyTBGLHJsOC5L9VlppAI7k6KfIi0j0hg=="],
 
     "hookable": ["hookable@5.5.3", "", {}, "sha512-Yc+BQe8SvoXH1643Qez1zqLRmbA5rCL+sSmk6TVos0LWVfNIB7PGncdlId77WzLGSIB5KaWgTaNTs2lNVEI6VQ=="],
 

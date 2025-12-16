@@ -252,7 +252,7 @@
                 const full_name = `${userStore.user?.name ?? ''} ${userStore.user?.last_name ?? ''}`
                 this.user = {
                     name: full_name.replaceAll(' ', '') == '' ? 'Без имени' : full_name,
-                    avatar: userStore.user ? JSON.parse(userStore.user?.avatar)[0]?.url ?? '/undefined.svg' : '/undefined.svg'
+                    avatar: userStore.user && userStore.user?.avatar ? JSON.parse(userStore.user?.avatar)[0]?.url ?? '/undefined.svg' : '/undefined.svg'
                 }
                 await this.update()
             } catch (error) {

@@ -1,0 +1,9 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+.analytics__grid {
+    gap: 20px;
+    display: grid;
+    margin-top: 25px;
+    grid-template-columns: repeat(3, 1fr);
+}

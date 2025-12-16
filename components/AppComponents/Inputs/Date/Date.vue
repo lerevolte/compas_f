@@ -1,7 +1,7 @@
 <template>
     <div class="form__item form__item_date" ref="dateRef" :class="{'error': props.error.state}">
         <label class="blank__title" :for="props.options.id" v-if="props.options.title && props.options.title != ''">
-            {{ props.options.title }}
+            {{ props.options.title }} 
         </label>
         <VueDatePicker 
             :id="props.options.id"

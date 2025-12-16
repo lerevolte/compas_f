@@ -1,0 +1,41 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+.highcharts-credits {
+    display: none;
+}
+
+.chart {
+    background: #fff;
+    border: 1px solid #eeeff1;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px #eeeff1;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.chart__header {
+    gap: 10px;
+    display: flex;
+    font-weight: 600;
+    align-items: center;
+    padding: 10px 10px 10px 20px;
+    justify-content: space-between;
+    border-bottom: 1px solid #eeeff1;
+    @include mixins.textHidden();
+}
+
+.chart__content {
+    position: relative;
+    min-height: 180px;
+
+    .highcharts-tooltip {
+        text {
+            tspan {
+                &:nth-child(1) {
+                    fill: rgb(143, 143, 143);
+                }
+            }
+        }
+    }
+}

@@ -1,5 +1,6 @@
 export default {
-    domain: 'https://opt6.compas.pro',
+    domain: 'https://compas.pro',
+    // domain: 'https://opt6.compas.pro',
     auth: {
         login: '/auth',
         reset_password: '/password/reset',
@@ -111,5 +112,9 @@ export default {
         getModalCompanies: '/objects/search?field_id=1888&q=',
         getModalCars: '/objects/search?field_id=2064&q=',
         getModalEmployees: '/objects/search?field_id=1887&q=',
+    },
+    chart: {
+        get: '/analytics',
+        getChart: '/analytics/${slug}'
     }
 }

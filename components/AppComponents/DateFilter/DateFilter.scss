@@ -5,6 +5,14 @@
     display: flex;
     align-items: center;
     gap: 10px;
+
+    &.date-fitler_range {
+        .date-fitler__item {
+            &.date-fitler__item_active {
+                min-width: 75px;
+            }
+        }
+    }
 }
 
 .date-fitler__item {
