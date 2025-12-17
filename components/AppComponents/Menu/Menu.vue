@@ -8,7 +8,7 @@
         </teleport>
 
         <div class="menu__content">
-            <NuxtLink class="menu__logo" to="/">
+            <NuxtLink class="menu__logo" :to="menu.visible[0]?.link">
                 <IconLogo />
             </NuxtLink>
 
@@ -259,7 +259,6 @@
                 console.log('menu_template', error);
             } finally {
                 this.loading = false
-
                 if (route.path == '/') {
                     navigateTo(this.visible[0].link)
                 }

@@ -13,7 +13,7 @@
             </span>
 
             <div class="tile-section__title" v-else>
-                <IconDragDotted class="icon_drag-section" />
+                <IconDragDotted class="icon_drag-section" v-if="!props.options?.isModule" />
                 <AppH3 class="textarea_title">
                     <p 
                         class="ghost_text" 
@@ -31,10 +31,10 @@
                         v-model="section.name"
                     />
                 </AppH3>
-                <IconEdit v-show="!section.editTitle" @click="section.initEditTitle()"/>
+                <IconEdit v-if="!props.options?.isModule" v-show="!section.editTitle" @click="section.initEditTitle()"/>
             </div>
 
-            <div class="tile-section__actions" v-if="!props.options.isGlobalEdit && props.options.type != 'field'">
+            <div class="tile-section__actions" v-if="!props.options.isGlobalEdit && !props.options.isModule && props.options.type != 'field'">
                 <AppButton class="button_text" v-if="section.fields.find(item => item.edit || (item.type == 'text_group' && item.fields.find(item => item.edit)))" @click="fieldObject.section.cancelEditAll(props.section)">
                     Отмена
                 </AppButton>
@@ -83,7 +83,7 @@
                 <div 
                     class="field" 
                     :class="{ 
-                        'field_hidden': !field.edit && fieldObject.checkVisible(field, true),
+                        'field_hidden': !props.options.isModule && !field.edit && fieldObject.checkVisible(field, true),
                         'field_empty': !field.edit && fieldObject.checkVisible(field, false),
                         'field_static': !field.can_edit,
                         'blank_required': field.required
@@ -91,6 +91,7 @@
                     @click="e => fieldObject.initChangeField(field, e.target)"
                 >
                     <IconDrag 
+                        v-if="!props.options?.isModule"
                         class="icon_drag-field"
                     />
 
@@ -275,6 +276,7 @@
 
                         <AppBlank 
                             v-else-if="['text', 'number'].includes(field.type)"
+                            :class="{'blank_pre': field.is_plural}"
                             :options="{
                                 color: field.set_color ? field.color : '#000',
                                 isCheckEmpty: true,
@@ -321,7 +323,7 @@
                         </div>
                     </template>
 
-                    <AppPopup class="field__settings" :isPreventBottom="true">
+                    <AppPopup class="field__settings" v-if="!props.options?.isModule" :isPreventBottom="true">
                         <template #header>
                             <IconSettings />
                         </template>
@@ -338,7 +340,7 @@
                             </div>
                             <div 
                                 class="popup__option" 
-                                @click="() => {
+                                @click="(e) => {
                                     emit('actionField', {
                                         action: 'initUpdate',
                                         value: field
@@ -367,7 +369,7 @@
                             <div 
                                 class="popup__option" 
                                 v-show="field.type != 'text_group'" 
-                                @click="() => {
+                                @click="(e) => {
                                     emit('actionField', {
                                         action: 'hide',
                                         value: field
@@ -380,7 +382,7 @@
                            <div 
                                 class="popup__option popup__option_red" 
                                 v-show="!field.is_permanent" 
-                                @click="() => {
+                                @click="(e) => {
                                     emit('actionField', {
                                         action: 'initDelete',
                                         value: field
@@ -396,7 +398,7 @@
             </template>
         </draggable> 
 
-        <div class="tile-section__footer" v-if="!props.options.isDisableFooter">
+        <div class="tile-section__footer" v-if="!props.options.isDisableFooter && !props.options?.isModule">
             <AppPopup :isPreventBottom="true">
                 <template #header>
                     <AppButton class="button_text">

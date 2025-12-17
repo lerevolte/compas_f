@@ -166,6 +166,7 @@
                     response = await api.callMethod('GET', `${route}${props.options.isCopy ? '?is_copy=1' : ''}`)
                     emit('action', { action: 'getTabs', value: response.data.tabs })
                     emit('action', { action: 'getTitle', value: response.data.detail.title?.name })
+                    emit('action', {action: 'checkIsTrash', value: Boolean(response.data.detail.deleted_at)})
                     emit('action', { 
                         action: 'updateMetaHeader', value: {
                             title: response.data.detail.header_title, 

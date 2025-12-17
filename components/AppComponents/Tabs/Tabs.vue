@@ -12,7 +12,13 @@
                             {{ tab.title }}
                         </template>
                         <template #content>
-                            <div class="popup__option" v-for="child in tab.childs" @click="emit('action', { action: 'set', value: { tab: {...child, tab: child.alias}, is_module: true} })">
+                            <div 
+                                class="popup__option" 
+                                v-for="child in tab.childs" 
+                                @click="(e) => {
+                                    e.target?.closest('.popup')?.classList.remove('popup_open')
+                                    emit('action', { action: 'set', value: { tab: {...child, tab: child.alias}, is_module: true} })
+                                }">
                                 {{ child.title }}
                             </div> 
                         </template>
@@ -29,13 +35,13 @@
                             <div 
                                 class="popup__option" 
                                 v-for="action in tabs.actions"
-                                @click="() => {
+                                @click="(e) => {
+                                    e.target?.closest('.popup')?.classList.remove('popup_open')
                                     tabs[action.action](tab)
-                                    popupRef[index].popup.popupRef.classList.remove('popup_open');
                                 }"
                             >
                                 {{ action.name }}
-                            </div>
+                            </div> 
                         </template>
                     </AppPopup>
                 </li>

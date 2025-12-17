@@ -9,6 +9,7 @@
         }"
         :loading="props.modal.loading"
         @create="route.create()"
+        @close="emit('close', true)"
     >
         <AppCategories 
             class="logistic-modal__categories"
@@ -143,7 +144,8 @@
     })
 
     const emit = defineEmits([
-        'create'
+        'create',
+        'close'
     ])
 
     class Route {

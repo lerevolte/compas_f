@@ -68,6 +68,18 @@
     box-shadow: 0 5px 20px variables.$color-border-light;
     padding: 15px;
     position: relative;
+
+    &:not(:last-child) {
+        &::after {
+            background-color: variables.$color-border-light;
+            content: "";
+            left: -20px;
+            position: absolute;
+            top: 37px;
+            height: 100%;
+            width: 1px;
+        }
+    }
 }
 
 .history-group__icon {

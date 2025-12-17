@@ -136,26 +136,29 @@
         }
     }
 
-    .file__upload {
-        .icon__file {
-            background: #FFF;
-            border: 1px solid variables.$color-border;
-            border-right: none;
-        }
-
-        .icon__file,
+    .file__upload {        
+        &, 
+        .file__preview,
         input {
             width: 40px;
             height: 40px;
         }
 
-        g[clip-path="url(#clip0_525_2820)"] {
-            transform: scale(1.5);
-            transform-origin: center;
+        input {
+            padding: 0px;
         }
 
-        [stroke-dasharray] {
-            display: none;
+        .file__preview {
+            background: variables.$color-white;
+            border-radius: 0px;
+            border: 1px solid variables.$color-border;
+            border-right: none;
+        }
+
+        &:hover {
+            .file__preview {
+                border-color: variables.$color-border;
+            }
         }
     }
 

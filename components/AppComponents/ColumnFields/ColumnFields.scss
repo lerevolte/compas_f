@@ -63,6 +63,11 @@
         order: 1;
     }
 
+
+    &:has(.popup_open) {
+        z-index: 3;
+    }
+
     @media (max-width: 1300px) {
         .popup {
             .popup__content {

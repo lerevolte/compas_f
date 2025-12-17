@@ -86,6 +86,10 @@
       }
     }
   }
+
+  &:has(.table__cell-border:hover) {
+    z-index: 101;
+  }
 }
 
 .table__cell-border {

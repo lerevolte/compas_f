@@ -26,11 +26,12 @@
     import IconLoader from '@AppIcons/Loader.vue'
     import { format } from 'date-fns'
     import uniq from 'lodash/uniq'
+    import isEqual from 'lodash/isEqual'
     
     const chartRef = ref(null)
 
     const emit = defineEmits([
-        'getTitle'
+        'getData'
     ])
 
     const props = defineProps({
@@ -88,7 +89,7 @@
                 this.data = response.data
                 this.title = response.data.title
                 this.set(response.data.legend)
-                emit('getTitle', this.title)
+                emit('getData', response.data)
             } catch (error) {
                 console.error('Ошибка загрузки данных графика:', error)
                 this.error = 'Не удалось загрузить данные графика'
@@ -244,9 +245,12 @@
     onMounted(() => {
         chart.value.init()
         chart.value.get()
+        console.log('onMounted');
     })
 
-    watch(() => props.settings?.type, (newType) => {
+    watch(() => props.settings?.type, (newType, prev) => {
+        console.log('type');
+        if (isEqual(newType, prev)) return
         if (chart.value.chart && chart.value.chart.series) {
             chart.value.chart.series.forEach(series => {
                 series.update({ type: newType }, false)
@@ -255,7 +259,9 @@
         }
     })
 
-    watch(() => props.options, () => {
+    watch(() => props.options, (newType, prev) => {
+        console.log('options');
+        if (isEqual(newType, prev)) return
         chart.value.get()
     })
 </script>

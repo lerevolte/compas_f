@@ -3,7 +3,7 @@
         <draggable
             v-for="(column, index) in columns.list"
             tag="div"
-            group="columns"
+            :group="`columns_${props.slug}_${props.pageId}`"
             class="column-fields__column"
             ghost-class="draggable-ghost"
             drag-class="tile-section_drag"
@@ -21,6 +21,7 @@
                     class="column-fields__item column-section"
                     :section="item"
                     :options="{
+                        isModule: props.options.isModule,
                         isDisableFooter: props.options.isDisableFooter,
                         isGlobalEdit: props.options.isGlobalEdit,
                     }"
@@ -43,7 +44,7 @@
                 />
             </template>
             <template #footer>
-                <AppButon class="button_text column-fields__button" @click="section.initCreate(index)" v-if="!props.options.isDisableFooter">
+                <AppButon class="button_text column-fields__button" @click="section.initCreate(index)" v-if="!props.options.isDisableFooter && !props.options.isGlobalEdit && !props.options?.isModule">
                     Создать раздел 
                 </AppButon>
                 <AppHistory 
@@ -294,9 +295,6 @@
     })
 
     watch(() => props.options.isGlobalEdit, (next, prev) => {
-
-        console.log(props.options.isGlobalEdit);
-        
         if (next) {
             section.value.editAllSections()
         }

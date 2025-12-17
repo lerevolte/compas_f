@@ -60,6 +60,7 @@
 .menu__sublist {
     display: flex;
     flex-direction: column;
+    font-family: Verdana;
 }
 
 .menu__content {
@@ -70,8 +71,6 @@
     max-height: 100vh;
     position: sticky;
     top: 0px;
-    font-family: Verdana;
-    @include mixins.userSelect(none);
 }
 
 .menu__item {

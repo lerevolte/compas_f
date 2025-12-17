@@ -32,7 +32,7 @@
                             />
 
                             <div class="file__name" v-show="props.options.show_file_name">
-                                {{ item.name }}
+                                {{ common.transformName(item.name ?? '', 15) }}
                             </div>
 
                             <AppShowMore 
@@ -45,11 +45,12 @@
                     <template #footer>
                         <div class="file__upload">
                             <input type="file" @change="fileManager.onFileChange" :multiple="props.options.multiple" :accept="props.options.accept ? props.options.accept.join(', ') : ['*']" />
-                            <IconFile class="file__preview">
+                            <div class="file__preview">
+                                <IconFile />
                                 <div class="file__upload-text" v-if="props.options.button_name">
                                     {{ props.options.button_name }}
                                 </div>
-                            </IconFile>
+                            </div>
                         </div>
                     </template>
                 </draggable>

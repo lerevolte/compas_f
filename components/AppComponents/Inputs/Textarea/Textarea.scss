@@ -37,7 +37,7 @@
         position: absolute;
         top: 0;
         left: 0;
-        width: 100%;
+        width: calc(100% + 5px);
         height: 100%;
         z-index: 2;
         overflow: hidden;
@@ -47,6 +47,7 @@
         padding: 0px;
         min-height: auto !important;
         min-width: auto;
+        border-radius: 0px;
         color: variables.$color-black;
     }
 }

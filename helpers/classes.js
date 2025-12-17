@@ -1122,7 +1122,7 @@ export class Filter {
             if (this.setter.dependences.state) {
                 const otherKeys = Object.keys(this.setter.dependences.query)
                 for (let key of otherKeys) {
-                    if (key == 'trashed') {
+                    if (['trashed'].includes(key)) {
                         response.push(`${key}=${this.setter.dependences.query[key] ? 1 : 0}`)
                     } else if (key == 'trash_tab') {
                         continue
@@ -1155,6 +1155,7 @@ export class Filter {
         
         try {
             this.filtering = true
+            this.setter.loading = true
             this.query = setFilter(fields, saved_query)
             
             let response = await api.callMethod("GET", routes.table.get.replace('${slug}', this.setter.slug) + `${this.query ? '?' + this.query : ''}`)
@@ -1169,12 +1170,12 @@ export class Filter {
                 }
                 this.query = this.query.join('&')
                 this.setter.common.setQueryUrl(this.query ? '?' + this.query : '')
-                
             }
             return response.data
         } catch (error) {
             console.log(error);
         } finally {
+            this.setter.loading = false
             this.filtering = false
         }
     }
@@ -1494,9 +1495,46 @@ export class HeaderEditable {
         }
     }
 
-
+    // Инициализация редактирования
     edit({isGlobalEdit}) {
         isGlobalEdit = true
+    }
+
+    // Инициализация удаления объекта
+    initRestore({id, slug, is_modal}) {
+        this.modal = {
+            state: true,
+            title: 'Восстановление',
+            actionTitle: 'Восстановить',
+            action: 'restore',
+            text: 'Вы действительно хотите восстановить объект?',
+            content: {
+                id: id,
+                slug: slug,
+                is_modal: is_modal
+            },
+            loading: false
+        }
+    }
+
+    // Удаление объекта
+    async restore() {
+        try {
+            this.modal.loading = true
+            await api.callMethod('POST', routes.table.restore.replace('${slug}', this.modal.content.slug), {
+                ids: [this.modal.content.id]
+            })
+            if (this.modal.content.is_modal) {
+                this.emit('close', true)
+            } else {
+                navigateTo(`/objects/${this.modal.content.slug}`)
+            }
+        } catch (error) {
+            console.log(error);
+        } finally {
+            this.modal.state = false
+            this.modal.loading = false
+        }
     }
 }
 
@@ -1664,6 +1702,8 @@ export class Section {
                 this.cancelEditAll(section)
             }
         }
+
+        this.buffer.backup = []
     }
 
     // Отмена редактирования полей в секции
@@ -1752,7 +1792,7 @@ export class Section {
                 id: options?.isGlobalEdit ? 0 : pageId,
                 ...this.buffer.edits.reduce((obj, field) => {
                     if (field.type == 'relation') {
-                        obj[field.key] = field.value?.value
+                        obj[field.key] = field.value?.value.filter(p => p)
                     } else {
                         obj[field.key] = field.value
                     }
@@ -1779,18 +1819,26 @@ export class Section {
                         if (field.type == 'text_group') {
                             for (let subfield of field.fields) {
                                 if (subfield.edit) {
-                                    subfield.edit = false
+                                    if (subfield.type == 'relation' && subfield.value.value) {
+                                        subfield.value.value = subfield.value?.value.filter(p => p)
+                                    }
                                     this.buffer.backup = this.buffer.backup.filter(f => f.id != subfield.id)
+                                    subfield.edit = false
                                 }
                             }
                         } else if (field.edit) {
-                            field.edit = false
+                            if (field.type == 'relation' && field.value.value) {
+                                field.value.localOptions = field.value.localOptions.filter(p => p)
+                                field.value.value = field.value?.value.filter(p => p)
+                            }
                             this.buffer.backup = this.buffer.backup.filter(f => f.id != field.id)
+                            field.edit = false
                         }
                     }
                 }
             }
             emit('action', { action: 'savePage', value: response })
+            this.buffer.backup = []
         } catch (error) {
             console.log(error);
         } finally {

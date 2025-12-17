@@ -28,7 +28,8 @@
                         start: Array.isArray(detail.activeRange) ? detail.activeRange[0] : detail.activeRange,
                         end: Array.isArray(detail.activeRange) ? detail.activeRange[1] : detail.activeRange
                     },
-                    type: detail.slug
+                    type: detail.slug,
+                    group: 'account_id'
                 }"
                 :settings="{
                     detail: null,
@@ -38,7 +39,25 @@
                     isShowGrid: true,
                     isEnableRows: true
                 }"
-                @getTitle="(title) => detail.title = title"
+                @getData="(data) => detail.get(data)"
+            />
+
+            <AppVirtualTable 
+                v-if="detail.slug"
+                :slug="detail.slug"
+                :path="null"
+                :options="{
+                    isHaveQuery: false,
+                    isPermanentEdit: true,
+                    isHaveFilter: false,
+                    isHaveFooter: false,
+                    isHaveTopHeader: true,
+                    isTrash: false,
+                    isLocalTable: true,
+                    isAnalytic: true,
+                    updatingCount: detail.table.counter
+                }"
+                :table="detail.table"
             />
         </div>
     </div>
@@ -53,6 +72,7 @@
     import AppChart from '@AppComponents/Chart/Chart.vue'
     import AppStatus from '@AppComponents/Inputs/Status/Status.vue'
     import AppDateFilterRange from '@AppComponents/DateFilter/Range.vue'
+    import AppVirtualTable from '@AppComponents/VirtualTable/VirtualTable.vue';
 
     const router = useRoute()
 
@@ -76,6 +96,11 @@
     class Detail {
         constructor() {
             this.title = null
+            this.table = {
+                tableKeys: null,
+                list: null,
+                counter: 0
+            }
             this.slug = props.slug ?? router.params.type
             this.activeRange = props.dateRange ?? [format(new Date(), 'yyyy-MM-dd'), format(new Date(), 'yyyy-MM-dd')]
             this.type = {
@@ -119,6 +144,14 @@
                     }
                 ]
             }
+        }
+
+        get(response) {
+            this.title = response.title
+            this.table.table = response.table
+            this.table.list = response.list
+            this.table.counter++
+            console.log(this.table);
         }
 
         closeDetail() {

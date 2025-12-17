@@ -5,12 +5,13 @@
         </label>
 
         <div 
-            v-for="(selectItem, index) in normalizedModelValue.value.slice(-5)"
+            v-for="(selectItem, index) in normalizedModelValue.value"
             :key="index"
             class="select select_icon select-container" 
             :ref="el => setSelectRef(el, index)"
             :data-id="index"
             :class="{ 
+                'select_hidden': normalizedModelValue.value.length - 6 >= index, 
                 'select_open': selectInstances[index]?.state.isOpen, 
                 'select_disabled': props.options.edit == false, 
                 'select_empty': getActiveOption(index) == undefined || !getActiveOption(index).value
@@ -19,7 +20,13 @@
             <div class="select__content" @click="event => selectInstances[index]?.toggleOptions(event)">
                 <IconWarning v-if="props.options.required && !getActiveOption(index)"/>
 
-                <div class="select__value select__value_single" :class="{ 'select__value_typing': (selectInstances[index]?.state?.search?.length || 0) > 0 }">
+                <div 
+                    class="select__value select__value_single" 
+                    :class="{ 
+                        'select__value_typing': (selectInstances[index]?.state?.search?.length || 0) > 0,
+                        'select_value_text': props.options.slug == 'roles'
+                    }"
+                >
                     <figure class='select__value-icon' v-if="getActiveOption(index)">
                         <img 
                             class="select__value-img"
@@ -120,6 +127,7 @@
             <AppButton 
                 v-if="normalizedModelValue.value.length > 5"
                 class="button_text"
+                data-action="show"
                 @click="emit('showAll', true)"
             >
                 Всего {{normalizedModelValue.value.length}}, посмотреть все
@@ -127,6 +135,7 @@
             <AppButton 
                 v-if="props.options.edit !== false && props.options.isCanAdd && props.options.multiple"
                 class="button_text"
+                data-action="add"
                 :disabled="props.options.edit === false"
                 @click="addNewSelect"
             >
@@ -499,12 +508,16 @@
         if (next) {
             if (props.options?.focus) {
                 setTimeout(() => {
+                    if (clickedItem.value == null) return
                     const clickedTarget = clickedItem.value.target
                     const clickedInstance = clickedTarget.closest('.select')
                     selectInstances.value[clickedInstance.getAttribute('data-id')]?.toggleOptions(clickedItem.value)
                     clickedInstance.querySelector('input')?.focus()
                 }, 10);
             }
+        } else {
+            updateNormalizedData();
+            initializeSelects();
         }
     })
 

@@ -52,7 +52,7 @@
 
                 <div 
                     class="select__option" 
-                    v-for="option in select.state.list" 
+                    v-for="option in select.state.visibleList" 
                     :class="{ 'select__option_active': props.modelValue && (props.modelValue == option.value || (Array.isArray(props.modelValue) && props.modelValue.includes(option.value)))}" 
                     :value="option.value" 
                     @click="select.changeValue(option)"
@@ -97,8 +97,10 @@
         constructor() {
             this.state = reactive({
                 list: [],
+                visibleList: [],
                 search: '',
-                isOpen: false
+                isOpen: false,
+                lastTab: null
             });
 
             // Закрытие опций
@@ -118,13 +120,16 @@
                 if (props.options.type == 'address') {
                     response = await api.callMethod("GET", `/map/geocode?address=${value}`)
                     this.state.list = response.data.map(p => ({ label: p.text, value: JSON.parse(JSON.stringify(p)) }))
+                    this.state.visibleList = response.data.map(p => ({ label: p.text, value: JSON.parse(JSON.stringify(p)) }))
                 } else {
                     if (props.options.subtype == 'map_suggest') {
                         response = await api.callMethod("GET", `/map/suggest?restrict=city&address=${value}`)
                         this.state.list = response.data.map(p => ({ label: p, value: p }))
+                        this.state.visibleList = response.data.map(p => ({ label: p, value: p }))
                     } else {
                         response = await api.callMethod("GET", `/objects/search?per_page=12&field_id=${props.options.relation}&q=${value}`)
                         this.state.list = response.data.map(p => ({ label: p.label, value: p.value }))
+                        this.state.visibleList = response.data.map(p => ({ label: p.label, value: p.value }))
                     }
                     emit('update:modelList', this.state.list)
                 }
@@ -147,7 +152,7 @@
             if (props.options.searchable) {
                 this.throttledFilter(value)
             } else {
-                this.state.list = props.options.list.filter(p => p.label.toLowerCase().includes(value.toLowerCase()))
+                this.state.visibleList = props.options.list.filter(p => p.label.toLowerCase().includes(value.toLowerCase()))
             }
         }
 
@@ -194,6 +199,7 @@
                 this.state.isTop = false
                 if (!props.options.searchable) {
                     this.state.list = props.options.list
+                    this.state.visibleList = props.options.list
                 }
                 selectRef.value.querySelector('input').blur();
                 document.removeEventListener('click', this.closeOptions);
@@ -203,6 +209,7 @@
         setOptions() {
             if (props.options.type == 'address') {
                 this.state.list = props.options.list ?? []
+                this.state.visibleList = props.options.list ?? []
                 
                 if (props.modelValue && Array.isArray(this.state.list) && !this.state.list.find(p => isEqual(p.value, props.modelValue))) {
                     const option = JSON.parse(JSON.stringify(props.modelValue))
@@ -210,6 +217,7 @@
                 }
             } else {
                 this.state.list = props.options.list ?? []
+                this.state.visibleList = props.options.list ?? []
             }
         }
 

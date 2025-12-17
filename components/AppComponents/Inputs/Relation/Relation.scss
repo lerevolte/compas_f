@@ -97,6 +97,10 @@
             }
         }
 
+        &.select_hidden {
+            display: none;
+        }
+
         .select__option {
             &.select__option_active {
                 &::after {
@@ -178,6 +182,15 @@
 
         .icon__arrow {
             right: 28px;
+        }
+
+        &.select_open,
+        &:has(input:focus) {
+            .relation__arrow {
+                border-bottom: 1px solid variables.$color-hover;
+                right: -9px;
+                border-radius: 0px 0px 4px 4px;
+            }
         }
     }
 
@@ -264,6 +277,16 @@
 
     &.select__value_typing {
         opacity: 0;
+    }
+
+    &.select_value_text {
+        .value__text  {
+            &.value__text_link {
+                cursor: text;
+                color: variables.$color-default;
+                text-decoration: none;
+            }
+        }
     }
 }
 
@@ -378,6 +401,12 @@
     display: flex;
     align-items: center;
     gap: 30px;
+
+    &:not(:has(.button_text[data-action="add"])) {
+        &:not(:has(.button_text[data-action="show"])) {
+            display: none;
+        }
+    }
 }
 
 .select__content-container {

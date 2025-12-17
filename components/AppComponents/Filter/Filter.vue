@@ -137,8 +137,7 @@
                     </template>
                 </AppPopup>
 
-
-                <div class="filter__actions" v-if="filter.savedFilter.active.state">
+                <div class="filter__actions" v-show="filter.savedFilter.active.state">
                     <AppButton class="button_fill" @click="filter.savedFilter.save()">
                         Сохранить
                     </AppButton>
@@ -146,7 +145,7 @@
                         Отмена
                     </AppButton>
                 </div>
-                <div class="filter__actions" v-else>
+                <div class="filter__actions" v-show="!filter.savedFilter.active.state">
                     <AppButton class="button_fill" @click="filter.updateInfo()">
                         Найти
                     </AppButton>

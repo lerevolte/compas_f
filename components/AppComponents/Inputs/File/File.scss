@@ -34,19 +34,15 @@
         cursor: pointer;
     }
 
-    svg {
-        * {
-            transition: 0.1s all;
-        }
+    svg * ,
+    .file__upload-text,
+    .file__preview {
+        transition: 0.1s all;
     }
 
     &:hover {
         svg {
-            & > rect {
-                stroke: variables.$color-icon-active;
-            }
-
-            g * {
+            * {
                 fill: variables.$color-icon-active;
             }
         }
@@ -54,6 +50,27 @@
         .file__upload-text {
             color: variables.$color-default;
         }
+
+        .file__preview {
+            border-color: variables.$color-icon-active;
+        }
+    }
+}
+
+.file__preview {
+    gap: 10px;
+    width: 100px;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    border-radius: 6px;
+    flex-direction: column;
+    justify-content: center;
+    border: 2px dashed #a6b7d4;
+
+    .icon__file {
+        width: 32px;
+        height: 23px;
     }
 }
 
@@ -152,10 +169,6 @@
 }
 
 .file__upload-text {
-    position: absolute;
-    bottom: 5px;
-    left: 50%;
-    transform: translate(-50%, -50%);
     @include mixins.textVerticalHidden(2);
     color: variables.$color-border;
 }

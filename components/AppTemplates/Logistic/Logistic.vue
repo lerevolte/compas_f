@@ -131,6 +131,7 @@
         <teleport to="#menu__overlay" v-if="logistic.modal.state">
             <LogisticModal 
                 :modal="logistic.modal"
+                @close="logistic.modal.state = false"
                 @create="content => logistic.createRoute(content)"
             />
         </teleport>

@@ -6,6 +6,13 @@
     display: flex;
     flex-direction: column;
     
+    &.blank_pre {
+        .blank__text {
+            white-space: pre;
+            @include mixins.textVerticalHidden(20);
+        }
+    }
+
     .blank__title {
         display: block;
         font-size: variables.$font-size-label;

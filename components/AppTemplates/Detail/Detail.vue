@@ -1,6 +1,6 @@
 <template>
     <div class="detail">
-        <header ref="detailHeaderRef" id="mobile-menu-target" class="detail-page__header">
+        <header id="mobile-menu-target" class="detail-page__header">
             <IconArrowBack @click="detail.closeDetail"/>
             <AppH1 ref="H1Ref" class="textarea_title">
                 <p 
@@ -27,7 +27,7 @@
                 })"/>
                 <AppShowMore 
                     :isPreventBottom="true"
-                    :options="detail.actions.default"
+                    :options="detail.isTrash ? detail.actions.trash : detail.actions.default"
                     @initClick="action => detail.header[action]({
                         columns: detail.columns,
                         is_modal: props.is_modal,
@@ -73,6 +73,7 @@
                 }"
                 :loading="detail.header.modal.loading"
                 @delete="detail.header.delete()"
+                @restore="detail.header.restore()"
                 @close="detail.header.modal.state = false"
             >
             <template v-if="detail.header.modal.action == 'delete'">
@@ -98,7 +99,6 @@
     import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'
 
     const textareaRef = ref(null)
-    const detailHeaderRef = ref(null)
     const router = useRoute()
     const common = new Common()
 
@@ -188,6 +188,7 @@
             this.columns = {}
             this.isGlobalEdit = false
             this.isCopy = false
+            this.isTrash = false
             this.actions = {
                 default: [
                     {
@@ -213,8 +214,8 @@
                         action: 'copyLink'
                     },
                     {
-                        name: 'Скопировать внешнюю ссылку',
-                        action: 'copyExternalLink'
+                        name: 'Восстановить',
+                        action: 'initRestore'
                     }
                 ]
             }
@@ -253,6 +254,10 @@
         // Получение колонок
         getColumns(columns) {
             this.columns = columns
+        }
+
+        checkIsTrash(isTrash) {
+            this.isTrash = isTrash
         }
 
         // Открытие модального окна
