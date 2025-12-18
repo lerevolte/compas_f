@@ -6,7 +6,6 @@
 
         <div class="status" ref="statusRef" :class="{ 'status_open': status.state.isOpen }">
             <div class="status__content" @click="event => status.toggleOptions(event)">
-                <IconWarning v-if="props.options.required && !activeOption"/>
                 <figure class="status__value">
                     <div class="status__rect">
                         <div class="status__rect-container" :style="`--bgColor: ${activeOption?.label?.color}`">
@@ -56,8 +55,6 @@
 <script setup>
     import './Status.scss';
     
-    import IconWarning from '@AppIcons/Warning.vue';
-
     const statusRef = ref(null)
     const contentRef = ref(null)
 

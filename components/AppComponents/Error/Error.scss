@@ -5,6 +5,16 @@
     input, textarea {
         border: 1px solid variables.$color-error;
     }
+    
+    .select {
+        &.select_icon {
+            .relation__arrow {
+                border-bottom: 1px solid variables.$color-error;
+                right: -9px;
+                border-radius: 0px 0px 4px 4px;
+            }
+        }
+    }
 }
 
 .error__text {

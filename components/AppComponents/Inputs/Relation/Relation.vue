@@ -18,8 +18,6 @@
             }"
         >
             <div class="select__content" @click="event => selectInstances[index]?.toggleOptions(event)">
-                <IconWarning v-if="props.options.required && !getActiveOption(index)"/>
-
                 <div 
                     class="select__value select__value_single" 
                     :class="{ 
@@ -151,7 +149,6 @@
     import AppButton from '@AppComponents/Button/Button.vue';
     import AppInput from '@AppComponents/Inputs/Input/Input.vue';
     import IconSelectArrow from '@AppIcons/Input/SelectArrow.vue';
-    import IconWarning from '@AppIcons/Warning.vue';
     import api from '@/helpers/api.js'
     import throttle from 'lodash/throttle'
     import AppError from '@AppComponents/Error/Error.vue'

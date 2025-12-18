@@ -32,6 +32,12 @@
         font-size: 14px;
         margin-top: 15px;
     }
+
+    .modal__options {
+        max-height: 30vh;
+        overflow-y: auto;
+        @include mixins.scrollBar();
+    }
 }
 
 .modal__options {
@@ -51,6 +57,7 @@
     .icon__close {
         width: 12px;
         aspect-ratio: 1;
+        left: -5px;
         height: auto;
         position: relative;
         cursor: pointer;
