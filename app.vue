@@ -1,7 +1,12 @@
 <template>
   <div class="wrapper">
-      <div class="page" :class="{ 'page_auth': getRoute }">
-        <AppMenu v-if="!getRoute"/>
+      <div class="page" :class="{ 'page_auth': !getRoute.state }">
+        <AppMenu 
+          v-if="getRoute.state"
+          :options="{
+            type: getRoute.type
+          }"
+        />
         <NuxtPage 
           :entity="entity"
           :slug="router.params.slug"
@@ -118,7 +123,10 @@
   }
 
   const getRoute = computed(() => {
-    return router.path.includes('/auth') && router.path.includes('/api/external')
+    return {
+      type: router.path.includes('/auth') ? 'auth' : router.path.includes('/api/external') ? 'empty' : 'default',
+      state: !router.path.includes('/auth')
+    }
   })
 
   const entity = ref(new Entity())

@@ -9,8 +9,8 @@
             :hidden="detail.columns.hidden"
             :tabs="props.tabs"
             :options="{
-                isModule: props.options.isModule,
-                isDisableFooter: props.options.isGlobalEdit,
+                isModule: props.options.isModule || props.options.isExternal,
+                isDisableFooter: props.options.isGlobalEdit || props.options.isExternal,
                 isHaveHistory: true,
                 isGlobalEdit: props.options.isGlobalEdit,
             }"
@@ -158,12 +158,19 @@
                 let response = null
                 this.loading = true
 
-                if (props.options.isModule) {
+
+                if (props.options.isExternal) {
+                    const route = routes.detail.external.replace('${token}', props.id)
+                    response = await api.callMethod('GET', route)
+                } else if (props.options.isModule) {
                     const route = routes.detail.module.replace('${slug}', props.slug).replace('${id}', props.id).replace('${tab}', props.tabs.active.tab)
                     response = await api.callMethod('GET', route)
                 } else {
                     const route = routes.detail.get.replace('${slug}', props.slug).replace('${id}', props.id)
                     response = await api.callMethod('GET', `${route}${props.options.isCopy ? '?is_copy=1' : ''}`)
+                }
+
+                if (!props.options.isModule) {
                     emit('action', { action: 'getTabs', value: response.data.tabs })
                     emit('action', { action: 'getTitle', value: response.data.detail.title?.name })
                     emit('action', {action: 'checkIsTrash', value: Boolean(response.data.detail.deleted_at)})

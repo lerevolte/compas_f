@@ -67,6 +67,7 @@ export default {
         create_field: '/field',
         delete_field: '/field/${id}',
         edit_fields: '/objects/${slug}/batch',
+        external: '/external/${token}',
         update_field: '/field/${id}',
     },
     trash: {

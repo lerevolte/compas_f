@@ -9,7 +9,9 @@ export default {
         return new Promise(async (resolve, reject) => {
             const url = `${routes.domain}/api${method}`
             try {
-                headers.Authorization = `Bearer ${userStore.token}`
+                if (!method.includes('/external')) {
+                    headers.Authorization = `Bearer ${userStore.token}`
+                }
                 let result = await http.call(type, url, params, headers)
                 resolve(result)
             } catch(e) {

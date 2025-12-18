@@ -1,5 +1,5 @@
 <template>
-    <nav class="tabs" :class="{'tabs_disabled': props.disableAll}">
+    <nav class="tabs" :class="{'tabs_disabled': props.disableAll || props.options.isExternal}">
         <ul class="tabs__list">
             <template  v-for="(tab, index) in tabs.list" :key="tab.id">
                 <li 
@@ -27,7 +27,7 @@
                         {{ tab.title }}
                     </span>
 
-                    <AppPopup ref="popupRef" class="tab_settings" :isPreventBottom="true">
+                    <AppPopup ref="popupRef" class="tab_settings" :isPreventBottom="true" v-if="!props.options.isExternal">
                         <template #header>
                             <IconActionsSettings />
                         </template>
@@ -48,7 +48,7 @@
             </template>
         </ul>
 
-        <div class="tabs__actions">
+        <div class="tabs__actions" v-if="!props.options.isExternal">
             <AppSave 
                 v-show="tabs.isChanged" 
                 @save="(role) => tabs.save(role)"

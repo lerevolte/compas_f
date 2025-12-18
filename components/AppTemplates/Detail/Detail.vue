@@ -18,7 +18,7 @@
                     v-model="detail.header.name"
                 />
             </AppH1>
-            <div class="detail-page__actions" v-show="!detail.header.editTitle && !props.isGlobalEdit">
+            <div class="detail-page__actions" v-if="!props.is_external" v-show="!detail.header.editTitle && !props.isGlobalEdit">
                 <IconEdit  @click="() => detail.header.initEditTitle({
                     textarea: textareaRef.textareaRef.querySelector('textarea'),
                     columns: detail.columns,
@@ -45,6 +45,7 @@
             :disableAll="detail.isGlobalEdit"
             :slug="detail.slug"
             :options="{
+                isExternal: props.is_external,
                 modal: tabs.modal
             }"
             @action="item => tabs[item.action](item.value)"
@@ -54,6 +55,7 @@
             :id="detail.id"
             :slug="detail.slug"
             :options="{
+                isExternal: props.is_external,
                 isModule: tabs.is_module,
                 isCopy: detail.isCopy,
                 isGlobalEdit: detail.isGlobalEdit
@@ -110,6 +112,10 @@
 
     const props = defineProps({
         is_modal: {
+            default: false,
+            type: Boolean
+        },
+        is_external: {
             default: false,
             type: Boolean
         },
@@ -223,7 +229,7 @@
 
         // Получение данных
         get() {
-            this.id = props.id ?? router.params.id
+            this.id = props.id ?? router.params.id ?? router.params.token
             this.isGlobalEdit = props.isGlobalEdit
             this.isCopy = props.isCopy
             this.slug = props.slug ?? router.params.slug
