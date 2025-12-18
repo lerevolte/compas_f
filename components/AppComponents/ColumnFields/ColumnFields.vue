@@ -60,6 +60,7 @@
 
         <teleport to="#menu__overlay" v-if="section.modal.state">
             <AppModalWarning 
+                v-if="section.modal.type == 'warning'"
                 :options="{
                     title: section.modal.title,
                     action: section.modal.action,
@@ -71,22 +72,42 @@
                 @create="section.create(columns.list, props.slug)"
                 @close="section.modal.state = false"
             >
-            <template v-if="section.modal.action == 'delete'">
-                <p class="warning__text">
-                    {{ section.modal.text }}
-                </p>
-            </template>
-            <template v-else-if="section.modal.action == 'create'">
-                <AppInput 
-                    v-model="section.modal.content.name"
-                    :options="{
-                        id: 0,
-                        title: 'Название раздела',
-                        type: 'text',
-                        name: 'name'
-                    }"
+                <template v-if="section.modal.action == 'delete'">
+                    <p class="warning__text">
+                        {{ section.modal.text }}
+                    </p>
+                </template>
+                <template v-else-if="section.modal.action == 'create'">
+                    <AppInput 
+                        v-model="section.modal.content.name"
+                        :options="{
+                            id: 0,
+                            title: 'Название раздела',
+                            type: 'text',
+                            name: 'name'
+                        }"
+                    />
+                </template>
+            </AppModalWarning>
+
+            <AppModalWarning 
+                v-else-if="section.modal.type == 'validate'"
+                class="validate-modal"
+                :options="{
+                    title: section.modal.title,
+                    action: section.modal.action,
+                    actionTitle: section.modal.actionTitle,
+                    template: 'slot'
+                }"
+                :loading="section.modal.loading"
+                @save="section.save(null, columns.list, props.pageId, props.slug, emit, [])"
+                @close="section.modal.state = false"
+            >
+                <ModalValidate 
+                    :id="props.pageId"
+                    :sectionClass="section"
+                    :section="section.modal.content"
                 />
-            </template>
             </AppModalWarning>
         </teleport>
         <teleport to="#menu__overlay" v-if="field.modal.state">
@@ -131,6 +152,7 @@
     import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'
     import AppTileSection from '@AppComponents/TileSection/TileSection.vue';
     import MassAction from '@AppComponents/MassAction/MassAction.vue'
+    import ModalValidate from './Validate/Validate.vue'
 
     import AppInput from '@AppComponents/Inputs/Input/Input.vue';
 

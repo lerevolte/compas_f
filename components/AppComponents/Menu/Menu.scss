@@ -58,6 +58,25 @@
     &:has(.draggable-ghost) {
         @include mixins.userSelect(none);
     }
+
+    .menu__arrow {
+        cursor: pointer;
+        width: 15px;
+        height: 15px;
+        aspect-ratio: 1;
+        position: relative;
+
+        &.arrow-back {
+            svg {
+                position: absolute;
+                top: 0px;
+                left: 0px;
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+            }
+        }
+    }
 }
 
 .menu__list,
@@ -178,10 +197,6 @@
     margin: 30px auto 25px;
 }
 
-.menu__arrow {
-    display: flex;
-}
-
 .menu-item__details {
     width: 100%;
 
@@ -205,11 +220,6 @@
         & > .menu-item__summary {
             &:hover {
                 background: #161616;
-            }
-
-            .menu__arrow {
-                transform: rotate(180deg);
-                padding: 10px 10px 10px 25px;
             }
         }
     }
@@ -254,11 +264,6 @@
     }
 }
 
-.menu__arrow {
-    cursor: pointer;
-    padding: 10px 25px 10px 10px;
-}
-
 .menu__item-hide:after, 
 .menu__item-hide:before {
     background-color: #2c3d51;
@@ -298,10 +303,6 @@
     .popup__content {
         max-width: calc(100% - 20px);
         left: 10px;
-    }
-
-    .menu__arrow {
-        display: none;
     }
 }
 
@@ -389,7 +390,9 @@
 
             .menu__content {
                 display: flex;
-                padding: 15px 10px;
+                padding: 25px;
+                margin-top: 5px;
+                gap: 10px;
                 flex-direction: column;
                 background: variables.$color-white;
             }
@@ -416,6 +419,20 @@
             gap: 5px;
             display: flex;
             flex-direction: column;
+        }
+
+        .menu-item__details,
+        .menu__popup {
+            .menu__arrow {
+                transform: rotate(180deg);
+            }
+
+            &[open],
+            &.popup_open {
+                .menu__arrow {
+                    transform: rotate(0deg);
+                }
+            }
         }
 
         .menu__item,
@@ -459,30 +476,20 @@
                 background: transparent;
             }
 
-            .menu__link,
-            .menu__arrow {
+            .menu__link {
                 padding: 0px;
-            }
-
-            .menu__arrow {
-                transform: rotate(-90deg);
             }
 
             &.menu-item__summary_text {
                 display: flex;
-                margin-bottom: 25px;
-                font-size: 24px;
+                margin-bottom: 30px;
+                font-size: 28px;
+                line-height: 110%;
                 font-weight: 400;
-
-                .menu__arrow {
-                    display: flex;
-                    transform: rotate(90deg);
-                }
             }
         }
 
         .menu-item__details {
-
             .menu__sublist {
                 gap: 5px;
                 display: flex;
@@ -526,22 +533,21 @@
                 height: 100%;
                 background: #FFF;
                 z-index: 2;
-                padding: 15px 10px;
+                padding: 25px;
                 margin-top: 0px;
                 
                 .menu-item__summary  {
                     display: flex;
                     flex-direction: row-reverse;
-                    margin-bottom: 25px;
-                    font-size: 24px;
+                    margin-bottom: 40px;
+                    font-size: 28px;
                     font-weight: 400;
                     background: transparent;
                     border: none;
                     padding: 0px;
 
-                    .menu__arrow {
-                        padding: 0px;
-                        transform: rotate(90deg);
+                    .menu__link {
+                        font-family: PT Sans;
                     }
                 }
             }
@@ -552,17 +558,11 @@
             margin-top: 5px;
                 
             .popup__header {
-                padding: 15px 10px;
+                padding: 15px 11px 15px 10px;
+                gap: 5px;
                 display: flex;
                 max-width: none;
                 justify-content: space-between;;
-            }
-
-            .menu__arrow {
-                padding: 0px;
-                align-items: center;
-                display: flex;
-                transform: rotate(-90deg);
             }
 
             .menu-user {
@@ -591,19 +591,16 @@
                 height: 100%;
                 background: #FFF;
                 z-index: 2;
-                padding: 15px 10px;
+                padding: 25px;
                 margin-top: 0px;
 
                 .popup__header {
-                    gap: 5px;
                     padding: 0px;
                     justify-content: start;
+                    align-items: center;
                     flex-direction: row-reverse;
-                    margin-bottom: 25px;
-
-                    .menu__arrow {
-                        transform: rotate(90deg);
-                    }
+                    margin-bottom: 40px;
+                    margin-top: 5px;
 
                     .menu-user__name {
                         font-weight: 400;

@@ -13,6 +13,8 @@
     @use '@/assets/mixins.scss'as mixins;
 
     .icon__gamburger {
+        display: flex; 
+        align-items: center;
         cursor: pointer;
         width: max-content;
 

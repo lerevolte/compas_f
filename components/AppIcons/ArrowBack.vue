@@ -7,12 +7,17 @@
 <style scoped lang="scss">
     .arrow-back {
         display: flex;
+        position: relative;
         align-items: center;
 
         svg {
             transform: rotate(180deg);
-            height: 20px;
-            width: 20px;
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
 
             * {
                 fill: #a6b7d4;

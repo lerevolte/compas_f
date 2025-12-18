@@ -83,6 +83,18 @@
             font-size: variables.$font-size-h1;
         }
     }
+
+    @media (max-width: 990px) {
+        align-items: center;
+        margin-top: 5px;
+
+        .arrow-back {
+            margin-right: -5px;
+            width: 15px;
+            height: 15px;
+            aspect-ratio: 1;
+        }
+    }
 }
 
 

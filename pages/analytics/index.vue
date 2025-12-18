@@ -20,4 +20,10 @@
 	const emit = defineEmits([
 		'openModal'
 	])
+
+	onMounted(() => {
+		useHead({
+			title: `Аналитика | Compas.pro`
+		})
+	})
 </script>

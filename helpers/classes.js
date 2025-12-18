@@ -1560,6 +1560,7 @@ export class Section {
         this.hidden = []
         this.modal = {
             state: false,
+            type: null,
             title: 'Создание раздела',
             actionTitle: 'Создать',
             action: 'create',
@@ -1582,6 +1583,7 @@ export class Section {
     initCreate(column_id) {
         this.modal = {
             state: true,
+            type: 'warning',
             title: 'Создание раздела',
             actionTitle: 'Создать',
             action: 'create',
@@ -1626,6 +1628,7 @@ export class Section {
     initDelete(section, column_id) {
         this.modal = {
             state: true,
+            type: 'warning',
             title: 'Удаление поля',
             actionTitle: 'Удалить',
             action: 'delete',
@@ -1784,11 +1787,33 @@ export class Section {
             }
         }
 
-
-        if (isError) return
+        if (isError) {
+            this.modal = {
+                state: true,
+                type: 'validate',
+                title: 'Ошибка валидации',
+                actionTitle: 'Сохранить',
+                action: 'save',
+                text: null,
+                content: {
+                    id: 0,
+                    name: null,
+                    is_short: 0,
+                    fields: this.buffer.edits.filter(p => p.error.state),
+                    children: []
+                },
+                loading: false
+            }
+            return
+        }
 
         try {
             this.buffer.loading = true
+
+            if (this.modal.state && this.modal.type == 'validate') {
+                this.modal.loading = true
+            }
+
             const request = {
                 id: options?.isGlobalEdit ? 0 : pageId,
                 ...this.buffer.edits.reduce((obj, field) => {
@@ -1844,6 +1869,11 @@ export class Section {
             console.log(error);
         } finally {
             this.buffer.loading = false
+
+            if (this.modal.state && this.modal.type == 'validate') {
+                this.modal.loading = false
+                this.modal.state = false
+            }
         }
     }
 

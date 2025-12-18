@@ -1,2 +1,43 @@
 @use '@/assets/variables.scss' as variables;
 @use '@/assets/mixins.scss' as mixins;
+
+.validate-modal {
+    &.modal {
+        .modal__content {
+            max-width: 900px;
+        }
+    }
+}
+
+.validate__header {
+    gap: 10px;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.validate__section {
+    &.tile-section {
+        box-shadow: none;
+        width: 100%;
+        border-radius: 0px;
+        border: none;
+        background: none;
+    }
+
+    .tile-section__header,
+    .icon_drag-field,
+    .field__settings {
+        display: none;
+    }
+
+    .tile-section__body {
+        padding: 0px;
+    }
+
+    .field {
+        padding: 0px;
+    }
+}

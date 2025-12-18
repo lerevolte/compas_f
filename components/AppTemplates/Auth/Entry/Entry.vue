@@ -75,4 +75,10 @@
     import AppCheckbox from '@AppComponents/Inputs/Checkbox/Checkbox.vue'
 
     const auth = inject('auth')
+
+    onMounted(() => {
+        useHead({
+			title: `Авторизация | Compas.pro`
+		})
+	})
 </script>

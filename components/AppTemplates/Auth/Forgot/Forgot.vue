@@ -221,5 +221,9 @@
             auth.value.formForgot.email = router.query.email 
             stages.value.activeStage = 3
         }
+
+        useHead({
+			title: `Восстановление пароля | Compas.pro`
+		})
     })
 </script>

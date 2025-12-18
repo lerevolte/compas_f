@@ -108,6 +108,10 @@
                     }
                 }
             }
+
+            @media (max-width: 990px) {
+                padding: 0px 25px;
+            }
         }
     }
 
@@ -120,6 +124,11 @@
         button {
             width: 100%;
             justify-content: center;
+        }
+
+
+        @media (max-width: 990px) {
+            padding: 0px 25px;
         }
     }
 
@@ -223,6 +232,10 @@
     padding: 0px 15px 10px;
     width: 100%;
     display: block;
+
+    @media (max-width: 990px) {
+        padding: 0px 25px 10px;
+    }
 }
 
 .filter__saves {
@@ -271,13 +284,16 @@
         }   
     }
 
-
     &:has(.form__item_input) {
         padding: 0px;
 
         .show-more {
             display: none;
         }
+    }
+
+    @media (max-width: 990px) {
+        padding: 10px 25px 10px 25px;
     }
 }
 
@@ -323,6 +339,11 @@
             max-width: none;
         }
     }
+
+
+    @media (max-width: 990px) {
+        padding: 0px 25px;
+    }
 }
 
 button.button_text.filter__add {
@@ -333,17 +354,29 @@ button.button_text.filter__add {
     &:hover {
         color: variables.$color-icon-active;
     }
+
+    @media (max-width: 990px) {
+        padding: 0px 25px;
+    }
 }
 
 .mobile-filter__header {
     order: -2;
-    gap: 15px;
+    gap: 35px;
     display: none;
     flex-direction: column;
-    padding: 20px 10px 15px;
+    padding: 20px 25px 15px;
+    margin-top: 7px;
+
+    .arrow-back {
+        aspect-ratio: 1;
+        width: 15px;
+        height: 15px;
+    }
 
     .filter__info {
-        font-size: 30px;
+        font-size: 28px;
+        gap: 5px;
     }
 
     .filter__header {
@@ -356,6 +389,5 @@ button.button_text.filter__add {
 
     @media (max-width: 990px) {
         display: flex;
-        
     }
 }

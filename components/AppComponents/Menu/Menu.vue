@@ -14,9 +14,7 @@
 
             <template v-if="props.options?.type == 'default'">
                 <div class="menu-item__summary menu-item__summary_text" @click="menu.isOpen = false">
-                    <figure class='menu__arrow'>
-                        <svg xmlns="http://www.w3.org/2000/svg" id="arrow" width="14" height="8" viewBox="0 0 14 8" fill="none"><path d="M13.5 1L7 7L0.5 1" stroke="#979797"/></svg>
-                    </figure>
+                    <IconArrowBack class='menu__arrow' />
                     Меню
                 </div>
         
@@ -57,9 +55,8 @@
                                             {{ item.name }}
                                         </NuxtLink>
         
-                                        <figure class='menu__arrow'>
-                                            <svg xmlns="http://www.w3.org/2000/svg" id="arrow" width="14" height="8" viewBox="0 0 14 8" fill="none"><path d="M13.5 1L7 7L0.5 1" stroke="#979797"/></svg>
-                                        </figure>
+
+                                        <IconArrowBack class='menu__arrow' />
                                     </summary>
         
                                     <ul class="menu__sublist">
@@ -78,9 +75,7 @@
                         <summary class="menu-item__summary">
                             <div class="menu__link"></div>
         
-                            <figure class='menu__arrow'>
-                                <svg xmlns="http://www.w3.org/2000/svg" id="arrow" width="14" height="8" viewBox="0 0 14 8" fill="none"><path d="M13.5 1L7 7L0.5 1" stroke="#979797"/></svg>
-                            </figure>
+                            <IconArrowBack class='menu__arrow' />
                         </summary>
         
                         <div class="menu-item__hidden-content">
@@ -118,9 +113,7 @@
                                                     {{ item.name }}
                                                 </NuxtLink>
                 
-                                                <figure class='menu__arrow'>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" id="arrow" width="14" height="8" viewBox="0 0 14 8" fill="none"><path d="M13.5 1L7 7L0.5 1" stroke="#979797"/></svg>
-                                                </figure>
+                                                <IconArrowBack class='menu__arrow' />
                                             </summary>
                 
                                             <ul class="menu__sublist">
@@ -184,9 +177,7 @@
                             </strong>
                         </div>
     
-                        <figure class='menu__arrow' v-show="menu.loading == false">
-                            <svg xmlns="http://www.w3.org/2000/svg" id="arrow" width="14" height="8" viewBox="0 0 14 8" fill="none"><path d="M13.5 1L7 7L0.5 1" stroke="#979797"/></svg>
-                        </figure>
+                        <IconArrowBack class='menu__arrow' />
                     </template>
                     <template #content>
                         <NuxtLink class="popup__option" to="/profile" @click="popupRef.popup.popupRef.classList.remove('popup_open');">
@@ -208,6 +199,7 @@
 <script setup>
     import './Menu.scss';
 
+    import IconArrowBack from '@AppIcons/ArrowBack.vue';
     import IconDrag from '@AppIcons/Actions/Drag.vue';
     import IconLogo from '@AppIcons/Logo.vue';
     import draggable from 'vuedraggable';
