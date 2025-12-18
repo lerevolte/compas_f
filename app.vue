@@ -118,7 +118,7 @@
   }
 
   const getRoute = computed(() => {
-    return router.path.includes('/auth')
+    return router.path.includes('/auth') && router.path.includes('/api/external')
   })
 
   const entity = ref(new Entity())

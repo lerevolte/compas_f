@@ -287,8 +287,12 @@ export class Common {
     }
 
     // Копирование внешней ссылки
-    copyExternalLink(link) {
-        this.copyText(link)
+    async copyExternalLink({slug, id}) {
+        const response = await api.callMethod('POST', routes.external_link.create, {
+            model_slug: slug,
+            model_id: id
+        })
+        this.copyLink(response.data.url)
     }
 }
 
@@ -647,9 +651,6 @@ export class Table {
 
             if (this.slug) {
                 if (this.slug == 'products') {
-
-                    console.log(request);
-                    
                     await api.callMethod('PUT', routes.table.set_products.replace('${page_id}', this.pageId), {
                         products: request
                     })
@@ -821,7 +822,7 @@ export class Table {
     }
 
     copyExternalLink(row) {
-        this.common.copyExternalLink(`${window.location.hostname}/${this.slug}/${row.id}`)
+        this.common.copyExternalLink({slug: this.slug, id: row.id})
     }
 
     // Инициализация удаления
@@ -1402,8 +1403,8 @@ export class HeaderEditable {
     }
 
     // Копирование внешней ссылки
-    copyExternalLink() {
-        this.common.copyExternalLink(window.location.href)
+    copyExternalLink({slug, id}) {
+        this.common.copyExternalLink({slug: slug, id: id})
     }
 
     // Редактирование заголовка

@@ -1,5 +1,5 @@
 <template>
-    <div class="form__item form__item_date" ref="dateRef" :class="{'error': props.error.state}">
+    <div class="form__item form__item_date" ref="dateRef" :class="{'error': props.error.state, 'form__item_date_range': props.options.multiple}">
         <label class="blank__title" :for="props.options.id" v-if="props.options.title && props.options.title != ''">
             {{ props.options.title }} 
         </label>
@@ -7,7 +7,7 @@
             :id="props.options.id"
             :model-value="modelValue"
 			:no-swipe="false"
-			:auto-apply="true"
+			:auto-apply="!props.options.multiple"
 			:enable-time-picker="false"
 			:max-time="{ hours: 0, minutes: 0, seconds: 0 }"
 			:month-change-on-scroll="true"
@@ -15,13 +15,70 @@
 			:range="props.options.multiple"
 			locale="ru"
 			ref="datepicker"
-			position="center"
+			position="left"
 			hide-offset-dates
 			format="dd.MM.yyyy"
 			:placeholder="'__.__.____'"
-            @update:modelValue="emit('update:modelValue', props.options.multiple ? [format($event[0], `yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'`), format($event[1], `yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'`)] : format($event, `yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'`))"
+            @update:modelValue="emit('update:modelValue',  $event ? props.options.multiple ? [format($event[0], `yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'`), format($event[1], `yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'`)] : format($event, `yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'`) : null)"
             @open="datepickerField.open()"
-        />
+        >
+            <template #right-sidebar>
+				<div class="datapicker__preset-days">
+					<div
+						class="datapicker__preset-item"
+						v-for="day in datepickerField.preset[props.options.multiple ? 'multiple' : 'default']"
+                        :class="{'datapicker__preset-item_active': isEqual(day.day, props.modelValue)}"
+                        :key="day.id"
+                        @click="emit('update:modelValue', day.day)"
+					>
+						{{ day.title }}
+					</div>
+				</div>
+			</template>
+            <template
+                #left-sidebar
+                v-if="props.options.multiple"
+			>
+				<div class="datapicker__footer">
+					<div class="datepicker__inputs">
+						<AppInput
+							:options="{
+                                id: 0,
+                                title: null,
+                                type: 'text',
+                                name: 'date',
+                                focus: false,
+                                placeholder: '__.__.____',
+                                mask: '##.##.####',
+                                required: false
+							}"
+                            v-model="datepickerField.inputRange.start"
+                            @blur="datepickerField.setInputsValue()"
+						/>
+						—
+						<AppInput
+							:options="{
+                                id: 0,
+                                title: null,
+                                type: 'text',
+                                name: 'date',
+                                focus: false,
+                                placeholder: '__.__.____',
+                                mask: '##.##.####',
+                                required: false
+							}"
+                            v-model="datepickerField.inputRange.end"
+                            @blur="datepickerField.setInputsValue()"
+						/>
+					</div>
+
+					<AppButton class="button_fill" @click="datepickerField.apply()">
+						Применить
+					</AppButton>
+				</div>
+			</template>
+    
+        </VueDatePicker>
         <AppError v-show="props.error.state">
             {{ props.error.text }}
         </AppError>
@@ -31,10 +88,26 @@
 <script setup>
     import './Date.scss';
     
+    import isEqual from 'lodash/isEqual'
     import VueDatePicker from '@vuepic/vue-datepicker';
     import '@vuepic/vue-datepicker/dist/main.css'
-    import { format } from 'date-fns'
+    import { 
+        format, 
+        subDays, 
+        addDays, 
+        startOfMonth, 
+        endOfMonth, 
+        startOfQuarter, 
+        endOfQuarter, 
+        startOfYear, 
+        endOfYear, 
+        subMonths, 
+        subQuarters, 
+        subYears 
+    } from 'date-fns'
+    import AppInput from '@AppComponents/Inputs/Input/Input.vue';
     import AppError from '@AppComponents/Error/Error.vue'
+    import AppButton from '@AppComponents/Button/Button.vue'
 
     const dateRef = ref(null)
 
@@ -68,7 +141,79 @@
     ])
 
     class Datepicker {
-        constructor() {}
+        constructor() {
+            this.inputRange = {
+                start: null,
+                end: null
+            }
+            const now = new Date()
+            this.preset = {
+                default: [
+                    {
+                        id: 0,
+                        title: "Вчера",
+                        day: format(subDays(now, 1), 'yyyy-MM-dd'),
+                    },
+                    {
+                        id: 1,
+                        title: "Сегодня",
+                        day: format(now, 'yyyy-MM-dd'),
+                    },
+                    {
+                        id: 2,
+                        title: "Завтра",
+                        day: format(addDays(now, 1), 'yyyy-MM-dd'),
+                    },
+                    {
+                        id: 3,
+                        title: "Послезавтра",
+                        day: format(addDays(now, 2), 'yyyy-MM-dd'),
+                    },
+                ],
+                multiple: [
+                    {
+                        id: 0,
+                        title: "Сегодня",
+                        day: [format(now, 'yyyy-MM.dd'), format(now, 'yyyy-MM.dd')],
+                    },
+                    {
+                        id: 1,
+                        title: "Завтра",
+                        day: [format(addDays(now, 1), 'yyyy-MM.dd'), format(addDays(now, 1), 'yyyy-MM.dd')],
+                    },
+                    {
+                        id: 2,
+                        title: "Текущий месяц",
+                        day: [format(startOfMonth(now), 'yyyy-MM-dd'), format(endOfMonth(now), 'yyyy-MM-dd')],
+                    },
+                    {
+                        id: 3,
+                        title: "Прошлый месяц",
+                        day: [format(startOfMonth(subMonths(now, 1)), 'yyyy-MM-dd'), format(endOfMonth(subMonths(now, 1)), 'yyyy-MM-dd')],
+                    },
+                    {
+                        id: 4,
+                        title: "Текущий квартал",
+                        day: [format(startOfQuarter(now), 'yyyy-MM-dd'),format(endOfQuarter(now), 'yyyy-MM-dd')],
+                    },
+                    {
+                        id: 5,
+                        title: "Прошлый квартал",
+                        day: [format(startOfQuarter(subQuarters(now, 1)), 'yyyy-MM-dd'), format(endOfQuarter(subQuarters(now, 1)), 'yyyy-MM-dd')],
+                    },
+                    {
+                        id: 5,
+                        title: "Текущий год",
+                        day: [format(startOfYear(now), 'yyyy-MM-dd'),  format(endOfYear(now), 'yyyy-MM-dd')],
+                    },
+                    {
+                        id: 6,
+                        title: "Прошлый год",
+                        day: [format(startOfYear(subYears(now, 1)), 'yyyy-MM-dd'), format(endOfYear(subYears(now, 1)), 'yyyy-MM-dd')],
+                    },
+                ]
+            }
+        }
 
         // Открытие датапикера
         open() {
@@ -76,6 +221,54 @@
             document.querySelectorAll('.status_open').forEach(el => el.classList.remove('status_open'))
             document.querySelectorAll('.select_open').forEach(el => el.classList.remove('select_open'))
             emit('open', dateRef.value)
+        }
+
+        // Получение дат для инпута
+        getInputsValue() {
+            if (props.options.multiple) {
+                if (props.modelValue) {
+                    if (Array.isArray(props.modelValue)) {
+                        this.inputRange.start = format(props.modelValue[0], 'dd.MM.yyyy')
+                        this.inputRange.end = format(props.modelValue[1], 'dd.MM.yyyy')
+                    } else {
+                        if (props.modelValue) {
+                            this.inputRange.start = format(props.modelValue, 'dd.MM.yyyy')
+                            this.inputRange.end = format(props.modelValue, 'dd.MM.yyyy')
+                        }
+                    }
+
+                }
+            }
+        }
+
+        // Установка дат для инпута
+        setInputsValue() {
+            const checkDate = (value) => {
+                if (value.split('.').length == 3) {
+                    return {
+                        state: true,
+                        value: value.split('.').reverse().join('-')
+                    }
+                } else {
+                    return {
+                        state: false,
+                        value: value.split('.').reverse().join('-')
+                    }
+                }
+            }
+
+            const start = checkDate(this.inputRange.start)
+            const end = checkDate(this.inputRange.end)
+
+            if (start.state && end.state) {
+                emit('update:modelValue', [start.value, end.value])
+            }
+        }
+
+        // Применить
+        apply() {
+            datepicker.value?.selectDate()
+            datepicker.value?.closeMenu()
         }
     }
 
@@ -90,5 +283,10 @@
             }
         });
         datepickerField.value.open()
+        datepickerField.value.getInputsValue()
+    })
+
+    watch(() => props.modelValue, () => {
+        datepickerField.value.getInputsValue()
     })
 </script>

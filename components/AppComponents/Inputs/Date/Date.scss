@@ -5,10 +5,26 @@
     &.form__item_date {
         @include mixins.blankGap();
 
+        * {
+            font-family: PT Sans !important;
+            transition: none !important;
+        }
+
         .dp__input {
             border-color: variables.$color-border !important;
             border-radius: 5px;
             padding: 7px 15px;
+        }
+
+        .dp__action_row {
+            display: none;
+        }
+
+        .dp__menu_content_wrapper {
+            background: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 3px #000, inset 0 1px 2px #ffffff80;
+            overflow: hidden;
         }
 
         .dp__input_icon,
@@ -23,6 +39,142 @@
 
         .dp__menu {
             border-radius: 5px;
+        }
+
+        .dp__date_hover_end,
+        .dp__date_hover_start,
+        .dp__date_hover,
+        .dp__month_year_select,
+        .dp__overlay_cell,
+        .dp__button,
+        .dp__cell_inner,
+        .dp__inner_nav {
+            &:hover {
+                background: #eef3f8;
+            }
+    
+            &.dp__active_date,
+            &.dp__range_end,
+            &.dp__range_start {
+                &:hover {
+                    background: var(--dp-primary-color);
+                    filter: brightness(1.4);
+                }
+            }
+    
+            &.dp__range_start {
+                &.dp__range_end {
+                    border-radius: 5px;
+                }
+            }
+        }
+    
+        .dp__today {
+            border: none;
+            font-weight: 600;
+            color: variables.$color-red;
+    
+            &.dp__active_date,
+            &.dp__range_end,
+            &.dp__range_start {
+                color: variables.$color-white;
+            }
+        }
+    
+        .dp__calendar_row {
+            margin: 0px;
+        }
+    
+        .dp__month_year_select {
+            padding: 5px 10px;
+        }
+    
+        .dp__month_year_col_nav {
+            padding: 0px 10px;
+    
+            &:hover {
+                filter: brightness(1);
+            }
+        }
+    
+        .dp__overlay_cell_active,
+        .dp__active_date {
+            background: variables.$color-icon-active;
+        }
+    
+        .dp__inner_nav {
+            width: 25px;
+            display: grid;
+            place-items: center;
+    
+            svg {
+                @include mixins.resolution(25px, 20px);
+            }
+        }
+
+        &.form__item_date_range {
+            .dp__menu_content_wrapper {
+                display: grid;
+                grid-template-columns: 1fr 150px;
+                grid-template-rows: 1fr auto;
+                height: 100%;
+            }
+    
+            .dp__sidebar_left {
+                padding: 0px;
+                grid-row: 2/3;
+                grid-column: 1/3;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+    
+                .datapicker__footer {
+                    gap: 10px;
+                    width: 100%;
+                    display: flex;
+                    padding: 15px;
+                    justify-content: space-between;
+
+                    .button_fill {
+                        width: 115px;
+                    }
+                }
+    
+                .datepicker__inputs {
+                    display: flex;
+                    gap: 20px;
+                    align-items: center;
+                }
+            }
+        }
+
+        .dp__sidebar_right {
+            padding: 0px;
+            position: relative;
+            border-left: none;
+    
+            &::before {
+                content: "";
+                position: absolute;
+                width: 1px;
+                background: variables.$color-border;
+                height: calc(100% + 70px);
+                left: 0px;
+                z-index: 2;
+                top: 0px;
+            }
+        }
+    
+        .datapicker__preset-days {
+            .datapicker__preset-item {
+                padding: 8px 20px 8px 10px;
+                
+                &:hover,
+                &.datapicker__preset-item_active {
+                    background: #eef3f8;
+                    cursor: pointer;
+                }
+            }
         }
     }
 }

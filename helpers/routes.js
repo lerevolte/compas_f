@@ -116,5 +116,9 @@ export default {
     chart: {
         get: '/analytics',
         getChart: '/analytics/${slug}'
+    },
+    external_link: {
+        create: '/external-links',
+        delete: '/external-links/${token}'
     }
 }
