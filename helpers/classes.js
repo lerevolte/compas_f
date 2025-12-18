@@ -294,6 +294,18 @@ export class Common {
         })
         this.copyLink(response.data.url)
     }
+
+    // Обновление названия файла
+    async updateFileName({slug, id, field}) {
+        await api.callMethod('POST', routes.detail.edit_fields.replaceAll('${slug}', slug), {
+            rows: [
+                {
+                    id: id,
+                    [field.key]: field.value
+                }
+            ]
+        })
+    }
 }
 
 export class Auth {
@@ -1196,9 +1208,10 @@ export class Filter {
             })
         }
 
-        this.fields = response.filter(field => !['isChoose', 'actions', 'file'].includes(field.type)).map(p => {
+        this.fields = response.filter(field => !['isChoose', 'actions', 'file'].includes(field.type)).map((p, index) => {
             return {
                 ...p,
+                sort: p.sort ?? index,
                 type: p.type == 'address' ? 'text' : p.type
             }
         })
@@ -1555,8 +1568,9 @@ export class Columns {
 
 // Секции
 export class Section {
-    constructor() {
+    constructor(slug) {
         this.list = []
+        this.slug = slug
         this.hidden = []
         this.modal = {
             state: false,

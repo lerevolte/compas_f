@@ -32,7 +32,7 @@
                             />
 
                             <div class="file__name" v-show="props.options.show_file_name">
-                                {{ common.transformName(item.name ?? '', 15) }}
+                                {{ common.transformName(item.display_name ?? item.name ?? '', 15) }}
                             </div>
 
                             <AppShowMore 
@@ -68,10 +68,10 @@
                         }"
                     />
                     <div class="file__name" v-show="props.options.show_file_name">
-                        {{ common.transformName(item.name ?? '', 15) }}
+                        {{ common.transformName(item.display_name ?? item.name ?? '', 15) }}
                     </div>
                     <AppShowMore 
-                        :options="props.options.isModal ? fileManager.actions.filter(p => p.action != 'showMore') : fileManager.actions"
+                        :options="props.options.isModal ? fileManager.actions.filter(p => p.action != 'showMore' && p.action != 'delete') : fileManager.actions"
                         :isPreventBottom="true"
                         @initClick="action => fileManager[action](item)"
                     />
@@ -92,7 +92,7 @@
                     template: 'slot'
                 }"
                 :loading="fileManager.modal.loading"
-                @update="fileManager.update()"
+                @updateFile="fileManager.updateFile()"
                 @close="fileManager.modal.state = false"
             >
             <div class="modal__fields">
@@ -105,16 +105,30 @@
                     v-model="fileManager.modal.content.image"
                 />
                 <AppBlank 
+                    class="blank_static"
                     :item="{
                         title: 'Название',
                         text: fileManager.modal.content.name
                     }"
                 />
+
+                <AppInput 
+                    v-if="fileManager.modal.edit"
+                    v-model="fileManager.modal.content.display_name"
+                    :options="{
+                        id: 0,
+                        title: 'Название файла',
+                        type: 'text',
+                        focus: true
+                    }"
+                />
                 <AppBlank 
+                    v-else
                     :item="{
                         title: 'Название файла',
-                        text: fileManager.modal.content.file_name
+                        text: fileManager.modal.content.display_name
                     }"
+                    @click="() => fileManager.modal.edit = true"
                 />
             </div>
             </AppModalWarning>
@@ -135,6 +149,7 @@
     import FansyBox from '@AppComponents/FansyBox/FansyBox.vue'
     import FansyBoxItem from '@AppComponents/FansyBox/Item/Item.vue'
     import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'
+    import AppInput from '@AppComponents/Inputs/Input/Input.vue'
     import AppError from '@AppComponents/Error/Error.vue'
 
     import { useUserStore } from '@/stores/userStore.js'
@@ -143,16 +158,20 @@
     const props = defineProps({
         options: {
             default: {
-                 id: 0,
-                 title: '',
-                 name: '',
-                 autocomplete: 'on',
-                 placeholder: '',
-                 multiple: false,
-                 isModal: false,
-                 isDraggable: false,
-                 accept: ['*'],
-                 query: {}
+                id: 0,
+                title: '',
+                name: '',
+                autocomplete: 'on',
+                placeholder: '',
+                multiple: false,
+                isModal: false,
+                isDraggable: false,
+                accept: ['*'],
+                query: {
+                    field_id: 0,
+                    page_id: 0,
+                    slug: null
+                }
             },
             type: Object
         },
@@ -199,11 +218,11 @@
                 state: false,
                 title: 'Подробная информация',
                 actionTitle: 'Принять',
-                action: 'close',
+                action: 'updateFile',
                 content: {
                     image: [],
                     name: '',
-                    file_name: ''
+                    display_name: ''
                 },
             }
         }
@@ -289,10 +308,11 @@
         // Подробная информация
         showMore(file) {
             this.modal.state = true
+            this.modal.edit = false
             this.modal.content = {
                 ...file,
                 image: [file],
-                file_name: file.name
+                display_name: file?.display_name ?? file?.name
             }
         }
 
@@ -331,6 +351,25 @@
         delete(file) {
             this.previewUrl = this.previewUrl.filter(f => f.id != file.id)
             emit('update:modelValue', this.previewUrl.filter(f => f.id != file.id))
+        }
+
+        async updateFile() {
+            try {
+                this.modal.loading = true
+                let request = this.previewUrl.map(file => {
+                    return {
+                        ...file,
+                        display_name: this.modal.content.id == file.id ? this.modal.content.display_name : file.display_name
+                    }
+                })
+                emit('update:modelValue', request)
+                await common.updateFileName({slug: props.options.query.slug, id: props.options.query.page_id, field: {key: props.options.key, value: request}})
+            } catch (error) {
+                console.log(error);
+            } finally {
+                this.modal.loading = false
+                this.modal.state = false
+            }
         }
     }
 

@@ -117,6 +117,7 @@
                             isDraggable: true,
                             query: {
                                 field_id: field.id,
+                                slug: props.sectionClass.slug,
                                 page_id: props.pageId ?? null
                             }
                         }"

@@ -73,7 +73,7 @@
                     v-model="filter.state.fields" 
                     :forceFallback="true"
                     :fallbackOnBody="true"
-                    item-key="filter-fields" 
+                    item-key="id" 
                     handle=".icon_drag-field"
                     class="filter__fields"
                     drag-class="draggable-drag"
@@ -195,8 +195,9 @@
                 </strong>
                 <div class="filter__saves">
                     <div 
-                        class="filter__save filter-save" 
                         v-for="(save, index) in savedFilters" 
+                        class="filter__save filter-save" 
+                        :class="{'filter__save_active': save.id == filter.savedFilter.active.id}"
                         @click="!filter.savedFilter.active.state && filter.savedFilter.get(save, index)"
                     >
                         <div class="filter-save__title">
@@ -491,7 +492,7 @@
         get(item, is_update = true) {
             let findedField = null
             let flag = false
-
+            this.active.id = item.id
 
             for (let field of item.fields) {
                 findedField = filter.state.fields.find(f => f.key == field.key)
@@ -504,7 +505,6 @@
                     }
                 }
             }
-
 
             if (is_update) {
                 filter.updateInfo()
@@ -601,6 +601,13 @@
                 fields: hiddenFilter ? hiddenFilter.fields : []
             })
 
+
+            filter.state.fields = [
+                ...this.active.fields,
+                ...filter.state.fields.filter(
+                    item => !this.active.fields.some(el => el.id === item.id)
+                )
+            ]
             filter.updateFields(this.active.fields)
         }
 

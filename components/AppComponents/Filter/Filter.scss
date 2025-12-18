@@ -249,6 +249,11 @@
     display: flex;
     justify-content: space-between;
 
+
+    &.filter__save_active {
+        background: variables.$color-hover-option;
+    }
+
     &:first-child {
         .popup__option[data-action="moveUp"] {
             display: none;

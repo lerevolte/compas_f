@@ -305,7 +305,7 @@
     }
 
     const columns = ref(new Columns())
-    const section = ref(new Section())
+    const section = ref(new Section(props.slug))
     const field = ref(new Field())
     
     onMounted(() => {
