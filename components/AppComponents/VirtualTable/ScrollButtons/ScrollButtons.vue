@@ -39,10 +39,11 @@
   </template>
   
   <script setup>
-  import { ref, inject, computed, onMounted, onUnmounted } from 'vue'
+  import { ref, inject, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
   import './ScrollButtons.scss'
   
   const tableRef = inject('tableRef')           // контейнер, который скроллим
+  const table = inject('table')                 // объект таблицы для отслеживания загрузки
   const buttonLeftRef = ref(null)
   const buttonRightRef = ref(null)
   
@@ -53,14 +54,23 @@
   const TOLERANCE = 1       // px, чтобы избежать ошибок округления
   const STEP = 12           // px за кадр при удержании кнопки
   
+  // Флаг готовности таблицы для корректного расчета
+  const isTableReady = ref(false)
+  
   // вычисляемое состояние для левой кнопки
-  const isAtStart = computed(() => scrollLeft.value <= TOLERANCE)
+  const isAtStart = computed(() => {
+    if (!isTableReady.value) return false // Показываем кнопку пока таблица не готова
+    return scrollLeft.value <= TOLERANCE
+  })
   
   // вычисляемое состояние для правой кнопки
   const isAtEnd = computed(() => {
-    if (!tableRef?.value) return true
+    if (!isTableReady.value || !tableRef?.value) return false // Показываем кнопку пока таблица не готова
     const maxLeft = Math.max(0, tableRef.value.scrollWidth - tableRef.value.clientWidth)
-    return scrollLeft.value + TOLERANCE >= maxLeft || maxLeft <= 0
+    // Если скролл вообще не нужен (maxLeft <= 0), скрываем кнопку
+    if (maxLeft <= 0) return true
+    // Скрываем только если мы в конце и скролл возможен
+    return scrollLeft.value + TOLERANCE >= maxLeft
   })
   
   /**
@@ -70,9 +80,10 @@
    * - Слушает scroll и resize
    */
   class ButtonScroll {
-    constructor (tableRef, scrollLeftRef) {
+    constructor (tableRef, scrollLeftRef, isTableReadyRef) {
       this.tableRef = tableRef
       this.scrollLeftRef = scrollLeftRef
+      this.isTableReadyRef = isTableReadyRef
   
       this.rafId = null       // id активного requestAnimationFrame
       this.running = false    // флаг, запущен ли скролл
@@ -142,6 +153,17 @@
       this.updateScrollLeft()
       if (this.tableRef?.value) void this.tableRef.value.scrollWidth
     }
+
+    /** Принудительное обновление состояния кнопок */
+    forceUpdate () {
+      this.updateScrollLeft()
+      // Принудительно обновляем готовность таблицы
+      if (this.tableRef?.value && this.isTableReadyRef) {
+        const maxLeft = Math.max(0, this.tableRef.value.scrollWidth - this.tableRef.value.clientWidth)
+        // Таблица готова, если scrollWidth больше 0 и мы можем определить maxLeft
+        this.isTableReadyRef.value = this.tableRef.value.scrollWidth > 0
+      }
+    }
   
     /** Подключить слушатели и установить начальное состояние */
     mount () {
@@ -162,10 +184,96 @@
   }
   
   // создаём экземпляр класса
-  const buttonScroll = new ButtonScroll(tableRef, scrollLeft)
+  const buttonScroll = new ButtonScroll(tableRef, scrollLeft, isTableReady)
   
+  // функция для обновления состояния кнопок после рендера
+  const updateButtonsState = async () => {
+    await nextTick()
+    // Даем время на полный рендер таблицы
+    await new Promise(resolve => setTimeout(resolve, 50))
+    if (tableRef?.value) {
+      buttonScroll.forceUpdate()
+    }
+  }
+
+  // ResizeObserver для отслеживания изменений размеров таблицы
+  let resizeObserver = null
+
+  // Периодическая проверка состояния (на случай, если watch не сработал)
+  let checkInterval = null
+
   // монтирование/размонтирование
-  onMounted(() => buttonScroll.mount())
-  onUnmounted(() => buttonScroll.unmount())
+  onMounted(() => {
+    buttonScroll.mount()
+    
+    // Отслеживаем изменения размеров таблицы
+    if (tableRef?.value && window.ResizeObserver) {
+      resizeObserver = new ResizeObserver(() => {
+        updateButtonsState()
+      })
+      resizeObserver.observe(tableRef.value)
+    }
+
+    // Обновляем состояние после монтирования несколько раз с задержками
+    updateButtonsState()
+    setTimeout(() => updateButtonsState(), 100)
+    setTimeout(() => updateButtonsState(), 300)
+    setTimeout(() => updateButtonsState(), 500)
+
+    // Периодическая проверка каждые 500ms в течение первых 3 секунд
+    let checkCount = 0
+    checkInterval = setInterval(() => {
+      if (checkCount++ < 6) {
+        updateButtonsState()
+      } else {
+        clearInterval(checkInterval)
+        checkInterval = null
+      }
+    }, 500)
+  })
+
+  onUnmounted(() => {
+    buttonScroll.unmount()
+    if (resizeObserver) {
+      resizeObserver.disconnect()
+    }
+    if (checkInterval) {
+      clearInterval(checkInterval)
+    }
+  })
+
+  // Отслеживаем загрузку таблицы и обновляем состояние кнопок
+  if (table) {
+    watch(() => table?.value?.loading, async (isLoading, wasLoading) => {
+      // Когда загрузка завершается, обновляем состояние кнопок
+      if (wasLoading && !isLoading) {
+        // Сбрасываем флаг готовности при начале новой загрузки
+        isTableReady.value = false
+        await updateButtonsState()
+        // Дополнительное обновление после полного рендера
+        setTimeout(() => {
+          updateButtonsState()
+        }, 200)
+      }
+    })
+
+    // Отслеживаем изменения данных таблицы
+    watch(() => table?.value?.body?.length, async (newLength, oldLength) => {
+      if (newLength !== oldLength) {
+        isTableReady.value = false
+        await updateButtonsState()
+        setTimeout(() => {
+          updateButtonsState()
+        }, 200)
+      }
+    })
+
+    // Отслеживаем готовность виртуализатора
+    watch(() => table?.value?.rowVirtualizer, async (virtualizer) => {
+      if (virtualizer) {
+        await updateButtonsState()
+      }
+    }, { immediate: true })
+  }
   </script>
   
