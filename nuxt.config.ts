@@ -4,6 +4,7 @@ import { resolve } from 'path';
 export default defineNuxtConfig({
   compatibilityDate: '2025-08-13',
   devtools: { enabled: false },
+  ssr: false,
   modules: [
     '@pinia/nuxt',
     'nuxt-lodash',

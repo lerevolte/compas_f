@@ -123,9 +123,11 @@
   }
 
   const getRoute = computed(() => {
+    const isAuth = router.path.includes('/auth')
+    const isExternal = router.path.includes('/api/external')
     return {
-      type: router.path.includes('/auth') ? 'auth' : router.path.includes('/api/external') ? 'empty' : 'default',
-      state: !router.path.includes('/auth')
+      type: isAuth ? 'auth' : isExternal ? 'empty' : 'default',
+      state: !isAuth
     }
   })
 

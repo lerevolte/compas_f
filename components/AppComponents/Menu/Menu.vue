@@ -236,13 +236,6 @@
         }
     })
 
-    // Загружаем данные самыми первыми на сайте
-    if (props.options?.type == 'default') {
-        await userStore.get()
-        await menuStore.get()
-        await userStore.getRoles()
-    }
-    
     class Menu {
         constructor() {
             this.isChanged = false
@@ -272,14 +265,18 @@
                 console.log('menu_template', error);
             } finally {
                 this.loading = false
-                if (route.path == '/') {
-                    navigateTo(this.visible[0].link)
-                }
             }
         }
 
         // Обновление
         async update() {
+            // Обновляем информацию о пользователе
+            const full_name = `${userStore.user?.name ?? ''} ${userStore.user?.last_name ?? ''}`
+            this.user = {
+                name: full_name.replaceAll(' ', '') == '' ? 'Без имени' : full_name,
+                avatar: userStore.user && userStore.user?.avatar ? JSON.parse(userStore.user?.avatar)[0]?.url ?? '/undefined.svg' : '/undefined.svg'
+            }
+            // Обновляем меню
             this.list = menuStore.list
             this.visible = this.list.filter(item => !item.is_hidden)
             this.hidden = this.list.filter(item => item.is_hidden)
@@ -324,7 +321,7 @@
 
         // Начало перетаскивания в меню
         dragStart(e) {
-            e.preventDefault()
+            e?.preventDefault()
             this.isDragging = true
             this.beforeDrag = [...this.visible.map(item => item.id), ...this.hidden.map(item => item.id)]
 
@@ -369,9 +366,24 @@
 
     const menu = ref(new Menu())
 
+    // Загружаем данные самыми первыми на сайте
+    if (props.options?.type == 'default') {
+        menu.value.list = menuStore?.list ?? []
+        menu.value.visible = menu.value.list.filter(item => !item.is_hidden)
+        menu.value.hidden = menu.value.list.filter(item => item.is_hidden)
+        await userStore.get()
+        await userStore.getRoles()
+    }
+    
     onMounted(async () => {
         if (props.options?.type == 'default') {
-            await menu.value.get()
+            // Сначала показываем сохраненное меню (если есть), чтобы навигация не стиралась
+            if (menuStore.list && menuStore.list.length > 0) {
+                await menu.value.update()
+            }
+            // Затем дожидаемся обновления меню из API (которое запущено в setup) и обновляем отображение
+            await menuStore.get()
+            await menu.value.update()
             isClient.value = true
         }
     })

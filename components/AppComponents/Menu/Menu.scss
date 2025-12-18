@@ -54,6 +54,10 @@
             }
         }
     }
+
+    &:has(.draggable-ghost) {
+        @include mixins.userSelect(none);
+    }
 }
 
 .menu__list,
