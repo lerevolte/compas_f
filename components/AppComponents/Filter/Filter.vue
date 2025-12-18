@@ -65,61 +65,95 @@
                             :options="{ id: 0, title: 'Поиск', type: 'text', name: 'search', placeholder: '', autocomplete: 'off' }" 
                         />
                     </div>
-    
-    
-                    <div class="filter__field" v-for="field in filter.state.fields" :class="{'filter__field_disabled': !field.enabled}">
-                        <AppSelect 
-                            v-if="field.type == 'select_dropdown' || field.type == 'relation'"
-                            :isPreventBottom="true"
-                            :options="{
-                                ...field,
-                                list: field.options ?? [],
-                                isHaveNull: true,
-                                searchable: field.type == 'relation',
-                                relation: field.type == 'relation' ? field.id : null
-                            }"
-                            v-model="filter.state.tabsValues[field.key]"
-                            @update:list="options => field.options = options"
-                            @update:modelList="options => field.options = options"
-                        />
-                        <AppDate 
-                            v-else-if="field.type == 'date'"
-                            :options="{
-                                id: field.id,
-                                title: field.title,
-                                type: field.type,
-                                name: field.name,
-                                multiple: true,
-                                placeholder: field.placeholder
-                            }"
-                            v-model="filter.state.tabsValues[field.key]"
-                        />
-                        <AppSelect 
-                            v-else-if="field.type == 'boolean'"
-                            :isPreventBottom="true"
-                            :options="field"
-                            v-model="filter.state.tabsValues[field.key]"
-                        />
-                        <AppStatus 
-                            v-else-if="field.type == 'status'"
-                            :isPreventBottom="true"
-                            :options="{
-                                ...field,
-                                edit: true,
-                                list: field.options,
-                                isHaveNull: false,
-                            }"
-                            v-model="filter.state.tabsValues[field.key]"
-                        />
-                        <AppInput 
-                            v-else
-                            :options="field"
-                            v-model="filter.state.tabsValues[field.key]"
-                            @keyup.enter="filter.updateInfo()" 
-                        />
-    
-                    </div>
                 </div>
+
+                <draggable
+                    tag="div"
+                    group="filter-fields"
+                    v-model="filter.state.fields" 
+                    :forceFallback="true"
+                    :fallbackOnBody="true"
+                    item-key="filter-fields" 
+                    handle=".icon_drag-field"
+                    class="filter__fields"
+                    drag-class="draggable-drag"
+                    ghost-class="draggable-ghost"
+                    fallback-class="draggable-fallback"
+                    @start="filter.dragStart()"
+                    @end="filter.dragEnd()"
+                >
+                    <template #item="{ element: field }">
+                        <div class="filter__field" :class="{'filter__field_disabled': !field.enabled}">
+                            <IconDrag 
+                                class="icon_drag-field"
+                            />
+                            <AppSelect 
+                                v-if="field.type == 'select_dropdown' || field.type == 'relation'"
+                                :isPreventBottom="true"
+                                :options="{
+                                    ...field,
+                                    list: field.options ?? [],
+                                    isHaveNull: true,
+                                    searchable: field.type == 'relation',
+                                    relation: field.type == 'relation' ? field.id : null
+                                }"
+                                v-model="filter.state.tabsValues[field.key]"
+                                @update:list="options => field.options = options"
+                                @update:modelList="options => field.options = options"
+                            />
+                            <AppDate 
+                                v-else-if="field.type == 'date'"
+                                :options="{
+                                    id: field.id,
+                                    title: field.title,
+                                    type: field.type,
+                                    name: field.name,
+                                    multiple: true,
+                                    placeholder: field.placeholder
+                                }"
+                                v-model="filter.state.tabsValues[field.key]"
+                            />
+                            <AppSelect 
+                                v-else-if="field.type == 'boolean'"
+                                :isPreventBottom="true"
+                                :options="field"
+                                v-model="filter.state.tabsValues[field.key]"
+                            />
+                            <AppStatus 
+                                v-else-if="field.type == 'status'"
+                                :isPreventBottom="true"
+                                :options="{
+                                    ...field,
+                                    edit: true,
+                                    list: field.options,
+                                    isHaveNull: false,
+                                }"
+                                v-model="filter.state.tabsValues[field.key]"
+                            />
+                            <AppInput 
+                                v-else
+                                :options="field"
+                                v-model="filter.state.tabsValues[field.key]"
+                                @keyup.enter="filter.updateInfo()" 
+                            />
+                            <AppPopup class="field__settings" :isPreventBottom="true">
+                                <template #header>
+                                    <IconSettings />
+                                </template>
+                                <template #content>
+                                    <div class="popup__option" @click="e => {
+                                        field.enabled = false
+                                        filter.savedFilter.updateSavedFilter()
+                                        e.target?.closest('.popup')?.classList.remove('popup_open')
+                                    }">
+                                        Скрыть
+                                    </div>
+                                </template>
+                            </AppPopup>
+                        </div>
+                    </template>
+                </draggable> 
+
                 <AppPopup class="filter__popup" :isPreventBottom="true">
                     <template #header>
                         <AppButton class="button_text">
@@ -210,6 +244,7 @@
 <script setup>
     import './Filter.scss';
     
+    import draggable from 'vuedraggable'; 
     import AppStatus from '@AppComponents/Inputs/Status/Status.vue'
     import AppPopup from '@AppComponents/Popup/Popup.vue'
     import AppCheckbox from '@AppComponents/Inputs/Checkbox/Checkbox.vue'
@@ -223,6 +258,8 @@
     import isEqual from 'lodash/isEqual'
     import { Common } from '~/helpers/classes';
     import IconArrowBack from '@AppIcons/ArrowBack.vue';
+    import IconSettings from '@AppIcons/Actions/Settings.vue'
+    import IconDrag from '@AppIcons/Actions/Drag.vue'
 
     const filterRef = ref(null)
     const injectedFilter = inject('filter')
@@ -388,6 +425,7 @@
 
         updateFields(savedFilterFields) {
             let findedField = null
+
             for (let field of savedFilterFields) {
                 findedField = this.state.fields.find(f => f.key == field.key)
                 
@@ -396,6 +434,15 @@
                     findedField.enabled = true
                 }
             }
+        }
+
+        dragStart() {
+            document.body.classList.add('body_unselected')
+        }
+
+        dragEnd() {
+            this.savedFilter.updateSavedFilter()
+            document.body.classList.remove('body_unselected')
         }
     }
 

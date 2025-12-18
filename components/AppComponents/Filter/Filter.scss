@@ -299,17 +299,54 @@
 
 
 .filter__field {
+    position: relative;
+
     &.filter__field_disabled {
         display: none;
+    }
+
+    .field__settings {
+        position: absolute;
+        top: 0px;
+        right: 15px;
+
+        .icon_settings {
+            svg {
+                aspect-ratio: 1;
+                height: auto;
+                width: 13px;
+            }
+        }
+    }
+
+    .icon_drag {
+        cursor: grab;
+        left: 2px;
+        position: absolute;
+    }
+
+    .field__settings,
+    .icon_drag {
+        opacity: 0;
+    }
+
+
+    &:hover {
+        .field__settings,
+        .icon_drag {
+            opacity: 1;
+        }
     }
 }
 
 .filter__popup {
     padding: 0px 15px;
+    max-width: max-content;
     
     .button_text {
         color: variables.$color-icon;
         text-decoration: none;
+        height: max-content;
 
         &:hover {
             color: variables.$color-icon-active;
