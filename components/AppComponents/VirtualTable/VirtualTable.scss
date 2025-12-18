@@ -42,6 +42,10 @@
     .table__row {
       position: relative;
     }
+
+    .scroll-buttons {
+      display: none;
+    }
   }
 
   &:not(.table_permanent-edit) {

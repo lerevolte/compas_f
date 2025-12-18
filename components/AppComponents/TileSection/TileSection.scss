@@ -349,4 +349,33 @@
     .blank__title {
         max-width: max-content;
     }
+
+    &.draggable-ghost {
+        min-height: 40px;
+        padding-bottom: 0px;
+
+        .file__name {
+            font-size: variables.$font-size-default;
+        }
+    }
+
+    &.draggable-drag {
+        opacity: 0.95;
+        cursor: grabbing;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        background: variables.$color-white;
+        border: 1px solid variables.$color-border-light;
+        border-radius: 10px;
+        min-height: max-content;
+        padding-bottom: 10px;
+
+        .field__settings,
+        .icon_drag {
+            opacity: 0;
+        }
+
+        .blank__title {
+            margin-top: -10px;
+        }
+    }
 }
