@@ -155,10 +155,10 @@
 
         get(response) {
             this.title = response.title
+            this.type.value = response.config?.type ?? 'line'
             this.table.table = response.table
-            this.table.list = {data: []}
+            this.table.list = response.list
             this.table.counter++
-            console.log(this.table);
         }
 
         closeDetail() {

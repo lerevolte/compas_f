@@ -59,12 +59,14 @@
     const mapInstance = ref(null);
     const markersLayer = ref(null);
     const routeLayer = ref(null);
+    const routingControl = ref(null);
     const selectionPolygon = ref(null);
     const selectionActive = ref(false);
     const isDrawingPath = ref(false);
     const selectionPath = ref([]);
     const drawingPolyline = ref(null);
     let selectionMouseDownHandler = null;
+    let throttledMoveHandler = null;
 
     /**
      * Нормализует массив точек из пропсов
@@ -192,9 +194,14 @@
 
     /**
      * Удаляет маршрут с карты
-     * Очищает слой с маршрутом если он существует
+     * Очищает слой с маршрутом и routing control если они существуют
      */
     const clearRoute = () => {
+        if (routingControl.value && mapInstance.value) {
+            mapInstance.value.removeControl(routingControl.value);
+            routingControl.value = null;
+        }
+
         if (routeLayer.value && mapInstance.value) {
             mapInstance.value.removeLayer(routeLayer.value);
         }
@@ -203,8 +210,24 @@
     };
 
     /**
+     * Загружает RoutingMachine.js
+     * @returns {Promise} Промис, который разрешается после загрузки
+     */
+    const loadRoutingMachine = () => {
+        return new Promise(async (resolve, reject) => {
+            // Проверяем, не загружен ли уже RoutingMachine
+            if (window.L && window.L.Routing && window.L.Routing.control) {
+                resolve();
+                return;
+            }
+
+            // await import('./RoutingMachine.js');
+        });
+    };
+
+    /**
      * Строит маршрут между точками
-     * Использует OSRM API для построения реального маршрута
+     * Использует L.Routing.control из RoutingMachine.js для построения реального маршрута
      * При ошибке или недоступности API рисует прямую линию между точками
      * @param {Boolean} isSilent - Если true, не эмитит событие route-built
      */
@@ -223,31 +246,58 @@
         clearRoute();
 
         const coords = normalizedPoints.value.map(({ coords }) => coords);
+        const waypoints = coords.map(coord => L.latLng(coord));
         
         try {
-            // Используем OSRM API для построения маршрута
-            const coordinates = coords.map(c => `${c[1]},${c[0]}`).join(';');
-            const response = await fetch(
-                `https://router.project-osrm.org/route/v1/driving/${coordinates}?overview=full&geometries=geojson`
-            );
-            
-            const data = await response.json();
-            
-            if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
-                const route = data.routes[0];
-                const routeCoordinates = route.geometry.coordinates.map(coord => [coord[1], coord[0]]);
-                
-                routeLayer.value = L.polyline(routeCoordinates, {
-                    color: '#3b82f6',
-                    weight: 4,
-                    opacity: 0.7
-                }).addTo(mapInstance.value);
+            // Загружаем RoutingMachine если еще не загружен
+            await loadRoutingMachine();
 
-                if (!isSilent) {
-                    emit('route-built', normalizedPoints.value.map(({ raw }) => raw));
+            if (!L.Routing || !L.Routing.control) {
+                throw new Error('L.Routing is not available');
+            }
+
+            // Создаем routing control
+            routingControl.value = L.Routing.control({
+                waypoints: waypoints,
+                routeWhileDragging: false,
+                show: false,
+                useHints: false,
+                createMarker: () => null, // Отключаем создание маркеров, так как они уже есть
+                lineOptions: {
+                    styles: [{ 
+                        color: '#3b82f6', 
+                        opacity: 0.7, 
+                        weight: 4 
+                    }]
+                },
+                router: L.Routing.osrmv1({
+                    serviceUrl: 'https://router.project-osrm.org/route/v1'
+                })
+            });
+
+            // Обработчик успешного построения маршрута
+            routingControl.value.on('routesfound', function(e) {
+                const route = e.routes[0];
+                if (route && route.coordinates) {
+                    // RoutingMachine уже отображает маршрут, но мы можем сохранить координаты
+                    // для возможного использования в других местах
+                    routeLayer.value = {
+                        coordinates: route.coordinates,
+                        distance: route.summary?.totalDistance,
+                        time: route.summary?.totalTime
+                    };
+
+                    if (!isSilent) {
+                        emit('route-built', normalizedPoints.value.map(({ raw }) => raw));
+                    }
                 }
-            } else {
-                // Если OSRM не доступен, рисуем прямую линию между точками
+            });
+
+            // Обработчик ошибки построения маршрута
+            routingControl.value.on('routingerror', function() {
+                console.warn('[MapFrame] Не удалось построить маршрут через RoutingMachine, используется прямая линия');
+                
+                // В случае ошибки рисуем прямую линию
                 routeLayer.value = L.polyline(coords, {
                     color: '#3b82f6',
                     weight: 4,
@@ -258,9 +308,13 @@
                 if (!isSilent) {
                     emit('route-built', normalizedPoints.value.map(({ raw }) => raw));
                 }
-            }
+            });
+
+            // Добавляем control на карту
+            routingControl.value.addTo(mapInstance.value);
+
         } catch (error) {
-            console.warn('[MapFrame] Не удалось построить маршрут через OSRM, используется прямая линия', error);
+            console.warn('[MapFrame] Не удалось построить маршрут через RoutingMachine, используется прямая линия', error);
             
             // В случае ошибки рисуем прямую линию
             routeLayer.value = L.polyline(coords, {
@@ -514,6 +568,41 @@
     };
 
     /**
+     * Создает функцию throttle для ограничения частоты вызовов
+     * @param {Function} func - Функция для троттлинга
+     * @param {Number} delay - Задержка в миллисекундах
+     * @returns {Function} Троттлированная функция
+     */
+    const throttle = (func, delay) => {
+        let timeoutId = null;
+        let lastExecTime = 0;
+        
+        return function (...args) {
+            const currentTime = Date.now();
+            
+            if (currentTime - lastExecTime > delay) {
+                func.apply(this, args);
+                lastExecTime = currentTime;
+            } else {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => {
+                    func.apply(this, args);
+                    lastExecTime = Date.now();
+                }, delay - (currentTime - lastExecTime));
+            }
+        };
+    };
+
+    /**
+     * Обработчик передвижения карты с троттлингом
+     * Вызывается при перетаскивании карты для оптимизации производительности
+     */
+    const handleMapMove = () => {
+        // Здесь можно добавить логику, которая должна выполняться при передвижении карты
+        // Например, обновление координат, эмит событий и т.д.
+    };
+
+    /**
      * Синхронизирует отображение точек на карте
      * Обновляет маркеры, центрирует карту на точках
      * Перестраивает маршрут если он был построен ранее
@@ -559,6 +648,17 @@
                 const leafletModule = await import('leaflet');
                 L = leafletModule.default;
                 await import('leaflet/dist/leaflet.css');
+                
+                // Убеждаемся, что L доступен глобально для RoutingMachine
+                if (typeof window !== 'undefined') {
+                    window.L = L;
+                }
+                
+                // // Загружаем Yandex Maps API перед загрузкой плагина
+                // await loadYandexMaps();
+                
+                // Загружаем плагин Yandex для Leaflet
+                await import('./Yandex.js');
             } catch (error) {
                 console.error('[MapFrame] Не удалось загрузить Leaflet', error);
                 return;
@@ -585,13 +685,14 @@
 
             // Используем цветные тайлы CartoDB Voyager - визуально похожи на Яндекс.Карты
             // И используют стандартную проекцию Leaflet, что обеспечивает корректное отображение координат
-            const mapLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-                subdomains: 'abcd',
-                maxZoom: 19
-            });
-
-            mapLayer.addTo(mapInstance.value);
+            // const mapLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            //     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            //     subdomains: 'abcd',
+            //     maxZoom: 19
+            // });
+            
+            L.yandex().addTo(mapInstance.value);
+            // mapLayer.addTo(mapInstance.value);
 
             // Принудительно обновляем размер карты после инициализации
             setTimeout(() => {
@@ -600,11 +701,68 @@
                 }
             }, 100);
 
+            // Добавляем троттлинг на события передвижения карты
+            // Троттлинг с задержкой 100мс для плавной работы без излишней нагрузки
+            throttledMoveHandler = throttle(handleMapMove, 100);
+            mapInstance.value.on('move', throttledMoveHandler);
+
             emit('map-ready', mapInstance.value);
             syncPointsOnMap();
         } catch (error) {
             console.error('[MapFrame] Не удалось инициализировать карту', error);
         }
+    };
+
+    /**
+     * Загружает API Яндекс карт
+     * @returns {Promise} Промис, который разрешается после загрузки API
+     */
+     const loadYandexMapsAPI = () => {
+        return new Promise((resolve, reject) => {
+            // Проверяем, не загружен ли уже API
+            if (window.ymaps && typeof window.ymaps.ready === 'function') {
+                resolve();
+                return;
+            }
+
+            // Проверяем, не загружается ли уже API
+            if (document.querySelector('script[src*="api-maps.yandex.ru"]')) {
+                // Ждем пока API загрузится
+                const checkInterval = setInterval(() => {
+                    if (window.ymaps && typeof window.ymaps.ready === 'function') {
+                        clearInterval(checkInterval);
+                        resolve();
+                    }
+                }, 100);
+                // Таймаут на случай если API не загрузится
+                setTimeout(() => {
+                    clearInterval(checkInterval);
+                    if (window.ymaps && typeof window.ymaps.ready === 'function') {
+                        resolve();
+                    } else {
+                        reject(new Error('Yandex Maps API loading timeout'));
+                    }
+                }, 10000);
+                return;
+            }
+
+            const script = document.createElement('script');
+            script.src = 'https://api-maps.yandex.ru/2.1/?apikey=10946c08-3ea9-4fac-95d1-c833ee44dd6b&suggest_apikey=ac70b70c-5e2e-4a1e-9d90-a66aa3b11ddd&lang=ru_RU';
+            script.onload = () => {
+                // Даем время API инициализироваться
+                setTimeout(() => {
+                    if (window.ymaps && typeof window.ymaps.ready === 'function') {
+                        resolve();
+                    } else {
+                        reject(new Error('Yandex Maps API loaded but ymaps is not available'));
+                    }
+                }, 100);
+            };
+            script.onerror = () => {
+                reject(new Error('Failed to load Yandex Maps API'));
+            };
+            document.head.appendChild(script);
+        });
     };
 
     watch(normalizedPoints, () => {
@@ -623,8 +781,10 @@
         }
     });
 
-    onMounted(() => {
-        initMap();
+    onMounted(async () => {
+        initMap();   
+        syncPointsOnMap();
+        loadYandexMapsAPI()
     });
 
     onBeforeUnmount(() => {
@@ -632,9 +792,15 @@
         clearSelectionPolygon();
         clearRoute();
 
-        if (mapInstance.value) {
-            mapInstance.value.remove();
-            mapInstance.value = null;
+        // Удаляем обработчик события move перед размонтированием
+        if (mapInstance.value && throttledMoveHandler) {
+            mapInstance.value.off('move', throttledMoveHandler);
+            throttledMoveHandler = null;
         }
+
+        // if (mapInstance.value) {
+        //     mapInstance.value.remove();
+        //     mapInstance.value = null;
+        // }
     });
 </script>

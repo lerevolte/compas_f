@@ -109,4 +109,14 @@
     .logistic__section {
         height: 100%;
     }
+
+    .table__header {
+        .table__row {
+            position: absolute;
+        }
+    }
+
+    .table__body {
+        top: 60px;
+    }
 }
