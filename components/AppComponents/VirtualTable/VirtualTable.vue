@@ -2,11 +2,15 @@
   <TableCalc 
     v-if="table.slug == 'products'"
   />
-  
+ 
   <section class="section-table" ref="sectionRef">
     <TableTop v-if="props.options?.isHaveTopHeader" :options="props.options" :showMore="props.showMore" :title="props.options?.title ?? null"/>
     <div ref="tableRef" class="table" :class="{'table_permanent-edit': props.options.isPermanentEdit}">
-      <TableHeader />
+      <TableHeader>
+        <div class="socket-row" v-if="table.socket?.table?.length > 0" >
+          {{ table.socket?.table?.length }} изменения в таблице <span class="socket-row__button" @click="table.getSocketRows()"> Загрузить </span>
+        </div>
+      </TableHeader>
       <TableBody 
         :options="props.options"
         @choseRow="row => emit('choseRow', row)"
@@ -167,6 +171,7 @@
 
   const table = ref(new Table({tableRef, slug: props.slug, path: props.path, pageId: props.pageId, options: props.options, emit}))
   const common = new Common()
+  const socket = inject('socket')
 
   const isChoosed = computed(() => {
         return table.value.body.filter(item => item.isChoose).length > 0
@@ -175,6 +180,7 @@
   onMounted(async () => {
     nextTick(() => {
       initTable()
+      socket.value.set({slug: props.slug})
     })
   })
 
@@ -197,6 +203,11 @@
       table.value.getWithQuery(common.getQueryUrl())
     } else {
       table.value.get()
+    }
+
+
+    if (!props.options?.isLocalTable) {
+      table.value.socket = socket.value.entities[props.slug]
     }
   }
 

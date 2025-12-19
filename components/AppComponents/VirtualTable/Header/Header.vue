@@ -38,6 +38,7 @@
                 <IconSort v-if="column.key == table.sortItem.sort_field" :class="{'icon_sort_up': table.sortItem.sort_order == 'asc'}"/>
             </div>
         </div>
+        <slot></slot>
     </div>
 </template>
 

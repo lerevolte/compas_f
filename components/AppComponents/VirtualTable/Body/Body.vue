@@ -33,6 +33,7 @@
                     :style="table.isDragging ? `position: relative; top: 0; --color-row: ${row.index % 2 === 0  ? '#f7fbff' : '#FFF'};` : `--row-start: ${row.start}px; --color-row: ${row.index % 2 === 0  ? '#f7fbff' : '#FFF'};`"
                     :class="{
                         'table__row_hidden': table.options?.isHaveLocalFilter && !checkEnabledRow(table.body[row.index]),
+                        'table__row_socket-change': table.body[row.index] && table.body[row.index].socketChange,
                         'table__row_clicked': table.body[row.index] && table.body[row.index].clicked, 
                         'table__row_edit': table.body[row.index] && table.body[row.index].edit, 
                         'table__row_choose': table.body[row.index] && table.body[row.index].isChoose

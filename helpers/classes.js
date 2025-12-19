@@ -4,6 +4,9 @@ import routes from '@/helpers/routes.js'
 import { useVirtualizer } from '@tanstack/vue-virtual'
 import isEqual from 'lodash/isEqual'
 
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
+
 import { format, startOfMonth, endOfMonth } from 'date-fns'
 import { toast } from 'vue3-toastify';
 import { useUserStore } from '@/stores/userStore.js'
@@ -388,6 +391,7 @@ export class Table {
         this.isDragging = false
         this.pageId = pageId,
         this.options = options
+        this.socket = null
 
         this.isChanged = false
         this.tableRef = tableRef
@@ -1103,10 +1107,33 @@ export class Table {
         })
     }
 
-
     // Инициализаия создания маршрута
     initCreateRoute() {
         this.emit('initCreateRoute', true)
+    }
+
+    getSocketRows() {
+        let findedRow = null
+
+        for (let socketRow of this.socket.table) {
+            if (socketRow.state == 'delete') {
+                this.body = this.body.filter(item => item.id != socketRow.row.id)
+            } else if (socketRow.state == 'update') {
+                findedRow = this.body.find(item => item.id == socketRow.row.id)
+                if (findedRow) {
+                    Object.assign(findedRow, socketRow.row)
+                    findedRow.socketChange = true
+
+                    setTimeout(() => {
+                        delete findedRow.socketChange
+                    }, 1500);
+                }
+            } else if (socketRow.state == 'create') {
+                this.body.push(socketRow.row)
+            }
+        }
+
+        this.socket.table = []
     }
 }
 
@@ -2863,6 +2890,139 @@ export class Logistic {
     }
 
     changeFilter() {
+
+    }
+}
+
+export class Socket {
+    constructor() {
+        this.options = {
+            authEndpoint: `https://${routes.tenant}/broadcasting/auth`,
+            broadcaster: 'pusher',
+            key: '9c178d50f781876d1c75',
+            httpHost: `/${routes.tenant}`,
+            httpsHost: `/${routes.tenant}`,
+            wsHost: `/${routes.tenant}`,
+            wssHost: `/${routes.tenant}`,
+            wsPort: 6001,
+            wssPort: 6001,
+            forceTLS: true,
+            disableStats: true,
+            encrypted: false,
+            //enabledTransports: ['ws', 'wss'],
+            cluster: 'eu',
+            auth: {
+                headers: {
+                    Authorization: `Bearer null`
+                },
+            },
+        }
+        this.entities = {}
+        this.userStore = null
+        this.emit = null
+    }
+
+    // Инициализация
+    init(emit) {
+        this.userStore = useUserStore()
+        this.options.auth = {
+            headers: {
+                Authorization: `Bearer ${this.userStore.token}`
+            },
+        }
+        this.emit = emit
+
+        window.Pusher = Pusher
+        window.Echo = new Echo(this.options);
+
+        // Обновление строк в таблице и объектов
+        window.Echo.private(`tenant.${routes.tenant.split('.')[0]}`).listen('ObjectUpdated', (data) => this.ObjectUpdated(data))
+        // Обновление настроек поля
+        window.Echo.private(`tenant.${routes.tenant.split('.')[0]}`).listen('FieldUpdated', (data) => this.ObjectUpdated(data))
+    }
+
+
+    set({slug}) {
+        this.entities[slug] = new socketObject()
+        console.log(this.entities);
+    }
+
+    // Обновление строк в таблице и объектов
+    ObjectUpdated(data) {
+        // Проверяем, существует ли объект для данного slug
+        if (!data.data || !data.data.slug) {
+            console.warn('Socket event missing data or slug', data)
+            return
+        }
+
+        // Автоматически создаем объект, если его еще нет
+        if (!this.entities[data.data.slug]) {
+            this.entities[data.data.slug] = new socketObject()
+        }
+
+        switch (data.action) {
+            case 'ObjectCreated':
+                this.entities[data.data.slug].ObjectCreated(data.data)
+                break;
+            case 'ObjectUpdated':
+                this.entities[data.data.slug].ObjectUpdated(data.data)
+                break;
+            case 'ObjectDeleted':
+                this.entities[data.data.slug].ObjectDeleted(data.data)
+                break;
+            case 'ObjectRestored':
+                this.entities[data.data.slug].ObjectRestored(data.data)
+                break;
+            case 'HistoryUpdated':
+                this.entities[data.data.slug].HistoryUpdated(data.data)
+                break;
+            default:
+                break;
+        }
+    }
+
+    // Обновление настроек поля
+    FieldUpdated(data) {
+        console.log('FieldUpdated', data);
+    }
+}
+
+class socketObject {
+    constructor() {
+        this.table = []
+        this.detail = []
+        this.history = []
+    }
+
+    // Обновление строки
+    ObjectUpdated(data) {
+        let findedRow = this.table.find(row => row.id == data.id)
+        console.log(data);
+        
+
+        if (findedRow) {
+           Object.assign(findedRow.row, data.viewList)
+        } else {
+            this.table.push({
+                row: data.viewList,
+                state: 'update'
+            })
+        }
+    }
+
+    ObjectCreated() {
+
+    }
+
+    ObjectDeleted() {
+
+    }
+
+    ObjectRestored() {
+
+    }
+
+    HistoryUpdated() {
 
     }
 }

@@ -63,6 +63,30 @@
   }
 }
 
+.socket-row {
+  position: sticky;
+  align-items: center;
+  background: #fffbe2;
+  color: #8f8f8f;
+  display: flex;
+  gap: 10px;
+  height: 40px;
+  left: 0px;
+  justify-content: center;
+  width: calc(100vw - 280px);
+}
+
+.socket-row__button {
+  color: #1253a2;
+  font-size: 15px;
+  cursor: pointer;
+  text-decoration: underline;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
 
 .table__cell {
   flex: 0 0 var(--cell-size);
@@ -218,6 +242,14 @@
   &:has(.select_open),
   &:has(.popup_open) {
     z-index: 100;
+  }
+
+  &.table__row_socket-change {
+    background: #fffbe2;
+
+    .table__cell {
+      background: #fffbe2;
+    }
   }
 }
 

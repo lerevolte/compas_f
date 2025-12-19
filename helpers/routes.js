@@ -1,6 +1,7 @@
 export default {
     // domain: 'https://compas.pro',
     domain: 'https://opt6.compas.pro',
+    tenant: 'opt6.compas.pro',
     auth: {
         login: '/auth',
         reset_password: '/password/reset',

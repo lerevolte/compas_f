@@ -58,6 +58,7 @@
   import '@/assets/default.scss'
   import '@/assets/fonts/fonts.css'
 
+  import { Socket } from '@AppHelpers/classes.js';
   import AppMenu from '@AppComponents/Menu/Menu.vue';
 	import AppDetail from '@AppTemplates/Detail/Detail.vue';
   import AppAnalyticDetail from '@AppTemplates/Analytic/Detail/Detail.vue';
@@ -67,7 +68,19 @@
 
   import metaJSON from './meta.json'
   import entitiesJSON from './entities.json'
+  
+  const emit = defineEmits([
+      'ObjectUpdated',
+      'ObjectCreated',
+      'ObjectDeleted',
+      'ObjectRestored',
+      'HistoryUpdated',
+      'FieldUpdated',
+      'FieldDeleted'
+  ])
 
+  const socket = ref(new Socket())
+  
   class Entity {
     constructor() {
       this.modal = []
@@ -131,5 +144,12 @@
     }
   })
 
+  onMounted(() => {
+    if (!getRoute.value.isAuth) {
+      socket.value.init(emit)
+    }
+  })
+
   const entity = ref(new Entity())
+  provide('socket', socket)
 </script>
