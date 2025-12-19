@@ -21,6 +21,16 @@
     }
 }
 
+.logistic__section {
+    &:has(.section__tab-save) {
+        .logistic-filter {
+            right: 130px;
+        }
+    }
+}
+
+
+
 .logistic-filter__input {
     position: relative;
 }

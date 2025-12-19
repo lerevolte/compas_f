@@ -5,7 +5,8 @@
         </div>
         <div class="section-table__top-group">
             <AppSave 
-                v-show="table.isChanged" 
+                class="section__tab-save"
+                v-if="table.isChanged" 
                 @save="(role) => table.saveSettings(role)"
             />
             <AppShowMore 

@@ -17,6 +17,7 @@
                     edit: true,
                     list: detail.type.options
                 }"
+                @update:modelValue="detail.updateChart()"
             />
         </div>
 
@@ -69,6 +70,8 @@
     import './Detail.scss'
 
     import { format } from 'date-fns'
+    import routes from '@/helpers/routes.js'
+    import api from '@/helpers/api.js'
 	import AppH1 from '@AppComponents/Headers/H1/H1.vue';
     import IconArrowBack from '@AppIcons/ArrowBack.vue';
     import AppChart from '@AppComponents/Chart/Chart.vue'
@@ -168,6 +171,15 @@
                 return {
                     id: localRow.id,
                     active: localRow.id == row.id ? row.active : localRow.active 
+                }
+            })
+        }
+
+        async updateChart() {
+            await api.callMethod('PUT', routes.chart.update, {
+                type: this.slug,
+                config: {
+                    type: this.type.value
                 }
             })
         }

@@ -117,6 +117,7 @@ export default {
     },
     chart: {
         get: '/analytics',
+        update: '/analytics/settings',
         getChart: '/analytics/${slug}'
     },
     external_link: {
