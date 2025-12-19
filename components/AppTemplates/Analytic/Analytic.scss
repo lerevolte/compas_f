@@ -10,4 +10,31 @@
     .chart {
         cursor: pointer;
     }
+
+    @media (max-width: 1400px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 660px) {
+        grid-template-columns: repeat(1, 1fr);
+    }
+}
+
+
+.analytics__chart {
+    position: relative;
+
+    .icon_drag-field {
+        position: absolute;
+        left: 6px;
+        top: 12px;
+        cursor: grab;
+        opacity: 0;
+    }
+
+    &:hover {
+        .icon_drag-field {
+            opacity: 1;
+        }
+    }
 }

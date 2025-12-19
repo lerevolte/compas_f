@@ -63,6 +63,16 @@
                             v-else-if="column.key == 'clicked' && table.body[row.index]"
                             v-model="table.body[row.index].clicked"
                         />
+                        <AppCheckbox 
+                            v-else-if="column.key == 'active' && table.body[row.index]"
+                            v-model="table.body[row.index].active"
+                            @update:modelValue="() => {
+                                emit('changeActive', {
+                                    ...table.body[row.index],
+                                    slug: table.slug
+                                })
+                            }" 
+                        />
                         <AppShowMore 
                             v-else-if="column.key == 'actions' && table.body[row.index]"
                             :options="table.options.isTrash ? cell.actions.trash : table.body[row.index].edit ? cell.actions.edit : cell.actions.default"
@@ -294,6 +304,7 @@
 
     const emit = defineEmits([
         'choseRow',
+        'changeActive',
         'getData'
     ])
 

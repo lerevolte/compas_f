@@ -1139,6 +1139,8 @@ export class Filter {
                         response.push(`${key}=${this.setter.dependences.query[key] ? 1 : 0}`)
                     } else if (key == 'trash_tab') {
                         continue
+                    } else if (key == 'search') {
+                        response.push(`q=${this.setter.dependences.query[key]}`)
                     } else if (Array.isArray(this.setter.dependences.query[key])) {
                         for (let value of this.setter.dependences.query[key]) {
                             response.push(`filter[${key}][]=${value}`)
@@ -2733,6 +2735,7 @@ export class Logistic {
             },
             loading: false
         }
+        this.filterFields = []
     }
 
     // Получение колонок
@@ -2774,6 +2777,13 @@ export class Logistic {
     choseRoute(row) {
         this.machine_tasks.route_id = row.id
         this.machine_tasks.updatingCount++
+        this.getRouteFilters(row.id)
+    }
+
+
+    async getRouteFilters(id) {
+        const response = await api.callMethod('GET', routes.logistic.getFilterFields.replace('${id}', id))
+        this.filterFields = response.data
     }
 
     // Конец ресайза
@@ -2850,5 +2860,9 @@ export class Logistic {
     // Изменение порядка задач
     async changeRouteTasks(list) {
         await api.callMethod('POST', routes.logistic.changeRouteTasks, {rows: [{id: this.machine_tasks.route_id, task_id: list.map(item => item.id)}]})
+    }
+
+    changeFilter() {
+
     }
 }

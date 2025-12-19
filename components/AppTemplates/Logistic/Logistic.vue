@@ -68,31 +68,37 @@
                         @initCreateRoute="logistic.initCreateRoute()"
                     />
 
-                    <AppVirtualTable 
-                        v-else-if="section.key == 'tasks'"
-                        :slug="'logistic_tasks'"
-                        :key="'logistic_tasks'"
-                        :options="{
-                            title: 'Задачи логистики',
-                            isHaveQuery: true,
-                            query: {
-                                route_id: null,
-                                per_page: 12 
-                            },
-                            overscan: 5,
-                            isDraggable: true,
-                            isCheckClicked: true,
-                            draggableTarget: '.table__row',
-                            group: 'logistic_tasks',
-                            isHaveFilter: false,
-                            isPermanentEdit: false,
-                            isTrash: false,
-                            isHaveTopHeader: true,
-                            isHaveFooter: false,
-                            updatingCount: logistic.logistic_tasks.updatingCount
-                        }"
-                        @openModal="item => emit('openModal', item)"
-                    />
+                    <div class="logistic__section" v-else-if="section.key == 'tasks'">
+                        <LogisticFilter 
+                            v-model="logistic.filterFields"
+                            @update:modelValue="data => logistic.changeFilter(data)"
+                        />
+                        <AppVirtualTable 
+                            :slug="'logistic_tasks'"
+                            :key="'logistic_tasks'"
+                            :options="{
+                                title: 'Задачи логистики',
+                                isHaveQuery: true,
+                                query: {
+                                    ...filteredFields,
+                                    route_id: 'null',
+                                    per_page: 12 
+                                },
+                                overscan: 5,
+                                isDraggable: true,
+                                isCheckClicked: true,
+                                draggableTarget: '.table__row',
+                                group: 'logistic_tasks',
+                                isHaveFilter: false,
+                                isPermanentEdit: false,
+                                isTrash: false,
+                                isHaveTopHeader: true,
+                                isHaveFooter: false,
+                                updatingCount: logistic.logistic_tasks.updatingCount
+                            }"
+                            @openModal="item => emit('openModal', item)"
+                        />
+                    </div>
 
                     <AppVirtualTable 
                         v-else-if="section.key == 'route_tasks'"
@@ -146,6 +152,7 @@
     import draggable from 'vuedraggable';
     import LogisticModal from './Modal/Modal.vue'
     import { Logistic } from '@AppHelpers/classes.js'
+    import LogisticFilter from './Filter/Filter.vue'
 
     const emit = defineEmits([
         'openModal'
@@ -156,6 +163,10 @@
             default: null,
             type: [String, Date]
         },
+        filterTabs: {
+            default: null,
+            type: Array
+        },
         activeRoute: {
             default: null,
             type: Object
@@ -163,6 +174,19 @@
     })
 
     const logistic = ref(new Logistic(props.activeDate))
+
+    const filteredFields = computed(() => {
+        let request = {}
+        if (logistic.value.filterFields.length == 0) return request
+        logistic.value.filterFields.map(tab => {
+            request[tab.key] = tab.value
+        })
+        return request
+    })
+
+    watch(() => filteredFields.value, () => {
+        logistic.value.logistic_tasks.updatingCount++
+    })
 
     watch(() => props.activeDate, () => {
         logistic.value.updateActiveDate(props.activeDate)

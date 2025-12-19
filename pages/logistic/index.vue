@@ -34,6 +34,7 @@
 		</div>
 		
 		<LogisticTemplate 
+			:filterTabs="logisticPage.filter"
 			:activeDate="logisticPage.activeDate"
 			:activeRoute="logisticPage.activeRoute"
 			@openModal="item => emit('openModal', item)"
@@ -56,6 +57,12 @@
 	}
 
 	const logisticPage = ref(new LogisticPage())
+
+	const props = defineProps({
+        entity: {
+            default: null
+        },
+	})
 
 	const emit = defineEmits([
 		'openModal'

@@ -29,6 +29,11 @@
     gap: 20px;
     display: flex;
     align-items: center;
+
+    @media (max-width: 1150px) {
+        align-items: start;
+        flex-direction: column;
+    }
 }
 
 .analytics__detail-content {
@@ -36,4 +41,8 @@
     margin-top: 25px;
     grid-template-rows: auto 1fr;
     grid-template-columns: 1fr;
+    
+    .section-table {
+        margin: 25px 0px 0px;
+    }
 }

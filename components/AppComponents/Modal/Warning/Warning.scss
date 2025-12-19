@@ -39,6 +39,7 @@
 
             @media (max-width: 550px) {
                 gap: 50px;
+                padding: 25px 15px;
             }
             
             .modal__text {
@@ -80,6 +81,7 @@
 
                 button {
                     width: 100%;
+                    min-height: 47px;
                 }
             }
         }

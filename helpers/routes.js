@@ -106,6 +106,7 @@ export default {
         get_operations: '/balance_operations/compose'
     },
     logistic: {
+        getFilterFields: '/routes/${id}/task_filter',
         getSections: '/logistic/sections',
         updateSection: '/logistic/sections/${id}',
         createRoute: '/objects/routes/batch',

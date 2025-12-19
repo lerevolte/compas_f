@@ -29,7 +29,7 @@
                         end: Array.isArray(detail.activeRange) ? detail.activeRange[1] : detail.activeRange
                     },
                     type: detail.slug,
-                    group: 'account_id'
+                    group: 'all'
                 }"
                 :settings="{
                     detail: null,
@@ -39,16 +39,17 @@
                     isShowGrid: true,
                     isEnableRows: true
                 }"
+                :activeSeries="detail.activeSeries"
                 @getData="(data) => detail.get(data)"
             />
 
             <AppVirtualTable 
-                v-if="detail.slug"
+                v-if="detail.table.list"
                 :slug="detail.slug"
                 :path="null"
                 :options="{
                     isHaveQuery: false,
-                    isPermanentEdit: true,
+                    isPermanentEdit: false,
                     isHaveFilter: false,
                     isHaveFooter: false,
                     isHaveTopHeader: true,
@@ -58,6 +59,7 @@
                     updatingCount: detail.table.counter
                 }"
                 :table="detail.table"
+                @changeActive="data => detail.changeVisible(data)"
             />
         </div>
     </div>
@@ -97,10 +99,12 @@
         constructor() {
             this.title = null
             this.table = {
-                tableKeys: null,
+                table: null,
+                list: null,
                 list: null,
                 counter: 0
             }
+            this.activeSeries = []
             this.slug = props.slug ?? router.params.type
             this.activeRange = props.dateRange ?? [format(new Date(), 'yyyy-MM-dd'), format(new Date(), 'yyyy-MM-dd')]
             this.type = {
@@ -149,7 +153,7 @@
         get(response) {
             this.title = response.title
             this.table.table = response.table
-            this.table.list = response.list
+            this.table.list = {data: []}
             this.table.counter++
             console.log(this.table);
         }
@@ -157,6 +161,15 @@
         closeDetail() {
             emit('close', true)
             emit('closeDetail', true)
+        }
+
+        changeVisible(row) {
+            this.activeSeries = this.table.list.data.map(localRow => {
+                return {
+                    id: localRow.id,
+                    active: localRow.id == row.id ? row.active : localRow.active 
+                }
+            })
         }
     }
 

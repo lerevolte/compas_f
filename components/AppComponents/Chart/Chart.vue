@@ -58,6 +58,10 @@
                 isLabelEnable: true,
                 isShowGrid: true
             }
+        },
+        activeSeries: {
+            default: [],
+            type: Array
         }
     })
 
@@ -245,11 +249,9 @@
     onMounted(() => {
         chart.value.init()
         chart.value.get()
-        console.log('onMounted');
     })
 
     watch(() => props.settings?.type, (newType, prev) => {
-        console.log('type');
         if (isEqual(newType, prev)) return
         if (chart.value.chart && chart.value.chart.series) {
             chart.value.chart.series.forEach(series => {
@@ -260,8 +262,18 @@
     })
 
     watch(() => props.options, (newType, prev) => {
-        console.log('options');
         if (isEqual(newType, prev)) return
         chart.value.get()
     })
+
+    watch(() => props.activeSeries, (newType, prev) => {
+        if (isEqual(newType, prev)) return
+        
+        chart.value.chart.series.forEach((series, index) => {
+            chart.value.chart.series[index].setVisible(props.activeSeries[index].active, false)
+        })
+        chart.value.chart.redraw()
+    })
+
+    
 </script>

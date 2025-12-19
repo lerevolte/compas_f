@@ -1,0 +1,69 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+.logistic-filter {
+    position: absolute;
+    top: 12px;
+    right: 85px;
+
+    .popup__content {
+        right: 0px;
+        left: auto;
+        padding: 15px;
+        width: 100%;
+        min-width: 500px;
+        max-width: 500px;
+    }
+    
+
+    .blank__title {
+        color: variables.$color-border;
+    }
+}
+
+.logistic-filter__input {
+    position: relative;
+}
+
+.logistic-filter__tabs {
+    bottom: 0px;
+    left: 5px;
+    width: max-content;
+    height: calc(30px + 8px);
+    gap: 5px;
+    cursor: pointer;
+    display: flex;
+    overflow: hidden;
+    max-width: calc(100% - 15px);
+    position: absolute;
+    align-items: center;
+    @include mixins.userSelect(none);
+}
+
+.logistic-filter__tab {
+    gap: 5px;
+    top: 0px;
+    left: 0px;
+    display: flex;
+    font-size: 16px;
+    position: relative;
+    align-items: center;
+    border: 1px solid variables.$color-icon-active;
+    padding: 4px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+    background-color: variables.$color-hover-option;
+
+    .icon__close {
+        display: flex;
+        aspect-ratio: 1 / 1;
+        width: 9px;
+        pointer-events: none;
+
+        svg {
+            width: 100%;
+            height: 100%;
+        }
+    }
+}

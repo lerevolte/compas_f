@@ -10,6 +10,7 @@
       <TableBody 
         :options="props.options"
         @choseRow="row => emit('choseRow', row)"
+        @changeActive="row => emit('changeActive', row)"
         @getData="data => emit('getData', data)"
       />
       <IconLoader v-if="table.loading"/>
@@ -156,6 +157,7 @@
       'choseRow',
       'addRow',
       'removeRow',
+      'changeActive',
       'changePositionRow',
   ])
 
