@@ -46,6 +46,7 @@
   const table = inject('table')                 // объект таблицы для отслеживания загрузки
   const buttonLeftRef = ref(null)
   const buttonRightRef = ref(null)
+  const isAtEnd = ref(false)
   
   // --- реактивное значение позиции скролла ---
   const scrollLeft = ref(0)
@@ -64,15 +65,13 @@
   })
   
   // вычисляемое состояние для правой кнопки
-  const isAtEnd = computed(() => {
-    if (!isTableReady.value || !tableRef?.value) return false // Показываем кнопку пока таблица не готова
-    const maxLeft = Math.max(0, tableRef.value.scrollWidth - tableRef.value.clientWidth)
-    // Если скролл вообще не нужен (maxLeft <= 0), скрываем кнопку
-    if (maxLeft <= 0) return true
-    // Скрываем только если мы в конце и скролл возможен
-    return scrollLeft.value + TOLERANCE >= maxLeft
-  })
-  
+  const getIsAtEnd = () => {
+    if (!isTableReady.value || !tableRef?.value) return false
+      const maxLeft = Math.max(0, tableRef.value.scrollWidth - tableRef.value.clientWidth)
+      if (maxLeft <= 0) return true
+      return scrollLeft.value + TOLERANCE >= maxLeft
+  }
+
   /**
    * Класс для управления скроллом кнопками
    * - Следит за положением scrollLeft
@@ -116,11 +115,12 @@
   
     /** Запустить плавный скролл в нужном направлении */
     start (direction) {
+      isAtEnd.value = getIsAtEnd()
       if (!this.tableRef?.value) return
       if (direction === 'left' && isAtStart.value) return
       if (direction === 'right' && isAtEnd.value) return
       if (this.running) return
-  
+      
       this.running = true
       if (this.rafId) cancelAnimationFrame(this.rafId)
       this.rafId = requestAnimationFrame(() => this.step(direction))
@@ -137,6 +137,7 @@
         cancelAnimationFrame(this.rafId)
         this.rafId = null
       }
+      isAtEnd.value = getIsAtEnd()
       document.removeEventListener('mouseup', this.stop)
       document.removeEventListener('touchend', this.stop)
     }
@@ -159,7 +160,7 @@
       this.updateScrollLeft()
       // Принудительно обновляем готовность таблицы
       if (this.tableRef?.value && this.isTableReadyRef) {
-        const maxLeft = Math.max(0, this.tableRef.value.scrollWidth - this.tableRef.value.clientWidth)
+        isAtEnd.value = getIsAtEnd()
         // Таблица готова, если scrollWidth больше 0 и мы можем определить maxLeft
         this.isTableReadyRef.value = this.tableRef.value.scrollWidth > 0
       }

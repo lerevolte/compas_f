@@ -376,13 +376,21 @@
       width: 100%;
     }
 
-    .select {
-      &.select_icon {
-        .select__value {
-          max-width: calc(100% - 5px);
+    .form__item_select {
+      .select {
+        &.select_icon {
+          .select__value {
+            max-width: calc(100% - 5px);
+          }
         }
       }
+
+      .select__actions {
+        overflow: hidden;
+        max-width: max-content;
+      }
     }
+
   }
 }
 

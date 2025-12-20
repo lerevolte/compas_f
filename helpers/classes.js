@@ -1271,6 +1271,8 @@ export class Filter {
             fields: filter.fields,
             title: filter.title
         })
+
+        this.saves[this.saves.findIndex(p => p.id == filter.id)] = filter
     }
 
     // Создание сохраненного фильтра

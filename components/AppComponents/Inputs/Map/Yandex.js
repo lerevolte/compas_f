@@ -165,6 +165,19 @@ L.Yandex = L.Layer.extend({
 	},
 
 	_initApi: function () { // to be extended in addons
+		if (typeof ymaps === 'undefined' || typeof ymaps.ready !== 'function') {
+			console.error('[L.Yandex] Yandex Maps API не загружен. Убедитесь, что API загружен перед использованием плагина.');
+			// Повторяем попытку через небольшую задержку
+			var self = this;
+			setTimeout(function() {
+				if (typeof ymaps !== 'undefined' && typeof ymaps.ready === 'function') {
+					ymaps.ready(self._initMapObject, self);
+				} else {
+					console.error('[L.Yandex] Yandex Maps API не загружен после повторной попытки.');
+				}
+			}, 500);
+			return;
+		}
 		ymaps.ready(this._initMapObject, this);
 	},
 

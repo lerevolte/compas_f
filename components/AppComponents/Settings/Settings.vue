@@ -59,14 +59,14 @@
                         class="settings__list settings__list_drag"
                         ghost-class="draggable-ghost"
                         drag-class="draggable-drag"
-                        v-model="templateListCheck" 
+                        v-model="visible" 
                         item-key="id" 
                         fallback-class="draggable-fallback"
                         :forceFallback="true"
                         :fallbackOnBody="true"
                         handle=".icon_drag"
-                        @start="settings.nest.dragStart()"
-                        @end="settings.nest.dragEnd()"
+                        @start="event => settings.nest.dragStart(event)"
+                        @end="event => settings.nest.dragEnd(event)"
                     >
                         <template #item="{ element: field }">
                             <div class="settings__item popup__option" :class="{'popup__option_hide': !field.enabled}">
@@ -433,10 +433,14 @@
         }
 
         // Конец перетаскивания
-        dragEnd() {
+        dragEnd(event) {
             this.isDragging = false
             emit('isChanged', true); 
             emit('dragEvent', false)
+
+            if (props.options.isHaveHidden) {
+                console.log(event);
+            }
         }
     }
 

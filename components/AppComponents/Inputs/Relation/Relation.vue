@@ -43,7 +43,7 @@
                         </div>
                         <figcaption>
                             <span class="value__text value__text_link" @click="() => clickLink(index)">
-                                {{ getActiveOption(index).label?.text }}  
+                                {{ getActiveOption(index)?.value ? getActiveOption(index).label?.text : 'Не выбрано' }}  
                             </span>
                         </figcaption>
                     </figure>
@@ -229,7 +229,7 @@
         }
 
         getList(selectIndex) {
-            if (!props.modelValue.value) {
+            if (!props.modelValue || !props.modelValue.value) {
                 return this.state.list ?? []
             }
 

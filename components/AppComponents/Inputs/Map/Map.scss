@@ -366,4 +366,9 @@
             height: 100%;
         }
     }
+
+    .ymaps-2-1-79-copyrights-pane,
+    .leaflet-control-container {
+        display: none !important;
+    }
 }

@@ -221,7 +221,19 @@
                 return;
             }
 
-            // await import('./RoutingMachine.js');
+            try {
+                await import('./RoutingMachine.js');
+                // Даем время RoutingMachine инициализироваться
+                setTimeout(() => {
+                    if (window.L && window.L.Routing && window.L.Routing.control) {
+                        resolve();
+                    } else {
+                        reject(new Error('RoutingMachine не загружен'));
+                    }
+                }, 100);
+            } catch (error) {
+                reject(error);
+            }
         });
     };
 
@@ -233,6 +245,11 @@
      */
     const buildRoute = async (isSilent = false) => {
         if (!mapInstance.value || !L) {
+            return;
+        }
+
+        // Проверяем, включено ли построение маршрута
+        if (!props.options?.enableRoute) {
             return;
         }
 
@@ -611,7 +628,7 @@
         renderMarkers(normalizedPoints.value);
         focusMapOnPoints(normalizedPoints.value);
 
-        if (routeLayer.value || props.options) {
+        if (props.options?.enableRoute) {
             clearRoute();
             buildRoute(true);
         }
@@ -654,10 +671,10 @@
                     window.L = L;
                 }
                 
-                // // Загружаем Yandex Maps API перед загрузкой плагина
-                // await loadYandexMaps();
+                // Загружаем Yandex Maps API перед загрузкой плагина
+                await loadYandexMapsAPI();
                 
-                // Загружаем плагин Yandex для Leaflet
+                // Загружаем плагин Yandex для Leaflet только после загрузки API
                 await import('./Yandex.js');
             } catch (error) {
                 console.error('[MapFrame] Не удалось загрузить Leaflet', error);
@@ -775,15 +792,16 @@
         deep: true
     });
 
-    watch(() => props.options.enableRoute, (isEnabled) => {
-        if (!isEnabled) {
+    watch(() => props.options?.enableRoute, (isEnabled) => {
+        if (isEnabled && normalizedPoints.value.length >= 2) {
+            buildRoute(true);
+        } else {
             clearRoute();
         }
     });
 
     onMounted(async () => {
-        loadYandexMapsAPI()
-        initMap();   
+        await initMap();   
         syncPointsOnMap();
     });
 

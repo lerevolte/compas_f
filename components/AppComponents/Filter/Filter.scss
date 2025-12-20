@@ -38,9 +38,9 @@
     }
 
     .filter__mobile-search {
-        position: fixed;
+        position: absolute;
         z-index: 100;
-        top: 80px;
+        top: 0px;
         right: 0px;
         padding: 15px;
         display: none;

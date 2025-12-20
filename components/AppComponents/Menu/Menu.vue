@@ -49,7 +49,7 @@
                         <template #item="{ element: item }">
                             <li class="menu__item" :class="{'menu__item_disabled': !item.enabled}" v-if="item.children.length == 0">
                                 <IconDrag />
-                                <NuxtLink :class="{'menu__link_active': menu.isActive(item.link)}" class="menu__link" :to="item.link ?? null">
+                                <NuxtLink :class="{'menu__link_active': menu.isActive(item.link)}" class="menu__link" :to="item.link ?? null" @click="menu.isMobile && menu.closeMenu()">
                                     {{ item.name }}
                                 </NuxtLink>
                             </li>
@@ -67,7 +67,7 @@
                                     </summary>
         
                                     <ul class="menu__sublist">
-                                        <li class="menu__item" :class="{'menu__link_active': menu.isActive(item.link), 'menu__item_disabled': !child.enabled}" v-for="child in item.children" :key="child.id">
+                                        <li @click="menu.isMobile && menu.closeMenu()" class="menu__item" :class="{'menu__link_active': menu.isActive(item.link), 'menu__item_disabled': !child.enabled}" v-for="child in item.children" :key="child.id">
                                             <NuxtLink class="menu__link" :to="child.link ?? '/'">
                                                 {{ child.name }}
                                             </NuxtLink>
@@ -107,7 +107,7 @@
                                 <template #item="{ element: item }">
                                     <li class="menu__item" :class="{'menu__item_disabled': !item.enabled}" v-if="item.children.length == 0">
                                         <IconDrag />
-                                        <NuxtLink :class="{'menu__link_active': menu.isActive(item.link)}" class="menu__link" :to="item.link ?? null">
+                                        <NuxtLink :class="{'menu__link_active': menu.isActive(item.link)}" class="menu__link" :to="item.link ?? null" @click="menu.isMobile && menu.closeMenu()">
                                             {{ item.name }}
                                         </NuxtLink>
                                     </li>
@@ -124,7 +124,7 @@
                                             </summary>
                 
                                             <ul class="menu__sublist">
-                                                <li class="menu__item" v-for="child in item.children" :key="child.id">
+                                                <li class="menu__item" v-for="child in item.children" :key="child.id" @click="menu.isMobile && menu.closeMenu()">
                                                     <NuxtLink :class="{'menu__link_active': menu.isActive(item.link)}" class="menu__link" :to="child.link ?? '/'">
                                                         {{ child.name }}
                                                     </NuxtLink>
@@ -375,6 +375,12 @@
             menuStore.save(role, this.list)
             this.isChanged = false
         }
+
+        closeMenu() {
+            setTimeout(() => {
+                this.isOpen = false
+            }, 100);
+        }
     }
 
     const menu = ref(new Menu())
@@ -400,5 +406,11 @@
             isClient.value = true
         }
     })
-    
+
+    watch(() => route.path, () => {
+        isClient.value = false
+        setTimeout(() => {
+            isClient.value = true
+        }, 100);
+    })
 </script>

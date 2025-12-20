@@ -296,12 +296,14 @@
     import { Common } from '@/helpers/classes.js'
     import { format } from 'date-fns'
     import isEqual from 'lodash/isEqual'
+    import { useMediaQuery } from '@vueuse/core'
 
     const table = inject('table')
     const sectionRef = inject('sectionRef')
     const common = new Common()
     const draggableRow = ref(null)
     const tableRef = inject('tableRef')
+    const isMobile = ref(useMediaQuery('(max-width: 990px)'))
 
     const emit = defineEmits([
         'choseRow',
@@ -319,7 +321,7 @@
     const doubleClick = common.useDoubleClick((elem, event) => {
         let cell = event.target.closest('.table__cell')
         
-        if (table.value.state == 'edit' || table.value.options?.isPermanentEdit || ['isChoose', 'actions'].includes(cell.getAttribute('data-column-key'))) return
+        if (table.value.state == 'edit' || table.value.options?.isPermanentEdit || (!isMobile.value && ['isChoose', 'actions'].includes(cell.getAttribute('data-column-key')))) return
         // Support both Element and Event inputs
         const el = elem?.getAttribute ? elem : (elem?.currentTarget || elem?.target)
         const rowIndex = el?.getAttribute ? el.getAttribute('data-index') : null

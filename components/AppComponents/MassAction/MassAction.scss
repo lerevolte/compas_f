@@ -7,6 +7,24 @@
     width: calc(100% - 230px);
     left: 230px;
     z-index: 1000;
+
+    @media (max-width: 990px) {
+        width: 100%;
+        left: 0px;
+    }
+
+    @media (max-width: 430px) {
+        .mass-action__groups,
+        .mass-action__group {
+            display: flex;
+            align-items: start;
+            flex-direction: column;
+
+            & > * {
+                width: 100%;
+            }
+        }
+    }
 }
 
 .mass-action {

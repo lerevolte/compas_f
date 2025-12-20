@@ -43,6 +43,12 @@
                         </div>
                     </template>
                     <template #footer>
+                        <div class="file__upload" v-for="progress in fileManager.uploadProgress" :key="progress.id">
+                            <div class="file__preview">
+                                {{ progress.percent }}
+                                <IconFileLoader :progress="progress.percent" />
+                            </div>
+                        </div>
                         <div class="file__upload">
                             <input type="file" @change="fileManager.onFileChange" :multiple="props.options.multiple" :accept="props.options.accept ? props.options.accept.join(', ') : ['*']" />
                             <div class="file__preview">
@@ -151,7 +157,9 @@
     import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'
     import AppInput from '@AppComponents/Inputs/Input/Input.vue'
     import AppError from '@AppComponents/Error/Error.vue'
+    import IconFileLoader from '@AppIcons/Input/FileLoader.vue'
 
+    import { nextTick } from 'vue'
     import { useUserStore } from '@/stores/userStore.js'
     const userStore = useUserStore()    
 
@@ -196,6 +204,7 @@
         constructor() {
             this.previewUrl = []
             this.loading = false
+            this.uploadProgress = []
             this.actions = [
                 {
                     name: 'Посмотреть',
@@ -239,16 +248,145 @@
         // Изменение файла
         async onFileChange(event) {
             const files = Array.from(event.target.files);
-            let response = null
 
             if (files.length > 0) {
-                response = await this.uploadFiles(files);
-                this.previewUrl = [...this.previewUrl, ...response]
-                emit('update:modelValue', this.previewUrl);
+                try {
+                    this.loading = true;
+                    
+                    // Создаем прогресс-бары для всех файлов сразу
+                    const fileIdMap = new Map(); // Мапа для связи fileId с файлом
+                    const uploadPromises = files.map((file, i) => {
+                        const fileId = `file_${Date.now()}_${i}_${Math.random()}`;
+                        
+                        // Сохраняем связь fileId с файлом
+                        fileIdMap.set(fileId, file);
+                        
+                        // Добавляем прогресс для этого файла
+                        this.uploadProgress.push({
+                            id: fileId,
+                            fileName: file.name,
+                            percent: 0
+                        });
+                        
+                        // Загружаем файл и возвращаем промис с fileId
+                        return this.uploadSingleFile(file, fileId)
+                            .then(response => {
+                                return { fileId, response };
+                            })
+                            .catch(error => {
+                                console.error(`Ошибка загрузки файла ${file.name}:`, error);
+                                // Удаляем прогресс при ошибке сразу
+                                const index = this.uploadProgress.findIndex(p => p.id === fileId);
+                                if (index !== -1) {
+                                    this.uploadProgress.splice(index, 1);
+                                }
+                                return { fileId, response: null };
+                            });
+                    });
+                    
+                    // Загружаем все файлы параллельно
+                    const results = await Promise.all(uploadPromises);
+                    
+                    // Собираем все успешные ответы и удаляем прогресс после добавления в previewUrl
+                    const allResponses = [];
+                    results.forEach(({ fileId, response }) => {
+                        if (response && Array.isArray(response)) {
+                            allResponses.push(...response);
+                        } else if (response) {
+                            allResponses.push(response);
+                        }
+                    });
+                    
+                    if (allResponses.length > 0) {
+                        this.previewUrl = [...this.previewUrl, ...allResponses]
+                        emit('update:modelValue', this.previewUrl);
+                        
+                        // Удаляем прогресс-бары только после того, как файлы отобразились на экране
+                        // Используем nextTick, чтобы дождаться обновления DOM
+                        await nextTick();
+                        results.forEach(({ fileId, response }) => {
+                            if (response) {
+                                // Удаляем прогресс только для успешно загруженных файлов
+                                const index = this.uploadProgress.findIndex(p => p.id === fileId);
+                                if (index !== -1) {
+                                    this.uploadProgress.splice(index, 1);
+                                }
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.error('Ошибка загрузки файлов:', error);
+                } finally {
+                    this.loading = false;
+                }
             }
         }
 
-        // Загрузка файла на сервер
+        // Загрузка одного файла на сервер
+        async uploadSingleFile(file, fileId, uploadUrl = routes.file.upload) {
+            if (!file) {
+                console.error('Нет файла для загрузки');
+                return null;
+            }
+    
+            const formData = new FormData();
+            formData.append(`files[]`, file);
+    
+            return new Promise((resolve, reject) => {
+                try {
+                    const url = `${routes.domain}/api${props.options.query ? `${uploadUrl}?${new URLSearchParams(props.options.query).toString()}` : uploadUrl}`
+                    
+                    const xhr = new XMLHttpRequest();
+                    
+                    // Отслеживание прогресса загрузки
+                    xhr.upload.addEventListener('progress', (event) => {
+                        if (event.lengthComputable) {
+                            const percentComplete = Math.round((event.loaded / event.total) * 100);
+                            // Обновляем прогресс для конкретного файла
+                            const progressItem = this.uploadProgress.find(p => p.id === fileId);
+                            if (progressItem) {
+                                progressItem.percent = percentComplete;
+                            }
+                        }
+                    });
+                    
+                    // Обработка успешной загрузки
+                    xhr.addEventListener('load', () => {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            try {
+                                const response = JSON.parse(xhr.responseText);
+                                resolve(response);
+                            } catch (e) {
+                                reject(new Error('Ошибка парсинга ответа сервера'));
+                            }
+                        } else {
+                            reject(new Error(`Ошибка загрузки: ${xhr.statusText}`));
+                        }
+                    });
+                    
+                    // Обработка ошибок
+                    xhr.addEventListener('error', () => {
+                        reject(new Error('Ошибка сети'));
+                    });
+                    
+                    // Обработка отмены
+                    xhr.addEventListener('abort', () => {
+                        reject(new Error('Загрузка отменена'));
+                    });
+                    
+                    // Отправка запроса
+                    xhr.open('POST', url);
+                    xhr.setRequestHeader('Authorization', `Bearer ${userStore.token}`);
+                    xhr.send(formData);
+                    
+                } catch (error) {
+                    console.error('Ошибка:', error);
+                    reject(error);
+                }
+            });
+        }
+
+        // Загрузка файлов на сервер (старый метод для обратной совместимости)
         async uploadFiles(files, uploadUrl = routes.file.upload) {
             if (!files || files.length === 0) {
                 console.error('Нет файлов для загрузки');
@@ -266,26 +404,50 @@
                 formData.append(`files[]`, file);
             });
     
-            try {
-                this.loading = true
-                const response = await fetch(`${routes.domain}/api${props.options.query ? `${uploadUrl}?${new URLSearchParams(props.options.query).toString()}` : uploadUrl}`, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        Authorization: `Bearer ${userStore.token}`
-                    }
-                });
-    
-                if (!response.ok) {
-                    throw new Error(`Ошибка загрузки: ${response.statusText}`);
+            return new Promise((resolve, reject) => {
+                try {
+                    this.loading = true
+
+                    const url = `${routes.domain}/api${props.options.query ? `${uploadUrl}?${new URLSearchParams(props.options.query).toString()}` : uploadUrl}`
+                    
+                    const xhr = new XMLHttpRequest();
+                    
+                    // Обработка успешной загрузки
+                    xhr.addEventListener('load', () => {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            try {
+                                const response = JSON.parse(xhr.responseText);
+                                resolve(response);
+                            } catch (e) {
+                                reject(new Error('Ошибка парсинга ответа сервера'));
+                            }
+                        } else {
+                            reject(new Error(`Ошибка загрузки: ${xhr.statusText}`));
+                        }
+                    });
+                    
+                    // Обработка ошибок
+                    xhr.addEventListener('error', () => {
+                        reject(new Error('Ошибка сети'));
+                    });
+                    
+                    // Обработка отмены
+                    xhr.addEventListener('abort', () => {
+                        reject(new Error('Загрузка отменена'));
+                    });
+                    
+                    // Отправка запроса
+                    xhr.open('POST', url);
+                    xhr.setRequestHeader('Authorization', `Bearer ${userStore.token}`);
+                    xhr.send(formData);
+                    
+                } catch (error) {
+                    console.error('Ошибка:', error);
+                    reject(error);
+                } finally {
+                    this.loading = false
                 }
-                return await response.json(); // Возвращаем JSON-ответ сервера
-            } catch (error) {
-                console.error('Ошибка:', error);
-                return null;
-            } finally {
-                this.loading = false
-            }
+            });
         }
 
         // Конец перетаскивания

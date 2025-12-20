@@ -15,10 +15,16 @@
                 }"
             />
 
-            <div class="filter__tabs" v-if="filter.state.activeTabs.length > 0" @click="event => filter.toggleOptions(event)">
+            <div class="filter__tabs" ref="filterTabsRef" v-if="filter.state.activeTabs.length > 0 || filter.state.hiddenTabs.length > 0" @click="event => filter.toggleOptions(event)">
                 <div class="filter__tab" v-for="tab in filter.state.activeTabs" :data-key="tab.key" :key="tab.key" >
                     {{ tab.label }}: {{ filter.setTabValue(tab) }}
                     <IconClose @click="filter.deleteTab(tab)" />
+                </div>
+                <div class="filter__tab filter-tab filter__tab_other" v-if="filter.state.hiddenTabs.length > 0">
+                    <div class="filter-tab__title">
+                        и еще {{ filter.state.hiddenTabs.length }}
+                    </div>
+                    <IconClose @click="filter.clearHiddenTabs()" />
                 </div>
             </div>
         </div>
@@ -116,7 +122,10 @@
                             <AppSelect 
                                 v-else-if="field.type == 'boolean'"
                                 :isPreventBottom="true"
-                                :options="field"
+                                :options="{
+                                    ...field,
+                                    multiple: false
+                                }"
                                 v-model="filter.state.tabsValues[field.key]"
                             />
                             <AppStatus 
@@ -189,7 +198,7 @@
                 </div>
             </div>
 
-            <div class="filter__group" ref="filterSavedRef">
+            <div class="filter__group">
                 <strong class="filter__subtitle">
                     Сохраненные
                 </strong>
@@ -264,8 +273,12 @@
 
     const filterRef = ref(null)
     const injectedFilter = inject('filter')
-    const filterSavedRef = ref(null)
+    const filterTabsRef = ref(null)
     const common = new Common()
+    const classObserver = ref(null)
+    const resizeObserver = ref(null)
+    let checkTabsWidthTimeout = null
+    let isCheckingTabs = false
 
     const props = defineProps({
         filter: {
@@ -284,6 +297,7 @@
 
             this.state = reactive({
                 activeTabs: [],
+                hiddenTabs: [],
                 search: '',
                 isOpen: false,
                 fields: [],
@@ -348,7 +362,7 @@
                         return this.state.tabsValues[key]
                 }
             }
-
+            this.state.hiddenTabs = []
             this.state.activeTabs = Object.keys(this.state.tabsValues).filter(key => (this.state.tabsValues[key] || typeof this.state.tabsValues[key] == 'boolean') && key != 'search').map(key => (
                 {
                     label: this.state.fields.find(field => field.key == key)?.title,
@@ -399,6 +413,19 @@
 
             if (tab.key == 'search') {
                 this.state.search = ''
+            }
+
+            this.updateInfo()
+        }
+
+        clearHiddenTabs() {
+            for (let tab of this.state.hiddenTabs) {
+                this.state.activeTabs = this.state.activeTabs.filter(p => p.key != tab.key)
+                this.state.tabsValues[tab.key] = null
+    
+                if (tab.key == 'search') {
+                    this.state.search = ''
+                }
             }
 
             this.updateInfo()
@@ -634,14 +661,6 @@
         }
     }
 
-    onMounted(() => {
-        filter.getFields()
-    })
-
-    onBeforeUnmount(() => {
-        document.removeEventListener('click', filter.closeContent);
-    });
-
     watch(() => injectedFilter.fields, (next, prev) => {
         if (!isEqual(next.map(p => p.key), prev.map(p => p.key))) {
             filter.getFields()
@@ -653,6 +672,167 @@
     })  
 
     const filter = new Filter(filterRef)
+
+    // Инициализация обсерверов
+    const initObservers = () => {
+        if (!filterTabsRef.value || !filterRef.value) return;
+
+        // Отслеживание изменения длины плашек
+        const checkTabsWidth = () => {
+            if (isCheckingTabs) return;
+            if (!filterTabsRef.value || !filterRef.value) return;
+            
+            // Очищаем предыдущий таймаут
+            if (checkTabsWidthTimeout) {
+                clearTimeout(checkTabsWidthTimeout)
+            }
+            
+            // Debounce для избежания слишком частых вызовов
+            checkTabsWidthTimeout = setTimeout(() => {
+                isCheckingTabs = true
+                
+                const containerWidth = filterRef.value.offsetWidth
+                const availableWidth = containerWidth - 100 // Запас 100px
+                
+                // Получаем все видимые табы (без элемента "и еще N")
+                const visibleTabs = filterTabsRef.value.querySelectorAll('.filter__tab:not(.filter__tab_other)')
+                const otherTab = filterTabsRef.value.querySelector('.filter__tab_other')
+                
+                // Вычисляем общую ширину видимых табов
+                let totalTabsWidth = 0
+                visibleTabs.forEach(tab => {
+                    totalTabsWidth += tab.offsetWidth
+                })
+                
+                // Добавляем ширину элемента "и еще N", если он есть
+                if (otherTab && filter.state.hiddenTabs.length > 0) {
+                    totalTabsWidth += otherTab.offsetWidth
+                }
+                
+                // Если не влезает - перемещаем самый длинный таб в hiddenTabs
+                // Продолжаем пока все не влезет
+                while (totalTabsWidth > availableWidth && filter.state.activeTabs.length > 0) {
+                    // Найти самый длинный элемент среди активных табов
+                    let maxField = null
+                    let maxFieldLength = 0
+                    let maxFieldElement = null
+                    
+                    visibleTabs.forEach(tab => {
+                        const tabWidth = tab.offsetWidth
+                        if (tabWidth > maxFieldLength) {
+                            maxFieldElement = tab
+                            maxFieldLength = tabWidth
+                        }
+                    })
+                    
+                    if (maxFieldElement) {
+                        const fieldKey = maxFieldElement.getAttribute('data-key')
+                        const field = filter.state.activeTabs.find(p => p.key == fieldKey)
+                        
+                        if (field) {
+                            filter.state.hiddenTabs.push(field)
+                            filter.state.activeTabs = filter.state.activeTabs.filter((tab) => tab.key != field.key)
+                            totalTabsWidth -= maxFieldLength
+                            
+                            // Обновляем список видимых табов
+                            const newVisibleTabs = filterTabsRef.value.querySelectorAll('.filter__tab:not(.filter__tab_other)')
+                            if (newVisibleTabs.length === 0) break
+                        } else {
+                            break
+                        }
+                    } else {
+                        break
+                    }
+                }
+                
+                // Если влезает и есть скрытые табы - пытаемся вернуть обратно
+                // Продолжаем пока есть место и скрытые табы
+                while (totalTabsWidth <= availableWidth && filter.state.hiddenTabs.length > 0) {
+                    // Берем последний добавленный таб (он был первым скрыт)
+                    const fieldToRestore = filter.state.hiddenTabs[filter.state.hiddenTabs.length - 1]
+                    
+                    if (fieldToRestore) {
+                        // Временно добавляем таб для проверки ширины
+                        const tempTab = document.createElement('div')
+                        tempTab.className = 'filter__tab'
+                        tempTab.setAttribute('data-key', fieldToRestore.key)
+                        tempTab.textContent = `${fieldToRestore.label}: ${filter.setTabValue(fieldToRestore)}`
+                        tempTab.style.visibility = 'hidden'
+                        tempTab.style.position = 'absolute'
+                        tempTab.style.whiteSpace = 'nowrap'
+                        filterTabsRef.value.appendChild(tempTab)
+                        
+                        const tempTabWidth = tempTab.offsetWidth
+                        filterTabsRef.value.removeChild(tempTab)
+                        
+                        // Проверяем, влезет ли таб обратно
+                        const newTotalWidth = totalTabsWidth + tempTabWidth
+                        if (newTotalWidth <= availableWidth) {
+                            filter.state.hiddenTabs = filter.state.hiddenTabs.filter((tab) => tab.key != fieldToRestore.key)
+                            filter.state.activeTabs.push(fieldToRestore)
+                            totalTabsWidth = newTotalWidth
+                        } else {
+                            break
+                        }
+                    } else {
+                        break
+                    }
+                }
+                
+                isCheckingTabs = false
+            }, 50) // Debounce 50ms
+        }
+
+        // MutationObserver для отслеживания изменений DOM
+        if (classObserver.value) {
+            classObserver.value.disconnect()
+        }
+        classObserver.value = new MutationObserver(checkTabsWidth)
+        classObserver.value.observe(filterTabsRef.value, { 
+            childList: true, 
+            subtree: true, 
+            attributes: true,
+            attributeFilter: ['class', 'style']
+        })
+
+        // ResizeObserver для отслеживания изменений размера
+        if (resizeObserver.value) {
+            resizeObserver.value.disconnect()
+        }
+        resizeObserver.value = new ResizeObserver(checkTabsWidth)
+        resizeObserver.value.observe(filterRef.value)
+    }
+
+    onMounted(async () => {
+        filter.getFields()
+        await nextTick();
+        initObservers()
+    })
+
+    // Отслеживание появления filterTabsRef
+    watch(() => filterTabsRef.value, (newVal) => {
+        if (newVal) {
+            nextTick(() => {
+                initObservers()
+            })
+        }
+    })
+
+    // Отслеживание изменений activeTabs для переинициализации обсервера
+    watch(() => filter.state.activeTabs.length, () => {
+        nextTick(() => {
+            initObservers()
+        })
+    })
+
+    onBeforeUnmount(() => {
+        if (checkTabsWidthTimeout) {
+            clearTimeout(checkTabsWidthTimeout)
+        }
+        if (classObserver.value) classObserver.value.disconnect();
+        if (resizeObserver.value) resizeObserver.value.disconnect();
+        document.removeEventListener('click', filter.closeContent);
+    });
 
     defineExpose({
         filter: filter

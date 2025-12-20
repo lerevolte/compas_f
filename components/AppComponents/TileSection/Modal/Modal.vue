@@ -535,7 +535,7 @@
             if (props.modal.content.type == 'text_group') {
                 modal.value.field = {
                 ...props.modal.content,
-                options: [...props.modal.content.options, ...modal.value.getTextGroupOptions()]
+                options: [...props.modal.content.options, ...modal.value.getTextGroupOptions()],
             }
             } else if (props.modal.content.type == 'status') {
                 modal.value.field = {
@@ -550,7 +550,11 @@
                     })
                 }
             } else {
-                modal.value.field = props.modal.content
+                modal.value.field = {
+                    ...props.modal.content,
+                    roles_write: props.modal.content.roles_write ? props.modal.content.roles_write.filter(p => userStore.roles.find(r => r.id == p))  : [],
+                    roles_read: props.modal.content.roles_write ? props.modal.content.roles_read.filter(p => userStore.roles.find(r => r.id == p))  : [],
+                }
                 console.log(modal.value.field);
             }
         }
