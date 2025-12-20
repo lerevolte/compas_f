@@ -63,7 +63,7 @@
                     <FansyBoxItem 
                         :id="`file_${props.options.id}`"
                         :image="{
-                            path: item.file,
+                            path: item.url,
                             thumbnail_path: item.url
                         }"
                     />

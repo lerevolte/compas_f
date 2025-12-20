@@ -148,6 +148,7 @@
                 table: [],
                 list: []
             }
+            this.socket = null
             this.history = new History()
             this.columns = new Columns()
         }
@@ -168,6 +169,8 @@
                 } else {
                     const route = routes.detail.get.replace('${slug}', props.slug).replace('${id}', props.id)
                     response = await api.callMethod('GET', `${route}${props.options.isCopy ? '?is_copy=1' : ''}`)
+                    socket.value.set({slug: props.slug, id: props.id})
+                    this.socket = socket.value.entities[props.slug]?.details[props.id]
                 }
 
                 if (!props.options.isModule) {
@@ -189,7 +192,6 @@
                 this.products.list = response.data.table.tableBody
                 this.history.get(response.data)
                 this.columns.get(response.data.detail)
-                
                 emit('action', { action: 'getColumns', value: response.data.detail.columns })
             } catch (error) {
                 console.log(error);
@@ -203,8 +205,22 @@
     }
 
     const detail = ref(new Detail())
+    const socket = inject('socket')
 
     watch(() => props.updateComponent, () => {
         detail.value.get()
+    })
+
+    watch(() => detail.value.socket, () => {
+        if (detail.value.socket?.history?.fields && detail.value.socket?.history?.fields?.length > 0) {
+            detail.value.history.fields.data.unshift(detail.value.socket.history.fields.pop())
+        }
+        if (detail.value.socket?.history?.events && detail.value.socket?.history?.events?.length > 0) {
+            detail.value.history.events.data.unshift(detail.value.socket.history.fields.pop())
+        }
+    }, {deep: true})
+
+    onUnmounted(() => {
+        socket.value.remove({slug: props.slug, id: props.id})
     })
 </script>

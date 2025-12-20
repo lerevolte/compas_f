@@ -4,6 +4,7 @@
 .logistic {
     grid-gap: 25px;
     display: grid;
+    margin-bottom: 40px;
     grid-template-columns: repeat(2, 1fr);
 
     &.logistic_dragging {
@@ -111,12 +112,13 @@
     }
 
     .table__header {
-        .table__row {
-            position: absolute;
-        }
-    }
+        .table__cell  {
+            min-height: 40px;
 
-    .table__body {
-        top: 60px;
+            &,
+            .text {
+                @include mixins.textVerticalHidden(1)
+            }
+        }
     }
 }

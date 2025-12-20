@@ -15,17 +15,26 @@
     min-height: 262px;
     display: grid;
     grid-template-rows: auto 1fr;
+
+    &.chart_loading {
+        .chart__header-text {
+            opacity: 0;
+        }
+    }
 }
 
 .chart__header {
     gap: 10px;
     display: flex;
-    font-weight: 600;
     align-items: center;
     padding: 10px 10px 10px 20px;
     justify-content: space-between;
     border-bottom: 1px solid #eeeff1;
-    @include mixins.textHidden();
+    
+    .chart__header-text {
+        font-weight: 600;
+        @include mixins.textHidden();
+    }
 }
 
 .chart__content {

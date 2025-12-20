@@ -1,7 +1,9 @@
 <template>
-    <div class="chart">
+    <div class="chart" :class="{'chart_loading': chart.loading}">
         <div class="chart__header">
-            {{ chart.title || 'График' }}
+            <span class="chart__header-text">
+                {{ chart.title || 'График' }}
+            </span>
         </div>
         <div class="chart__content">
             <IconLoader v-show="chart.loading" />
@@ -76,10 +78,11 @@
 
         // Получение данных
         async get() {
-            this.loading = true
             this.error = null
-
+            
             try {
+                this.loading = true
+                this.title = null
                 let request = []
                 if (props.options?.date_range?.start) request.push(`period[start]=${format(props.options?.date_range.start, 'yyyy-MM-dd')}`)
                 if (props.options?.date_range?.end) request.push(`period[end]=${format(props.options?.date_range.end, 'yyyy-MM-dd')}T23:59:59.999Z`)

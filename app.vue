@@ -13,6 +13,7 @@
           @init="item => entity.init(item)"
           @openModal="item => entity.openModal(item)"
         />
+        <div id="menu-group"></div>
       </div>
 
       <div class="detail__overlay" id="detail__overlay" v-if="entity.modal.length > 0">
@@ -144,6 +145,7 @@
     }
   })
 
+
   onMounted(() => {
     if (!getRoute.value.isAuth) {
       socket.value.init(emit)
@@ -151,5 +153,10 @@
   })
 
   const entity = ref(new Entity())
+
+  watch(entity.value.modal, () => {
+      socket.value.isModal = entity.value.modal.length > 0
+  })
+
   provide('socket', socket)
 </script>

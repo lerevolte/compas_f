@@ -34,14 +34,14 @@
                 <IconEdit v-if="!props.options?.isModule" v-show="!section.editTitle" @click="section.initEditTitle()"/>
             </div>
 
-            <div class="tile-section__actions" v-if="!props.options.isGlobalEdit && !props.options.isModule && props.options.type != 'field'">
+            <div class="tile-section__actions" v-if="!props.options.isGlobalEdit && props.options.type != 'field'">
                 <AppButton class="button_text" v-if="section.fields.find(item => item.edit || (item.type == 'text_group' && item.fields.find(item => item.edit)))" @click="fieldObject.section.cancelEditAll(props.section)">
                     Отмена
                 </AppButton>
                 <AppButton class="button_text"  v-else @click="editAll()">
                     Изменить
                 </AppButton>
-                <AppPopup :isPreventBottom="true">
+                <AppPopup v-if="!props.options.isModule" :isPreventBottom="true">
                     <template #header>
                         <IconSettings />
                     </template>

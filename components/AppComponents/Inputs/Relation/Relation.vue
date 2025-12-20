@@ -98,7 +98,7 @@
                 </div>
                 <div 
                     class="select__option" 
-                    v-for="option in selectInstances[index]?.state?.list || []" 
+                    v-for="option in selectInstances[index]?.getList(index)" 
                     :class="{ 'select__option_active': normalizedModelValue.value[index] == option.value }" 
                     :value="option.value" 
                     @click="selectInstances[index]?.changeValue(option, index)"
@@ -226,6 +226,18 @@
                     p.label.text ? p.label.text.toLowerCase().includes(value.toLowerCase()) : p.label.toLowerCase().includes(value.toLowerCase())
                 )
             }
+        }
+
+        getList(selectIndex) {
+            if (!props.modelValue.value) {
+                return this.state.list ?? []
+            }
+
+            if (this.state?.list?.length > 0) {
+                return this.state.list.filter(p => normalizedModelValue.value.value[selectIndex] == p.value || !props.modelValue.value.includes(p.value))
+            } 
+
+            return []
         }
 
         // Изменение значения

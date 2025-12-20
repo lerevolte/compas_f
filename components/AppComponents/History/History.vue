@@ -27,7 +27,7 @@
                                 </div>
 
 
-                                <figure class='ibg history-item__user' :style="`--backgroundColor: ${item.user.color};`" @click="history.openModal({slug: 'users', id: item.user.id}, false)">
+                                <figure class='ibg history-item__user' :title="item.user.name" :style="`--backgroundColor: ${item.user.color};`" @click="history.openModal({slug: 'users', id: item.user.id}, false)">
                                     <img :src='item.user.icon' alt='' v-if="item.user.icon">
                                     <figcaption v-else>
                                         {{ item.user.ab }}
@@ -185,5 +185,5 @@
 
     watch(() => props.history.data, () => {
         history.value.get(props.history)
-    })
+    }, {deep: true})
 </script>

@@ -59,9 +59,12 @@
 	})
 	
 	onMounted(() => {
-		useHead({
-			title: `${metaJSON[props.slug]?.title} | Compas.pro`
-		})
+
+		setTimeout(() => {
+			useHead({
+				title: `${metaJSON[props.slug]?.title} | Compas.pro`
+			})
+		}, 100);
 	})
 
 </script>

@@ -10,6 +10,37 @@
 				/>
 			</div>
 			<div class="logistic-header__group">
+				<AppPopup class="logistic-header__statistic">
+					<template #header>
+						<IconChart />
+					</template>
+					<template #content>
+						<div class="logistic-header__statistic-content">
+							<AppChart 
+								v-if="logisticPage.activeChart"
+								class="logistic-header__chart"
+								:options="{
+									slug: logisticPage.activeChart.type,
+									date_range: {
+										start: logisticPage.activeDate,
+										end:logisticPage.activeDate
+									},
+									type: logisticPage.activeChart.type
+								}"
+							/>
+							<div class="logistic-header__categories" v-if="logisticPage.charts">
+								<div 
+									v-for="category in logisticPage.charts"
+									class="logistic-header__category" 
+									:class="{'logistic-header__category_active': category.type == logisticPage.activeChart.type}"
+									@click="logisticPage.activeChart = category"
+								>
+									{{ category.title }}
+								</div>
+							</div>
+						</div>
+					</template>
+				</AppPopup>
 				<AppRelation 
 					v-model="logisticPage.activeRoute"
 					:isPreventBottom="true"
@@ -43,16 +74,28 @@
 </template>
 
 <script setup>
+	import api from '@/helpers/api.js'
+	import routes from '@/helpers/routes.js'
 	import AppH1 from '@AppComponents/Headers/H1/H1.vue';
 	import AppDateFilter from '@AppComponents/DateFilter/DateFilter.vue';
 	import LogisticTemplate from '@AppTemplates/Logistic/Logistic.vue'
-	import AppSelect from '@AppComponents/Inputs/Select/Select.vue'
 	import AppRelation from '@AppComponents/Inputs/Relation/Relation.vue'
+	import AppPopup from '@AppComponents/Popup/Popup.vue'
+	import IconChart from '@AppIcons/Actions/Chart.vue'
+	import AppChart from '@AppComponents/Chart/Chart.vue'
 
 	class LogisticPage {
 		constructor() {
 			this.activeDate = new Date()
 			this.activeRoute = null
+			this.activeChart = null
+			this.charts = []
+		}
+
+		async getStatistics() {
+			const response = await api.callMethod('GET', routes.logistic.getStatistics)
+			this.charts = response.data
+			this.activeChart = this.charts[0]
 		}
 	}
 
@@ -72,5 +115,6 @@
         useHead({
 			title: `Логистика | Compas.pro`
 		})
+		logisticPage.value.getStatistics()
 	})
 </script>

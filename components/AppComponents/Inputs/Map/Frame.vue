@@ -782,9 +782,9 @@
     });
 
     onMounted(async () => {
+        loadYandexMapsAPI()
         initMap();   
         syncPointsOnMap();
-        loadYandexMapsAPI()
     });
 
     onBeforeUnmount(() => {
@@ -797,10 +797,5 @@
             mapInstance.value.off('move', throttledMoveHandler);
             throttledMoveHandler = null;
         }
-
-        // if (mapInstance.value) {
-        //     mapInstance.value.remove();
-        //     mapInstance.value = null;
-        // }
     });
 </script>

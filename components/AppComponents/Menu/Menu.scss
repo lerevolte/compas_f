@@ -687,3 +687,31 @@
         }
     }
 }
+
+.menu__sublinks {
+    gap: 5px 25px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+
+.menu__sublink {
+    align-items: center;
+    color: #1253a2;
+    cursor: pointer;
+    display: flex;
+    font-weight: 600;
+    gap: 5px;
+    justify-content: flex-start;
+
+    &:hover {
+        color: #1253a2;
+    }
+
+    &.menu__sublink_active {
+        color: #000;
+        cursor: text;
+        opacity: 1;
+        pointer-events: auto;
+    }
+}

@@ -2918,6 +2918,7 @@ export class Socket {
             },
         }
         this.entities = {}
+        this.isModal = false;
         this.userStore = null
         this.emit = null
     }
@@ -2942,39 +2943,46 @@ export class Socket {
     }
 
 
-    set({slug}) {
+    set({slug, id}) {
         this.entities[slug] = new socketObject()
-        console.log(this.entities);
+
+        if (id) {
+            this.entities[slug].details[id] = {
+                history: {
+                    events: [],
+                    fields: []
+                }
+            }
+        }
+        // console.log(this.entities);
+    }
+
+    remove({slug, id}) {
+        delete this.entities[slug].details[id]
     }
 
     // Обновление строк в таблице и объектов
     ObjectUpdated(data) {
+        console.log(data);
+        
         // Проверяем, существует ли объект для данного slug
-        if (!data.data || !data.data.slug) {
-            console.warn('Socket event missing data or slug', data)
-            return
-        }
-
-        // Автоматически создаем объект, если его еще нет
-        if (!this.entities[data.data.slug]) {
-            this.entities[data.data.slug] = new socketObject()
-        }
+        if (!data.data || !data.data.slug || !this.entities[data.data.slug]) return
 
         switch (data.action) {
             case 'ObjectCreated':
-                this.entities[data.data.slug].ObjectCreated(data.data)
+                this.entities[data.data.slug].ObjectCreated({data: data.data, isModal: this.isModal, userId: this.userStore.user.id})
                 break;
             case 'ObjectUpdated':
-                this.entities[data.data.slug].ObjectUpdated(data.data)
+                this.entities[data.data.slug].ObjectUpdated({data: data.data, isModal: this.isModal, userId: this.userStore.user.id})
                 break;
             case 'ObjectDeleted':
-                this.entities[data.data.slug].ObjectDeleted(data.data)
+                this.entities[data.data.slug].ObjectDeleted({data: data.data, isModal: this.isModal, userId: this.userStore.user.id})
                 break;
             case 'ObjectRestored':
-                this.entities[data.data.slug].ObjectRestored(data.data)
+                this.entities[data.data.slug].ObjectDeleted({data: data.data, isModal: this.isModal, userId: this.userStore.user.id})
                 break;
             case 'HistoryUpdated':
-                this.entities[data.data.slug].HistoryUpdated(data.data)
+                this.entities[data.data.slug].HistoryUpdated({data: data.data, isModal: this.isModal, userId: this.userStore.user.id})
                 break;
             default:
                 break;
@@ -2990,15 +2998,14 @@ export class Socket {
 class socketObject {
     constructor() {
         this.table = []
-        this.detail = []
-        this.history = []
+        this.details = {}
     }
 
     // Обновление строки
-    ObjectUpdated(data) {
+    ObjectUpdated({data, isModal, userId}) {
+        if (!isModal && userId == data.changed_by) return
+
         let findedRow = this.table.find(row => row.id == data.id)
-        console.log(data);
-        
 
         if (findedRow) {
            Object.assign(findedRow.row, data.viewList)
@@ -3008,21 +3015,40 @@ class socketObject {
                 state: 'update'
             })
         }
+
+        console.log(this.table);
+        
     }
 
-    ObjectCreated() {
-
+    ObjectCreated({data}) {
+        this.table.push({
+            row: data.viewList,
+            state: 'update'
+        })
     }
 
-    ObjectDeleted() {
+    ObjectDeleted({data}) {
+        let findedRow = this.table.find(row => row.id == data.id)
 
+        if (findedRow) {
+            findedRow.state = 'delete'
+        } else {
+            this.table.push({
+                row: data.viewList,
+                state: 'delete'
+            })
+        }
     }
 
-    ObjectRestored() {
+    HistoryUpdated({data}) {
+        if (!this.details[data.id]) return
 
-    }
-
-    HistoryUpdated() {
-
+        for (let field of data.fields) {
+            if (['FIELD_UPDATED'].includes(field.event)) {
+                this.details[data.id].history.fields.push(field)
+            }
+        }
+        console.log(this.details);
+        // this.details.history
     }
 }

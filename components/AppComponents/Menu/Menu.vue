@@ -6,9 +6,16 @@
                 @click="menu.isOpen = true"
             />
         </teleport>
+        <teleport to="#menu-group" v-if="isClient">
+            <div class="menu__sublinks" v-if="menu.activeGroup">
+                <NuxtLink v-for="item in menu.activeGroup.children" class="menu__sublink" :class="{'menu__sublink_active': route.path.startsWith(item.link)}" :key="item.id" :to="item.link ?? '/'">
+                    {{ item.name }}
+                </NuxtLink>
+            </div>
+        </teleport>
 
         <div class="menu__content">
-            <NuxtLink class="menu__logo" :to="props.options?.type == 'default' ? menu.visible[0]?.link : null">
+            <NuxtLink class="menu__logo" :to="props.options?.type == 'default' ? menu.visible[0] && menu.visible[0].is_group ? menu.visible[0]?.children[0]?.link : menu.visible[0]?.link : null">
                 <IconLogo />
             </NuxtLink>
 
@@ -240,6 +247,7 @@
             this.loading = false
             this.beforeDrag = []
             this.isDragging = false
+            this.activeGroup = null
             this.isMobile = useMediaQuery('(max-width: 990px)')
         }
 
@@ -308,7 +316,20 @@
 
         // Поиск активной вкладки
         isActive(link) {
+            if (route.path.startsWith(link)) {
+                this.activeGroup = this.getActiveGroup(link)
+            }
             return route.path.startsWith(link)
+        }
+
+        getActiveGroup(link) {
+            let findedGroup = this.visible.find(item => item.is_group && item.children.find(child => child.link == link))
+            
+            if (!findedGroup) {
+                return this.hidden.find(item => item.is_group && item.children.find(child => child.link == link))
+            } else {
+                return findedGroup
+            }
         }
 
         // Начало перетаскивания в меню

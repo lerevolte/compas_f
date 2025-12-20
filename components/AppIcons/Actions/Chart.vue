@@ -1,0 +1,11 @@
+<template>
+    <figure class='icon_chart'>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="15" viewBox="0 0 16 15">
+            <g fill="none" fill-rule="evenodd">
+                <rect fill="#23704B" x="6" width="4" height="15" rx=".7"></rect>
+                <rect fill="#1253A2" x="12" y="4" width="4" height="11" rx=".7"></rect>
+                <rect fill="#AD0B0A" y="7" width="4" height="8" rx=".7"></rect>
+            </g>
+        </svg>
+    </figure>
+</template>

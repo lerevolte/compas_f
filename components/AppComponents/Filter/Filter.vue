@@ -507,7 +507,7 @@
             }
 
             if (is_update) {
-                filter.updateInfo()
+                // filter.updateInfo()
             }
 
             if (flag) {

@@ -2,7 +2,7 @@
   <TableCalc 
     v-if="table.slug == 'products'"
   />
- 
+
   <section class="section-table" ref="sectionRef">
     <TableTop v-if="props.options?.isHaveTopHeader" :options="props.options" :showMore="props.showMore" :title="props.options?.title ?? null"/>
     <div ref="tableRef" class="table" :class="{'table_permanent-edit': props.options.isPermanentEdit}">
@@ -222,6 +222,10 @@
       table.value.options.localFilter = props.options.localFilter
     }
   })
+
+  watch(() => socket.value.entities[props.slug], () => {
+    table.value.socket = socket.value.entities[props.slug]
+  }, {deep: true})
 
   provide('table', table)
   provide('filter', table.value.filter)

@@ -37,4 +37,10 @@
             opacity: 1;
         }
     }
+
+    &:has(.chart_loading) {
+        .icon_drag-field {
+            opacity: 0;
+        }
+    }
 }

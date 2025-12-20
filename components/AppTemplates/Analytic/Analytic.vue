@@ -25,6 +25,8 @@
         drag-class="draggable-drag"
         ghost-class="draggable-ghost"
         fallback-class="draggable-fallback"
+        @start="analytics.dragStart()"
+        @end="analytics.dragEnd()"
     >
         <template #item="{ element: section }">
             <div class="analytics__chart">
@@ -92,7 +94,9 @@
  
         async dragEnd() {
             document.body.classList.remove('body_unselected')
-            await api.callMethod('PUT', routes.chart.update, this.sections) 
+            await api.callMethod('PUT', routes.chart.update, {
+                order: this.sections.map(section => section.key)
+            }) 
         }
     }
 
