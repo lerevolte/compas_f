@@ -4,7 +4,7 @@
             tag="div"
             :group="props.options?.group ?? 'table'"
             v-model="rows" 
-            :handle="table.options?.isDraggable ? table.options?.draggableTarget ?? '.table__row' : 'null'"
+            :handle="table.options?.isDraggable && !isMobile ? table.options?.draggableTarget ?? '.table__row' : 'null'"
             :forceFallback="true"
             :fallbackOnBody="true"
             :item-key="getItemKey" 

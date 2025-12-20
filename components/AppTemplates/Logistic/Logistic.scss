@@ -104,7 +104,18 @@
     }
 
     .table {
-        max-width: 100%;
+        max-width: calc((100vw - 282px - 25px) / 2);
+
+        @media (max-width: 1300px) {
+            max-width: calc(100vw - 282px);
+        }
+
+        @media (max-width: 1300px) {
+        }
+
+        @media (max-width: 990px) {
+            max-width: 100%;
+        }
     }
 
     .logistic__section {

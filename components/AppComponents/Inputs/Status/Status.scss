@@ -27,20 +27,6 @@
 .status {
     position: relative;
 
-    .icon__arrow {
-        position: absolute;
-        top: 10px;
-        right: 15px;
-        display: flex;
-        height: 20px;
-        aspect-ratio: 1 / 2;
-        transform: rotate(0deg);
-
-        svg {
-            @include mixins.resolution(100%, 100%);
-        }
-    }
-
     .icon__warning {
         position: absolute;
         top: -13px;
@@ -151,6 +137,45 @@
 
             &:not(img)::before {
                 border-radius: 5px;
+            }
+        }
+    }
+
+
+    .settings__item {
+        justify-content: space-between;
+    }
+
+    &.colorpicker {
+        max-height: none;
+
+        .colorpicker__preview {
+            min-height: 50px;
+        }
+
+        .colorpicker__content {
+            padding: 5px;
+            display: flex;
+            flex-direction: column;
+
+            .button_fill {
+                margin-top: 10px;
+            }
+        }
+
+        
+        .settings__item_back {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+            font-weight: 600;
+            position: sticky;
+            top: 0px;
+            z-index: 10;
+            background: variables.$color-white;
+
+            .icon__arrow {
+                transform: rotate(180deg);
             }
         }
     }

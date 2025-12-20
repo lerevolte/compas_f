@@ -118,21 +118,19 @@
     }
 
     updateMetaHeader(item) {
-      this.currentTitle = item.title
       window.history.replaceState({}, document.title, window.location.origin +  `/objects/${item.href?.slug}/${item.href?.id}`);
       useHead({
         title: item.title
       })
+      this.currentTitle = JSON.parse(JSON.stringify(item.title))
     }
 
     closeDetail() {
-      const prevAddress = this.addresses.pop()
-      if (prevAddress?.link) {
-        window.history.replaceState({}, document.title, prevAddress?.link);
-        useHead({
-          title: prevAddress.title
-        })
-      }
+      let prevAddress = this.addresses.pop()
+      window.history.replaceState({}, document.title, prevAddress?.link);
+      useHead({
+        title: prevAddress.title
+      })
     }
   }
 
@@ -146,6 +144,7 @@
   })
 
 
+
   onMounted(() => {
     if (!getRoute.value.isAuth) {
       socket.value.init(emit)
@@ -156,7 +155,8 @@
 
   watch(entity.value.modal, () => {
       socket.value.isModal = entity.value.modal.length > 0
-  })
+      console.log(entity.value.addresses);
+    })
 
   provide('socket', socket)
 </script>

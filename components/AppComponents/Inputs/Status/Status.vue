@@ -22,7 +22,7 @@
                     </figcaption>
                 </figure>
             </div>
-            <div class="status__options" ref="contentRef" :class="{ 'popup__content_top': status.state.isTop }">
+            <div class="status__options" ref="contentRef" :class="{ 'popup__content_top': status.state.isTop }" v-show="!status.state.colorpicker?.isActive">
                 <div class="status__option" v-if="props.options.isHaveNull" :value="null" @click="status.changeValue({ value: null })">
                     Не выбрано
                 </div>
@@ -47,6 +47,30 @@
                         {{ option.label?.text }} 
                     </span>
                 </div>
+
+                <div class="settings__item popup__option" v-if="props.options?.isCanCreate" @click="status.toogleColorpicker(true)">
+                    Палитра цветов
+                    <SelectArrowSubmenu /> 
+                </div>
+            </div>
+
+            <div class="status__options colorpicker"  v-if="props.options?.isCanCreate" v-show="status.state.colorpicker?.isActive">
+                <div class="settings__item popup__option settings__item_back" @click="status.toogleColorpicker(false)">
+                    Палитра цветов
+                    <SelectArrowSubmenu /> 
+                </div>
+                <div class="colorpicker__content">
+                    <div class="colorpicker__preview" :style="`--colorValue: ${status.state.colorpicker.color}`"></div>
+                    <ColorPicker 
+                        :color="status.state.colorpicker.color"
+                        default-format="hex"
+                        :visible-formats="['hex']"
+                        @color-change="(eventData) => status.state.colorpicker.color = eventData.cssColor"
+                    />
+                    <AppButton class="button_fill" :class="{'skeleton': status.state.colorpicker.loading}" @click="status.createOption()">
+                        Применить
+                    </AppButton>
+                </div>
             </div>
         </div>
     </div>
@@ -54,6 +78,13 @@
 
 <script setup>
     import './Status.scss';
+    import 'vue-accessible-color-picker/styles'
+
+    import api from '@/helpers/api.js'
+    import routes from '@/helpers/routes.js'
+    import AppButton from '@AppComponents/Button/Button.vue'
+    import { ColorPicker } from 'vue-accessible-color-picker'
+    import SelectArrowSubmenu from '@AppIcons/Input/SelectArrowSubmenu.vue';
     
     const statusRef = ref(null)
     const contentRef = ref(null)
@@ -67,7 +98,12 @@
             this.state = reactive({
                 list: [],
                 isTop: false,
-                isOpen: false
+                isOpen: false,
+                colorpicker: {
+                    color: '#b6b6b6',
+                    isActive: false,
+                    loading: false
+                }
             });
 
             // Закрытие опций
@@ -76,6 +112,7 @@
                     this.state.isOpen = false;
                     this.state.isTop = false;
                     this.state.list = props.options.list
+                    this.toogleColorpicker(false)
                     document.removeEventListener('click', this.closeOptions);
                 }
             };
@@ -114,6 +151,29 @@
             
             this.state.isTop = props.isPreventBottom ? false : contentRect.bottom > parentRect.bottom;
         }
+
+        toogleColorpicker(state) {
+            this.state.colorpicker.isActive = state
+        }
+
+        async createOption() {
+            try {
+                this.state.colorpicker.loading = true
+                const response = await api.callMethod('POST', routes.status.create, {
+                    field_id: props.options.id,
+                    color: this.state.colorpicker.color
+                })
+                this.state.list.push(response.data)
+                emit('update:modelValue', response.data?.value)
+                this.state.colorpicker.isActive = false
+            } 
+            catch (error) {
+                console.log(error);
+            } 
+            finally {
+                this.state.colorpicker.loading = false
+            } 
+        }
     }
 
     const status = new Status(statusRef.value, contentRef.value)
@@ -137,6 +197,7 @@
                 edit: true,
                 required: false,
                 isHaveNull: false,
+                isCanCreate: false,
                 type: 'status',
                 placeholder: '' 
             },

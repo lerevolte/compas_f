@@ -14,6 +14,9 @@ export default {
     file: {
         upload: '/files/store'
     },
+    status: {
+        create: '/field/status'
+    },
     menu: {
         get: '/sidebar/get',
         update: '/sidebar/set',

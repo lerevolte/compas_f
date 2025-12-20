@@ -101,6 +101,7 @@
                             ...field,
                             focus: !localGlobalEdit,
                             edit: field.edit,
+                            isCanCreate: true,
                             list: field.options,
                             isHaveNull: false
                         }"

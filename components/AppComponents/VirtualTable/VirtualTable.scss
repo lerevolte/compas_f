@@ -112,7 +112,7 @@
   }
 
   &.table__cell_hide {
-    display: none;
+    display: none !important;
   }
 
   &.table__cell_active {
