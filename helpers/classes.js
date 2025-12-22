@@ -1249,7 +1249,6 @@ export class Filter {
     // Установка сохраненных фильтров
     setSaves(saves) {
         this.saves = saves
-        const hiddenFilter = this.saves.find(f => f.is_hidden)
     }
 
     // Удаление сохраненного фильтра
@@ -2791,6 +2790,7 @@ export class Logistic {
     updateActiveDate(activeDate) {
         this.activeDate = format(activeDate, 'yyyy-MM-dd')
         this.machine_tasks.updatingCount++
+        this.logistic_tasks.updatingCount++
         this.routes.updatingCount++
     }
 
@@ -2813,6 +2813,7 @@ export class Logistic {
     async getRouteFilters(id) {
         const response = await api.callMethod('GET', routes.logistic.getFilterFields.replace('${id}', id))
         this.filterFields = response.data
+        this.logistic_tasks.updatingCount++
     }
 
     // Конец ресайза

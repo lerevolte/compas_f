@@ -11,7 +11,7 @@
             :ref="el => setSelectRef(el, index)"
             :data-id="index"
             :class="{ 
-                'select_hidden': normalizedModelValue.value.length - 6 >= index, 
+                'select_hidden': normalizedModelValue.value.length - (props.options?.visibleCount + 1 ?? 6) >= index, 
                 'select_open': selectInstances[index]?.state.isOpen, 
                 'select_disabled': props.options.edit == false, 
                 'select_empty': getActiveOption(index) == undefined || !getActiveOption(index).value
@@ -39,7 +39,7 @@
                             }"
                             @click="() => clickLink(index)" 
                         >
-                            {{ getActiveOption(index).value ? getActiveOption(index).label?.text.slice(0, 1) : 'Н' }}
+                            {{ getActiveOption(index).value ? getActiveOption(index).label?.text?.slice(0, 1) : 'Н' }}
                         </div>
                         <figcaption>
                             <span class="value__text value__text_link" @click="() => clickLink(index)">
@@ -99,9 +99,12 @@
                 <div 
                     class="select__option" 
                     v-for="option in selectInstances[index]?.getList(index)" 
-                    :class="{ 'select__option_active': normalizedModelValue.value[index] == option.value }" 
+                    :class="{ 
+                        'select__option_active': normalizedModelValue.value[index] == option.value,
+                        'select__option_disabled': option.disabled
+                    }" 
                     :value="option.value" 
-                    @click="selectInstances[index]?.changeValue(option, index)"
+                    @click="!option.disabled && selectInstances[index]?.changeValue(option, index)"
                 >
                     <span class="value__text">
                         {{ option.label.text || option.label.text == null ? option.label.text : option.label }} 
@@ -123,7 +126,7 @@
 
         <div class="select__actions">
             <AppButton 
-                v-if="normalizedModelValue.value.length > 5"
+                v-if="normalizedModelValue.value.length > props.options?.visibleCount + 1 ?? 6"
                 class="button_text"
                 data-action="show"
                 @click="emit('showAll', true)"
@@ -131,10 +134,9 @@
                 Всего {{normalizedModelValue.value.length}}, посмотреть все
             </AppButton>
             <AppButton 
-                v-if="props.options.edit !== false && props.options.isCanAdd && props.options.multiple"
+                v-if="props.options.isCanAdd && props.options.multiple"
                 class="button_text"
                 data-action="add"
-                :disabled="props.options.edit === false"
                 @click="addNewSelect"
             >
                 + Добавить
@@ -234,7 +236,12 @@
             }
 
             if (this.state?.list?.length > 0) {
-                return this.state.list.filter(p => normalizedModelValue.value.value[selectIndex] == p.value || !props.modelValue.value.includes(p.value))
+                return this.state.list.map(p => {
+                    return {
+                        ...p,
+                        disabled: normalizedModelValue.value.value[selectIndex] == p.value || props.modelValue.value.includes(p.value)
+                    }
+                })
             } 
 
             return []
@@ -321,6 +328,7 @@
                 isSetDefault: false,
                 isHaveNull: false,
                 relation_type: null,
+                visibleCount: 5,
                 multiple: false,
                 type: 'select',
                 placeholder: '' 
@@ -415,7 +423,7 @@
         // Добавляем новые элементы
         newValueArray.push(null);
         newLocalOptionsArray.push(null);
-        
+
         
         // Обновляем внутренние данные
         normalizedModelValue.value = { value: newValueArray, localOptions: newLocalOptionsArray };

@@ -306,7 +306,7 @@
 
             // Закрытие опций
             this.closeContent = (event, state = false) => {
-                if (state ||(this.filterRef.value && !this.filterRef.value.contains(event.target))) {
+                if (state || (this.filterRef.value && !this.filterRef.value.contains(event.target))) {
                     this.state.isOpen = false;
                     document.removeEventListener('click', this.closeContent);
                 }
@@ -397,10 +397,10 @@
         toggleOptions(event) {
             if (this.state.isOpen && this.filterRef.value.contains(event.target)) return
             this.state.isOpen = !this.state.isOpen;
-
             if (this.state.isOpen) {
                 document.addEventListener('click', this.closeContent);
             } else {
+                filter.value.dropUnsavedFields();
                 filterRef.value.querySelector('input').blur();
                 document.removeEventListener('click', this.closeContent);
             }

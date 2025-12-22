@@ -9,7 +9,6 @@
                     <AppInput 
                         :options="{
                             title: 'Фильтр по необработанным задачам',
-                            placeholder: 'Поиск'
                         }"
                         v-model="filter.search"
                         @keyup.enter="filter.setSearch()" 

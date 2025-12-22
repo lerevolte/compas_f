@@ -137,7 +137,8 @@
 		async create() {
 			try {
 				this.modal.loading = true
-				await api.callMethod('POST', routes.roles.create, this.modal.content)
+				const response = await api.callMethod('POST', routes.roles.create, this.modal.content)
+				userStore.roles.push(response.data)
 			} catch (error) {
 				console.log(error);
 			} finally {

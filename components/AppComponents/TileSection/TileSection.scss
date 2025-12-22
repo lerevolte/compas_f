@@ -164,7 +164,7 @@
     &.tile-section_drag {
         .tile-section__body,
         .tile-section__footer {
-            display: none;
+            display: none !important;
         }
     }
 
@@ -369,13 +369,19 @@
         min-height: max-content;
         padding-bottom: 10px;
 
-        .field__settings,
-        .icon_drag {
+        .field__settings {
             opacity: 0;
         }
 
+        .icon_drag {
+            opacity: 1;
+            position: absolute;
+            top: 4px;
+            left: 3px;
+        }
+
         .blank__title {
-            margin-top: -10px;
+            margin-top: 5px;
         }
     }
 }

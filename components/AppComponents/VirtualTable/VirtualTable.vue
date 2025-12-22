@@ -5,9 +5,9 @@
 
   <section class="section-table" ref="sectionRef">
     <TableTop v-if="props.options?.isHaveTopHeader" :options="props.options" :showMore="props.showMore" :title="props.options?.title ?? null"/>
-    <div ref="tableRef" class="table" :class="{'table_permanent-edit': props.options.isPermanentEdit}">
+    <div ref="tableRef" class="table" :class="{'table_permanent-edit': props.options.isPermanentEdit, 'table_short': props.options?.isShort}">
       <TableHeader>
-        <div class="socket-row" v-if="table.socket?.table?.length > 0" >
+        <div class="socket-row" v-if="!props.options?.isDisableSockets && table.socket?.table?.length > 0" >
           {{ table.socket?.table?.length }} изменения в таблице <span class="socket-row__button" @click="table.getSocketRows()"> Загрузить </span>
         </div>
       </TableHeader>
@@ -129,7 +129,11 @@
           isCheckClicked: false,
           isLocalTable: false,
           isHaveQuery: false,
+          isShort: false,
           query: {},
+          isDisableSockets: false,
+          isDisableSort: false,
+          isDisablePull: false,
           isHaveFilter: true,
           isPermanentEdit: false,
           isTrash: false,
@@ -180,7 +184,9 @@
   onMounted(async () => {
     nextTick(() => {
       initTable()
-      socket.value.set({slug: props.slug})
+      if (!props.options?.isDisableSockets) {
+        socket.value.set({slug: props.slug})
+      }
     })
   })
 
@@ -206,7 +212,7 @@
     }
 
 
-    if (!props.options?.isLocalTable) {
+    if (!props.options?.isLocalTable && !props.options?.isDisableSockets) {
       table.value.socket = socket.value.entities[props.slug]
     }
   }
@@ -223,9 +229,11 @@
     }
   })
 
-  watch(() => socket.value.entities[props.slug], () => {
-    table.value.socket = socket.value.entities[props.slug]
-  }, {deep: true})
+  if (!props.options?.isDisableSockets) {
+    watch(() => socket.value.entities[props.slug], () => {
+      table.value.socket = socket.value.entities[props.slug]
+    }, {deep: true})
+  }
 
   provide('table', table)
   provide('filter', table.value.filter)

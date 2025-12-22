@@ -35,7 +35,7 @@
                     {{ column.title }}
                 </span>
 
-                <IconSort v-if="column.key == table.sortItem.sort_field" :class="{'icon_sort_up': table.sortItem.sort_order == 'asc'}"/>
+                <IconSort v-if="!table.options?.isDisableSort && column.key == table.sortItem.sort_field" :class="{'icon_sort_up': table.sortItem.sort_order == 'asc'}"/>
             </div>
         </div>
         <slot></slot>
@@ -401,6 +401,7 @@
     const common = new Common()
 
     const doubleClick = common.useDoubleClick((event) => {
+        if (table.value.options.isDisableSort) return
         table.value.sort(table.value.header[event.getAttribute('data-idx')])
     })
  

@@ -251,7 +251,7 @@
 
         // Получение колонок
         get() {
-            this.list = JSON.parse(JSON.stringify(props.columns))
+            this.list = props.columns
             section.value.hidden = props.hidden 
         }
 

@@ -101,7 +101,7 @@
                             ...field,
                             focus: !localGlobalEdit,
                             edit: field.edit,
-                            isCanCreate: true,
+                            isCanCreate: field.can_create ?? false,
                             list: field.options,
                             isHaveNull: false
                         }"

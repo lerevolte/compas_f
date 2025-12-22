@@ -264,10 +264,17 @@
         }
 
         create() {
+            const name = [
+                this.computedSavedOptions.find(p => p.origin?.value == this.filter.cars),
+                this.computedSavedOptions.find(p => p.origin?.value == this.filter.employees),
+            ].filter(p => p).map(p => p.value)
+
             emit('create', {
                 id: 0,
                 date: format(new Date(), 'yyyy-MM-dd'),
+                company_id: this.filter.company ? [this.filter.company] : null,
                 car_id: this.filter.cars ? [this.filter.cars] : null,
+                name: name.length ? name.join(', ') : null,
                 employee_id: this.filter.employees ? [this.filter.employees] : null
             })
         }

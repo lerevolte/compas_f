@@ -16,6 +16,12 @@
             padding: 7px 15px;
         }
 
+        &:has(.dp__outer_menu_wrap) {
+            .dp__input {
+                border-color: variables.$button-fill !important;
+            }
+        }
+
         .dp__action_row {
             display: none;
         }

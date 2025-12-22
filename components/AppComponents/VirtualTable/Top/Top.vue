@@ -16,6 +16,7 @@
             />
             <AppSettings 
                 v-model:list="table.header"
+                v-model:visible="table.header"
                 :options="{
                     isCheck: {
                         state: true,
@@ -34,6 +35,7 @@
                 @reset="table.reset()"
                 @isChanged="table.isChanged = true"
                 @update:modelValue="(val) => {table.header = val; table.isChanged = true}"
+                @update:modelVisible="(val) => {table.header = val; table.isChanged = true}"
             />
         </div>
     </div>
@@ -72,18 +74,18 @@
         }
     ])
 
-        onMounted(() => {
-            if (props.options?.isEnableCreateOption == undefined || props.options?.isEnableCreateOption) {
-                showMore.value.unshift(
-                    {
-                        name: 'Создать',
-                        action: 'create',
-                        enabled: true
-                    }
-                )
-            }
-            if (props.showMore && props.showMore.length > 0) {
-                showMore.value = [...showMore.value, ...props.showMore]
-            }
-        })
+    onMounted(() => {
+        if (props.options?.isEnableCreateOption == undefined || props.options?.isEnableCreateOption) {
+            showMore.value.unshift(
+                {
+                    name: 'Создать',
+                    action: 'create',
+                    enabled: true
+                }
+            )
+        }
+        if (props.showMore && props.showMore.length > 0) {
+            showMore.value = [...showMore.value, ...props.showMore]
+        }
+    })
 </script>

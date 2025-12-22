@@ -171,6 +171,13 @@
 
             <template v-if="modal.field.type != 'text_group'">
                 <AppCheckbox 
+                    v-if="modal.fields[modal.field.type] && typeof modal.fields[modal.field.type].can_create != 'undefined'"
+                    v-model="modal.field.can_create"
+                    :options="{
+                        title: 'Разрешить создание опций',
+                    }"
+                />
+                <AppCheckbox 
                     v-if="modal.fields[modal.field.type] && typeof modal.fields[modal.field.type].show_file_name != 'undefined'"
                     v-model="modal.field.show_file_name"
                     :options="{
@@ -359,7 +366,8 @@
                     options: [],
                 },
                 status: {
-                    options: [],
+                    can_create: false,
+                    options: []
                 },
                 text_group: {
                     options: [],

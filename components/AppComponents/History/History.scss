@@ -4,6 +4,10 @@
 .history {
     max-width: 50vw;
     padding-bottom: 60px;
+
+    @media (max-width: 990px) {
+        max-width: none;
+    }
 }
 
 .history__header {

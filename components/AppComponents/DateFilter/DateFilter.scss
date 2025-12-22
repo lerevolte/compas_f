@@ -42,7 +42,7 @@
 
 .date-fitler__date {
     margin-left: 5px;
-    width: 155px;
+    width: 145px;
 
     .dp__input_wrap {
         cursor: pointer;
@@ -52,11 +52,19 @@
             position: absolute;
             @include mixins.position(10px, 40px);
         }
-    
+
         &::before {
             content: url("/icons/calendar.svg");
             position: absolute;
             @include mixins.position(10px, 15px);
+        }
+    }
+
+    &:has(.dp__outer_menu_wrap) {
+        .dp__input_wrap {
+            &::before {
+                content: url("/icons/calendarFill.svg");
+            }
         }
     }
 

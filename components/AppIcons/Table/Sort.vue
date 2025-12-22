@@ -18,6 +18,7 @@
         height: 100%;
         align-items: center;
         background: variables.$color-white;
+        top: 0px;
         right: 0px;
         padding: 0px 10px;
         pointer-events: none;

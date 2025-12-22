@@ -2,7 +2,12 @@
         <draggable
             v-if="table.rowVirtualizer"
             tag="div"
-            :group="props.options?.group ?? 'table'"
+            :group="{
+                name: props.options?.group ?? 'table',
+                pull: !props.options?.isDisablePull ?? true,
+                put: !props.options?.isDisablePut ?? true
+            }"
+            :sort="!props.options?.isDisableSort"
             v-model="rows" 
             :handle="table.options?.isDraggable && !isMobile ? table.options?.draggableTarget ?? '.table__row' : 'null'"
             :forceFallback="true"
@@ -22,7 +27,7 @@
             @start="event => {draggableRow = event.item; table.dragStart(event)}"
             @end="event => dragEnd(event)"
             @change="event => table.changeDrag(event)"
-            >
+        >
             <template #item="{ element: row, index }">
                 <div 
                     :key="row.key" 
@@ -95,7 +100,6 @@
 
                         <AppRelation  
                             v-else-if="column.type == 'relation' && table.body[row.index]"
-                            :parentContainer="sectionRef"
                             :options="{
                                 id: `${row.index}_${column.key}`,
                                 title: null,
@@ -110,6 +114,7 @@
                                 required: false,
                                 isHaveNull: true,
                                 multiple: column.is_plural,
+                                visibleCount: props.options?.isShort ? 1 : 5,
                                 placeholder: '' 
                             }"
                             v-model="cell.useCellModel(row.index, column).value"
@@ -321,7 +326,8 @@
     const doubleClick = common.useDoubleClick((elem, event) => {
         let cell = event.target.closest('.table__cell')
         
-        if (table.value.state == 'edit' || table.value.options?.isPermanentEdit || (!isMobile.value && ['isChoose', 'actions'].includes(cell.getAttribute('data-column-key')))) return
+        if (table.value.state == 'edit' || table.value.options?.isPermanentEdit || (!isMobile.value && ['isChoose'].includes(cell.getAttribute('data-column-key')))) return
+        if (event.target.closest('.show-more')) return
         // Support both Element and Event inputs
         const el = elem?.getAttribute ? elem : (elem?.currentTarget || elem?.target)
         const rowIndex = el?.getAttribute ? el.getAttribute('data-index') : null
@@ -333,6 +339,7 @@
         if (table.value.state == 'edit' || table.value.options?.isPermanentEdit || (cell && ['isChoose', 'actions'].includes(cell.getAttribute('data-column-key')))) return
         const el = elem?.getAttribute ? elem : (elem?.currentTarget || elem?.target)
         const rowIndex = el?.getAttribute ? el.getAttribute('data-index') : null
+        if (table.value.body[rowIndex]?.clicked) return
 
         table.value.body = table.value.body.map((item, index) => {
             return {
@@ -341,6 +348,7 @@
             }
         })
         
+
         emit('choseRow', {
             ...table.value.body[rowIndex],
             slug: table.value.slug

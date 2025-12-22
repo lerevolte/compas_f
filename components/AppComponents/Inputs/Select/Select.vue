@@ -191,6 +191,10 @@
             if (this.state.isOpen) {
                 document.addEventListener('click', this.closeOptions);
                 nextTick(() => this.checkPosition());
+                if (props.options.isSaveSearch) {
+                    this.state.search = activeOption.value?.label ?? ''
+                    this.state.visibleList = [activeOption.value]
+                }
                 if (searchRef.value.inputRef) {
                     searchRef.value.inputRef.focus();
                 }
@@ -254,6 +258,7 @@
                 searchable: false,
                 required: false,
                 isHaveNull: false,
+                isSaveSearch: false,
                 multiple: false,
                 type: 'select',
                 placeholder: '' 

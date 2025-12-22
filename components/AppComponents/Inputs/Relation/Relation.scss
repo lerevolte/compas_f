@@ -102,7 +102,8 @@
         }
 
         .select__option {
-            &.select__option_active {
+            &.select__option_active,
+            &.select__option_disabled {
                 &::after {
                     content: none;
                 }
@@ -113,6 +114,14 @@
                         position: relative;
                         margin-left: 10px;
                     }
+                }
+            }
+
+            &.select__option_disabled {
+                cursor: default;
+                
+                .value__text {
+                    color: #bcbcbc;
                 }
             }
         }
@@ -434,10 +443,10 @@
     &::before {
         content: '';
         position: absolute;
-        top: 1px;
+        top: 4px;
         right: 0px;
         width: 100%;
-        height: calc(100% - 2px);
+        height: calc(100% - 8px);
         border-radius: 4px;
         background: variables.$color-white;
         border-right: 1px solid variables.$color-border;

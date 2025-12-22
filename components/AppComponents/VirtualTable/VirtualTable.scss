@@ -61,6 +61,16 @@
   .loader {
     z-index: 30;
   }
+
+  &.table_short {
+    @media (min-width: 990px) {
+      .table__text {
+        white-space: nowrap;
+        display: flex;
+        flex-wrap: nowrap;
+      }
+    }
+  }
 }
 
 .socket-row {

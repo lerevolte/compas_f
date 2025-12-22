@@ -155,7 +155,6 @@
 
   watch(entity.value.modal, () => {
       socket.value.isModal = entity.value.modal.length > 0
-      console.log(entity.value.addresses);
     })
 
   provide('socket', socket)

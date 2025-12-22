@@ -132,6 +132,12 @@ html {
         }
     }
 
+    &:has(main > .detail) {
+        #menu-group {
+            display: none;
+        }
+    }
+
     @media (max-width: 990px) {
         grid-template-columns: 1fr;
         height: 100vh;
@@ -140,6 +146,13 @@ html {
         main {
             grid-column: 1;
             padding: 15px 10px;
+
+            &:has(.detail) {
+                .detail__actions {
+                    margin-left: -35px;
+                    width: calc(100% + 70px);
+                }
+            }
         }
     }
 }
@@ -216,6 +229,10 @@ html {
         h1 {
             width: 100%;
             max-width: 250px;
+        }
+
+        .filter__mobile-search {
+            right: -10px;
         }
     }
 }

@@ -1,16 +1,19 @@
 <template>
-    <IconLoader 
-        v-if="tabs.loading"
-    />
-    <main v-else>
+    <main>
+        <IconLoader 
+            v-if="tabs.loading"
+        />
         <AppTabs 
+            v-if="!tabs.loading"
             :tabs="tabs.list"
             :activeTab="tabs.active ? tabs.active.tab : null"
             @action="item => tabs[item.action](item.value)"
         />
-		<div class="page__header page__header_trash">
+		<div class="page__header page__header_trash page__header_table">
 			<AppH1 id="mobile-menu-target">
-				{{ tabs.active?.title }}
+                <template v-if="!tabs.loading">
+                    {{ tabs.active?.title }}
+                </template>
 			</AppH1>
 
 			<div id="filter-container"></div>
@@ -18,7 +21,8 @@
             <div></div>
 		</div>
 
-		<AppVirtualTable 
+		<AppVirtualTable
+            v-if="!tabs.loading" 
             :options="{
                 updatingCount: tabs.updatingCount,
                 isHaveQuery: true,

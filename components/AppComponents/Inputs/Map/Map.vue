@@ -7,6 +7,7 @@
                 :isPreventBottom="props.isPreventBottom"
                 :options="{
                     ...props.options,
+                    isSaveSearch: true,
                     searchable: true
                 }"
                 v-model="setModelValue"

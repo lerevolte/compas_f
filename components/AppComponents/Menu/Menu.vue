@@ -14,7 +14,7 @@
             </div>
         </teleport>
 
-        <div class="menu__content">
+        <div class="menu__content" ref="menuContentRef">
             <NuxtLink class="menu__logo" :to="props.options?.type == 'default' ? menu.visible[0] && menu.visible[0].is_group ? menu.visible[0]?.children[0]?.link : menu.visible[0]?.link : null">
                 <IconLogo />
             </NuxtLink>
@@ -225,6 +225,7 @@
     const isClient = ref(false)
 	const route = useRoute()
     const popupRef = ref(null)
+    const menuContentRef = ref(null)
 
     const props = defineProps({
         options: {
@@ -407,10 +408,17 @@
         }
     })
 
+    watch(() => menu.value.isOpen, () => {
+        if (menu.value.isOpen) {
+            menuContentRef.value.querySelectorAll('.popup_open').forEach(el => el.classList.remove('popup_open'))
+            menuContentRef.value.querySelectorAll('details[open]').forEach(el => el.removeAttribute('open'))
+        }
+    })
+
     watch(() => route.path, () => {
         isClient.value = false
-        setTimeout(() => {
+        nextTick(() => {
             isClient.value = true
-        }, 100);
+        })
     })
 </script>

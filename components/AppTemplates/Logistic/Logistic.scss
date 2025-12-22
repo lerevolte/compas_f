@@ -2,7 +2,7 @@
 @use '@/assets/mixins.scss' as mixins;
 
 .logistic {
-    grid-gap: 25px;
+    grid-gap: 15px;
     display: grid;
     margin-bottom: 40px;
     grid-template-columns: repeat(2, 1fr);
@@ -17,6 +17,7 @@
                 display: none;
             }
         }
+        
 
         .icon__resize {
             display: none;
@@ -57,7 +58,7 @@
     max-width: 1125px;
     display: flex;
     flex-direction: column;
-    gap: 25px;
+    gap: 15px;
     position: relative;
     z-index: 1;
 
@@ -74,20 +75,17 @@
     }
 
     .resize {
-        &:has(.map) {
-            .icon__resize {
-                bottom: 1px;
-                right: 0px;
-                border-radius: 0px 0px 10px 0px;
-            }
-        }
-
         .resize__icon-drag {
             position: absolute;
             z-index: 2;
             top: 12px;
             left: 5px;
             opacity: 0;
+
+
+            &:hover {
+                opacity: 1;
+            }
         }
 
         .section-table__top,
@@ -101,10 +99,24 @@
                 opacity: 1;
             }
         }
+
+        .scroll-buttons {
+            top: 43%;
+        }
     }
 
     .table {
         max-width: calc((100vw - 282px - 25px) / 2);
+
+        .table__row {
+            &.table__row_clicked {
+                background: #d9e4f0;
+
+                .table__cell {
+                    background: #d9e4f0;
+                }
+            }
+        }
 
         @media (max-width: 1300px) {
             max-width: calc(100vw - 282px);
@@ -125,11 +137,61 @@
     .table__header {
         .table__cell  {
             min-height: 40px;
+            overflow: visible !important;
 
             &,
             .text {
-                @include mixins.textVerticalHidden(1)
+                @include mixins.textVerticalHidden(1);
             }
+        }
+    }
+
+    .map__frame {
+        min-height: auto;
+    }
+}
+
+.resize {
+    &.draggable-drag {
+        height: max-content !important;
+
+        .table {
+            display: none;
+        }
+
+        .section-table {
+            height: auto;
+            margin-bottom: 0px;
+        }
+
+        .icon__resize {
+            display: none;
+        }
+
+        .resize__icon-drag {
+            top: 10px;
+            left: 10px;
+            position: absolute;
+        }
+
+        .filter__mobile-search {
+            display: none;
+        }
+
+        .section-table__top-group {
+            padding-left: 20px;
+
+            &:last-child {
+                display: none;
+            }
+        }
+
+        .map__frame-map {
+            display: none;
+        }
+
+        .map__frame {
+            height: max-content;
         }
     }
 }

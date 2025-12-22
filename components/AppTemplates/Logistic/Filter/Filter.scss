@@ -13,6 +13,7 @@
         width: 100%;
         min-width: 500px;
         max-width: 500px;
+        min-height: 85px;
     }
     
 
@@ -33,19 +34,32 @@
 
 .logistic-filter__input {
     position: relative;
+    margin-bottom: 5px;
+    
+    .form__item_input {
+        position: absolute;
+        height: calc(100% + 10px);
+        width: 100%;
+
+        input {
+            height: 100%;
+        }
+    }
 }
 
 .logistic-filter__tabs {
-    bottom: 0px;
+    top: 5px;
+    margin-top: 20px;
     left: 5px;
-    width: max-content;
-    height: calc(30px + 8px);
+    // width: max-content;
     gap: 5px;
     cursor: pointer;
+    // pointer-events: none;
     display: flex;
+    flex-wrap: wrap;
     overflow: hidden;
     max-width: calc(100% - 15px);
-    position: absolute;
+    position: relative;
     align-items: center;
     @include mixins.userSelect(none);
 }
@@ -62,6 +76,7 @@
     padding: 4px 10px;
     border-radius: 5px;
     cursor: pointer;
+    // pointer-events: auto;
     white-space: nowrap;
     background-color: variables.$color-hover-option;
 
@@ -69,7 +84,6 @@
         display: flex;
         aspect-ratio: 1 / 1;
         width: 9px;
-        pointer-events: none;
 
         svg {
             width: 100%;

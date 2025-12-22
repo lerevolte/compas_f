@@ -6,7 +6,7 @@
             group="columns"
             class="logistic__column"
             ghost-class="draggable-ghost"
-            drag-class="logistic__column_drag"
+            drag-class="draggable-drag"
             v-model="logistic.columns[index]" 
             item-key="id" 
             fallback-class="draggable-fallback"
@@ -54,8 +54,10 @@
                                 id: logistic.routes.id ?? null,
                                 date: logistic.activeDate
                             },
+                            isShort: true,
                             isEnableCreateOption: false,
                             isHaveFilter: false,
+                            isDisableSockets: true,
                             isPermanentEdit: false,
                             isCheckClicked: true,
                             isTrash: false,
@@ -82,11 +84,17 @@
                                 query: {
                                     ...filteredFields,
                                     route_id: 'null',
+                                    delivery_date: logistic.activeDate,
                                     per_page: 12 
                                 },
+                                isShort: true,
                                 overscan: 5,
                                 isDraggable: true,
+                                isDisableSockets: true,
                                 isCheckClicked: true,
+                                isDisableSort: true,
+                                isDisablePull: false,
+                                isDisablePut: true,
                                 draggableTarget: '.table__row',
                                 group: 'logistic_tasks',
                                 isHaveFilter: false,
@@ -115,10 +123,14 @@
                                 route_id: String(logistic.machine_tasks.route_id),
                                 delivery_date: logistic.activeDate
                             },
+                            isShort: true,
                             isHaveFilter: false,
                             isPermanentEdit: false,
                             isTrash: false,
+                            isDisablePull: false,
+                            isDisablePut: false,
                             isHaveTopHeader: true,
+                            isDisableSockets: true,
                             isHaveFooter: false,
                             isHaveLocalFilter: true,
                             localFilter: logistic.machine_tasks.selectedAddresses,
