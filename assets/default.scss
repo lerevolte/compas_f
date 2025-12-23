@@ -249,11 +249,18 @@ html {
 
     @media (max-width: 1200px) {
         gap: 25px;
+        grid-template-rows: auto auto 1fr;
         grid-template-columns: 1fr;
 
         .page__header {
             grid-column: 1/2;
+            margin-bottom: 0px;
         }
+    }
+
+
+    @media (max-width: 990px) {
+        gap: 15px;
     }
 }
 
@@ -647,6 +654,10 @@ section {
 
         #mobile-menu-target {
             margin-bottom: 0px;
+        }
+
+        &:first-child {
+            gap: 40px;
         }
     }
 }
