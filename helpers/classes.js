@@ -548,6 +548,10 @@ export class Table {
 
     // Получнеие шапки
     getHeader(data) {
+        if (this.options?.disabledKeys && this.options?.disabledKeys.length > 0) {
+            data = data.map(p => this.options?.disabledKeys.find(k => k == p.key) ? { ...p, read_only: true } : p)
+        }
+
         if (this.options.isCheckClicked) {
             this.header = [{
                 "id": 0,
@@ -680,6 +684,7 @@ export class Table {
                     rows: request
                 })
             }
+            this.emit('saveTable', request)
         } catch (error) {
             console.log('get_table', error);
         } finally {
@@ -2809,6 +2814,10 @@ export class Logistic {
         this.getRouteFilters(row.id)
     }
 
+    updateRoute() {
+        this.routes.updatingCount++
+        this.machine_tasks.updatingCount++
+    }
 
     async getRouteFilters(id) {
         const response = await api.callMethod('GET', routes.logistic.getFilterFields.replace('${id}', id))
@@ -2855,7 +2864,10 @@ export class Logistic {
     async createRoute(content) {
         try {
             this.modal.loading = true
-            await api.callMethod('POST', routes.logistic.createRoute, {rows: [content]})
+            await api.callMethod('POST', routes.logistic.createRoute, {rows: [{
+                ...content,
+                date: this.activeDate
+            }]})
             this.updateActiveRoute({value: [null]})
         } catch (error) {
             console.log(error);

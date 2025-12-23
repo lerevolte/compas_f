@@ -95,11 +95,13 @@
 			this.modalActions = [
 				{
                     name: "Изменить имя",
-                    action: "initUpdate"
+                    action: "initUpdate",
+					enabled: true
 				},
 				{
                     name: "Удалить",
-                    action: "initDelete"
+                    action: "initDelete",
+					enabled: true
 				}
 			]
 			this.modal = {

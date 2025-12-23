@@ -4,7 +4,16 @@
             <IconShowMore />
         </template>
         <template #content>
-            <div class="popup__option" :data-action="option.action" :class="{ 'popup__option_red': ['delete', 'initDelete'].includes(option.action) }" v-for="option in props.options" @click="initClick(option.action)">
+            <div 
+                v-for="option in props.options" 
+                class="popup__option" 
+                :data-action="option.action" 
+                :class="{ 
+                    'popup__option_red': ['delete', 'initDelete'].includes(option.action),
+                    'popup__option_disable': !option.enabled
+                }" 
+                @click="initClick(option.action)"
+            >
                 {{ option.name }}
             </div>
             <slot></slot>

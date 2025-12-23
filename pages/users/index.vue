@@ -1,6 +1,6 @@
 <template>
     <main>
-		<div class="page__header">
+		<div class="page__header page__header_table">
 			<AppH1 id="mobile-menu-target">
 				Пользователи
 			</AppH1>
@@ -13,7 +13,9 @@
 				id: '0'
 			})">
 				<AppIconPlus />
-				Создать
+				<span class="text">
+					Создать
+				</span>
 			</AppButton>
 		</div>
 

@@ -7,6 +7,7 @@
 				</AppH1>
 				<AppDateFilter 
 					v-model="logisticPage.activeDate"
+					@update:modelValue="logisticPage.set()"
 				/>
 			</div>
 			<div class="logistic-header__group">
@@ -26,6 +27,14 @@
 										end:logisticPage.activeDate
 									},
 									type: logisticPage.activeChart.type
+								}"
+								:settings="{
+									detail: null,
+									type: 'line',
+									height: 220,
+									isLabelEnable: false,
+									isShowGrid: false,
+									isEnableRows: true
 								}"
 							/>
 							<div class="logistic-header__categories" v-if="logisticPage.charts">
@@ -76,6 +85,8 @@
 <script setup>
 	import api from '@/helpers/api.js'
 	import routes from '@/helpers/routes.js'
+	import { Common } from '@/helpers/classes.js'
+	import { format } from 'date-fns'
 	import AppH1 from '@AppComponents/Headers/H1/H1.vue';
 	import AppDateFilter from '@AppComponents/DateFilter/DateFilter.vue';
 	import LogisticTemplate from '@AppTemplates/Logistic/Logistic.vue'
@@ -83,6 +94,8 @@
 	import AppPopup from '@AppComponents/Popup/Popup.vue'
 	import IconChart from '@AppIcons/Actions/Chart.vue'
 	import AppChart from '@AppComponents/Chart/Chart.vue'
+
+	const common = new Common()
 
 	class LogisticPage {
 		constructor() {
@@ -96,6 +109,15 @@
 			const response = await api.callMethod('GET', routes.logistic.getStatistics)
 			this.charts = response.data
 			this.activeChart = this.charts[0]
+		}
+
+		get() {
+			const query = common.getQueryUrl()
+			this.activeDate = query && query['active-date'] ? format(new Date(query['active-date']), 'yyyy-MM-dd') : new Date()
+		}
+
+		set() {
+			common.setQueryUrl(`?active-date=${format(this.activeDate, 'yyyy-MM-dd')}`)
 		}
 	}
 
@@ -112,6 +134,9 @@
 	])
 
 	onMounted(() => {
+		console.log();
+		logisticPage.value.get()
+		
         useHead({
 			title: `Логистика | Compas.pro`
 		})

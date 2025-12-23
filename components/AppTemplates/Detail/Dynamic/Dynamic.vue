@@ -76,7 +76,20 @@
             :options="{
                 isHaveQuery: true,
                 query: props.tabs.queryTab,
-                isHaveFilter: false
+                isHaveFilter: false,
+                title: null,
+                isCheckClicked: false,
+                isLocalTable: false,
+                isShort: false,
+                isDisableSockets: true,
+                isDisableSort: true,
+                isDisablePull: true,
+                isPermanentEdit: false,
+                isTrash: false,
+                isHaveTopHeader: false,
+                isHaveFooter: false,
+                isHaveLocalFilter: false,
+                localFilter: []
             }"
             :slug="props.tabs.active?.slug"
             @openModal="item => emit('action', {

@@ -10,6 +10,14 @@
             transition: none !important;
         }
 
+        .dp__main {
+            &.dp__main_bottom {
+                .dp__outer_menu_wrap {
+                    top: 50px !important;
+                }
+            }
+        }
+
         .dp__input {
             border-color: variables.$color-border !important;
             border-radius: 5px;

@@ -4,6 +4,7 @@
             {{ props.options.title }} 
         </label>
         <VueDatePicker 
+            :class="{'dp__main_bottom': props.isPreventBottom}"
             :id="props.options.id"
             :model-value="modelValue"
 			:no-swipe="false"
@@ -21,6 +22,8 @@
 			:placeholder="'__.__.____'"
             @update:modelValue="emit('update:modelValue',  $event ? props.options.multiple ? [format($event[0], `yyyy-MM-dd'T'00:00:00.000000'Z'`), format($event[1], `yyyy-MM-dd'T'00:00:00.000000'Z'`)] : format($event, `yyyy-MM-dd'T'00:00:00.000000'Z'`) : null)"
             @open="datepickerField.open()"
+            @range-start="onRangeStart"
+            @range-end="onRangeEnd"
         >
             <template #right-sidebar>
 				<div class="datapicker__preset-days">
@@ -103,7 +106,9 @@
         endOfYear, 
         subMonths, 
         subQuarters, 
-        subYears 
+        subYears,
+        parseISO,
+        compareAsc
     } from 'date-fns'
     import AppInput from '@AppComponents/Inputs/Input/Input.vue';
     import AppError from '@AppComponents/Error/Error.vue'
@@ -122,6 +127,10 @@
                  placeholder: ''
             },
             type: Object
+        },
+        isPreventBottom: {
+            default: false,
+            type: Boolean
         },
         modelValue: [String, Date, Array],
         error: {
@@ -224,16 +233,16 @@
         }
 
         // Получение дат для инпута
-        getInputsValue() {
+        getInputsValue(value) {
             if (props.options.multiple) {
-                if (props.modelValue) {
-                    if (Array.isArray(props.modelValue)) {
-                        this.inputRange.start = format(props.modelValue[0], 'dd.MM.yyyy')
-                        this.inputRange.end = format(props.modelValue[1], 'dd.MM.yyyy')
+                if (value) {
+                    if (Array.isArray(value)) {
+                        this.inputRange.start = format(value[0], 'dd.MM.yyyy')
+                        this.inputRange.end = format(value[1], 'dd.MM.yyyy')
                     } else {
-                        if (props.modelValue) {
-                            this.inputRange.start = format(props.modelValue, 'dd.MM.yyyy')
-                            this.inputRange.end = format(props.modelValue, 'dd.MM.yyyy')
+                        if (value) {
+                            this.inputRange.start = format(value, 'dd.MM.yyyy')
+                            this.inputRange.end = format(value, 'dd.MM.yyyy')
                         }
                     }
 
@@ -273,6 +282,18 @@
     }
 
     const datepickerField = ref(new Datepicker())
+    const range = ref([])
+
+    const onRangeStart = (value) => {
+        range.value = []
+        range.value.push(value)
+    }
+
+    const onRangeEnd = (value) => {
+        range.value.push(value)
+        const request = range.value.map(p => new Date(p).getTime()).sort((a, b) => a - b).map(p => format(p, 'yyyy-MM-dd'))
+        datepickerField.value.getInputsValue(request)
+    }
 
     onMounted(() => {
         nextTick(() => {
@@ -283,10 +304,10 @@
             }
         });
         datepickerField.value.open()
-        datepickerField.value.getInputsValue()
+        datepickerField.value.getInputsValue(props.modelValue)
     })
 
     watch(() => props.modelValue, () => {
-        datepickerField.value.getInputsValue()
+        datepickerField.value.getInputsValue(props.modelValue)
     })
 </script>

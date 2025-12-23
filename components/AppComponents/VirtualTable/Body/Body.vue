@@ -9,7 +9,7 @@
             }"
             :sort="!props.options?.isDisableSort"
             v-model="rows" 
-            :handle="table.options?.isDraggable && !isMobile ? table.options?.draggableTarget ?? '.table__row' : 'null'"
+            :handle="table.options?.isDraggable && table.state != 'edit' && !isMobile ? table.options?.draggableTarget ?? '.table__row' : 'null'"
             :forceFallback="true"
             :fallbackOnBody="true"
             :item-key="getItemKey" 
@@ -114,13 +114,13 @@
                                 required: false,
                                 isHaveNull: true,
                                 multiple: column.is_plural,
-                                visibleCount: props.options?.isShort ? 1 : 5,
+                                visibleCount: props.options?.isShort ? 0 : 5,
                                 placeholder: '' 
                             }"
                             v-model="cell.useCellModel(row.index, column).value"
                             @clickLink="id => table.open({id, related_table: column.related_table})"
                             @create="item => table.create(column.related_table)"
-                            @showAll="() => table.open({id: table.body[row.index].id, tab_slug: column.related_table})"
+                            @showAll="() => table.open({id: table.body[row.index].id, related_table: table.slug, tab_slug: column.related_table})"
                             @update:model-value="val => table.slug == 'products' && getRow(val, table.body[row.index])"
                             @update:prevValue="val => cell.checkEditting(table.body[row.index], {value: val, key: column.key})"
                         />
@@ -188,6 +188,7 @@
                                     multiple: false,
                                     placeholder: ''
                                 }"
+                                :isPreventBottom="props.options.isShort"
                                 v-model="cell.useCellModel(row.index, column).value"
                                 @open="event => cell.setActiveCell({currentTarget: event.closest('.table__cell')}, row.index, column.key)"
                             />
@@ -361,51 +362,62 @@
                 default: [
                     {
                         name: 'Открыть',
-                        action: 'open'
+                        action: 'open',
+                        enabled: true
                     },    
                     {
                         name: 'Редактировать',
-                        action: 'edit'
+                        action: 'edit',
+                        enabled: !props.options?.isShort
                     },
                     {
                         name: 'Скопировать',
-                        action: 'copy'
+                        action: 'copy',
+                        enabled: true
                     },
                     {
                         name: 'Скопировать ссылку',
-                        action: 'copyLink'
+                        action: 'copyLink',
+                        enabled: true
                     },
                     {
                         name: 'Скопировать внешнюю ссылку',
-                        action: 'copyExternalLink'
+                        action: 'copyExternalLink',
+                        enabled: true
                     },
                     {
                         name: 'Удалить',
-                        action: 'initDelete'
+                        action: 'initDelete',
+                        enabled: true
                     }
                 ],
                 edit: [
                     {
                         name: 'Сохранить',
-                        action: 'save'
+                        action: 'save',
+                        enabled: true
                     },
                     {
                         name: 'Отмена',
-                        action: 'cancel'
+                        action: 'cancel',
+                        enabled: true
                     },
                     {
                         name: 'Удалить',
-                        action: 'initDelete'
+                        action: 'initDelete',
+                        enabled: true
                     }
                 ],
                 trash: [
                     {
                         name: 'Открыть',
-                        action: 'open'
+                        action: 'open',
+                        enabled: true
                     },    
                     {
                         name: 'Восстановить',
-                        action: 'initRestore'
+                        action: 'initRestore',
+                        enabled: true
                     },
                 ]
             }

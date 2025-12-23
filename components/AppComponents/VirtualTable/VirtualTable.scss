@@ -63,6 +63,12 @@
   }
 
   &.table_short {
+    .form__item_select {
+      .select__actions {
+        margin: 0px;
+      }
+    }
+
     @media (min-width: 990px) {
       .table__text {
         white-space: nowrap;
@@ -71,6 +77,16 @@
       }
     }
   }
+}
+
+.loader__wrapper {
+  position: sticky;
+  width: 100%;
+  margin-bottom: -50px;
+  left: 0px;
+  z-index: 10;
+  top: 55%;
+  pointer-events: none;
 }
 
 .socket-row {

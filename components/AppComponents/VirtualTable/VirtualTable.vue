@@ -17,7 +17,9 @@
         @changeActive="row => emit('changeActive', row)"
         @getData="data => emit('getData', data)"
       />
-      <IconLoader v-if="table.loading"/>
+      <div class="loader__wrapper" v-if="table.loading">
+        <IconLoader />
+      </div>
       <ScrollButtons />
     </div>
     <TableFooter v-if="props.options?.isHaveFooter" />
@@ -31,7 +33,7 @@
         edit: !props.options.isTrash && table.state != 'edit',
         cancel: true,
         restore: props.options.isTrash,
-        delete: !props.options.isTrash && table.state != 'edit'
+        delete: false
       }"
       :loading="table.saving"
       @action="action => table[action.action](action.value)"
@@ -131,6 +133,7 @@
           isHaveQuery: false,
           isShort: false,
           query: {},
+          disabledKeys: [],
           isDisableSockets: false,
           isDisableSort: false,
           isDisablePull: false,
@@ -155,11 +158,11 @@
           body: []
         }
       },
-      
   })
 
   const emit = defineEmits([
       'openModal',
+      'saveTable',
       'getData',
       'initCreateRoute',
       'choseRow',

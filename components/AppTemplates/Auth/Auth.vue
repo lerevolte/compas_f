@@ -78,7 +78,7 @@
                     userStore.token = response.data.token
                     await userStore.get()
                     await menuStore.get()
-                    window.location.href = menuStore.list[0].link
+                    window.location.href = menuStore.list[0].is_group ? menuStore.list[0]?.children[0]?.link : menuStore.list[0]?.link
                 }
             } catch (error) {
                 console.log('error', error);

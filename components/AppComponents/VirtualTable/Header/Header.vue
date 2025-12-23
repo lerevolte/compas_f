@@ -28,7 +28,10 @@
                 <AppCheckbox 
                     v-if="column.key == 'isChoose'"
                     v-model="column.value"
-                    :options="{title: column.title}"
+                    :options="{
+                        title: column.title,
+                        disabled: table.options?.isShort
+                    }"
                     @update:model-value="table.chooseAll(column.value)"
                 />
                 <span class="text" v-else>

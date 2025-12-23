@@ -480,19 +480,23 @@
             this.actions = [
                 {
                     name: 'Вверх',
-                    action: 'moveUp'
+                    action: 'moveUp',
+                    enabled: true
                 },    
                 {
                     name: 'Вниз',
-                    action: 'moveDown'
+                    action: 'moveDown',
+                    enabled: true
                 },
                 {
                     name: 'Редактировать',
-                    action: 'initEdit'
+                    action: 'initEdit',
+                    enabled: true
                 },
                 {
                     name: 'Удалить',
-                    action: 'delete'
+                    action: 'delete',
+                    enabled: true
                 }
             ]
 

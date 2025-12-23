@@ -53,7 +53,7 @@
         <DetailDynamic 
             :tabs="tabs"
             :id="detail.id"
-            :slug="detail.slug"
+            :slug="props.slug ?? router.params.slug"
             :options="{
                 isExternal: props.is_external,
                 isModule: tabs.is_module,
@@ -199,29 +199,35 @@
                 default: [
                     {
                         name: 'Скопировать',
-                        action: 'copy'
+                        action: 'copy',
+                        enabled: true
                     },
                     {
                         name: 'Скопировать ссылку',
-                        action: 'copyLink'
+                        action: 'copyLink',
+                        enabled: true
                     },
                     {
                         name: 'Скопировать внешнюю ссылку',
-                        action: 'copyExternalLink'
+                        action: 'copyExternalLink',
+                        enabled: true
                     },
                     {
                         name: 'Удалить',
-                        action: 'initDelete'
+                        action: 'initDelete',
+                        enabled: true
                     }
                 ],
                 trash: [
                     {
                         name: 'Скопировать ссылку',
-                        action: 'copyLink'
+                        action: 'copyLink',
+                        enabled: true
                     },
                     {
                         name: 'Восстановить',
-                        action: 'initRestore'
+                        action: 'initRestore',
+                        enabled: true
                     }
                 ]
             }

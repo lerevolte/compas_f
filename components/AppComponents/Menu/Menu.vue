@@ -163,9 +163,19 @@
                         @enableField="field => menu.enableField(field)"
                         @isChanged="menu.isChanged = true"
                         @dragEvent="state => menu.isDragging = state"
-                        @update:modelVisible="(val) => menu.visible = val"
-                        @update:modelHidden="(val) => menu.hidden = val"
-                        @update:modelList="(val) => {menu.list = val; menu.isChanged = true}"
+                        @update:modelVisible="(val) => {
+                            menu.visible = val; 
+                            menu.updateSortOrder()
+                        }"
+                        @update:modelHidden="(val) => {
+                            menu.hidden = val; 
+                            menu.updateSortOrder()
+                        }"
+                        @update:modelList="(val) => {
+                            menu.list = val; 
+                            menu.isChanged = true
+                            menu.updateSortOrder()
+                        }"
                     />
                     <AppSave 
                         v-show="menu.isChanged" 

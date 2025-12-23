@@ -142,6 +142,7 @@
                             searchable: true,
                             required: false,
                             isHaveNull: true,
+                            visibleCount: 5,
                             isSetDefault: true,
                             isCanAdd: true,
                             multiple: field.is_plural,

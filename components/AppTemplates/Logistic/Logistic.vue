@@ -44,7 +44,8 @@
                         :showMore="[
                             {
                                 name: 'Создать маршрут',
-                                action: 'initCreateRoute'
+                                action: 'initCreateRoute',
+                                enabled: true
                             }
                         ]"
                         :options="{
@@ -65,6 +66,7 @@
                             isHaveFooter: false,
                             updatingCount: logistic.routes.updatingCount
                         }"
+                        @saveTable="data => logistic.updateRoute(data)"
                         @openModal="item => emit('openModal', item)"
                         @choseRow="data => logistic.choseRoute(data)"
                         @initCreateRoute="logistic.initCreateRoute()"
@@ -92,7 +94,7 @@
                                 isDraggable: true,
                                 isDisableSockets: true,
                                 isCheckClicked: true,
-                                isDisableSort: true,
+                                isDisableSort: false,
                                 isDisablePull: false,
                                 isDisablePut: true,
                                 draggableTarget: '.table__row',
@@ -123,12 +125,14 @@
                                 route_id: String(logistic.machine_tasks.route_id),
                                 delivery_date: logistic.activeDate
                             },
+                            disabledKeys: ['delivery_date'],
                             isShort: true,
                             isHaveFilter: false,
                             isPermanentEdit: false,
                             isTrash: false,
-                            isDisablePull: false,
-                            isDisablePut: false,
+                            isDisablePull: !logistic.machine_tasks.route_id,
+                            isDisablePut: !logistic.machine_tasks.route_id,
+                            isDisableSort: true,
                             isHaveTopHeader: true,
                             isDisableSockets: true,
                             isHaveFooter: false,
@@ -145,7 +149,6 @@
                 </AppResize>
             </template>
         </draggable>
-
         <teleport to="#menu__overlay" v-if="logistic.modal.state">
             <LogisticModal 
                 :modal="logistic.modal"

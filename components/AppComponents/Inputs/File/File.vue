@@ -208,19 +208,23 @@
             this.actions = [
                 {
                     name: 'Посмотреть',
-                    action: 'check'
+                    action: 'check',
+                    enabled: true
                 },
                 {
                     name: 'Подробная информация',
-                    action: 'showMore'
+                    action: 'showMore',
+                    enabled: true
                 },
                 {
                     name: 'Скачать',
-                    action: 'download'
+                    action: 'download',
+                    enabled: true
                 },
                 {
                     name: 'Удалить',
-                    action: 'delete'
+                    action: 'delete',
+                    enabled: true
                 }
             ]    
             this.modal = {

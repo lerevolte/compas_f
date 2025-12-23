@@ -10,6 +10,7 @@
                 grid-template-columns: 300px 1fr;
                 grid-template-rows: repeat(2, auto) 1fr;
                 max-width: 70vw;
+                min-height: 70vh;
                 max-height: 70vh;
                 overflow: auto;
                 @include mixins.scrollBar();
@@ -48,10 +49,13 @@
 
 .logistic-modal__categories {
     grid-row: 2/5;
+    position: sticky;
+    top: 0px;
     align-self: start;
 
     @media (max-width: 1250px) {
         grid-row: 2;
+        position: static;
     }
 }
 
@@ -117,7 +121,7 @@
     gap: 20px;
     padding: 10px 15px;
     width: 100%;
-    max-width: 250px;
+    max-width: 21vw;
     position: relative;
 
     .icon__close {
@@ -138,11 +142,6 @@
     @media (max-width: 550px) {
         max-width: none;
     }
-}
-
-.modal-step__title {
-    max-width: calc(250px - 100px);
-    @include mixins.textHidden();
 }
 
 .logistic-modal__filter {
@@ -201,17 +200,6 @@
     max-height: 70vh;
     overflow: auto;
     @include mixins.scrollBar();
-}
-
-.logistic-modal__section-body {
-    max-height: 60vh;
-    overflow: auto;
-    @include mixins.scrollBar();
-
-    @media (max-width: 1250px) {
-        max-height: none;
-        overflow: auto;
-    }
 }
 
 .logistic-modal__section-item {

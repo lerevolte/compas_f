@@ -166,6 +166,10 @@
         .tile-section__footer {
             display: none !important;
         }
+
+        .icon_drag {
+            opacity: 1;
+        }
     }
 
     &.draggable-ghost {

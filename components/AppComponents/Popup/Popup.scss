@@ -62,6 +62,7 @@
 
     &.popup__option_disable {
         pointer-events: none;
+        color: variables.$color-border;
     }
 
     &.popup__option_empty {
