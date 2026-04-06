@@ -697,7 +697,7 @@ export class Table {
     create(slug) {
         this.emit('openModal', {
             type: 'create',
-            slug: slug,
+            slug: slug ?? this.slug,
             id: 0
         })
     }
