@@ -24,17 +24,16 @@
                     }" 
                     @endResize="height => logistic.endResize({section, height})"
                 >
-                    <AppMap v-if="section.key == 'map'"
-                        :options="{
-                                showSelect: false
-                        }"
-                        :frameOptions="{
-                            enableHeader: true,
-                            enableSelection: true,
-                            enableRoute: true
-                        }"
-                        :points="logistic.map"
+                    <!-- ★ LogisticMap instead of AppMap -->
+                    <LogisticMap v-if="section.key == 'map'"
+                        :routeData="logistic.selectedRouteData"
+                        :unassignedTasks="logistic.unassignedTasks"
+                        :showUnassigned="true"
+                        :enableSelection="true"
+                        :activeTaskId="logistic.activeTaskId"
                         @getSelectedPoints="data => logistic.getSelectedPoints(data)"
+                        @routeTaskClick="task => onRouteTaskClickOnMap(task)"
+                        @unassignedTaskClick="task => onUnassignedTaskClickOnMap(task)"
                     />
 
                     <AppVirtualTable 
@@ -107,6 +106,8 @@
                                 updatingCount: logistic.logistic_tasks.updatingCount
                             }"
                             @openModal="item => emit('openModal', item)"
+                            @choseRow="row => onUnassignedTaskClickInTable(row)"
+                            @addRow="row => logistic.onTaskDroppedToUnassigned(row)"
                         />
                     </div>
 
@@ -123,7 +124,8 @@
                             isCheckClicked: true,
                             query: {
                                 route_id: String(logistic.machine_tasks.route_id),
-                                delivery_date: logistic.activeDate
+                                sort_field: 'sort',
+                                sort_order: 'asc'
                             },
                             disabledKeys: ['delivery_date'],
                             isShort: true,
@@ -140,11 +142,12 @@
                             localFilter: logistic.machine_tasks.selectedAddresses,
                             updatingCount: logistic.machine_tasks.updatingCount
                         }"
-                        @openModal="item => emit('openModal', item)"
+                        @openModal="item => emit('openModal', { ...item, slug: item.slug || 'logistic_tasks', route_id: logistic.machine_tasks.route_id })"
                         @getData="data => logistic.getRoutes(data)"
                         @addRow="row => logistic.changeRouteTasks(row.list)"
                         @removeRow="row => logistic.changeRouteTasks(row.list)"
                         @changePositionRow="row => logistic.changeRouteTasks(row.list)"
+                        @choseRow="row => onRouteTaskClickInTable(row)"
                     />
                 </AppResize>
             </template>
@@ -161,57 +164,69 @@
 
 <script setup>
     import './Logistic.scss';
-    import AppMap from '@AppComponents/Inputs/Map/Map.vue';
     import AppResize from '@AppComponents/Resize/Resize.vue';
     import AppVirtualTable from '@AppComponents/VirtualTable/VirtualTable.vue';
     import draggable from 'vuedraggable';
-    import LogisticModal from './Modal/Modal.vue'
-    import { Logistic } from '@AppHelpers/classes.js'
-    import LogisticFilter from './Filter/Filter.vue'
+    import LogisticModal from './Modal/Modal.vue';
+    import LogisticFilter from './Filter/Filter.vue';
+    import LogisticMap from './Map/LogisticMap.vue';
+    import { LogisticWithMap } from './logisticClass.js';
 
-    const emit = defineEmits([
-        'openModal'
-    ])
+    const emit = defineEmits(['openModal']);
 
     const props = defineProps({
-        activeDate: {
-            default: null,
-            type: [String, Date]
-        },
-        filterTabs: {
-            default: null,
-            type: Array
-        },
-        activeRoute: {
-            default: null,
-            type: Object
-        }
-    })
+        activeDate: { default: null, type: [String, Date] },
+        filterTabs: { default: null, type: Array },
+        activeRoute: { default: null, type: Object }
+    });
 
-    const logistic = ref(new Logistic(props.activeDate))
+    const logistic = ref(new LogisticWithMap(props.activeDate));
+
+    // ── Map ↔ Table interaction ──
+    // Click on route task marker on map → highlight row in table
+    const onRouteTaskClickOnMap = (task) => {
+        logistic.value.activeTaskId = null;
+        nextTick(() => { logistic.value.activeTaskId = task.id; });
+    };
+
+    const onRouteTaskClickInTable = (row) => {
+        const taskId = row.id || row;
+        logistic.value.activeTaskId = null;
+        nextTick(() => { logistic.value.activeTaskId = taskId; });
+    };
+
+    const onUnassignedTaskClickOnMap = (task) => {
+        logistic.value.activeTaskId = null;
+        nextTick(() => { logistic.value.activeTaskId = task.id; });
+    };
+
+    const onUnassignedTaskClickInTable = (row) => {
+        const taskId = row.id || row;
+        logistic.value.activeTaskId = null;
+        nextTick(() => { logistic.value.activeTaskId = taskId; });
+    };
 
     const filteredFields = computed(() => {
-        let request = {}
-        if (logistic.value.filterFields.length == 0) return request
-        logistic.value.filterFields.map(tab => {
-            request[tab.key] = tab.value
-        })
-        return request
-    })
+        let request = {};
+        if (logistic.value.filterFields.length === 0) return request;
+        logistic.value.filterFields.map(tab => { request[tab.key] = tab.value; });
+        return request;
+    });
 
     watch(() => filteredFields.value, () => {
-        logistic.value.logistic_tasks.updatingCount++
-    })
+        logistic.value.logistic_tasks.updatingCount++;
+    });
 
     watch(() => props.activeDate, () => {
-        logistic.value.updateActiveDate(props.activeDate)
-    })
+        logistic.value.updateActiveDate(props.activeDate);
+    });
 
     watch(() => props.activeRoute, () => {
-        logistic.value.updateActiveRoute(props.activeRoute)
-    })
+        logistic.value.updateActiveRoute(props.activeRoute);
+    });
 
     onMounted(() => {
-        logistic.value.getSections()
-    })
+        logistic.value.getSections();
+        logistic.value.loadUnassignedTasks();
+    });
 </script>
