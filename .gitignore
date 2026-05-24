@@ -53,3 +53,4 @@ Thumbs.db
 
 # Claude Code (опционально)
 .claude/settings.local.json/public_new/
+/public_new/
