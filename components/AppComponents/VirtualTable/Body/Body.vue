@@ -12,6 +12,7 @@
             :handle="table.options?.isDraggable && table.state != 'edit' && !isMobile ? table.options?.draggableTarget ?? '.table__row' : 'null'"
             :forceFallback="true"
             :fallbackOnBody="true"
+            :delay="300"
             :item-key="getItemKey" 
             class="table__body" 
             drag-class="draggable-drag"
@@ -206,6 +207,7 @@
                                     edit: table.body[row.index] && !column.read_only && (table.body[row.index].edit || table.options?.isPermanentEdit),
                                     required: false,
                                     isHaveNull: true,
+                                    isCanCreate: column.can_create ?? false,
                                     placeholder: '' 
                                 }"
                                 v-model="cell.useCellModel(row.index, column).value"
@@ -233,7 +235,7 @@
 
                         <div class="table__cell-content" v-else-if="table.body[row.index] && (!table.body[row.index].edit || column.read_only)">
                             <span class="table__text text" v-if="['text', 'number'].includes(column.type) && (!column.is_external_link || !table.body[row.index][column.key]?.external_link)">
-                                {{ cell.useCellModel(row.index, column).value }}
+                                {{ cell.useCellModel(row.index, column).value }}<span class="table__unit" v-if="column.unit && cell.useCellModel(row.index, column).value"> {{ column.unit }}</span>
                             </span>
 
                             <a :href="cell.useCellModel(row.index, column, 'external_link').value" target="_blank" class="table__text text" v-else-if="column.type == 'text' && column.is_external_link">
@@ -272,6 +274,7 @@
                                     name: column.key,
                                     required: false,
                                     isHaveNull: false,
+                                    isCanCreate: column.can_create ?? false,
                                     placeholder: '' 
                                 }"
                                 :model-value="cell.useCellModel(row.index, column).value"
@@ -368,7 +371,7 @@
                     {
                         name: 'Редактировать',
                         action: 'edit',
-                        enabled: !props.options?.isShort
+                        enabled: true
                     },
                     {
                         name: 'Скопировать',

@@ -39,6 +39,7 @@
             :id="modal.id"
             :tab_slug="modal.tab_slug"
             :slug="modal.slug"
+            :route_id="modal.route_id"
             :is_modal="true"
             :isGlobalEdit="['create', 'copy'].includes(modal.type)"
             :isCopy="modal.type === 'copy'"
@@ -94,7 +95,7 @@
       item.slug = item.slug ?? router.params.slug
       item.tab_slug = item.tab_slug ?? null
  
-      if ((this.modal.length >= 9 || window.screen.width <= 990) && !['create', 'copy'].includes(item.type)) {
+      if (this.modal.length >= 9 && !['create', 'copy'].includes(item.type)) {
         this.modal = []
         this.addresses = []
         if (item.template == 'chart') {
@@ -136,10 +137,10 @@
 
   const getRoute = computed(() => {
     const isAuth = router.path.includes('/auth')
-    const isExternal = router.path.includes('/api/external')
+    const isExternal = router.path.startsWith('/external/') || router.path.includes('/api/external')
     return {
       type: isAuth ? 'auth' : isExternal ? 'empty' : 'default',
-      state: !isAuth
+      state: !isAuth && !isExternal
     }
   })
 

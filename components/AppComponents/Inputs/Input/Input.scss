@@ -1,11 +1,9 @@
 @use '@/assets/variables.scss' as variables;
 @use '@/assets/mixins.scss' as mixins;
-
 .form__item {
     &.form__item_input {
         position: relative;
         @include mixins.blankGap();
-
         .blank__unit {
             pointer-events: none;
             color: variables.$color-border;
@@ -13,11 +11,25 @@
             bottom: 10px;
             right: 15px;
         }
-
         &:has(.blank__unit) {
             input {
                 padding-right: 50px;
             }
         }
+        .form-item__substring {
+            background-color: transparent;
+            color: #8f8f8f;
+            display: inline-flex;
+            position: absolute;
+            right: 17px;
+            bottom: 10px;
+            user-select: none;
+            pointer-events: none;
+        }
+        &:has(.form-item__substring) {
+            input {
+                padding-right: 50px;
+            }
+        }
     }
-} 
+}

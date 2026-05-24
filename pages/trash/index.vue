@@ -22,7 +22,7 @@
 		</div>
 
 		<AppVirtualTable
-            v-if="!tabs.loading" 
+            v-if="!tabs.loading && tabs.active" 
             :options="{
                 updatingCount: tabs.updatingCount,
                 isHaveQuery: true,
@@ -34,9 +34,13 @@
                 isHaveFilter: true,
                 isTrash: true
             }"
-			:slug="tabs.active?.tab"
-			@openModal="item => emit('openModal', item)"
-		/>
+            :slug="tabs.active?.tab"
+            @openModal="item => emit('openModal', item)"
+        />
+
+        <div v-if="!tabs.loading && !tabs.active" class="trash-empty">
+            <p>Корзина пуста</p>
+        </div>
     </main>
 </template>
 

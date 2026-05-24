@@ -54,6 +54,7 @@
             :tabs="tabs"
             :id="detail.id"
             :slug="props.slug ?? router.params.slug"
+            :route_id="props.route_id"
             :options="{
                 isExternal: props.is_external,
                 isModule: tabs.is_module,
@@ -122,6 +123,10 @@
         slug: {
             default: '',
             type: String
+        },
+        route_id: {
+            default: null,
+            type: [String, Number]
         },
         tab_slug: {
             default: null,
@@ -291,7 +296,7 @@
                 this.isCopy = false
                 this.id = item.id
                 emit('updateMetaHeader', {
-                    title: item.header_title,
+                    title: item.header_title || '',
                     href: {
                         id: item.id,
                         slug: detail.value.slug

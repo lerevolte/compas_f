@@ -154,8 +154,11 @@
 
 .select__value {
     position: absolute;
-    top: 8px;
+    top: 0!important;
     left: 15px;
+    height: 100%;
+    display: flex;
+    align-items: center;
 
     &.select__value_single {
         pointer-events: none;

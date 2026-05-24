@@ -315,6 +315,13 @@
         position: absolute;
         top: 0px;
         right: 15px;
+
+        &.popup_open {
+            z-index: 50;
+        }
+    }
+    &:has(.popup_open) {
+        z-index: 50;
     }
 
     .icon_drag,

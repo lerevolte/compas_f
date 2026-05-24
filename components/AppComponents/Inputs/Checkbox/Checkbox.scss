@@ -57,11 +57,14 @@
             &::after {
                 opacity: 0;
                 position: absolute;
-                top: 0px;
-                left: -1px;
+                bottom: 2px;
+                left: 0;
                 width: 100%;
                 height: 100%;
-                content: url('/icons/check.svg')
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                content: url('/icons/check.svg');
             }
         }
 

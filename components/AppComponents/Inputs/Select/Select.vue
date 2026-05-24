@@ -53,7 +53,7 @@
                 <div 
                     class="select__option" 
                     v-for="option in select.state.visibleList" 
-                    :class="{ 'select__option_active': props.modelValue && (props.modelValue == option.value || (Array.isArray(props.modelValue) && props.modelValue.includes(option.value)))}" 
+                    :class="{ 'select__option_active': props.modelValue && (!Array.isArray(props.modelValue) ? props.modelValue == option.value : props.modelValue.length > 0 && props.modelValue.includes(option.value))}"
                     :value="option.value" 
                     @click="select.changeValue(option)"
                 >
@@ -103,13 +103,36 @@
                 lastTab: null
             });
 
-            // Закрытие опций
+
             this.closeOptions = (event) => {
+                console.log('closeOptions ENTER, isOpen:', this.state.isOpen, 'search:', this.state.search);
+                if (!this.state.isOpen) return;
                 if (selectRef.value && !selectRef.value.contains(event.target)) {
+                    // For address type - save typed text as value
+                    if (props.options.type == 'address' && this.state.search && this.state.search.trim()) {
+                        const typed = this.state.search.trim();
+                        const coordPattern = /^(-?\d+\.?\d*)[,\s]+(-?\d+\.?\d*)$/;
+                        const match = typed.match(coordPattern);
+                        const newValue = match 
+                            ? { text: typed, coords: [parseFloat(match[1]), parseFloat(match[2])] }
+                            : { text: typed, coords: props.modelValue?.coords ?? null };
+                        
+                        emit('update:modelValue', newValue);
+                        
+                        this.state.isOpen = false;
+                        this.state.search = '';
+                        this.state.isTop = false;
+                        // Update list with new value so activeOption can find it
+                        this.state.list = [{ label: typed, value: newValue }];
+                        this.state.visibleList = this.state.list;
+                        document.removeEventListener('click', this.closeOptions);
+                        return;
+                    }
+                    
                     this.state.isOpen = false;
-                    this.state.search = ''
+                    this.state.search = '';
                     this.state.isTop = false;
-                    this.setOptions()
+                    this.setOptions();
                     document.removeEventListener('click', this.closeOptions);
                 }
             };
@@ -186,6 +209,9 @@
         toggleOptions(event) {
             if (props.options.edit == false) return
             if (props.options.multiple && this.state.isOpen && selectValuesRef.value.contains(event.target)) return
+
+
+            if (this.state.isOpen && event?.target?.closest('input')) return
             this.state.isOpen = !this.state.isOpen;
 
             if (this.state.isOpen) {
@@ -193,7 +219,7 @@
                 nextTick(() => this.checkPosition());
                 if (props.options.isSaveSearch) {
                     this.state.search = activeOption.value?.label ?? ''
-                    this.state.visibleList = [activeOption.value]
+                    this.state.visibleList = activeOption.value ? [activeOption.value] : []
                 }
                 if (searchRef.value.inputRef) {
                     searchRef.value.inputRef.focus();
@@ -211,7 +237,9 @@
         }
         
         setOptions() {
+            console.log('setOptions called', new Error().stack.split('\n')[2]);
             if (props.options.type == 'address') {
+                console.log('setOptions address, modelValue:', JSON.stringify(props.modelValue));
                 this.state.list = props.options.list ?? []
                 this.state.visibleList = props.options.list ?? []
                 
@@ -280,6 +308,7 @@
     })
 
     watch(() => props.options.list, () => {
+        console.log('watch options.list fired');
         select.setOptions()
     })
 

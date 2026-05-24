@@ -7,32 +7,34 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    overflow: visible;
+    overflow: hidden;
 }
 
 .logistic-map__header {
-    padding: 10px;
+    padding: 9px 10px 9px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-shrink: 0;
 }
 
 .logistic-map__title {
     font-weight: 600;
+    font-size: 14px;
 }
 
 .logistic-map__body {
     position: relative;
     width: 100%;
-    height: 100%;
     flex: 1;
-    overflow: visible;
+    overflow: hidden;
+    min-height: 0;
 }
 
 .logistic-map__container {
     width: 100%;
     height: 100%;
-    min-height: 360px;
+    min-height: 300px;
     position: relative;
     z-index: 0;
 }
@@ -40,6 +42,11 @@
 // ── Route popup (planned markers) ──
 .red {
     color: #b41802 !important;
+}
+
+.fact-time {
+    color: #2e7d32;
+    font-weight: 600;
 }
 
 .route-popup {
@@ -56,7 +63,7 @@
     border: solid 1px #8601ff;
     background-color: #fff;
     font-family: Helvetica, sans-serif;
-    font-size: 14px;
+    font-size: 12px;
     color: #000;
     width: max-content;
 }
@@ -65,7 +72,7 @@
     display: none;
     width: max-content;
     position: absolute;
-    top: calc(100% + 10px);
+    top: calc(100% + 5px);
     left: 0;
     border-radius: 7px;
     box-shadow: 0 0 3px 0 #000;
@@ -107,7 +114,7 @@
     display: flex;
     align-items: center;
     font-family: Helvetica, sans-serif;
-    font-size: 14px;
+    font-size: 12px;
     padding: 0 10px;
     height: 30px;
 }
@@ -258,39 +265,42 @@
     }
 }
 
+// ── Header actions ──
+.logistic-map__header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 // ── Settings panel ──
 .logistic-map__settings {
-    position: absolute;
-    top: 10px;
-    right: 10px;
+    position: relative;
     z-index: 10000;
-    pointer-events: auto;
     overflow: visible;
 }
 
 .logistic-map__settings-button {
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-    min-height: 32px;
-    max-width: 32px;
-    max-height: 32px;
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    min-height: 26px;
+    max-width: 26px;
+    max-height: 26px;
     padding: 0;
+    cursor: pointer;
     margin: 0;
-    background-color: #fff;
-    border-radius: 6px;
+    background-color: transparent;
     display: flex;
     justify-content: center;
     align-items: center;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+
     cursor: pointer;
-    border: 1px solid rgba(0, 0, 0, 0.08);
+    border: none;
     transition: background-color 0.15s, box-shadow 0.15s;
-    overflow: visible;
 
     svg {
-        width: 16px;
-        height: 16px;
+        width: 14px;
+        height: 14px;
         display: block;
         fill: #555;
         flex-shrink: 0;
@@ -298,8 +308,7 @@
     }
 
     &:hover {
-        background-color: #f5f5f5;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+        
 
         svg {
             fill: #222;
@@ -309,30 +318,90 @@
 
 .settings-panel {
     display: none;
+    overflow:hidden;
     position: absolute;
-    top: calc(100% + 6px);
     right: 0;
-    width: 220px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    font-size: 13px;
-    line-height: 1.4;
-    color: #333;
+    top: calc(100% + 5px);
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    border: 1px solid #eeeff1;
+    min-width: 200px;
+    z-index: 100;
+    padding: 0;
+
+    .menu-panel {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .menu-item {
+        padding: 0 15px;
+        cursor: pointer;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 0;
+        font-family: PT Sans;
+
+        &:hover {
+            background: #f5f6f8;
+        }
+
+        label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            line-height: 1;
+        }
+
+        input[type="radio"],
+        input[type="checkbox"] {
+            margin: 0;
+            min-height: 20px;
+        }
+    }
+
+    .submenu-header {
+        padding: 10px 15px;
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid #eeeff1;
+
+        &:hover {
+            background: #f5f6f8;
+        }
+
+        .back-arrow {
+            font-size: 16px;
+        }
+    }
+
+    .arrow {
+        color: #a6b7d4;
+    }
 }
 
 .menu-panel {
     display: none;
-    padding: 4px 0;
+    padding: 0;
 
     &.active {
         display: block;
     }
 }
 
-.logistic-map .menu-item {
-    padding: 8px 14px;
+.logistic-map__settings .menu-item {
+    padding: 10px 14px;
     cursor: pointer;
     display: flex;
     justify-content: space-between;
@@ -340,8 +409,9 @@
     transition: background-color 0.12s;
     border: none;
     border-bottom: none;
-    font-size: 13px;
-    color: #333;
+    font-size: 15px;
+    font-family: PT Sans;
+    color: #000;
     white-space: nowrap;
 
     &:hover {
@@ -364,7 +434,7 @@
         cursor: pointer;
         margin: 0;
         font-weight: 400;
-        font-size: 13px;
+        font-size: 15px;
     }
 
     input[type="radio"],
@@ -380,9 +450,10 @@
 
 .submenu-header {
     padding: 10px 14px;
+    font-family: PT Sans;
     font-weight: 600;
-    font-size: 13px;
-    color: #333;
+    font-size: 15px;
+    color: #000;
     background-color: #f7f8fa;
     border-bottom: 1px solid #eaedf0;
     display: flex;
@@ -416,5 +487,173 @@
 
     .leaflet-routing-container {
         display: none !important;
+    }
+}
+
+// ── Task cluster popup ──
+.task-cluster-main {
+    position: relative;
+}
+
+.task-cluster-counters {
+    display: flex;
+    gap: 2px;
+}
+
+.task-cluster-counter-item {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.task-cluster-popup .route-popup__extend {
+    min-width: 180px;
+}
+
+.cluster-task-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.cluster-task-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.12s;
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &:hover {
+        background-color: #f0f4f8;
+    }
+
+    &.active {
+        background-color: #e0edfa;
+    }
+}
+
+.cluster-task-counter {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.cluster-task-name {
+    font-size: 12px;
+    color: #000;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+}
+
+.cluster-task-time {
+    font-size: 11px;
+    color: #888;
+    white-space: nowrap;
+    margin-left: auto;
+    padding-left: 8px;
+}
+
+// ── SVG icons in markers ──
+.marker-svg-icon {
+    width: 14px;
+    height: 14px;
+    display: block;
+    filter: brightness(0) invert(1); // make white on colored background
+}
+
+// ── Analytics cluster icons ──
+.analytics-cluster {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(255, 255, 255, 0.7);
+
+    &.signal-loss-cluster {
+        background-color: rgba(240, 113, 120, 0.7);
+    }
+}
+
+// ── Track control buttons ──
+.track-control-btn {
+    height: 27px;
+    margin-right: 5px;
+    padding: 0 10px;
+    border-radius: 5px;
+    border: solid 1px #553c40;
+    background-color: rgba(0, 0, 0, 0.53);
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    line-height: 1;
+}
+
+.unassigned-popup:has(.route-popup__extend.active) {
+    z-index: 10000 !important;
+    position: relative;
+}
+
+.custom-div-icon:has(.route-popup__extend.active) {
+    z-index: 10000 !important;
+}
+.leaflet-top.leaflet-left {
+    top: 50%;
+    transform: translateY(-50%);
+}
+.icon__lasso, .map__frame-selection {
+    display: none;
+}
+.settings-panel .submenu-header {
+    align-items: center;
+    border-bottom: 1px solid #eeeff1;
+    cursor: pointer;
+    display: flex;
+    font-size: 15px;
+    font-weight: 600;
+    gap: 10px;
+    padding: 10px 15px;
+
+    .icon__arrow {
+        display: flex;
+        align-items: center;
+        transform: rotate(180deg);
+    }
+}
+.logistic_dragging .logistic-map {
+    .logistic-map__body {
+        display: none;
     }
 }

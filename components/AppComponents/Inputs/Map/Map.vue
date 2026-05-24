@@ -107,7 +107,9 @@
 
     const setModelValue = computed({
         get: () => props.modelValue,
-        set: (val) => emit('update:modelValue', val)
+        set: (val) => {
+            emit('update:modelValue', val)
+        }
     })
 
     const copyText = (value, buttonRef) => {
@@ -117,6 +119,10 @@
         setTimeout(() => {
             buttonRef.classList.remove('button_copy_active')
         }, 3000);
-    } 
+    }
+    watch(() => props.modelValue, (val) => {
+        console.log('Map.vue modelValue changed:', JSON.stringify(val));
+    }, { deep: true })
+
 
 </script>

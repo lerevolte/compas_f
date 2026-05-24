@@ -31,7 +31,17 @@
                                 title: field.name ?? field.title
                             }"
                             @update:modelValue="() => {
-                                emit('enableField', field)
+                                if (isInitGroup) {
+                                    // Update group children immediately
+                                    const enabledItems = settings.nest.templateField.list.filter(p => p.enabled)
+                                    let findedLink = visible.find(item => item.id == settings.nest.templateField.id) ?? hidden.find(item => item.id == settings.nest.templateField.id)
+                                    if (findedLink) {
+                                        findedLink.children = JSON.parse(JSON.stringify(enabledItems))
+                                        emit('update:modelList', [...visible, ...hidden])
+                                    }
+                                } else {
+                                    emit('enableField', field)
+                                }
                                 emit('isChanged', true)
                             }"
                         />
@@ -59,7 +69,7 @@
                         class="settings__list settings__list_drag"
                         ghost-class="draggable-ghost"
                         drag-class="draggable-drag"
-                        v-model="visible" 
+                        v-model="dragList"
                         item-key="id" 
                         fallback-class="draggable-fallback"
                         :forceFallback="true"
@@ -438,8 +448,13 @@
             emit('isChanged', true); 
             emit('dragEvent', false)
 
-            if (props.options.isHaveHidden) {
-                console.log(event);
+            if (isInitGroup.value) {
+                const enabledItems = this.templateField.list.filter(p => p.enabled)
+                let findedLink = visible.value.find(item => item.id == this.templateField.id) ?? hidden.value.find(item => item.id == this.templateField.id)
+                if (findedLink) {
+                    findedLink.children = JSON.parse(JSON.stringify(enabledItems))
+                    emit('update:modelList', [...visible.value, ...hidden.value])
+                }
             }
         }
     }
@@ -469,6 +484,25 @@
 
     const isInitGroup = computed(() => {
         return settings.value.nest.history && settings.value.nest.history.find(p => p.value == 'initGroup')
+    })
+
+    const dragList = computed({
+        get: () => {
+            if (isInitGroup.value) {
+                return settings.value.nest.templateField.list.filter(p => p.enabled)
+            }
+            return visible.value
+        },
+        set: (val) => {
+            if (isInitGroup.value) {
+                // Update order in templateField.list for enabled items
+                const enabledIds = val.map(v => v.id)
+                const disabled = settings.value.nest.templateField.list.filter(p => !p.enabled)
+                settings.value.nest.templateField.list = [...val, ...disabled]
+            } else {
+                visible.value = val
+            }
+        }
     })
 
     const templateListCheck = computed({

@@ -7,6 +7,14 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
     if (import.meta.server) return
 
+    if (to.meta.auth === false) return
+
+
+    if (to.path.startsWith('/external/')) {
+        return
+    }
+
+
     // Исключаем маршруты /api/external из всех проверок - они должны быть доступны всегда
     if (to.path.includes('/api/external')) {
         return

@@ -18,9 +18,10 @@ export const useMenuStore = defineStore('menuStore', {
         async get() {
             try {
                 let response = await api.callMethod('GET', routes.menu.get)
-                this.list = response.data
+                this.list = Array.isArray(response.data) ? response.data : []
             } catch (error) {
                 console.log('get_menu', error)
+                this.list = []
             }
         },
 

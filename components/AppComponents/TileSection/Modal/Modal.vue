@@ -174,7 +174,7 @@
                     v-if="modal.fields[modal.field.type] && typeof modal.fields[modal.field.type].can_create != 'undefined'"
                     v-model="modal.field.can_create"
                     :options="{
-                        title: 'Разрешить создание опций',
+                        title: 'Включить цветовую палитру',
                     }"
                 />
                 <AppCheckbox 

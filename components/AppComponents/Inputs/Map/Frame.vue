@@ -140,24 +140,33 @@
      * @param {Array} points - Массив нормализованных точек
      */
     const focusMapOnPoints = (points) => {
-        if (!mapInstance.value || !points.length) {
-            return;
-        }
+        if (!mapInstance.value || !points.length) return;
 
         if (points.length === 1) {
             mapInstance.value.setView(points[0].coords, props.options.defaultZoom ?? 10, {
-                animate: true
+                animate: false
             });
-            return;
+        } else {
+            if (!L) return;
+            const bounds = L.latLngBounds(points.map(({ coords }) => coords));
+            mapInstance.value.fitBounds(bounds, {
+                padding: [20, 20],
+                animate: false
+            });
         }
 
-        if (!L) return;
-        
-        const bounds = L.latLngBounds(points.map(({ coords }) => coords));
-        mapInstance.value.fitBounds(bounds, {
-            padding: [20, 20],
-            animate: true
-        });
+        // Force Yandex layer to refresh by triggering a tiny zoom
+        setTimeout(() => {
+            if (mapInstance.value) {
+                const z = mapInstance.value.getZoom();
+                mapInstance.value.setZoom(z - 1, { animate: false });
+                setTimeout(() => {
+                    if (mapInstance.value) {
+                        mapInstance.value.setZoom(z, { animate: false });
+                    }
+                }, 50);
+            }
+        }, 100);
     };
 
     /**
@@ -167,24 +176,23 @@
      * @param {Array} points - Массив нормализованных точек для отображения
      */
     const renderMarkers = (points) => {
-        if (!mapInstance.value || !L) {
-            return;
-        }
+        if (!mapInstance.value || !L) return;
+        
+        console.log('renderMarkers, points:', points.map(p => p.coords));
 
         if (markersLayer.value) {
             mapInstance.value.removeLayer(markersLayer.value);
             markersLayer.value = null;
         }
 
-        if (!points.length) {
-            return;
-        }
+        if (!points.length) return;
 
         markersLayer.value = L.layerGroup();
         const icon = getMarkerIcon();
         if (!icon) return;
 
         points.forEach(({ coords }) => {
+            console.log('Adding marker at:', coords);
             const marker = L.marker(coords, { icon });
             markersLayer.value.addLayer(marker);
         });
@@ -625,8 +633,35 @@
      * Перестраивает маршрут если он был построен ранее
      */
     const syncPointsOnMap = () => {
-        renderMarkers(normalizedPoints.value);
-        focusMapOnPoints(normalizedPoints.value);
+        if (!mapInstance.value || !L) return;
+        
+        const points = normalizedPoints.value;
+        if (!points.length) return;
+        
+        // Remove Yandex layer temporarily
+        let yandexLayer = null;
+        mapInstance.value.eachLayer(layer => {
+            if (layer._type === 'yandex' || layer._yandex) {
+                yandexLayer = layer;
+            }
+        });
+        if (yandexLayer) mapInstance.value.removeLayer(yandexLayer);
+        
+        renderMarkers(points);
+
+        if (points.length === 1) {
+            mapInstance.value.setView(points[0].coords, props.options.defaultZoom ?? 10, { animate: false });
+        } else {
+            const bounds = L.latLngBounds(points.map(({ coords }) => coords));
+            mapInstance.value.fitBounds(bounds, { padding: [20, 20], animate: false });
+        }
+        
+        // Re-add Yandex layer
+        if (yandexLayer) {
+            setTimeout(() => {
+                if (mapInstance.value) yandexLayer.addTo(mapInstance.value);
+            }, 50);
+        }
 
         if (props.options?.enableRoute) {
             clearRoute();
@@ -799,6 +834,8 @@
             clearRoute();
         }
     });
+
+
 
     onMounted(async () => {
         await initMap();   

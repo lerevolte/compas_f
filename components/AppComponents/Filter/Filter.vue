@@ -315,15 +315,14 @@
 
         // Удаление несохранённых полей
         dropUnsavedFields() {
+            console.log('dropUnsavedFields called');
             for (let key in this.state.tabsValues) {
-                if (key == 'search') {
-                    this.state.search = this.state.tabsValues.search ?? null
-                } else {
-                    let findedField = this.state.activeTabs.find(tab => tab.key == key)
-                    this.state.tabsValues[key] = findedField ? findedField.value : null
-                }
+                this.state.tabsValues[key] = null
             }
-
+            this.state.search = null
+            this.state.activeTabs = []
+            
+            this.updateInfo()
             this.closeContent(null, true)
         }
 
@@ -390,6 +389,7 @@
             if (this.state.search) {
                 request.push({ label: 'Поиск', key: 'search', value: this.state.search })
             }
+            console.log('updateInfo request:', request);
             injectedFilter.get(request)
         }
 

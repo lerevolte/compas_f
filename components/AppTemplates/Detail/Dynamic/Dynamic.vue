@@ -126,6 +126,10 @@
             default: null,
             type: [String, Number, Object]
         },
+        route_id: {
+            default: null,
+            type: [String, Number]
+        },
         tabs: {
             default: {
                 active: {
@@ -181,7 +185,11 @@
                     response = await api.callMethod('GET', route)
                 } else {
                     const route = routes.detail.get.replace('${slug}', props.slug).replace('${id}', props.id)
-                    response = await api.callMethod('GET', `${route}${props.options.isCopy ? '?is_copy=1' : ''}`)
+                    const query = []
+                    if (props.options.isCopy) query.push('is_copy=1')
+                    if (props.route_id) query.push(`route_id=${props.route_id}`)
+                    const queryString = query.length ? `?${query.join('&')}` : ''
+                    response = await api.callMethod('GET', `${route}${queryString}`)
                     socket.value.set({slug: props.slug, id: props.id})
                     this.socket = socket.value.entities[props.slug]?.details[props.id]
                 }
@@ -192,7 +200,7 @@
                     emit('action', {action: 'checkIsTrash', value: Boolean(response.data.detail.deleted_at)})
                     emit('action', { 
                         action: 'updateMetaHeader', value: {
-                            title: response.data.detail.header_title, 
+                            title: response.data.detail.header_title || '',
                             href: {
                                 slug: props.slug, 
                                 id: props.id

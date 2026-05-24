@@ -37,6 +37,11 @@
         max-height: 30vh;
         overflow-y: auto;
         @include mixins.scrollBar();
+
+        // Allow colorpicker to overflow
+        &:has(.popup_open) {
+            overflow: visible;
+        }
     }
 }
 
@@ -182,6 +187,7 @@
             position: relative;
             width: 40px;
             aspect-ratio: 1;
+            overflow: hidden;
 
             .file__upload {
                 position: absolute;
@@ -201,7 +207,7 @@
 
     .modal__file-container {
         position: relative;
-
+        z-index: 1;
 
         .icon__close {
             background: #fff;
@@ -227,6 +233,12 @@
 
         .icon__file {
             width: 20px;
+        }
+    }
+    .modal__option-field {
+        .form__item_input {
+            position: relative;
+            z-index: 2;
         }
     }
 }

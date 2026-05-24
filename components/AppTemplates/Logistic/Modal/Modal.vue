@@ -28,7 +28,7 @@
                 class="logistic-modal__step modal-step" 
                 v-for="step in route.steps.list" 
                 :class="{'logistic-modal__step_active': step.slug == route.steps.active?.slug}"
-                @click="route.steps.active = step"
+                @click="route.switchTab(step)"
             >
                 <div class="modal-step__value">
                     <ModalItemValue 
@@ -179,40 +179,50 @@
                 cars: new Car(),
                 employees: new Employee(),
             }
+
+            // Separate filters per tab
+            this.tabFilters = reactive({
+                cars: {
+                    company: null,
+                    cars: null,
+                    employees: null
+                },
+                employees: {
+                    company: null,
+                    cars: null,
+                    employees: null
+                }
+            })
+
+            this.tabSavedOptions = reactive({
+                cars: [
+                    { slug: 'q', label: 'Поиск', value: null },
+                    { slug: 'company', label: 'Компания', value: null },
+                    { slug: 'cars', label: 'Машина', value: null },
+                    { slug: 'employees', label: 'Сотрудник', value: null }
+                ],
+                employees: [
+                    { slug: 'q', label: 'Поиск', value: null },
+                    { slug: 'company', label: 'Компания', value: null },
+                    { slug: 'cars', label: 'Машина', value: null },
+                    { slug: 'employees', label: 'Сотрудник', value: null }
+                ]
+            })
             this.filter = reactive({
                 cars: null,
                 company: null,
                 employees: null
             })
-            this.savedOptions = reactive([
-                {
-                    slug: 'q',
-                    label: 'Поиск',
-                    value: null
-                },
-                {
-                    slug: 'company',
-                    label: 'Компания',
-                    value: null
-                },
-                {
-                    slug: 'cars',
-                    label: 'Машина',
-                    value: null
-                },
-                {
-                    slug: 'employees',
-                    label: 'Сотрудник',
-                    value: null
-                }
-            ])
+         
         }
 
         // Инициализация вычисляемых свойств
         initComputed() {
             this.computedFilter = computed({
                 get: () => {
-                    return Object.values(this.filter).filter(p => p)
+                    const tab = this.steps.active?.slug
+                    if (!tab) return []
+                    return Object.values(this.tabFilters[tab]).filter(p => p)
                 },
                 set: (val) => {
                     this.setFilterValue(this.steps.active.slug, {val: val.value, label: val.label.text, origin: val})
@@ -220,10 +230,12 @@
             })
             this.computedSavedOptions = computed({
                 get: () => {
+                    const tab = this.steps.active?.slug
+                    if (!tab) return []
                     setTimeout(() => {
                         selectPadding.value = selectValuesRef.value?.offsetWidth 
                     }, 10);
-                    return this.savedOptions.filter(p => p.value)
+                    return this.tabSavedOptions[tab].filter(p => p.value)
                 }
             })
         }
@@ -237,29 +249,44 @@
 
         // Установка значения для фильтра
         setFilterValue(slug, val) {
+            const tab = this.steps.active?.slug
+            
+            // Update tab-specific filter
+            this.tabFilters[tab][slug] = val.value
+            let findedOption = this.tabSavedOptions[tab][this.tabSavedOptions[tab].findIndex(p => p.slug == slug)]
+            if (findedOption) {
+                findedOption.value = val.label
+                if (val.origin) {
+                    findedOption.origin = val.origin
+                }
+            }
+
+            // Update global filter and step value
             this.filter[slug] = val.value
-            let findedOption = this.savedOptions[this.savedOptions.findIndex(p => p.slug == slug)]
-            findedOption.value = val.label
-
             if (val.origin) {
-                findedOption.origin = val.origin
                 this.steps.list[this.steps.list.findIndex(p => p.slug == slug)].value = val.origin
-            } 
+            }
 
-            route.value.entities.cars.filterMachine()
-            route.value.entities.employees.filterEmployee()
+            // Only filter active tab's list
+            if (tab == 'cars') {
+                route.value.entities.cars.filterMachine()
+            } else if (tab == 'employees') {
+                route.value.entities.employees.filterEmployee()
+            }
         }
 
         // Удаление опций
         deleteOption(option) {
-            if (option.slug) {
-                if (option.slug == 'company') {
-                    this.entities.company.active = null
-                } else {
-                    let findedStep = this.steps.list[this.steps.list.findIndex(p => p.slug == option.slug)]
-                    if (findedStep) findedStep.value = null
-                }
+            const tab = this.steps.active?.slug
+            
+            if (option.slug == 'company') {
+                this.entities.company.active = null
+            } else if (tab == option.slug) {
+                // Only clear step value if deleting from own tab
+                let findedStep = this.steps.list[this.steps.list.findIndex(p => p.slug == option.slug)]
+                if (findedStep) findedStep.value = null
             }
+            
             this.setFilterValue(option.slug, {value: null, label: null})
         }
 
@@ -277,6 +304,26 @@
                 name: name.length ? name.join(', ') : null,
                 employee_id: this.filter.employees ? [this.filter.employees] : null
             })
+        }
+
+        switchTab(step) {
+            const prevTab = this.steps.active?.slug
+            this.steps.active = step
+            const newTab = step.slug
+            
+            // If switching to employees for the first time — copy filters from cars tab
+            if (newTab == 'employees' && !this.tabSavedOptions.employees.some(p => p.value)) {
+                this.tabFilters.employees = { ...this.tabFilters.cars }
+                this.tabSavedOptions.employees = JSON.parse(JSON.stringify(this.tabSavedOptions.cars))
+                route.value.entities.employees.filterEmployee()
+            }
+            
+            // Refresh the list for active tab
+            if (newTab == 'cars') {
+                route.value.entities.cars.filterMachine()
+            } else if (newTab == 'employees') {
+                route.value.entities.employees.filterEmployee()
+            }
         }
     }
 
@@ -319,14 +366,16 @@
             this.list = response.data
         }
 
-        // Фильтрация машин
+
         async filterMachine() {
             const request = ['entity=cars']
-            if (route.value.filter.company) request.push(`filter[company_id]=${route.value.filter.company}`)
-            if (route.value.filter.employees) request.push(`filter[employee_id]=${route.value.filter.employees}`)
+            const filters = route.value.tabFilters.cars
+            if (filters.company) request.push(`filter[company_id]=${filters.company}`)
+            if (filters.employees) request.push(`filter[employee_id]=${filters.employees}`)
             const response = await api.callMethod('GET', `${routes.logistic.getModalCars}&${request.join('&')}`)
             this.list = response.data
         }
+
     }
 
     class Employee {
@@ -341,11 +390,11 @@
             this.list = response.data
         }
 
-        // Фильтрация машин
         async filterEmployee() {
             const request = ['entity=employees']
-            if (route.value.filter.company) request.push(`filter[company_id]=${route.value.filter.company}`)
-            if (route.value.filter.cars) request.push(`filter[car_id]=${route.value.filter.cars}`)
+            const filters = route.value.tabFilters.employees
+            if (filters.company) request.push(`filter[company_id]=${filters.company}`)
+            if (filters.cars) request.push(`filter[car_id]=${filters.cars}`)
             const response = await api.callMethod('GET', `${routes.logistic.getModalEmployees}&${request.join('&')}`)
             this.list = response.data
         }

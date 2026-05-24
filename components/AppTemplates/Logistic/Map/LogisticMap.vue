@@ -2,22 +2,21 @@
     <div class="logistic-map">
         <div class="logistic-map__header">
             <div class="logistic-map__title">Карта</div>
-            <IconLaso
-                v-if="props.enableSelection"
-                class="map__frame-selection"
-                :class="{ 'map__frame-selection_active': selectionActive }"
-                @click="toggleSelectionMode"
-            />
-        </div>
-
-        <!-- Settings panel - fully DOM-managed to bypass Vue reactivity issues with Leaflet -->
-        <div class="logistic-map__settings" @click.stop>
-            <button class="logistic-map__settings-button" @click.stop="toggleSettings">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#333">
-                    <path d="M19.4,11.5c-0.2-0.8-0.6-1.6-1-2.3L19,8.5c0.2-0.2,0.2-0.5,0-0.7l-2.2-2.2c-0.2-0.2-0.5-0.2-0.7,0l-0.7,0.7c-0.7-0.4-1.5-0.8-2.3-1l-0.2-0.9C12.8,4.2,12.6,4,12.3,4h-3c-0.3,0-0.5,0.2-0.5,0.4l-0.2,0.9c-0.8,0.2-1.6,0.6-2.3,1l-0.7-0.7c-0.2-0.2-0.5-0.2-0.7,0L2.7,7.8c-0.2,0.2-0.2,0.5,0,0.7l0.7,0.7c-0.4,0.7-0.8,1.5-1,2.3L2,12.3c0,0.3,0.2,0.5,0.4,0.5h0.9c0.2,0.8,0.6,1.6,1,2.3l-0.7,0.7c-0.2,0.2-0.2,0.5,0,0.7l2.2,2.2c0.2,0.2,0.5,0.2,0.7,0l0.7-0.7c0.7,0.4,1.5,0.8,2.3,1l0.2,0.9c0,0.3,0.2,0.5,0.5,0.5h3c0.3,0,0.5-0.2,0.5-0.4l0.2-0.9c0.8-0.2,1.6-0.6,2.3-1l0.7,0.7c0.2,0.2,0.5,0.2,0.7,0l2.2-2.2c0.2-0.2,0.2-0.5,0-0.7l-0.7-0.7c0.4-0.7,0.8-1.5,1-2.3l0.9-0.2c0.3,0,0.5-0.2,0.4-0.5L19.4,11.5z M12,15.5c-1.9,0-3.5-1.6-3.5-3.5s1.6-3.5,3.5-3.5s3.5,1.6,3.5,3.5S13.9,15.5,12,15.5z"/>
-                </svg>
-            </button>
-            <div ref="settingsPanelRef" class="settings-panel" @click.stop></div>
+            <div class="logistic-map__header-actions">
+                <IconLaso
+                    v-if="props.enableSelection"
+                    class="map__frame-selection"
+                    :class="{ 'map__frame-selection_active': selectionActive }"
+                    @click="toggleSelectionMode"
+                />
+                <!-- Settings -->
+                <div class="logistic-map__settings" @click.stop>
+                    <button class="logistic-map__settings-button" @click.stop="toggleSettings">
+                        <IconSettings />
+                    </button>
+                    <div ref="settingsPanelRef" class="settings-panel" @click.stop></div>
+                </div>
+            </div>
         </div>
 
         <div class="logistic-map__body">
@@ -29,6 +28,7 @@
 <script setup>
     import './LogisticMap.scss';
     import IconLaso from '@AppIcons/Laso.vue';
+    import IconSettings from '@AppIcons/Actions/Settings.vue';
 
     let L = null;
 
@@ -93,15 +93,15 @@
         if (sub === null) {
             html = `
                 <div class="menu-panel active">
-                    <div class="menu-item" data-sub="orders">Заказы <span class="arrow">›</span></div>
-                    <div class="menu-item" data-sub="route_display">Отображение маршрута <span class="arrow">›</span></div>
-                    <div class="menu-item" data-sub="maps">Карты <span class="arrow">›</span></div>
-                    <div class="menu-item" data-sub="analytics">Аналитика <span class="arrow">›</span></div>
+                    <div class="menu-item" data-sub="orders">Заказы <figure class="icon__arrow"><svg width="6" height="9" viewBox="0 0 6 9" xmlns="http://www.w3.org/2000/svg"><path d="M.915 8.943 5.25 4.675a.344.344 0 0 0 .068-.222.344.344 0 0 0-.068-.222L.915.066a.587.587 0 0 0-.683.102C.027.35-.03.578.06.851l3.688 3.585L.06 8.056c-.114.25-.068.489.137.716.204.228.443.285.717.171z" fill="#000" fill-rule="evenodd"></path></svg></figure></div>
+                    <div class="menu-item" data-sub="route_display">Отображение маршрута<figure class="icon__arrow"><svg width="6" height="9" viewBox="0 0 6 9" xmlns="http://www.w3.org/2000/svg"><path d="M.915 8.943 5.25 4.675a.344.344 0 0 0 .068-.222.344.344 0 0 0-.068-.222L.915.066a.587.587 0 0 0-.683.102C.027.35-.03.578.06.851l3.688 3.585L.06 8.056c-.114.25-.068.489.137.716.204.228.443.285.717.171z" fill="#000" fill-rule="evenodd"></path></svg></figure></div>
+                    <div class="menu-item" data-sub="maps">Карты <figure class="icon__arrow"><svg width="6" height="9" viewBox="0 0 6 9" xmlns="http://www.w3.org/2000/svg"><path d="M.915 8.943 5.25 4.675a.344.344 0 0 0 .068-.222.344.344 0 0 0-.068-.222L.915.066a.587.587 0 0 0-.683.102C.027.35-.03.578.06.851l3.688 3.585L.06 8.056c-.114.25-.068.489.137.716.204.228.443.285.717.171z" fill="#000" fill-rule="evenodd"></path></svg></figure></div>
+                    <div class="menu-item" data-sub="analytics">Аналитика <figure class="icon__arrow"><svg width="6" height="9" viewBox="0 0 6 9" xmlns="http://www.w3.org/2000/svg"><path d="M.915 8.943 5.25 4.675a.344.344 0 0 0 .068-.222.344.344 0 0 0-.068-.222L.915.066a.587.587 0 0 0-.683.102C.027.35-.03.578.06.851l3.688 3.585L.06 8.056c-.114.25-.068.489.137.716.204.228.443.285.717.171z" fill="#000" fill-rule="evenodd"></path></svg></figure></div>
                 </div>`;
         } else if (sub === 'orders') {
             html = `
                 <div class="menu-panel active">
-                    <div class="submenu-header" data-sub="back"><span class="back-arrow">‹</span> Заказы</div>
+                    <div class="submenu-header" data-sub="back"><figure class="icon__arrow"><svg width="6" height="9" viewBox="0 0 6 9" xmlns="http://www.w3.org/2000/svg"><path d="M.915 8.943 5.25 4.675a.344.344 0 0 0 .068-.222.344.344 0 0 0-.068-.222L.915.066a.587.587 0 0 0-.683.102C.027.35-.03.578.06.851l3.688 3.585L.06 8.056c-.114.25-.068.489.137.716.204.228.443.285.717.171z" fill="#000" fill-rule="evenodd"></path></svg></figure> Заказы</div>
                     <div class="menu-item radio-item"><label><input type="radio" name="s_orders" value="all" ${settings.orders === 'all' ? 'checked' : ''}> Все</label></div>
                     <div class="menu-item radio-item"><label><input type="radio" name="s_orders" value="in_car" ${settings.orders === 'in_car' ? 'checked' : ''}> В машине</label></div>
                     <div class="menu-item radio-item"><label><input type="radio" name="s_orders" value="unprocessed" ${settings.orders === 'unprocessed' ? 'checked' : ''}> Показать необработанные</label></div>
@@ -109,7 +109,7 @@
         } else if (sub === 'route_display') {
             html = `
                 <div class="menu-panel active">
-                    <div class="submenu-header" data-sub="back"><span class="back-arrow">‹</span> Отображение маршрута</div>
+                    <div class="submenu-header" data-sub="back"><figure class="icon__arrow"><svg width="6" height="9" viewBox="0 0 6 9" xmlns="http://www.w3.org/2000/svg"><path d="M.915 8.943 5.25 4.675a.344.344 0 0 0 .068-.222.344.344 0 0 0-.068-.222L.915.066a.587.587 0 0 0-.683.102C.027.35-.03.578.06.851l3.688 3.585L.06 8.056c-.114.25-.068.489.137.716.204.228.443.285.717.171z" fill="#000" fill-rule="evenodd"></path></svg></figure> Отображение маршрута</div>
                     <div class="menu-item radio-item"><label><input type="radio" name="s_route_display" value="standard" ${settings.route_display === 'standard' ? 'checked' : ''}> Стандартный</label></div>
                     <div class="menu-item radio-item"><label><input type="radio" name="s_route_display" value="decorated" ${settings.route_display === 'decorated' ? 'checked' : ''}> С направлением</label></div>
                     <div class="menu-item radio-item"><label><input type="radio" name="s_route_display" value="vector" ${settings.route_display === 'vector' ? 'checked' : ''}> Вектор движения</label></div>
@@ -117,7 +117,7 @@
         } else if (sub === 'maps') {
             html = `
                 <div class="menu-panel active">
-                    <div class="submenu-header" data-sub="back"><span class="back-arrow">‹</span> Карты</div>
+                    <div class="submenu-header" data-sub="back"><figure class="icon__arrow"><svg width="6" height="9" viewBox="0 0 6 9" xmlns="http://www.w3.org/2000/svg"><path d="M.915 8.943 5.25 4.675a.344.344 0 0 0 .068-.222.344.344 0 0 0-.068-.222L.915.066a.587.587 0 0 0-.683.102C.027.35-.03.578.06.851l3.688 3.585L.06 8.056c-.114.25-.068.489.137.716.204.228.443.285.717.171z" fill="#000" fill-rule="evenodd"></path></svg></figure> Карты</div>
                     <div class="menu-item radio-item"><label><input type="radio" name="s_map_type" value="OpenStreetMap" ${settings.map_type === 'OpenStreetMap' ? 'checked' : ''}> OpenStreetMap</label></div>
                     <div class="menu-item radio-item"><label><input type="radio" name="s_map_type" value="Яндекс.Карты" ${settings.map_type === 'Яндекс.Карты' ? 'checked' : ''}> Яндекс.Карты</label></div>
                     <div class="menu-item radio-item"><label><input type="radio" name="s_map_type" value="Яндекс.Спутник" ${settings.map_type === 'Яндекс.Спутник' ? 'checked' : ''}> Яндекс.Спутник</label></div>
@@ -125,7 +125,7 @@
         } else if (sub === 'analytics') {
             html = `
                 <div class="menu-panel active">
-                    <div class="submenu-header" data-sub="back"><span class="back-arrow">‹</span> Аналитика</div>
+                    <div class="submenu-header" data-sub="back"><figure class="icon__arrow"><svg width="6" height="9" viewBox="0 0 6 9" xmlns="http://www.w3.org/2000/svg"><path d="M.915 8.943 5.25 4.675a.344.344 0 0 0 .068-.222.344.344 0 0 0-.068-.222L.915.066a.587.587 0 0 0-.683.102C.027.35-.03.578.06.851l3.688 3.585L.06 8.056c-.114.25-.068.489.137.716.204.228.443.285.717.171z" fill="#000" fill-rule="evenodd"></path></svg></figure> Аналитика</div>
                     <div class="menu-item checkbox-item"><label><input type="checkbox" name="s_stops" ${settings.analytics.stops ? 'checked' : ''}> Остановки</label></div>
                     <div class="menu-item checkbox-item"><label><input type="checkbox" name="s_signal_loss" ${settings.analytics.signal_loss ? 'checked' : ''}> Потеря сигнала</label></div>
                     <div class="menu-item checkbox-item"><label><input type="checkbox" name="s_actual_path" ${settings.analytics.actual_path ? 'checked' : ''}> Фактический маршрут</label></div>
@@ -330,11 +330,26 @@
 
         baseLayers = {
             'OpenStreetMap': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }),
-            'Яндекс.Карты': L.yandex(),
-            'Яндекс.Спутник': L.yandex({ type: 'satellite' })
+            'Яндекс.Карты': L.yandex({ suppressMapOpenBlock: true, suppressObsoleteBrowserNotifier: true }),
+            'Яндекс.Спутник': L.yandex({ type: 'satellite', suppressMapOpenBlock: true, suppressObsoleteBrowserNotifier: true })
         };
 
         baseLayers[settings.map_type].addTo(mapInstance.value);
+
+        // Disable clicks on Yandex map objects (POIs, buildings etc)
+        const disableYandexClicks = () => {
+            Object.values(baseLayers).forEach(layer => {
+                if (layer._yandex) {
+                    try {
+                        layer._yandex.events.add('click', (e) => e.preventDefault());
+                        layer._yandex.panes.get('events').getElement().style.pointerEvents = 'none';
+                    } catch(e) {}
+                }
+            });
+        };
+        if (window.ymaps) {
+            window.ymaps.ready(() => setTimeout(disableYandexClicks, 500));
+        }
 
         stopMarkersLayer = L.layerGroup().addTo(mapInstance.value);
         signalLossMarkersLayer = L.layerGroup().addTo(mapInstance.value);
@@ -363,6 +378,7 @@
         if (!mapInstance.value) return;
         if (routingControl) { mapInstance.value.removeControl(routingControl); routingControl = null; }
         routeMarkers.forEach(l => mapInstance.value.removeLayer(l)); routeMarkers = [];
+        groupedMarkers.forEach(l => mapInstance.value.removeLayer(l)); groupedMarkers = [];
         actualPathLayers.forEach(l => mapInstance.value.removeLayer(l)); actualPathLayers = [];
         actualMarkerLayers.forEach(l => mapInstance.value.removeLayer(l)); actualMarkerLayers = [];
         clearUnassignedMarkers();
@@ -399,10 +415,131 @@
                 renderUnassignedTasks(props.unassignedTasks);
             }
 
-            fitBounds();
+            // Group overlapping markers at same coordinates
+            groupOverlappingMarkers();
+
+            if (props.routeData?.tasks?.length > 0) {
+                fitBounds();
+            }
         } finally {
             isRendering = false;
         }
+    };
+
+    // ── Group markers at same coordinates into combined markers ──
+    let groupedMarkers = [];
+
+    const groupOverlappingMarkers = () => {
+        // Clean up old grouped markers
+        groupedMarkers.forEach(m => { if (mapInstance.value) mapInstance.value.removeLayer(m); });
+        groupedMarkers = [];
+
+        // Collect all task markers with their coords
+        const allMarkers = [
+            ...routeMarkers.map(m => ({ marker: m, type: 'route', id: m._taskId, lat: m.getLatLng().lat, lng: m.getLatLng().lng })),
+            ...unassignedMarkers.map(m => ({ marker: m, type: 'unassigned', id: m._taskId, lat: m.getLatLng().lat, lng: m.getLatLng().lng }))
+        ];
+
+        // Group by coordinate key (rounded to 6 decimals to handle float imprecision)
+        const groups = {};
+        allMarkers.forEach(item => {
+            const key = `${item.lat.toFixed(6)}_${item.lng.toFixed(6)}`;
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(item);
+        });
+
+        // For groups with >1 marker, hide originals and create combined marker
+        Object.values(groups).forEach(group => {
+            if (group.length <= 1) return;
+
+            // Hide original markers
+            group.forEach(item => {
+                mapInstance.value.removeLayer(item.marker);
+            });
+
+            // Build combined marker with task list
+            const listHtml = group.map(item => {
+                const m = item.marker;
+                const routeTask = item.type === 'route' ? processedRoute?.tasks?.find(t => t.id === item.id) : null;
+                const color = routeTask ? (routeTask.routeColor || '#8601ff') : '#999';
+                const order = routeTask ? (routeTask.order || '') : '';
+                const planTime = routeTask?.departureTime?.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) || routeTask?.planTime || '';
+                let name = '';
+                if (routeTask) {
+                    name = typeof routeTask.name === 'object' ? (routeTask.name?.value || routeTask.name?.name || '') : (routeTask.name || '');
+                } else {
+                    // Find unassigned task name from props
+                    const ut = props.unassignedTasks.find(t => Number(t.id) === Number(item.id));
+                    if (ut) {
+                        name = typeof ut.name === 'object' ? (ut.name?.value || ut.name?.name || '') : (ut.name || '');
+                    }
+                    if (!name) name = `#${item.id}`;
+                }
+                const timeHtml = planTime ? `<span class="cluster-task-time">${planTime}</span>` : '';
+                return `<div class="cluster-task-item" data-task-id="${item.id}" data-type="${item.type}"><span class="cluster-task-counter" style="background:${color}">${order}</span><span class="cluster-task-name">${name}</span>${timeHtml}</div>`;
+            }).join('');
+
+            const firstRoute = group.find(g => g.type === 'route');
+            const counterColor = firstRoute ? (processedRoute?.tasks?.find(t => t.id === firstRoute.id)?.routeColor || '#8601ff') : '#999';
+
+            // Collect order numbers for display
+            const orders = group.map(item => {
+                if (item.type === 'route') {
+                    const task = processedRoute?.tasks?.find(t => t.id === item.id);
+                    return task?.order || '';
+                }
+                return '';
+            }).filter(Boolean);
+
+            // Build stacked counters showing actual order numbers
+            const countersHtml = group.map(item => {
+                const routeTask = item.type === 'route' ? processedRoute?.tasks?.find(t => t.id === item.id) : null;
+                const color = routeTask ? (routeTask.routeColor || '#8601ff') : '#999';
+                const order = routeTask ? (routeTask.order || '') : '';
+                return `<span class="task-cluster-counter-item" style="background:${color}">${order}</span>`;
+            }).join('');
+
+            const html = `<div class="route-popup task-cluster-popup">
+                <div class="route-popup__main task-cluster-main" style="border-color:${counterColor}">
+                    <span class="task-cluster-counters">${countersHtml}</span>
+                </div>
+                <div class="route-popup__extend">
+                    <div class="cluster-task-list">${listHtml}</div>
+                </div>
+            </div>`;
+
+            const combined = L.marker([group[0].lat, group[0].lng], {
+                icon: L.divIcon({ className: 'custom-div-icon', html, iconAnchor: [15, 15] }),
+                zIndexOffset: 1100
+            }).addTo(mapInstance.value);
+
+            combined.on('click', () => {
+                const el = combined.getElement();
+                if (el) handleMarkerClick(el);
+
+                // Bind item clicks after DOM update
+                setTimeout(() => {
+                    el?.querySelectorAll('.cluster-task-item').forEach(itemEl => {
+                        itemEl.onclick = (ev) => {
+                            ev.stopPropagation();
+                            const taskId = Number(itemEl.dataset.taskId);
+                            const type = itemEl.dataset.type;
+                            el.querySelectorAll('.cluster-task-item.active').forEach(i => i.classList.remove('active'));
+                            itemEl.classList.add('active');
+                            if (type === 'route') {
+                                const task = processedRoute?.tasks?.find(t => t.id === taskId);
+                                if (task) { clickedFromMap = true; emit('routeTaskClick', task); setTimeout(() => { clickedFromMap = false; }, 100); }
+                            } else {
+                                const rawTask = props.unassignedTasks.find(t => Number(t.id) === taskId);
+                                if (rawTask) emit('unassignedTaskClick', rawTask);
+                            }
+                        };
+                    });
+                }, 50);
+            });
+
+            groupedMarkers.push(combined);
+        });
     };
 
     const shouldShowUnassigned = () => {
@@ -674,17 +811,20 @@
                 }
             }
 
+            const factTimeStr = task.factTime || '';
+            const factDisplay = factTimeStr ? ` → <span class="fact-time">${factTimeStr}</span>` : '';
+
             const html = `
                 <div class="route-popup">
                     <div class="route-popup__main" style="border-color: ${task.routeColor}">
-                        <span class="route-popup__counter" style="background-color: ${task.routeColor}">${task.order || ''}</span>
-                        <span class="route-popup__time">${planTime}${adjTime ? ' • <span class="red">' + adjTime + '</span>' : ''}</span>
+                        <span class="route-popup__counter" style="background: ${task.routeColor}">${task.order || ''}</span>
+                        <span class="route-popup__time">${planTime}${factDisplay}</span>
                     </div>
                     <div class="route-popup__extend">
                         <div class="point-attrs">
                             <span class="point-attrs__item"><span class="point-attrs__label">Название:</span><span class="point-attrs__val">${taskName}</span></span>
                             <span class="point-attrs__item"><span class="point-attrs__label">План. время:</span><span class="point-attrs__val">${planTime}</span></span>
-                            <span class="point-attrs__item"><span class="point-attrs__label">Факт. время:</span><span class="point-attrs__val red">${task.factTime || '—'}</span></span>
+                            <span class="point-attrs__item"><span class="point-attrs__label">Факт. время:</span><span class="point-attrs__val fact-time">${factTimeStr || '—'}</span></span>
                         </div>
                     </div>
                 </div>`;
@@ -729,16 +869,64 @@
     const showActualPathMarkers = (routeData) => {
         if (!routeData.actual_path?.length || !settings.analytics.actual_path || !L.markerClusterGroup) return;
         const MIN_DIST = 200;
-        const markers = L.markerClusterGroup({ iconCreateFunction: () => L.divIcon({ html: '', className: 'hidden-cluster', iconSize: L.point(0, 0) }) });
+
+        const markers = L.markerClusterGroup({
+            maxClusterRadius: (zoom) => zoom > 18 ? 50 : 80,
+            disableClusteringAtZoom: 19,
+            showCoverageOnHover: false,
+            zoomToBoundsOnClick: false,
+            spiderfyOnMaxZoom: false,
+            iconCreateFunction: (cluster) => {
+                const children = cluster.getAllChildMarkers();
+                const total = children.length;
+                const last = children[total - 1];
+                const first = children[0];
+
+                // Use last point's bearing for arrow direction
+                const bearing = last.options._bearing || 0;
+                // Average speed
+                const avgSpeed = (children.reduce((s, m) => s + (m.options._speed || 0), 0) / total).toFixed(1);
+                // Time range
+                const timeFrom = first.options._time || '';
+                const timeTo = last.options._time || '';
+                const timeLabel = timeFrom === timeTo ? timeTo : `${timeFrom}—${timeTo}`;
+
+                const html = `<div class="actual-path-marker"><div class="marker-main-view"><div class="icon-container"><div class="icon-background"><svg width="21" height="21" viewBox="0 0 21 21" style="transform:rotate(${bearing}deg)"><g stroke="none" fill="none"><g transform="translate(-173,-643)" fill="#FFF"><g transform="translate(162.5,634.5)"><g><g><g transform="translate(20.49,20.49) translate(-20.49,-20.49) translate(5.49,5.49)"><path d="M15.15,9.07L20.84,19.54C21.37,20.51 21.01,21.72 20.04,22.25C19.53,22.52 18.94,22.57 18.4,22.37L13.36,20.54L8.4,22.36C7.36,22.73 6.21,22.2 5.83,21.16C5.64,20.62 5.68,20.03 5.95,19.52L11.63,9.07C12.16,8.1 13.38,7.74 14.35,8.27C14.69,8.45 14.97,8.73 15.15,9.07Z" transform="translate(13.39,15) translate(-13.39,-15)"/></g></g></g></g></g></g></svg></div></div><span class="marker-time-label">${timeLabel}</span></div><div class="route-popup__extend"><div class="point-attrs"><span class="point-attrs__item"><span class="point-attrs__label">Точек:</span><span class="point-attrs__val">${total}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Период:</span><span class="point-attrs__val">${timeFrom} — ${timeTo}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Ср. скорость:</span><span class="point-attrs__val">${avgSpeed} км/ч</span></span></div></div></div>`;
+
+                return L.divIcon({ className: 'custom-div-icon', html, iconSize: [90, 30], iconAnchor: [15, 15] });
+            }
+        });
+
+        // Cluster click → toggle expand info
+        markers.on('clusterclick', (e) => {
+            const el = e.layer.getElement();
+            if (el) {
+                const marker = el.querySelector('.actual-path-marker');
+                if (marker) {
+                    const was = marker.classList.contains('active');
+                    document.querySelectorAll('.actual-path-marker.active').forEach(m => m.classList.remove('active'));
+                    if (!was) marker.classList.add('active');
+                }
+            }
+        });
+
         let last = null;
         routeData.actual_path.forEach((pt, i) => {
             const cur = L.latLng(pt.lat, pt.lon);
             if (last && last.distanceTo(cur) <= MIN_DIST) return;
             let bearing = 0;
-            if (i < routeData.actual_path.length - 1) { const nxt = routeData.actual_path[i + 1]; bearing = calculateBearing(pt.lat, pt.lon, nxt.lat, nxt.lon); }
+            if (i < routeData.actual_path.length - 1) {
+                const nxt = routeData.actual_path[i + 1];
+                bearing = calculateBearing(pt.lat, pt.lon, nxt.lat, nxt.lon);
+            }
             const speed = ((pt.speed || 0) * 1.60934).toFixed(1);
             const html = `<div class="actual-path-marker"><div class="marker-main-view"><div class="icon-container"><div class="icon-background"><svg width="21" height="21" viewBox="0 0 21 21" style="transform:rotate(${bearing}deg)"><g stroke="none" fill="none"><g transform="translate(-173,-643)" fill="#FFF"><g transform="translate(162.5,634.5)"><g><g><g transform="translate(20.49,20.49) translate(-20.49,-20.49) translate(5.49,5.49)"><path d="M15.15,9.07L20.84,19.54C21.37,20.51 21.01,21.72 20.04,22.25C19.53,22.52 18.94,22.57 18.4,22.37L13.36,20.54L8.4,22.36C7.36,22.73 6.21,22.2 5.83,21.16C5.64,20.62 5.68,20.03 5.95,19.52L11.63,9.07C12.16,8.1 13.38,7.74 14.35,8.27C14.69,8.45 14.97,8.73 15.15,9.07Z" transform="translate(13.39,15) translate(-13.39,-15)"/></g></g></g></g></g></g></svg></div></div><span class="marker-time-label">${pt.time||''}</span></div><div class="route-popup__extend"><div class="point-attrs"><span class="point-attrs__item"><span class="point-attrs__label">Время:</span><span class="point-attrs__val">${pt.time||''}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Скорость:</span><span class="point-attrs__val">${speed} км/ч</span></span></div></div></div>`;
-            const m = L.marker(cur, { icon: L.divIcon({ className: 'custom-div-icon', html, iconSize: [90, 30], iconAnchor: [15, 15] }) });
+            const m = L.marker(cur, {
+                icon: L.divIcon({ className: 'custom-div-icon', html, iconSize: [90, 30], iconAnchor: [15, 15] }),
+                _time: pt.time || '',
+                _speed: parseFloat(speed),
+                _bearing: bearing
+            });
             m.on('click', handleActualMarkerClick);
             markers.addLayer(m);
             last = cur;
@@ -862,12 +1050,11 @@
         return events;
     };
 
-    // ── Show stops on map ──
+    // ── Show stops on map (with data-aware clustering) ──
     const showStopMarkers = (routeData) => {
         if (!settings.analytics.stops) return;
         stopMarkersLayer.clearLayers();
 
-        // Compute stops from actual_path if backend didn't provide them
         let serviceStops = routeData.service_stops || [];
         let parkingStops = routeData.parking_stops || [];
 
@@ -878,44 +1065,123 @@
             parkingStops = result.parkingStops;
         }
 
-        const create = (stops, type) => {
-            if (!stops?.length) return;
+        const createCluster = (stops, type) => {
+            if (!stops?.length || !L.markerClusterGroup) return;
             const isService = type === 'service';
-            stops.forEach(s => {
-                const label = isService ? 'Обслуживание' : 'Остановка';
-                const bgColor = isService ? '#4a90d9' : '#bf0000';
-                const icon = isService ? '🔧' : 'P';
-                const html = `<div class="actual-path-marker stop-marker"><div class="marker-main-view" style="border-color:${bgColor}"><div class="icon-container"><div class="icon-background" style="background-color:${bgColor}">${icon}</div></div><span class="marker-time-label">${label}</span></div><div class="route-popup__extend"><div class="point-attrs"><span class="point-attrs__item"><span class="point-attrs__label">Период:</span><span class="point-attrs__val">с ${s.start_time} по ${s.end_time}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Длительность:</span><span class="point-attrs__val">${s.duration} мин</span></span></div></div></div>`;
-                const m = L.marker([s.lat, s.lon], { icon: L.divIcon({ className: 'custom-div-icon', html, iconSize: [120, 30], iconAnchor: [15, 15] }) });
-                m.on('click', handleActualMarkerClick);
-                stopMarkersLayer.addLayer(m);
+            const bgColor = isService ? '#4a90d9' : '#bf0000';
+            const iconSrc = isService ? '/img/unloading.svg' : '/img/stop.svg';
+            const label = isService ? 'Обслуживание' : 'Остановка';
+
+            const grp = L.markerClusterGroup({
+                disableClusteringAtZoom: 17,
+                maxClusterRadius: 60,
+                showCoverageOnHover: false,
+                zoomToBoundsOnClick: false,
+                iconCreateFunction: (cluster) => {
+                    const children = cluster.getAllChildMarkers();
+                    const total = children.length;
+                    // Aggregate: total duration, time range
+                    const totalDuration = children.reduce((s, m) => s + (m.options._duration || 0), 0);
+                    const times = children.map(m => m.options._startTime || '').filter(Boolean).sort();
+                    const endTimes = children.map(m => m.options._endTime || '').filter(Boolean).sort();
+                    const timeFrom = times[0] || '';
+                    const timeTo = endTimes[endTimes.length - 1] || '';
+
+                    const html = `<div class="actual-path-marker stop-marker"><div class="marker-main-view" style="border-color:${bgColor}"><div class="icon-container"><div class="icon-background" style="background-color:${bgColor}"><img src="${iconSrc}" class="marker-svg-icon" /></div></div><span class="marker-time-label">${label} (${total})</span></div><div class="route-popup__extend"><div class="point-attrs"><span class="point-attrs__item"><span class="point-attrs__label">Количество:</span><span class="point-attrs__val">${total}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Период:</span><span class="point-attrs__val">${timeFrom} — ${timeTo}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Общее время:</span><span class="point-attrs__val">${totalDuration} мин</span></span></div></div></div>`;
+
+                    return L.divIcon({ className: 'custom-div-icon', html, iconSize: [120, 30], iconAnchor: [15, 15] });
+                }
             });
+
+            grp.on('clusterclick', (e) => {
+                const el = e.layer.getElement();
+                if (el) {
+                    const marker = el.querySelector('.actual-path-marker');
+                    if (marker) {
+                        const was = marker.classList.contains('active');
+                        document.querySelectorAll('.actual-path-marker.active').forEach(m => m.classList.remove('active'));
+                        if (!was) marker.classList.add('active');
+                    }
+                }
+            });
+
+            stops.forEach(s => {
+                const html = `<div class="actual-path-marker stop-marker"><div class="marker-main-view" style="border-color:${bgColor}"><div class="icon-container"><div class="icon-background" style="background-color:${bgColor}"><img src="${iconSrc}" class="marker-svg-icon" /></div></div><span class="marker-time-label">${label}</span></div><div class="route-popup__extend"><div class="point-attrs"><span class="point-attrs__item"><span class="point-attrs__label">Период:</span><span class="point-attrs__val">с ${s.start_time} по ${s.end_time}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Длительность:</span><span class="point-attrs__val">${s.duration} мин</span></span></div></div></div>`;
+                const m = L.marker([s.lat, s.lon], {
+                    icon: L.divIcon({ className: 'custom-div-icon', html, iconSize: [120, 30], iconAnchor: [15, 15] }),
+                    _duration: s.duration || 0,
+                    _startTime: s.start_time || '',
+                    _endTime: s.end_time || ''
+                });
+                m.on('click', handleActualMarkerClick);
+                grp.addLayer(m);
+            });
+
+            stopMarkersLayer.addLayer(grp);
         };
-        create(serviceStops, 'service');
-        create(parkingStops, 'parking');
+
+        createCluster(serviceStops, 'service');
+        createCluster(parkingStops, 'parking');
     };
 
-    // ── Signal loss markers ──
+    // ── Signal loss markers (with data-aware clustering) ──
     const showSignalLossMarkers = (routeData) => {
         if (!settings.analytics.signal_loss) return;
         signalLossMarkersLayer.clearLayers();
 
-        // Compute signal loss from actual_path if backend didn't provide them
         let events = routeData.signal_loss_events || [];
         if (events.length === 0 && routeData.actual_path?.length > 1) {
             events = analyzeSignalLoss(routeData.actual_path);
         }
 
-        events.forEach(ev => {
-            ['loss', 'restore'].forEach(type => {
-                const pt = type === 'loss' ? ev.loss_point : ev.restore_point;
-                const isLoss = type === 'loss';
-                const html = `<div class="actual-path-marker stop-marker"><div class="marker-main-view" style="border-color:#f07178"><div class="icon-container"><div class="icon-background" style="background-color:#f07178">${isLoss ? '✕' : '✓'}</div></div><span class="marker-time-label">${isLoss ? 'Потеря сигнала' : 'Восстановление'}</span></div><div class="route-popup__extend"><div class="point-attrs"><span class="point-attrs__item"><span class="point-attrs__label">Период:</span><span class="point-attrs__val">${ev.loss_point.time} — ${ev.restore_point.time}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Длительность:</span><span class="point-attrs__val">${ev.duration} мин</span></span></div></div></div>`;
-                const m = L.marker([pt.lat, pt.lon], { icon: L.divIcon({ className: 'custom-div-icon', html, iconSize: [150, 30], iconAnchor: [15, 15] }) });
-                m.on('click', handleActualMarkerClick);
-                signalLossMarkersLayer.addLayer(m);
-            });
+        if (!events.length || !L.markerClusterGroup) return;
+
+        const grp = L.markerClusterGroup({
+            disableClusteringAtZoom: 17,
+            maxClusterRadius: 60,
+            showCoverageOnHover: false,
+            zoomToBoundsOnClick: false,
+            iconCreateFunction: (cluster) => {
+                const children = cluster.getAllChildMarkers();
+                const total = children.length;
+                const totalDuration = children.reduce((s, m) => s + (m.options._duration || 0), 0);
+                const times = children.map(m => m.options._lossTime || '').filter(Boolean).sort();
+                const endTimes = children.map(m => m.options._restoreTime || '').filter(Boolean).sort();
+                const timeFrom = times[0] || '';
+                const timeTo = endTimes[endTimes.length - 1] || '';
+
+                const html = `<div class="actual-path-marker stop-marker"><div class="marker-main-view" style="border-color:#f07178"><div class="icon-container"><div class="icon-background" style="background-color:#f07178"><img src="/img/nosignal.svg" class="marker-svg-icon" /></div></div><span class="marker-time-label">Потеря (${total})</span></div><div class="route-popup__extend"><div class="point-attrs"><span class="point-attrs__item"><span class="point-attrs__label">Количество:</span><span class="point-attrs__val">${total}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Период:</span><span class="point-attrs__val">${timeFrom} — ${timeTo}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Общее время:</span><span class="point-attrs__val">${totalDuration} мин</span></span></div></div></div>`;
+
+                return L.divIcon({ className: 'custom-div-icon', html, iconSize: [150, 30], iconAnchor: [15, 15] });
+            }
         });
+
+        grp.on('clusterclick', (e) => {
+            const el = e.layer.getElement();
+            if (el) {
+                const marker = el.querySelector('.actual-path-marker');
+                if (marker) {
+                    const was = marker.classList.contains('active');
+                    document.querySelectorAll('.actual-path-marker.active').forEach(m => m.classList.remove('active'));
+                    if (!was) marker.classList.add('active');
+                }
+            }
+        });
+
+        events.forEach(ev => {
+            const pt = ev.loss_point;
+            const html = `<div class="actual-path-marker stop-marker"><div class="marker-main-view" style="border-color:#f07178"><div class="icon-container"><div class="icon-background" style="background-color:#f07178"><img src="/img/nosignal.svg" class="marker-svg-icon" /></div></div><span class="marker-time-label">Потеря сигнала</span></div><div class="route-popup__extend"><div class="point-attrs"><span class="point-attrs__item"><span class="point-attrs__label">Период:</span><span class="point-attrs__val">${ev.loss_point.time} — ${ev.restore_point.time}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Длительность:</span><span class="point-attrs__val">${ev.duration} мин</span></span></div></div></div>`;
+            const m = L.marker([pt.lat, pt.lon], {
+                icon: L.divIcon({ className: 'custom-div-icon', html, iconSize: [150, 30], iconAnchor: [15, 15] }),
+                _duration: ev.duration || 0,
+                _lossTime: ev.loss_point.time || '',
+                _restoreTime: ev.restore_point.time || ''
+            });
+            m.on('click', handleActualMarkerClick);
+            grp.addLayer(m);
+        });
+
+        signalLossMarkersLayer.addLayer(grp);
     };
 
     // ── Unassigned tasks ──
@@ -926,7 +1192,6 @@
         tasks.forEach(task => {
             const addr = parseAddress(task.address);
             if (!addr) return;
-
             let taskName = '';
             if (task.name) {
                 if (typeof task.name === 'string') {
@@ -939,45 +1204,57 @@
                 }
             }
             if (!taskName && task.id) taskName = `#${task.id}`;
-
-            const addrText = addr.text || '';
-
             const html = `<div class="route-popup unassigned-popup">
                 <div class="route-popup__main" style="border-color: #999">
-                    <span class="route-popup__counter" style="background-color: #999"></span>
+                    <span class="route-popup__counter" style="background: #999"></span>
+                    <span class="route-popup__time">${taskName}</span>
                 </div>
                 <div class="route-popup__extend">
                     <div class="point-attrs">
                         <span class="point-attrs__item"><span class="point-attrs__label">Название:</span><span class="point-attrs__val">${taskName}</span></span>
-                        <span class="point-attrs__item"><span class="point-attrs__label">Адрес:</span><span class="point-attrs__val">${addrText}</span></span>
+                        <span class="point-attrs__item"><span class="point-attrs__label">ID:</span><span class="point-attrs__val">${task.id}</span></span>
                     </div>
                 </div>
             </div>`;
-
             const marker = L.marker([addr.coords[0], addr.coords[1]], {
                 icon: L.divIcon({ className: 'custom-div-icon', html, iconAnchor: [15, 15] }),
                 zIndexOffset: 500
             }).addTo(mapInstance.value);
-
+            marker._selected = false;
             marker.on('click', () => {
                 const el = marker.getElement();
+                const extend = el?.querySelector('.route-popup__extend');
+                const isAlreadyOpen = extend?.classList.contains('active');
+                if (isAlreadyOpen) return;
+                
+                unassignedMarkers.forEach(m => {
+                    m.setZIndexOffset(500);
+                    const mEl = m.getElement();
+                    if (mEl) mEl.querySelector('.route-popup__extend')?.classList.remove('active');
+                });
+                
+                clickedFromMap = true;  // ADD THIS
+                marker.setZIndexOffset(10000);
                 if (el) handleMarkerClick(el);
                 emit('unassignedTaskClick', task);
+                setTimeout(() => { clickedFromMap = false; }, 100);  // ADD THIS
             });
-
             marker._taskId = task.id;
             unassignedMarkers.push(marker);
         });
     };
 
     // ── Click handlers ──
-    const handleMarkerClick = (el) => {
+    const handleMarkerClick = (el, forceOpen = false) => {
         if (!el) return;
-        if (activeMarkerElement) activeMarkerElement.style.zIndex = '';
+        if (activeMarkerElement && activeMarkerElement !== el) activeMarkerElement.style.zIndex = '';
         el.style.zIndex = 1000; activeMarkerElement = el;
         const ext = el.querySelector('.route-popup__extend');
         document.querySelectorAll('.route-popup__extend.active').forEach(e => { if (e !== ext) e.classList.remove('active'); });
-        if (ext) ext.classList.toggle('active');
+        if (ext) {
+            if (forceOpen) ext.classList.add('active');
+            else ext.classList.toggle('active');
+        }
     };
 
     const handleActualMarkerClick = (e) => {
@@ -1080,9 +1357,26 @@
     };
 
     // ── Selection (lasso) ──
+    let lassoActive = false; // tracks if lasso area is drawn (not just mode)
+
     const toggleSelectionMode = () => {
         if (!props.enableSelection || !mapInstance.value) return;
-        if (selectionActive.value) { emit('getSelectedPoints', { value: [], state: false }); stopSelectionMode(false); return; }
+        
+        // If lasso area exists — clear everything and restore
+        if (lassoActive) {
+            lassoActive = false;
+            emit('getSelectedPoints', { value: [], state: false });
+            stopSelectionMode(false);
+            return;
+        }
+        
+        // If in drawing mode — cancel
+        if (selectionActive.value) {
+            stopSelectionMode(false);
+            return;
+        }
+        
+        // Start drawing mode
         clearSelectionPolygon();
         selectionActive.value = true;
         mapInstance.value.getContainer().style.cursor = 'crosshair';
@@ -1107,19 +1401,61 @@
                     const closed = [...selectionPath, selectionPath[0]];
                     selectionPolygon = L.polygon([closed], { fillColor: '#3b82f6', fillOpacity: 0.2, color: '#3b82f6', weight: 2 }).addTo(mapInstance.value);
                     const polLL = selectionPolygon.getLatLngs()[0], bounds = selectionPolygon.getBounds();
-                    const inside = props.unassignedTasks.filter(t => {
-                        const a = parseAddress(t.address); if (!a) return false;
-                        const ll = L.latLng(a.coords[0], a.coords[1]); if (!bounds.contains(ll)) return false;
+
+                    // Filter ONLY unassigned tasks that fall inside the lasso
+                    const insideIds = [];
+                    const insideCoords = [];
+                    console.log('🟣 Lasso: checking', props.unassignedTasks?.length, 'unassigned tasks');
+                    props.unassignedTasks.forEach(t => {
+                        const a = parseAddress(t.address);
+                        if (!a) { console.log('🟣 Task', t.id, 'no address parsed'); return; }
+                        const ll = L.latLng(a.coords[0], a.coords[1]);
+                        console.log('🟣 Task', t.id, 'coords:', ll.lat, ll.lng, 'bounds contains:', bounds.contains(ll));
+                        if (!bounds.contains(ll)) return;
                         let ins = false;
                         for (let i = 0, j = polLL.length - 1; i < polLL.length; j = i++) {
                             const xi = polLL[i].lng, yi = polLL[i].lat, xj = polLL[j].lng, yj = polLL[j].lat;
                             if (((yi > ll.lat) !== (yj > ll.lat)) && (ll.lng < (xj - xi) * (ll.lat - yi) / (yj - yi) + xi)) ins = !ins;
                         }
-                        return ins;
+                        console.log('🟣 Task', t.id, 'inside polygon:', ins);
+                        if (ins) {
+                            insideIds.push(Number(t.id));
+                            insideCoords.push(a.coords);
+                        }
                     });
-                    emit('getSelectedPoints', { value: inside.map(t => parseAddress(t.address)?.coords), state: true });
+
+                    // Hide unassigned markers outside the lasso
+                    unassignedMarkers.forEach(m => {
+                        if (!insideIds.includes(Number(m._taskId))) {
+                            mapInstance.value.removeLayer(m);
+                        }
+                    });
+
+                    // Also hide grouped markers that don't contain any selected task
+                    groupedMarkers.forEach(gm => {
+                        const el = gm.getElement();
+                        if (!el) return;
+                        const items = el.querySelectorAll('.cluster-task-item[data-type="unassigned"]');
+                        let hasSelected = false;
+                        items.forEach(item => {
+                            if (insideIds.includes(Number(item.dataset.taskId))) hasSelected = true;
+                        });
+                        if (!hasSelected && !el.querySelector('.cluster-task-item[data-type="route"]')) {
+                            mapInstance.value.removeLayer(gm);
+                        }
+                    });
+
+                    lassoActive = true;
+                    console.log('🟣 MAP: emitting getSelectedPoints, insideIds:', insideIds, 'insideCoords:', insideCoords.length);
+                    emit('getSelectedPoints', { value: insideCoords, ids: insideIds, state: true });
                 }
-                stopSelectionMode(true);
+                // Stop drawing mode but keep polygon visible
+                selectionActive.value = false;
+                if (mapInstance.value) {
+                    mapInstance.value.getContainer().style.cursor = '';
+                    mapInstance.value.dragging.enable();
+                    if (selectionMouseDownHandler) mapInstance.value.off('mousedown', selectionMouseDownHandler);
+                }
             };
             mapInstance.value.on('mousemove', moveH); mapInstance.value.on('mouseup', upH);
         };
@@ -1128,7 +1464,14 @@
 
     const stopSelectionMode = (keep) => {
         if (mapInstance.value) { mapInstance.value.getContainer().style.cursor = ''; mapInstance.value.dragging.enable(); if (selectionMouseDownHandler) mapInstance.value.off('mousedown', selectionMouseDownHandler); }
-        if (!keep) clearSelectionPolygon();
+        if (!keep) {
+            clearSelectionPolygon();
+            // Restore all unassigned markers
+            if (mapInstance.value && shouldShowUnassigned()) {
+                renderUnassignedTasks(props.unassignedTasks);
+                groupOverlappingMarkers();
+            }
+        }
         selectionActive.value = false; isDrawingPath = false;
     };
 
@@ -1142,6 +1485,8 @@
     const focusUnassignedTask = (taskId) => {
         if (!mapInstance.value) return;
         const id = Number(taskId);
+        // Check if marker is in a group
+        if (focusGroupedMarker(id, 'unassigned')) return;
         const marker = unassignedMarkers.find(m => Number(m._taskId) === id);
         if (marker) {
             const latlng = marker.getLatLng();
@@ -1151,10 +1496,11 @@
         }
     };
 
-    // ── Public: focus on a route task from table click ──
     const focusRouteTask = (taskId) => {
         if (!mapInstance.value) return;
         const id = Number(taskId);
+        // Check if marker is in a group
+        if (focusGroupedMarker(id, 'route')) return;
         const marker = routeMarkers.find(m => Number(m._taskId) === id);
         if (marker) {
             const latlng = marker.getLatLng();
@@ -1177,10 +1523,50 @@
         }
     };
 
+    // Focus on a task inside a grouped marker
+    const focusGroupedMarker = (taskId, type) => {
+        for (const gm of groupedMarkers) {
+            const el = gm.getElement();
+            if (!el) continue;
+            const item = el.querySelector(`.cluster-task-item[data-task-id="${taskId}"]`);
+            if (item) {
+                const latlng = gm.getLatLng();
+                safeSetView(latlng, 16);
+                // Always open (not toggle)
+                handleMarkerClick(el, true);
+                // Highlight the specific item and bind clicks
+                setTimeout(() => {
+                    el.querySelectorAll('.cluster-task-item.active').forEach(i => i.classList.remove('active'));
+                    const itemEl = el.querySelector(`.cluster-task-item[data-task-id="${taskId}"]`);
+                    if (itemEl) itemEl.classList.add('active');
+                    // Bind item clicks for table interaction
+                    el.querySelectorAll('.cluster-task-item').forEach(ci => {
+                        ci.onclick = (ev) => {
+                            ev.stopPropagation();
+                            const tid = Number(ci.dataset.taskId);
+                            const ttype = ci.dataset.type;
+                            el.querySelectorAll('.cluster-task-item.active').forEach(i => i.classList.remove('active'));
+                            ci.classList.add('active');
+                            if (ttype === 'route') {
+                                const task = processedRoute?.tasks?.find(t => t.id === tid);
+                                if (task) { clickedFromMap = true; emit('routeTaskClick', task); setTimeout(() => { clickedFromMap = false; }, 100); }
+                            } else {
+                                const rawTask = props.unassignedTasks.find(t => Number(t.id) === tid);
+                                if (rawTask) emit('unassignedTaskClick', rawTask);
+                            }
+                        };
+                    });
+                }, 100);
+                return true;
+            }
+        }
+        return false;
+    };
+
     defineExpose({ focusUnassignedTask, focusRouteTask });
 
     // ── Lifecycle ──
-    onMounted(async () => { await initMap(); /* document.addEventListener('click', closeSettingsOnClick); */ });
+    onMounted(async () => { await initMap(); /* document.addEventListener('click', closeSettingsOnClick); — temporarily disabled, test modal */ });
     onBeforeUnmount(() => {
         document.removeEventListener('click', closeSettingsOnClick);
         stopSelectionMode(false); clearAllLayers();
@@ -1196,9 +1582,32 @@
     });
     watch(() => props.unassignedTasks, (newVal) => {
         if (isRendering) return;
-        console.log('🟢 WATCH unassignedTasks, length:', newVal?.length);
         if (shouldShowUnassigned() && newVal?.length) {
+            clearUnassignedMarkers();
+            // Also clear grouped markers that were unassigned-only
+            groupedMarkers.forEach(gm => {
+                const el = gm.getElement();
+                if (!el) return;
+                if (!el.querySelector('.cluster-task-item[data-type="route"]')) {
+                    mapInstance.value.removeLayer(gm);
+                }
+            });
             renderUnassignedTasks(newVal);
+            groupOverlappingMarkers();
+        } else {
+            // No unassigned tasks — clear all unassigned markers
+            clearUnassignedMarkers();
+            groupedMarkers.forEach(gm => {
+                const el = gm.getElement();
+                if (!el) return;
+                if (!el.querySelector('.cluster-task-item[data-type="route"]')) {
+                    mapInstance.value.removeLayer(gm);
+                }
+            });
+            groupedMarkers = groupedMarkers.filter(gm => {
+                const el = gm.getElement();
+                return el && el.querySelector('.cluster-task-item[data-type="route"]');
+            });
         }
     }, { deep: true });
     watch(() => props.showUnassigned, () => applySettings());

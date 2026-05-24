@@ -21,7 +21,7 @@
             }"
             :style="{'--colorText': props.options?.color ?? '#000'}"
         >
-            {{ props.item.text ? props.item.text.value ?? props.item.text : '' }}
+            {{ props.item.text ? props.item.text.value ?? props.item.text : '' }}<span class="blank__unit" v-if="props.item.unit && (props.item.text || props.item.text === 0)"> {{ props.item.unit }}</span>
         </p>
     </div>
 </template>

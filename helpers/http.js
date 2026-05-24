@@ -21,8 +21,10 @@ export default {
                     //withCredentials: true,
                 }).catch((error) => {
                     if (error.response.status == 401) {
-                        userStore.token = null
-                        window.location.href = '/auth'
+                        if (!window.location.pathname.startsWith('/external/')) {
+                            userStore.token = null
+                            window.location.href = '/auth'
+                        }
                     } else {
                         common.showNotification({title: 'Ошибка', description: error.response.data.message})
                     }

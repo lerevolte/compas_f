@@ -1,5 +1,5 @@
 <template>
-    <div class="form__item form__item_input" :class="{'blank_required': props.options.required, 'error': props.error.state}">
+    <div class="form__item form__item_input" :class="{'blank_required': props.options.required, 'error': props.error.state}" :style="props.options.unit ? `--substring: ${props.options.unit}; --substringPadding: 17px` : ''">
         <label class="blank__title" :for="props.options.id" v-if="props.options.title && props.options.title != ''">
             <span>{{ props.options.title }}</span>
         </label>
@@ -24,6 +24,7 @@
             @input="onInput"
             @blur="event => emit('blur', event)"
         >
+        <span class="form-item__substring" v-if="props.options.unit">{{ props.options.unit }}</span>
         <AppError v-show="props.error.state">
             {{ props.error.text }}
         </AppError>

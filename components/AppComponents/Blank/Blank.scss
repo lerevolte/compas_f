@@ -57,6 +57,12 @@
         }
     }
 
+    .blank__unit {
+        color: #8f8f8f;
+        user-select: none;
+        margin-left: 4px;
+    }
+
     &.blank_static {
         .blank__title {
             color: variables.$color-border;

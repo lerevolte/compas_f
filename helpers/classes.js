@@ -295,7 +295,7 @@ export class Common {
             model_slug: slug,
             model_id: id
         })
-        this.copyLink(response.data.url)
+        this.copyLink(`${window.location.origin}/external/${response.data.token}`)
     }
 
     // Обновление названия файла
@@ -1119,8 +1119,10 @@ export class Table {
 
     getSocketRows() {
         let findedRow = null
+        console.log('🟢 getSocketRows called, socket.table:', JSON.stringify(this.socket.table.map(s => ({ state: s.state, id: s.row?.id }))));
 
         for (let socketRow of this.socket.table) {
+            console.log('🟢 socketRow:', socketRow.state, 'row:', socketRow.row);
             if (socketRow.state == 'delete') {
                 this.body = this.body.filter(item => item.id != socketRow.row.id)
             } else if (socketRow.state == 'update') {
@@ -1132,13 +1134,16 @@ export class Table {
                     setTimeout(() => {
                         delete findedRow.socketChange
                     }, 1500);
+                } else {
+                    this.body.unshift(socketRow.row)
                 }
             } else if (socketRow.state == 'create') {
-                this.body.push(socketRow.row)
+                this.body.unshift(socketRow.row)
             }
         }
 
         this.socket.table = []
+        this.initVirtualizer()
     }
 }
 
@@ -1499,8 +1504,8 @@ export class HeaderEditable {
         }
     }
 
-    copy({slug, id, emit}) {
-        emit('openModal', {
+    copy({slug, id}) {
+        this.emit('openModal', {
             id: id,
             slug: slug,
             type: 'copy',
@@ -2217,7 +2222,7 @@ export class Field {
                         if (slug == 'value') {
                             return typeof field.value === 'object' && field.value !== null ? field.value[slug] : field.value
                         } else {
-                            return field.value[slug]
+                            return field.value ? field.value[slug] : null
                         }
                     } else {
                         if ((typeof field.value === 'object' && field.value !== null)) {
@@ -2248,7 +2253,7 @@ export class Field {
                                 field.value = val
                             }
                         } else {
-                            if (!field.value[slug]) {
+                            if (!field.value || !field.value[slug]) {
                                 const prevVal = field.value
                                 if (typeof prevVal === 'object' && prevVal !== null) {
                                     field.value[slug] = val

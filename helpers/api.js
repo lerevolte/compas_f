@@ -11,6 +11,8 @@ export default {
             try {
                 if (!method.includes('/external/')) {
                     headers.Authorization = `Bearer ${userStore.token}`
+                } else {
+                    delete headers.Authorization
                 }
                 let result = await http.call(type, url, params, headers)
                 resolve(result)

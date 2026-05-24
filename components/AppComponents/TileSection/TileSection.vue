@@ -34,7 +34,7 @@
                 <IconEdit v-if="!props.options?.isModule" v-show="!section.editTitle" @click="section.initEditTitle()"/>
             </div>
 
-            <div class="tile-section__actions" v-if="!props.options.isGlobalEdit && props.options.type != 'field'">
+            <div class="tile-section__actions" v-if="!props.options.isGlobalEdit && props.options.type != 'field' && !props.options.isModule">
                 <AppButton class="button_text" v-if="section.fields.find(item => item.edit || (item.type == 'text_group' && item.fields.find(item => item.edit)))" @click="fieldObject.section.cancelEditAll(props.section)">
                     Отмена
                 </AppButton>
@@ -144,7 +144,7 @@
                             isHaveNull: true,
                             visibleCount: 5,
                             isSetDefault: true,
-                            isCanAdd: true,
+                            isCanAdd: !props.options.isModule,
                             multiple: field.is_plural,
                             placeholder: '' 
                         }"
@@ -287,8 +287,9 @@
                             }"
                             :item="{
                                 title: field.title,
-                                link: field.is_external_link ? field.value.external_link ?? null : null,
-                                text: field.is_external_link ? field.value.value ?? field.value : field.value
+                                link: field.is_external_link && field.value ? field.value.external_link ?? null : null,
+                                text: field.is_external_link && field.value ? field.value.value ?? field.value : field.value,
+                                unit: field.unit ?? null
                             }"
                         />
 
@@ -326,7 +327,7 @@
                         </div>
                     </template>
 
-                    <AppPopup class="field__settings" v-if="!props.options?.isModule" :isPreventBottom="true">
+                    <AppPopup class="field__settings" v-if="!props.options?.isModule">
                         <template #header>
                             <IconSettings />
                         </template>
@@ -359,14 +360,6 @@
                                     :options="{
                                         title: 'Показывать всегда'
                                     }"
-                                    @update:model-value="() => emit('actionField', {
-                                        action: 'update',
-                                        value: {
-                                            ...field,
-                                            section_type: props.options.type,
-                                            section_id: props.section.id,
-                                        }
-                                    })"
                                 />
                             </div>
                             <div 

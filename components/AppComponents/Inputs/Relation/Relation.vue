@@ -258,6 +258,9 @@
             clickedItem.value = event
             if (props.options.edit == false || (event && event.target.closest('.relation__arrow'))) return
             
+            // Prevent closing when clicking inside input (text selection)
+            if (this.state.isOpen && event?.target?.closest('input')) return
+            
             // Закрываем все другие селекты
             selectInstances.value.forEach((instance, idx) => {
                 if (idx !== this.index && instance.state.isOpen) {
@@ -274,6 +277,20 @@
             if (this.state.isOpen) {
                 document.addEventListener('click', this.closeOptions);
                 nextTick(() => this.checkPosition(event));
+                
+                // Fill search with current value text for editing
+                const activeOpt = getActiveOption(this.index);
+                if (activeOpt?.value) {
+                    this.state.search = activeOpt.label?.text || '';
+                }
+                
+                // Focus input
+                nextTick(() => {
+                    if (this.selectRef) {
+                        const input = this.selectRef.querySelector('input');
+                        if (input) input.focus();
+                    }
+                });
             } else {
                 this.state.isTop = false;
                 this.state.search = ''

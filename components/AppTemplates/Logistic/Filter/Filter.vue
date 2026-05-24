@@ -16,7 +16,7 @@
     
                     <div class="logistic-filter__tabs">
                         <div class="logistic-filter__tab" v-for="tab in filter.tabs" @click="() => filter.update(tab)">
-                            {{ tab.title }}: {{ tab.value }}
+                            {{ tab.title }}: {{ tab.label ?? tab.value }}
                             <IconClose />
                         </div>
                     </div>
@@ -25,32 +25,26 @@
         </AppPopup>
     </div>
 </template>
-
 <script setup>
     import './Filter.scss';
-
     import AppPopup from '@AppComponents/Popup/Popup.vue'
     import IconSearch from '@AppIcons/Input/Search.vue';
     import AppInput from '@AppComponents/Inputs/Input/Input.vue'
     import IconClose from '@AppIcons/Close.vue';
-
     const emit = defineEmits([
         'update:modelValue'
     ])
-
     const props = defineProps({
         modelValue: {
             default: [],
             type: Array
         }
     })
-
     class Filter {
         constructor() {
             this.search = null
             this.tabs = null
         }
-
         // Получение табов
         get() {
             this.tabs = computed({
@@ -60,10 +54,16 @@
                     for (let tab of props.modelValue) {
                         if (Array.isArray(tab.value)) {
                             response = [...response, ...tab.value.map((subvalue, index) => {
+                                // Find matching label from labels array if available
+                                let label = null;
+                                if (tab.labels && Array.isArray(tab.labels)) {
+                                    label = tab.labels[index] ?? null;
+                                }
                                 return {
                                     ...tab,
                                     title: `${tab.title}${tab.value.length > 1 ? index == 0 ? ' (от)' : index == tab.value.length - 1 ? ' (до)' : ' прочее' : ''}`, 
-                                    value: subvalue ?? null
+                                    value: subvalue ?? null,
+                                    label: label
                                 } 
                             })]
                         } else {
@@ -74,21 +74,23 @@
                 }
             })
         }
-
         update(tab) {
             let request = JSON.parse(JSON.stringify(props.modelValue))
-
             for (let item of request) {
                 if (Array.isArray(item.value) && item.key == tab.key) {
-                    item.value.splice(item.value.indexOf(tab.value), 1, null)
+                    const idx = item.value.indexOf(tab.value)
+                    item.value.splice(idx, 1, null)
+                    // Also remove corresponding label
+                    if (item.labels && Array.isArray(item.labels) && idx >= 0) {
+                        item.labels.splice(idx, 1, null)
+                    }
                 } else if (item.key == tab.key) {
                     item.value = null
+                    item.label = null
                 }
             }
-
             emit('update:modelValue', request)
         }
-
         setSearch() {
             emit('update:modelValue', [
                 ...props.modelValue,
@@ -101,12 +103,8 @@
             this.search = null
         }
     }
-
     const filter = ref(new Filter())
-
     onMounted(() => {
         filter.value.get()
     })
 </script>
-
-

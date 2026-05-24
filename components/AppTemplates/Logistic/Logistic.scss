@@ -1,6 +1,16 @@
 @use '@/assets/variables.scss' as variables;
 @use '@/assets/mixins.scss' as mixins;
 
+.draggable-fallback {
+    .logistic-map__settings,
+    .logistic-map__body,
+    .logistic-map__container {
+        display: none !important;
+    }
+    
+    height: 45px !important;
+    overflow: hidden !important;
+}
 .logistic {
     grid-gap: 15px;
     display: grid;
@@ -12,10 +22,34 @@
             overflow: hidden;
             height: 45px;
 
+            > .section-table {
+                height: 45px;
+                overflow: hidden;
+                
+                .section-table__top {
+                    border: none;
+                }
+            }
+
             .table,
-            .map__frame-map {
+            .map__frame-map,
+            .logistic-map__body,
+            .logistic-map__container {
+                display: none !important;
+            }
+
+            .logistic-map {
+                height: 45px;
+                overflow: hidden;
+            }
+            .logistic-map__settings {
                 display: none;
             }
+
+            .filter__mobile-search {
+                display: none;
+            }
+
         }
         
 
@@ -26,7 +60,7 @@
         .section-table__top {
             border: none;
 
-            .section-table__top-group:last-child {
+            .section-table__top-group:not(.section-table__top-title) {
                 display: none;
             }
         }
@@ -43,11 +77,7 @@
         height: 100%;
     }
 
-    &.logistic_dragging {
-        .resize {
 
-        }
-    }
 
     @media (max-width: 1300px) {
         grid-template-columns: 1fr;
@@ -155,47 +185,63 @@
     }
 }
 
-.resize {
-    &.draggable-drag {
-        height: max-content !important;
 
-        .table {
-            display: none;
-        }
+.resize.draggable-drag,
+.resize.draggable-fallback {
+    height: 45px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: center;
 
-        .section-table {
-            height: auto;
-            margin-bottom: 0px;
-        }
+    .resize__icon-drag {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        opacity: 1 !important;
+        margin-left: 5px;
+    }
 
-        .icon__resize {
-            display: none;
-        }
+    .section-table {
+        margin-bottom: 0 !important;
+        height: 45px !important;
+        display: flex;
+        align-items: center;
+    }
 
-        .resize__icon-drag {
-            top: 10px;
-            left: 10px;
-            position: absolute;
-        }
+    .section-table__top {
+        border: none !important;
+        padding: 0 10px !important;
+    }
 
-        .filter__mobile-search {
-            display: none;
-        }
+    .logistic-map {
+        height: 45px !important;
+        overflow: hidden !important;
+    }
 
-        .section-table__top-group {
-            padding-left: 20px;
+    .logistic-map__header {
+        display: flex;
+        align-items: center;
+        height: 45px;
+    }
 
-            &:last-child {
-                display: none;
-            }
-        }
+    .logistic-map__body,
+    .logistic-map__container,
+    .logistic-map__settings,
+    canvas,
+    .leaflet-container,
+    .table,
+    .map__frame-map {
+        display: none !important;
+    }
 
-        .map__frame-map {
-            display: none;
-        }
+    .icon__resize {
+        display: none !important;
+    }
 
-        .map__frame {
-            height: max-content;
-        }
+    .section-table__top-group:last-child {
+        display: none !important;
+    }
+    .filter__mobile-search {
+        display: none !important;
     }
 }

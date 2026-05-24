@@ -7,10 +7,11 @@
     <TableTop v-if="props.options?.isHaveTopHeader" :options="props.options" :showMore="props.showMore" :title="props.options?.title ?? null"/>
     <div ref="tableRef" class="table" :class="{'table_permanent-edit': props.options.isPermanentEdit, 'table_short': props.options?.isShort}">
       <TableHeader>
-        <div class="socket-row" v-if="!props.options?.isDisableSockets && table.socket?.table?.length > 0" >
-          {{ table.socket?.table?.length }} изменения в таблице <span class="socket-row__button" @click="table.getSocketRows()"> Загрузить </span>
-        </div>
+        
       </TableHeader>
+      <div class="socket-row" v-if="!props.options?.isDisableSockets && table.socket?.table?.length > 0" >
+          {{ table.socket?.table?.length }} изменения в таблице <span class="socket-row__button" @click="table.getSocketRows(); table.get()"> Загрузить </span>
+        </div>
       <TableBody 
         :options="props.options"
         @choseRow="row => emit('choseRow', row)"
@@ -33,7 +34,7 @@
         edit: !props.options.isTrash && table.state != 'edit',
         cancel: true,
         restore: props.options.isTrash,
-        delete: false
+        delete: !props.options.isTrash && table.state != 'edit'
       }"
       :loading="table.saving"
       @action="action => table[action.action](action.value)"

@@ -173,6 +173,8 @@
                         }"
                         @update:modelList="(val) => {
                             menu.list = val; 
+                            menu.visible = val.filter(item => !item.is_hidden)
+                            menu.hidden = val.filter(item => item.is_hidden)
                             menu.isChanged = true
                             menu.updateSortOrder()
                         }"
@@ -186,8 +188,13 @@
                 <AppPopup ref="popupRef" class="menu__popup">
                     <template #header>
                         <div class="menu-user">
-                            <figure class='ibg menu-user__avatar' :class="{'skeleton': menu.loading}">
-                                <img :src='menu.user?.avatar' alt=''>
+                            <figure v-if="menu.user?.avatar" class='ibg menu-user__avatar' :class="{'skeleton': menu.loading}">
+                                <img :src='menu.user.avatar' alt=''>
+                            </figure>
+                            <figure v-else class='ibg menu-user__icon' :class="{'skeleton': menu.loading}">
+                                <figcaption :style="{ '--backgroundColor': menu.user?.color || '#a6b7d4' }">
+                                    {{ menu.user?.name?.charAt(0) || '' }}
+                                </figcaption>
                             </figure>
                             <strong class="menu-user__name" :class="{'skeleton': menu.loading}">
                                 {{ menu.user?.name }}
@@ -269,7 +276,8 @@
                 const full_name = `${userStore.user?.name ?? ''} ${userStore.user?.last_name ?? ''}`
                 this.user = {
                     name: full_name.replaceAll(' ', '') == '' ? 'Без имени' : full_name,
-                    avatar: userStore.user && userStore.user?.avatar ? JSON.parse(userStore.user?.avatar)[0]?.url ?? '/undefined.svg' : '/undefined.svg'
+                    avatar: userStore.user && userStore.user?.avatar ? JSON.parse(userStore.user?.avatar)[0]?.url ?? null : null,
+                    color: userStore.user?.color || '#a6b7d4'
                 }
                 await this.update()
             } catch (error) {
@@ -285,7 +293,8 @@
             const full_name = `${userStore.user?.name ?? ''} ${userStore.user?.last_name ?? ''}`
             this.user = {
                 name: full_name.replaceAll(' ', '') == '' ? 'Без имени' : full_name,
-                avatar: userStore.user && userStore.user?.avatar ? JSON.parse(userStore.user?.avatar)[0]?.url ?? '/undefined.svg' : '/undefined.svg'
+                avatar: userStore.user && userStore.user?.avatar ? JSON.parse(userStore.user?.avatar)[0]?.url ?? null : null,
+                color: userStore.user?.color || '#a6b7d4'
             }
             // Обновляем меню
             this.list = menuStore.list
@@ -295,20 +304,14 @@
 
         // Изменение отображения поля
         enableField(field) {
-            this.visible = this.visible.map(p => {
-                return {
-                    ...p,
-                    children: p.children.map(item => item.id == field.id ? {...item, enabled: field.enabled} : item),
-                    enabled: p.id == field.id ? field.enabled : p.enabled
-                }
-            })
-            this.hidden = this.hidden.map(p => {
-                return {
-                    ...p,
-                    children: p.children.map(item => item.id == field.id ? {...item, enabled: field.enabled} : item),
-                    enabled: p.id == field.id ? field.enabled : p.enabled
-                }
-            })
+            this.visible = this.visible.map(p => ({
+                ...p,
+                enabled: p.id == field.id ? field.enabled : p.enabled
+            }))
+            this.hidden = this.hidden.map(p => ({
+                ...p,
+                enabled: p.id == field.id ? field.enabled : p.enabled
+            }))
         }
 
         // Вернуть значение по умолчанию
@@ -398,7 +401,7 @@
 
     // Загружаем данные самыми первыми на сайте
     if (props.options?.type == 'default') {
-        menu.value.list = menuStore?.list ?? []
+        menu.value.list = Array.isArray(menuStore?.list) ? menuStore.list : []
         menu.value.visible = menu.value.list.filter(item => !item.is_hidden)
         menu.value.hidden = menu.value.list.filter(item => item.is_hidden)
         await userStore.get()

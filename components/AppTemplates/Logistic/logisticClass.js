@@ -10,6 +10,7 @@ export class LogisticWithMap extends Logistic {
         this.unassignedTasks = [];
         this.loadingRouteMapData = false;
         this.activeTaskId = null;
+        this.onRouteChanged = null; // callback set by parent
     }
 
     choseRoute(row) {
@@ -31,19 +32,11 @@ export class LogisticWithMap extends Logistic {
         try {
             this.loadingRouteMapData = true;
 
-            // НЕ передаём delivery_date — на бэкенде баг, дата задач не совпадает с датой маршрута
-            const response = await api.callMethod('GET', 
-                `/objects/logistic_tasks/compose?filter[route_id]=${routeId}&per_page=100&sort_field=sort&sort_order=asc`
-            );
+            const response = await api.callMethod('GET', `/routes/${routeId}/tasks`);
 
-            let rows = response.data?.list?.data || [];
+            let rows = response.data?.data || [];
 
             console.log('🟢 Loaded route tasks:', rows.length);
-            if (rows.length > 0) {
-                console.log('🟢 First row keys:', Object.keys(rows[0]));
-                console.log('🟢 First row address:', rows[0].address);
-                console.log('🟢 First row name:', rows[0].name);
-            }
 
             if (rows.length === 0) {
                 console.log('🟠 Route has no tasks');
@@ -74,6 +67,7 @@ export class LogisticWithMap extends Logistic {
                     address: addressStr,
                     service_time: row.service_time || 0,
                     factTime: row.fact_time || row.factTime || '',
+                    planTime: row.plan_time || row.planTime || '',
                     statusColor: row.statusColor || '#ccc'
                 };
             });
@@ -81,56 +75,34 @@ export class LogisticWithMap extends Logistic {
             console.log('🟢 Converted tasks:', tasks.length);
             console.log('🟢 First task:', tasks[0]);
 
-            // ── TEST DATA: remove after connecting real API ──
-            // Simulates driver movement from Okhotny Ryad → Balashikha → back to Moscow
-            // Includes: normal driving, a stop near task 1 (service), a parking stop, and a signal gap
-            const testActualPath = [
-                // Starts near task 1 (Okhotny Ryad 55.7575, 37.6163)
-                { lat: 55.7574, lon: 37.6160, speed: 0,   time: '07:05' },
-                { lat: 55.7576, lon: 37.6165, speed: 5,   time: '07:08' },
-                // Stationary near task 1 for 12 min → should become "Обслуживание"
-                { lat: 55.7576, lon: 37.6164, speed: 0,   time: '07:10' },
-                { lat: 55.7576, lon: 37.6164, speed: 0,   time: '07:15' },
-                { lat: 55.7575, lon: 37.6164, speed: 0,   time: '07:22' },
-                // Driving east toward Balashikha
-                { lat: 55.7550, lon: 37.6500, speed: 45,  time: '07:30' },
-                { lat: 55.7500, lon: 37.7000, speed: 60,  time: '07:40' },
-                { lat: 55.7400, lon: 37.7800, speed: 55,  time: '07:55' },
-                { lat: 55.7350, lon: 37.8500, speed: 50,  time: '08:05' },
-                // Signal loss gap: 15 min → should become "Потеря сигнала"
-                { lat: 55.7348, lon: 37.8600, speed: 40,  time: '08:10' },
-                { lat: 55.7350, lon: 37.9000, speed: 35,  time: '08:25' },
-                // Near task 2 (Balashikha 55.7348, 38.0113)
-                { lat: 55.7345, lon: 37.9500, speed: 45,  time: '08:35' },
-                { lat: 55.7348, lon: 38.0100, speed: 10,  time: '08:50' },
-                // Stationary near task 2 for 8 min → "Обслуживание"
-                { lat: 55.7348, lon: 38.0112, speed: 0,   time: '08:52' },
-                { lat: 55.7348, lon: 38.0112, speed: 0,   time: '08:57' },
-                { lat: 55.7348, lon: 38.0113, speed: 0,   time: '09:00' },
-                // Driving back west
-                { lat: 55.7400, lon: 37.9500, speed: 50,  time: '09:10' },
-                // Random parking stop (not near any task) for 7 min → "Остановка"
-                { lat: 55.7450, lon: 37.8800, speed: 0,   time: '09:20' },
-                { lat: 55.7450, lon: 37.8800, speed: 0,   time: '09:25' },
-                { lat: 55.7450, lon: 37.8801, speed: 0,   time: '09:27' },
-                // Continue driving
-                { lat: 55.7500, lon: 37.8000, speed: 55,  time: '09:35' },
-                { lat: 55.7530, lon: 37.7000, speed: 60,  time: '09:45' },
-                // Near task 3 (Moscow 55.754, 37.620)
-                { lat: 55.7540, lon: 37.6210, speed: 10,  time: '10:00' },
-                { lat: 55.7540, lon: 37.6205, speed: 0,   time: '10:02' },
-                { lat: 55.7540, lon: 37.6205, speed: 0,   time: '10:08' },
-                { lat: 55.7541, lon: 37.6205, speed: 0,   time: '10:12' },
-            ];
-            // ── END TEST DATA ──
+            // Load additional map data (actual path, route meta)
+            let actualPath = [];
+            let routeName = `Маршрут ${routeId}`;
+            let loadingTime = '07:00';
+            let routeColor = '#8601ff';
+
+            try {
+                const mapDataResponse = await api.callMethod('GET', `/routes/${routeId}/map_data`);
+                const mapData = mapDataResponse.data || mapDataResponse;
+                actualPath = mapData.actual_path || [];
+                routeName = mapData.name || routeName;
+                loadingTime = mapData.loading_time || loadingTime;
+                // Color might be hex (#8601ff) or an ID (1484) — only use if it looks like a color
+                const rawColor = mapData.color || '';
+                if (rawColor && /^(#|rgb|hsl|linear)/.test(rawColor)) {
+                    routeColor = rawColor;
+                }
+            } catch (e) {
+                console.log('🟠 map_data endpoint not available, using defaults');
+            }
 
             this.selectedRouteData = {
                 id: routeId,
-                name: `Маршрут ${routeId}`,
-                loading_time: '07:00',
-                color: '#8601ff',
+                name: routeName,
+                loading_time: loadingTime,
+                color: routeColor,
                 tasks: tasks,
-                actual_path: testActualPath, // Replace with real API data later
+                actual_path: actualPath,
                 service_stops: [],
                 parking_stops: [],
                 signal_loss_events: []
@@ -147,23 +119,84 @@ export class LogisticWithMap extends Logistic {
     }
 
     async loadUnassignedTasks() {
-        if (this._loadingUnassigned) return;
-        this._loadingUnassigned = true;
+        this._unassignedRequestId = (this._unassignedRequestId || 0) + 1;
+        const requestId = this._unassignedRequestId;
         try {
-            // НЕ передаём delivery_date — бэкенд баг, дата задач не совпадает
-            const response = await api.callMethod('GET',
-                `/objects/logistic_tasks/compose?filter[route_id]=null&per_page=100&sort_field=id&sort_order=asc`
-            );
+            // Build filter query
+            let filterParams = `filter[route_id]=null&filter[delivery_date]=${this.activeDate}&per_page=100&sort_field=id&sort_order=asc`;
+            
+            // Add requirements filters if set
+            if (this.filterFields?.length) {
+                this.filterFields.forEach(f => {
+                    if (f.key && f.value && Array.isArray(f.value) && (f.key === 'car_requirements' || f.key === 'employee_requirements')) {
+                        const filtered = f.value.filter(v => v !== null && v !== undefined && v !== '');
+                        if (filtered.length > 0) {
+                            filtered.forEach(v => {
+                                filterParams += `&filter[${f.key}][]=${v}`;
+                            });
+                        }
+                    }
+                });
+            }
+
+            const url = `/objects/logistic_tasks/compose?${filterParams}`;
+            const response = await api.callMethod('GET', url);
+            
+            if (requestId !== this._unassignedRequestId) return;
             
             let rows = response.data?.list?.data || [];
-            console.log('🟢 Loaded unassigned tasks:', rows.length);
+            
+            // Frontend filtering for weight/volume
+            if (this.filterFields?.length) {
+                const weightFilter = this.filterFields.find(f => f.key === 'weight');
+                const volumeFilter = this.filterFields.find(f => f.key === 'volume');
+                
+                console.log('🟢 Filter fields:', this.filterFields.map(f => ({ key: f.key, value: f.value })));
+                
+                if (weightFilter?.value) {
+                    const wMin = weightFilter.value[0] !== null && weightFilter.value[0] !== undefined ? Number(weightFilter.value[0]) : null;
+                    const wMax = weightFilter.value[1] !== null && weightFilter.value[1] !== undefined ? Number(weightFilter.value[1]) : null;
+                    if (wMin !== null || wMax !== null) {
+                        rows = rows.filter(row => {
+                            const weight = this._calcProductsTotal(row.products, 'weight');
+                            console.log('🟢 Task', row.id, 'weight:', weight, 'wMin:', wMin, 'wMax:', wMax);
+                            if (wMin !== null && weight < wMin) return false;
+                            if (wMax !== null && weight > wMax) return false;
+                            return true;
+                        });
+                    }
+                }
+                
+                if (volumeFilter?.value) {
+                    const vMin = volumeFilter.value[0] !== null && volumeFilter.value[0] !== undefined ? Number(volumeFilter.value[0]) : null;
+                    const vMax = volumeFilter.value[1] !== null && volumeFilter.value[1] !== undefined ? Number(volumeFilter.value[1]) : null;
+                    if (vMin !== null || vMax !== null) {
+                        rows = rows.filter(row => {
+                            const volume = this._calcProductsTotal(row.products, 'volume');
+                            if (vMin !== null && volume < vMin) return false;
+                            if (vMax !== null && volume > vMax) return false;
+                            return true;
+                        });
+                    }
+                }
+            }
+            
             this.unassignedTasks = Array.isArray(rows) ? rows : [];
+            console.log('🟢 Final unassigned tasks after filtering:', this.unassignedTasks.length, 'IDs:', this.unassignedTasks.map(t => t.id));
         } catch (error) {
-            console.error('🔴 Error loading unassigned tasks:', error);
-            this.unassignedTasks = [];
-        } finally {
-            this._loadingUnassigned = false;
+            if (requestId === this._unassignedRequestId) {
+                this.unassignedTasks = [];
+            }
         }
+    }
+
+    _calcProductsTotal(products, field) {
+        let data = products;
+        if (typeof data === 'string') {
+            try { data = JSON.parse(data); } catch(e) { return 0; }
+        }
+        if (!Array.isArray(data)) return 0;
+        return data.reduce((sum, p) => sum + ((p[field] || 0) * (p.count || 1)), 0);
     }
 
     getRoutes(data) {
@@ -200,16 +233,70 @@ export class LogisticWithMap extends Logistic {
 
         const ids = list.map(row => row.id);
 
+        if (!ids.length) return;
+
         try {
-            await api.callMethod('PUT', `/routes/${routeId}/tasks`, { ids });
+            const response = await api.callMethod('PUT', `/routes/${routeId}/tasks`, { ids });
             
-            // Reload route data for map
-            this.loadRouteForMap(routeId);
+            // Use response data directly — it's already in correct order
+            const responseData = response.data || response;
+            const rows = responseData.data || [];
+            
+            if (rows.length > 0) {
+                const tasks = rows.map((row, index) => {
+                    let addressStr = row.address;
+                    if (typeof addressStr === 'object' && addressStr !== null) {
+                        addressStr = JSON.stringify(addressStr);
+                    }
+                    return {
+                        id: row.id || index + 1,
+                        order: index + 1,
+                        name: typeof row.name === 'object' ? (row.name?.value || row.name?.name || `Точка ${index + 1}`) : (row.name || `Точка ${index + 1}`),
+                        address: addressStr,
+                        service_time: row.service_time || 0,
+                        factTime: row.fact_time || '',
+                        planTime: row.plan_time || '',
+                        statusColor: row.statusColor || '#ccc'
+                    };
+                });
+
+                // Load map_data for color/name/actual_path
+                let actualPath = [];
+                let routeName = `Маршрут ${routeId}`;
+                let loadingTime = '07:00';
+                let routeColor = '#8601ff';
+
+                try {
+                    const mapDataResponse = await api.callMethod('GET', `/routes/${routeId}/map_data`);
+                    const mapData = mapDataResponse.data || mapDataResponse;
+                    actualPath = mapData.actual_path || [];
+                    routeName = mapData.name || routeName;
+                    loadingTime = mapData.loading_time || loadingTime;
+                    const rawColor = mapData.color || '';
+                    if (rawColor && /^(#|rgb|hsl|linear)/.test(rawColor)) {
+                        routeColor = rawColor;
+                    }
+                } catch (e) {}
+
+                this.selectedRouteData = {
+                    id: routeId,
+                    name: routeName,
+                    loading_time: loadingTime,
+                    color: routeColor,
+                    tasks: tasks,
+                    actual_path: actualPath,
+                    service_stops: [],
+                    parking_stops: [],
+                    signal_loss_events: []
+                };
+            }
+
             // Reload unassigned tasks (task may have moved in/out)
-            this._loadingUnassigned = false;
             this.loadUnassignedTasks();
-            // Refresh unassigned tasks table
+            // Refresh unassigned tasks table only (route tasks table already updated by drag)
             this.logistic_tasks.updatingCount++;
+            // Notify parent to refresh analytics
+            if (this.onRouteChanged) this.onRouteChanged();
         } catch (error) {
             console.error('🔴 Error updating route tasks:', error);
         }
