@@ -36,15 +36,23 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         // Если меню есть, редиректим на первую видимую ссылку (не скрытую)
         if (menuStore.list && menuStore.list.length > 0) {
             const visibleItems = menuStore.list.filter(item => !item.is_hidden)
-            const first = visibleItems[0]
-            if (first) {
-                // Если первый пункт — группа вкладок, берём первого видимого ребёнка.
-                const target = first.is_group
-                    ? first.children?.find(c => !c.is_hidden)?.link
-                    : first.link
-                if (target) {
-                    return navigateTo(target)
+            // Ищем первый item с реальной ссылкой. Если первый — группа без link,
+            // спускаемся в его children. Если у группы тоже нет линка — следующий item.
+            const resolveLink = (item) => {
+                if (!item) return null
+                if (item.is_group) {
+                    const child = (item.children || []).find(c => c?.link)
+                    return child?.link || null
                 }
+                return item.link || null
+            }
+            let target = null
+            for (const item of visibleItems) {
+                target = resolveLink(item)
+                if (target) break
+            }
+            if (target) {
+                return navigateTo(target)
             }
         }
     }

@@ -177,6 +177,10 @@
     }
 
     &.tile-section_drag {
+        .tile-section__header {
+            border-bottom: none;
+        }
+
         .tile-section__body,
         .tile-section__footer {
             display: none !important;
@@ -184,6 +188,12 @@
 
         .icon_drag {
             opacity: 1;
+        }
+    }
+
+    &.draggable-ghost {
+        .tile-section__header {
+            border-bottom: none;
         }
     }
 

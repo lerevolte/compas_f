@@ -34,12 +34,6 @@
 
     let L = null;
 
-    // Привязка значения map_type из настроек модуля к внутреннему названию.
-    const MAP_TYPE_FROM_SETTING = {
-        openstreet: 'OpenStreetMap',
-        yandex: 'Яндекс.Карты',
-    };
-
     const emit = defineEmits(['getSelectedPoints', 'unassignedTaskClick', 'routeTaskClick']);
 
     const props = defineProps({
@@ -1581,15 +1575,22 @@
             const response = await api.callMethod('GET', routes.settings.modules.logistics.get);
             const fields = response.data || [];
             for (const f of fields) {
-                if (f.key === 'main_city' && f.value && Array.isArray(f.value.coords)) {
+                if ((f.key === 'main_city' || f.title === 'Главный город') && f.value && Array.isArray(f.value.coords)) {
                     const lat = Number(f.value.coords[0]);
                     const lng = Number(f.value.coords[1]);
                     if (Number.isFinite(lat) && Number.isFinite(lng)) {
                         fetchedCenter.value = [lat, lng];
                     }
                 }
-                if (f.key === 'map_type' && f.value && MAP_TYPE_FROM_SETTING[f.value]) {
-                    settings.map_type = MAP_TYPE_FROM_SETTING[f.value];
+                if ((f.key === 'used_map' || f.title === 'Используемая карта') && typeof f.value === 'string') {
+                    // settings.map_type использует те же значения 'OpenStreetMap' / 'Яндекс.Карты'.
+                    if (f.value === 'OpenStreetMap' || f.value === 'Яндекс.Карты') {
+                        settings.map_type = f.value;
+                    } else if (/openstreet/i.test(f.value)) {
+                        settings.map_type = 'OpenStreetMap';
+                    } else if (/яндекс/i.test(f.value)) {
+                        settings.map_type = 'Яндекс.Карты';
+                    }
                 }
             }
         } catch (e) {

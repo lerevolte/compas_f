@@ -379,10 +379,23 @@
             this.set({label: field.name, value: 'initGroup'})
             this.statusTemplate = 'update'
 
+            // Сохраняем порядок enabled-сущностей из field.children (так как было сохранено),
+            // а disabled — добавляем после в общем порядке props.list.
+            const childIds = (field.children || []).map(c => c.id)
+            const enabledItems = (field.children || [])
+                .filter(c => c.enabled)
+                .map(c => {
+                    const base = props.list.find(p => p.id == c.id) || c
+                    return {...base, enabled: true}
+                })
+            const disabledItems = props.list
+                .filter(p => !childIds.includes(p.id) || !(field.children || []).find(c => c.id == p.id && c.enabled))
+                .map(p => ({...p, enabled: false}))
+
             this.templateField = {
                 id: field.id,
                 name: field.name,
-                list: disabledFields.value.reduce((acc, el) => [...acc, {...el, enabled: field.children.find(item => item.id == el.id)?.enabled ?? false}], [])
+                list: [...enabledItems, ...disabledItems]
             }
         }
 

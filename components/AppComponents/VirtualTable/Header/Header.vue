@@ -389,8 +389,12 @@
                 const stickyLeft = parseFloat(cell.style.getPropertyValue('--cell-left') || '0')
 
                 if (isSafari) {
+                    // Принудительно отключаем sticky на случай если CSS @supports не сработал
+                    // — иначе translateX накладывается поверх sticky и кажется удвоенным.
+                    cell.style.position = 'relative'
+                    cell.style.left = '0px'
                     if (isScrolledHorizontally) {
-                        cell.style.transform = `translateX(${scrollLeft}px)`
+                        cell.style.transform = `translate3d(${scrollLeft}px, 0, 0)`
                         cell.classList.add('table__cell_stuck')
                     } else {
                         cell.style.transform = ''

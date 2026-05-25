@@ -82,7 +82,10 @@
             min-height: 100vh;
             box-shadow: none;
             grid-template-columns: 1fr;
-            grid-template-rows: auto 1fr auto;
+            // Все ряды content-sized, иначе 1fr растягивал средний filter__group
+            // и создавал большой пустой зазор между секциями.
+            grid-template-rows: auto auto auto;
+            align-content: start;
             max-height: 100vh;
             overflow: auto;
             @include mixins.scrollBar();

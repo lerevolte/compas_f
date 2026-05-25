@@ -4,11 +4,11 @@
             v-if="props.isChoosed"
             class="mass-action__groups"
         >
-            <div class="mass-action__group mass-action__group_checked">
+            <div class="mass-action__group mass-action__group_checked" v-if="props.checkedCount > 0">
                 <span class="text text_accent">Выбрано:</span>
                 <span class="text">{{ props.checkedCount }}</span>
             </div>
-            <div class="mass-action__group">
+            <div class="mass-action__group mass-action__group_main">
                 <AppButton
                     class="button_fill"
                     v-if="props.actions.restore"

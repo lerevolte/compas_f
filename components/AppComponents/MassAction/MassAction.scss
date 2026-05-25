@@ -59,8 +59,11 @@
         }
     }
 
+    // Явное позиционирование в гриде, чтобы скрытие чек-группы не сдвигало остальные.
     &.mass-action__group_checked {
+        grid-column: 1;
         justify-content: flex-start;
+        align-items: center;
 
         .text {
             &.text_accent {
@@ -73,7 +76,12 @@
         }
     }
 
+    &.mass-action__group_main {
+        grid-column: 2;
+    }
+
     &.mass-action__group_delete {
+        grid-column: 3;
         justify-content: flex-end;
     }
 }
