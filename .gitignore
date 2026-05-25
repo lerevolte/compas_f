@@ -51,6 +51,7 @@ Thumbs.db
 .eslintcache
 .stylelintcache
 
-# Claude Code (опционально)
-.claude/settings.local.json/public_new/
-/public_new/
+# Claude Code (личные настройки)
+.claude/settings.local.json
+
+

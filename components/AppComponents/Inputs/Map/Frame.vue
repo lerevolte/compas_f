@@ -634,19 +634,10 @@
      */
     const syncPointsOnMap = () => {
         if (!mapInstance.value || !L) return;
-        
+
         const points = normalizedPoints.value;
         if (!points.length) return;
-        
-        // Remove Yandex layer temporarily
-        let yandexLayer = null;
-        mapInstance.value.eachLayer(layer => {
-            if (layer._type === 'yandex' || layer._yandex) {
-                yandexLayer = layer;
-            }
-        });
-        if (yandexLayer) mapInstance.value.removeLayer(yandexLayer);
-        
+
         renderMarkers(points);
 
         if (points.length === 1) {
@@ -654,13 +645,6 @@
         } else {
             const bounds = L.latLngBounds(points.map(({ coords }) => coords));
             mapInstance.value.fitBounds(bounds, { padding: [20, 20], animate: false });
-        }
-        
-        // Re-add Yandex layer
-        if (yandexLayer) {
-            setTimeout(() => {
-                if (mapInstance.value) yandexLayer.addTo(mapInstance.value);
-            }, 50);
         }
 
         if (props.options?.enableRoute) {
