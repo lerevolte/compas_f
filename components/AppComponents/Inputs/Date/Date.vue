@@ -32,7 +32,7 @@
 						v-for="day in datepickerField.preset[props.options.multiple ? 'multiple' : 'default']"
                         :class="{'datapicker__preset-item_active': isEqual(day.day, props.modelValue)}"
                         :key="day.id"
-                        @click="emit('update:modelValue', day.day)"
+                        @click="emit('update:modelValue', day.day); datepicker?.closeMenu()"
 					>
 						{{ day.title }}
 					</div>

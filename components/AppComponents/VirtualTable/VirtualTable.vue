@@ -27,8 +27,9 @@
   </section>
 
   <teleport to="#mass-action-container" v-if="isClient">
-    <MassAction 
+    <MassAction
       :isChoosed="isChoosed"
+      :checkedCount="checkedCount"
       :actions="{
         save: table.state == 'edit',
         edit: !props.options.isTrash && table.state != 'edit',
@@ -183,6 +184,10 @@
 
   const isChoosed = computed(() => {
         return table.value.body.filter(item => item.isChoose).length > 0
+    })
+
+  const checkedCount = computed(() => {
+        return table.value.body.filter(item => item.isChoose).length
     })
 
   onMounted(async () => {

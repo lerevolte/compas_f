@@ -329,8 +329,8 @@
 
     const doubleClick = common.useDoubleClick((elem, event) => {
         let cell = event.target.closest('.table__cell')
-        
-        if (table.value.state == 'edit' || table.value.options?.isPermanentEdit || (!isMobile.value && ['isChoose'].includes(cell.getAttribute('data-column-key')))) return
+
+        if (table.value.state == 'edit' || table.value.options?.isPermanentEdit || (cell && ['isChoose'].includes(cell.getAttribute('data-column-key')))) return
         if (event.target.closest('.show-more')) return
         // Support both Element and Event inputs
         const el = elem?.getAttribute ? elem : (elem?.currentTarget || elem?.target)

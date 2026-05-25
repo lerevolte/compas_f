@@ -5,7 +5,7 @@ SERVER_PATH="/home/admin/web/compas.pro/public_html/public"
 set -e
 
 echo "=== 0. Pushing to GitHub ==="
-git push
+#git push
 echo "=== 1. Building ==="
 npm run generate
 if [ $? -ne 0 ]; then

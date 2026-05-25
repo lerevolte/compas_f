@@ -141,7 +141,8 @@
             this.throttledFilter = throttle(async (value) => {
                 let response = null
                 if (props.options.type == 'address') {
-                    response = await api.callMethod("GET", `/map/geocode?address=${value}`)
+                    const restrict = props.options.subtype ? `&restrict=${props.options.subtype}` : ''
+                    response = await api.callMethod("GET", `/map/geocode?address=${value}${restrict}`)
                     this.state.list = response.data.map(p => ({ label: p.text, value: JSON.parse(JSON.stringify(p)) }))
                     this.state.visibleList = response.data.map(p => ({ label: p.text, value: JSON.parse(JSON.stringify(p)) }))
                 } else {

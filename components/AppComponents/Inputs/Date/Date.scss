@@ -182,7 +182,7 @@
         .datapicker__preset-days {
             .datapicker__preset-item {
                 padding: 8px 20px 8px 10px;
-                
+
                 &:hover,
                 &.datapicker__preset-item_active {
                     background: #eef3f8;
@@ -190,5 +190,9 @@
                 }
             }
         }
+    }
+
+    .dp__month_year_wrap button {
+        padding: 0;
     }
 }

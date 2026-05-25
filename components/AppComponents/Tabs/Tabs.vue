@@ -53,7 +53,7 @@
                 v-show="tabs.isChanged" 
                 @save="(role) => tabs.save(role)"
             />
-            <AppSettings 
+            <AppSettings
                 v-model:list="tabs.list"
                 :options="{
                     isCheck: {
@@ -69,6 +69,7 @@
                 @reset="tabs.reset()"
                 @isChanged="tabs.isChanged = true"
                 @update:modelValue="(val) => {tabs.list = val; tabs.isChanged = true}"
+                @update:modelList="(val) => {tabs.list = val; tabs.isChanged = true}"
             />
         </div>
 

@@ -29,8 +29,16 @@
     import './LogisticMap.scss';
     import IconLaso from '@AppIcons/Laso.vue';
     import IconSettings from '@AppIcons/Actions/Settings.vue';
+    import api from '@/helpers/api.js'
+    import routes from '@/helpers/routes.js'
 
     let L = null;
+
+    // Привязка значения map_type из настроек модуля к внутреннему названию.
+    const MAP_TYPE_FROM_SETTING = {
+        openstreet: 'OpenStreetMap',
+        yandex: 'Яндекс.Карты',
+    };
 
     const emit = defineEmits(['getSelectedPoints', 'unassignedTaskClick', 'routeTaskClick']);
 
@@ -309,7 +317,8 @@
             shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
         });
 
-        mapInstance.value = L.map(mapContainerRef.value, { center: props.defaultCenter, zoom: 12, zoomControl: true, minZoom: 3, maxZoom: 18, doubleClickZoom: false });
+        const center = fetchedCenter.value || props.defaultCenter;
+        mapInstance.value = L.map(mapContainerRef.value, { center, zoom: 14, zoomControl: true, minZoom: 3, maxZoom: 18, doubleClickZoom: false });
 
         // Monkey-patch L.Marker to prevent _animateZoom crash on removed markers
         const origAnimateZoom = L.Marker.prototype._animateZoom;
@@ -1565,8 +1574,35 @@
 
     defineExpose({ focusUnassignedTask, focusRouteTask });
 
+    // Подтянуть пользовательские настройки модуля «Логистика» и применить к карте.
+    const fetchedCenter = ref(null);
+    const applyModuleSettings = async () => {
+        try {
+            const response = await api.callMethod('GET', routes.settings.modules.logistics.get);
+            const fields = response.data || [];
+            for (const f of fields) {
+                if (f.key === 'main_city' && f.value && Array.isArray(f.value.coords)) {
+                    const lat = Number(f.value.coords[0]);
+                    const lng = Number(f.value.coords[1]);
+                    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+                        fetchedCenter.value = [lat, lng];
+                    }
+                }
+                if (f.key === 'map_type' && f.value && MAP_TYPE_FROM_SETTING[f.value]) {
+                    settings.map_type = MAP_TYPE_FROM_SETTING[f.value];
+                }
+            }
+        } catch (e) {
+            console.warn('[LogisticMap] Не удалось получить настройки модуля логистики', e);
+        }
+    };
+
     // ── Lifecycle ──
-    onMounted(async () => { await initMap(); /* document.addEventListener('click', closeSettingsOnClick); — temporarily disabled, test modal */ });
+    onMounted(async () => {
+        await applyModuleSettings();
+        await initMap();
+        /* document.addEventListener('click', closeSettingsOnClick); — temporarily disabled, test modal */
+    });
     onBeforeUnmount(() => {
         document.removeEventListener('click', closeSettingsOnClick);
         stopSelectionMode(false); clearAllLayers();

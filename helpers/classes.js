@@ -2327,7 +2327,12 @@ export class Field {
             } else if (field.type == 'file') {
                 if (field.edit || (!target.classList.contains('file') && !target.classList.contains('file__values'))) return
             } else if (field.type == 'address') {
-                if (field.edit || (target.classList.contains('blank__text') || target.classList.contains('button_copy') || target.classList.contains('map__frame-map'))) return
+                if (
+                    field.edit ||
+                    (target.classList.contains('blank__text') && !target.classList.contains('blank__text_empty')) ||
+                    target.classList.contains('button_copy') ||
+                    target.classList.contains('map__frame-map')
+                ) return
             }
         }
 
@@ -2516,7 +2521,13 @@ export class Settings {
                 ]
             } else {
                 const response = await api.callMethod('GET', routes.settings.modules[this.category].get)
-                this.section.fields = response.data
+                // У части тенантов в БД лежит старый конфиг с can_edit=0/read_only=1.
+                // Бэкенд тоже это нормализует, но для случая до деплоя страхуемся на фронте.
+                this.section.fields = (response.data || []).map(field => ({
+                    ...field,
+                    can_edit: 1,
+                    read_only: 0,
+                }))
             }
         } catch (error) {
             console.log(error);

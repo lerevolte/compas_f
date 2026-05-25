@@ -14,15 +14,15 @@
     }
 
     @media (max-width: 430px) {
-        .mass-action__groups,
-        .mass-action__group {
-            display: flex;
-            align-items: start;
-            flex-direction: column;
+        // Сохраняем горизонтальный layout: средняя группа центрирована,
+        // delete прижат вправо. Колонка «Выбрано» скрыта через .mass-action__group_checked.
+        .mass-action__groups {
+            grid-template-columns: 1fr auto 1fr;
+            gap: 5px;
+        }
 
-            & > * {
-                width: 100%;
-            }
+        .mass-action__group button {
+            padding: 8px 10px;
         }
     }
 }
@@ -38,8 +38,11 @@
 .mass-action__groups {
     width: 100%;
     display: grid;
-    grid-template-columns: var(--grid-columns);
+    // Три колонки одинаковой ширины 1fr / auto / 1fr —
+    // средняя группа кнопок центрируется относительно всего блока.
+    grid-template-columns: 1fr auto 1fr;
     gap: 10px;
+    align-items: center;
 }
 
 .mass-action__group {
@@ -49,11 +52,29 @@
 
     button {
         padding: 10px 15px;
-        
+
         svg {
             display: flex;
             align-items: center;
         }
+    }
+
+    &.mass-action__group_checked {
+        justify-content: flex-start;
+
+        .text {
+            &.text_accent {
+                color: variables.$color-border;
+            }
+        }
+
+        @media (max-width: 990px) {
+            display: none;
+        }
+    }
+
+    &.mass-action__group_delete {
+        justify-content: flex-end;
     }
 }
 

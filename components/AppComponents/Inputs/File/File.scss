@@ -40,6 +40,11 @@
         transition: 0.1s all;
     }
 
+    .file__upload-text {
+        text-align: center;
+        padding: 5px;
+    }
+
     &:hover {
         svg {
             * {

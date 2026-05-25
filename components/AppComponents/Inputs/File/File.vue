@@ -66,10 +66,10 @@
         <div class="file" :class="{'file_empty': fileManager.previewUrl.length == 0}" v-else>
             <FansyBox ref="fansyBoxRef" class="file__values" v-if="fileManager.previewUrl && fileManager.previewUrl.length > 0">
                 <div class="file__image" v-for="item in fileManager.modal.state ? fileManager.modal.content.image : fileManager.previewUrl">
-                    <FansyBoxItem 
+                    <FansyBoxItem
                         :id="`file_${props.options.id}`"
                         :image="{
-                            path: item.url,
+                            path: item.file ?? item.url,
                             thumbnail_path: item.url
                         }"
                     />
@@ -102,7 +102,7 @@
                 @close="fileManager.modal.state = false"
             >
             <div class="modal__fields">
-                <AppFile 
+                <AppFile
                     :options="{
                         edit: false,
                         isModal: true,
@@ -110,31 +110,32 @@
                     }"
                     v-model="fileManager.modal.content.image"
                 />
-                <AppBlank 
-                    class="blank_static"
-                    :item="{
-                        title: 'Название',
-                        text: fileManager.modal.content.name
-                    }"
-                />
 
-                <AppInput 
+                <AppInput
                     v-if="fileManager.modal.edit"
                     v-model="fileManager.modal.content.display_name"
                     :options="{
                         id: 0,
-                        title: 'Название файла',
+                        title: 'Название',
                         type: 'text',
                         focus: true
                     }"
                 />
-                <AppBlank 
+                <AppBlank
                     v-else
                     :item="{
-                        title: 'Название файла',
+                        title: 'Название',
                         text: fileManager.modal.content.display_name
                     }"
                     @click="() => fileManager.modal.edit = true"
+                />
+
+                <AppBlank
+                    class="blank_static"
+                    :item="{
+                        title: 'Название файла',
+                        text: fileManager.modal.content.name
+                    }"
                 />
             </div>
             </AppModalWarning>
@@ -194,7 +195,8 @@
     })
 
     const emit = defineEmits([
-        'update:modelValue'
+        'update:modelValue',
+        'update-file-info'
     ])
 
     const fansyBoxRef = ref(null)
@@ -528,7 +530,10 @@
                         display_name: this.modal.content.id == file.id ? this.modal.content.display_name : file.display_name
                     }
                 })
-                emit('update:modelValue', request)
+                // Используем отдельный эмит, чтобы родитель НЕ ставил поле в edit
+                // (update:modelValue в TileSection триггерит initChangeField → field.edit = true).
+                emit('update-file-info', request)
+                this.previewUrl = request
                 await common.updateFileName({slug: props.options.query.slug, id: props.options.query.page_id, field: {key: props.options.key, value: request}})
             } catch (error) {
                 console.log(error);

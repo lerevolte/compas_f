@@ -108,7 +108,7 @@
                         v-model="fieldObject.setFieldValue(field).value"
                     />
 
-                    <AppFile 
+                    <AppFile
                         v-else-if="field.type == 'file'"
                         :error="field.error"
                         :options="{
@@ -124,6 +124,7 @@
                         }"
                         v-model="field.value"
                         @update:model-value="fieldObject.initChangeField(field, null, 'option')"
+                        @update-file-info="value => field.value = value"
                     />
 
                     <AppRelation  

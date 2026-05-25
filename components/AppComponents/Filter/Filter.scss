@@ -216,9 +216,12 @@
     padding: 15px 0px;
 
     &:last-child {
+        // Раньше был display: grid с template-rows, который растягивал
+        // средний пустой блок .filter__saves когда родитель тянул высоту.
         gap: 0px;
-        display: grid;
-        grid-template-rows: auto 1fr auto;
+        display: flex;
+        flex-direction: column;
+        align-self: start;
         border-left: 1px solid variables.$color-border-light;
 
         @media (max-width: 990px) {

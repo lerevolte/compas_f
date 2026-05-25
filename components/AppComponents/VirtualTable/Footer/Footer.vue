@@ -1,13 +1,5 @@
 <template>
     <div class="table-footer">
-        <div class="table-footer__checked">
-            <span class="text text_accent">
-                Выбрано:
-            </span>
-            <span class="text"> {{ table.body.filter(p => p.isChoose).length }} </span>
-        </div>
-
-
         <div class="table-footer__group">
             <span class="text text_accent">
                 Страница:

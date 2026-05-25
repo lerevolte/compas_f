@@ -9,6 +9,9 @@
 
     &.column-fields_dragging {
         .tile-section {
+            .tile-section__header {
+                border-bottom: none;
+            }
             .tile-section__body,
             .tile-section__footer {
                 display: none;

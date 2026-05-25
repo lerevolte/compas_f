@@ -3,6 +3,10 @@
 
 .form__item {
     &.form__item_checkbox {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+
         label {
             gap: 10px;
             display: flex;

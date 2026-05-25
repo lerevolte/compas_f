@@ -373,26 +373,41 @@
         // Функция для проверки sticky позиционирования при горизонтальном скролле
         checkStickyCells() {
             if (!tableRef.value) return
-            
+
             const fixedCells = tableRef.value.querySelectorAll('.table__cell_fixed')
             const tableRect = tableRef.value.getBoundingClientRect()
-            
-            // Проверяем, скроллилась ли таблица по горизонтали
-            const isScrolledHorizontally = tableRef.value.scrollLeft > 0
-            
+            const scrollLeft = tableRef.value.scrollLeft
+            const isScrolledHorizontally = scrollLeft > 0
+
+            // Safari: position:sticky на flex-ячейках внутри position:absolute row'a
+            // местами теряет фиксацию при горизонтальной прокрутке. В этом случае
+            // компенсируем смещение через translateX(scrollLeft).
+            const isSafari = typeof navigator !== 'undefined'
+                && /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
+
             fixedCells.forEach(cell => {
-                const rect = cell.getBoundingClientRect()
                 const stickyLeft = parseFloat(cell.style.getPropertyValue('--cell-left') || '0')
-                
+
+                if (isSafari) {
+                    if (isScrolledHorizontally) {
+                        cell.style.transform = `translateX(${scrollLeft}px)`
+                        cell.classList.add('table__cell_stuck')
+                    } else {
+                        cell.style.transform = ''
+                        cell.classList.remove('table__cell_stuck')
+                    }
+                    return
+                }
+
+                const rect = cell.getBoundingClientRect()
                 const actualLeft = rect.left - tableRect.left
-                const tolerance = 2 // Небольшая погрешность для учета погрешностей вычислений
-                
+                const tolerance = 2
+
                 let isStuck = Math.abs(actualLeft - stickyLeft) <= tolerance
-                
                 if (!isScrolledHorizontally) {
                     isStuck = false
                 }
-                
+
                 cell.classList.toggle('table__cell_stuck', isStuck)
             })
         }

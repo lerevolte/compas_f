@@ -204,10 +204,11 @@
                     v-model="modal.field.color" 
                 >
                     <template #icon>
-                        <AppCheckbox 
+                        <AppCheckbox
                             v-model="modal.field.set_color"
                             :options="{
                                 title: 'Выбрать цвет',
+                                noLabelClick: true,
                             }"
                         />
                     </template>

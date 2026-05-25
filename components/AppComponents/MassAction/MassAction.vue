@@ -1,30 +1,33 @@
 <template>
     <div class="section-table__mass-action mass-action" v-if="props.isChoosed">
-        <div 
-            v-if="props.isChoosed" 
-            class="mass-action__groups" 
-            :style="`--grid-columns: ${props.actions.delete ? '1fr auto' : '1fr'}`"
+        <div
+            v-if="props.isChoosed"
+            class="mass-action__groups"
         >
+            <div class="mass-action__group mass-action__group_checked">
+                <span class="text text_accent">Выбрано:</span>
+                <span class="text">{{ props.checkedCount }}</span>
+            </div>
             <div class="mass-action__group">
-                <AppButton 
-                    class="button_fill" 
+                <AppButton
+                    class="button_fill"
                     v-if="props.actions.restore"
                     @click="emit('action', {action: 'initRestore', value: true})"
                 >
                     Восстановить
                 </AppButton>
-                <AppButton 
-                    class="button_icon" 
+                <AppButton
+                    class="button_icon"
                     v-else-if="props.actions.edit"
                     @click="emit('action', {action: 'initEdit', value: true})"
                 >
                     <IconActionEdit />
                     Редактировать
                 </AppButton>
-                <AppButton 
+                <AppButton
                     v-else-if="props.actions.save"
-                    class="button_fill" 
-                    :class="{'skeleton' : props.loading}" 
+                    class="button_fill"
+                    :class="{'skeleton' : props.loading}"
                     @click="emit('action', {action: 'save', value: true})"
                 >
                     Сохранить
@@ -33,8 +36,8 @@
                     Отмена
                 </AppButton>
             </div>
-            <div class="mass-action__group" v-if="props.actions.delete">
-                <AppButton class="button_icon" @click="emit('action', {action: 'initDelete', value: true})">
+            <div class="mass-action__group mass-action__group_delete">
+                <AppButton class="button_icon" v-if="props.actions.delete" @click="emit('action', {action: 'initDelete', value: true})">
                     <IconActionDeleteCross />
                     Удалить
                 </AppButton>
@@ -58,6 +61,10 @@
         isChoosed: {
             default: false,
             type: Boolean
+        },
+        checkedCount: {
+            default: 0,
+            type: Number
         },
         actions: {
             default: {

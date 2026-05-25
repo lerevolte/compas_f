@@ -491,7 +491,8 @@
             if (isInitGroup.value) {
                 return settings.value.nest.templateField.list.filter(p => p.enabled)
             }
-            return visible.value
+            // Если visible/hidden не передан (как в Tabs) — берём общий list.
+            return props.options.isHaveHidden ? visible.value : list.value
         },
         set: (val) => {
             if (isInitGroup.value) {
@@ -499,8 +500,10 @@
                 const enabledIds = val.map(v => v.id)
                 const disabled = settings.value.nest.templateField.list.filter(p => !p.enabled)
                 settings.value.nest.templateField.list = [...val, ...disabled]
-            } else {
+            } else if (props.options.isHaveHidden) {
                 visible.value = val
+            } else {
+                list.value = val
             }
         }
     })

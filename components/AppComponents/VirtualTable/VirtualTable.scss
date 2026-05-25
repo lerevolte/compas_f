@@ -17,8 +17,12 @@
   flex-direction: column;
   max-height: 100%;
   max-width: calc(100vw - 282px);
-  contain: layout paint;
-  will-change: scroll-position;
+  // Safari: contain + will-change ломают position: sticky на ячейках.
+  // @supports включает их только для не-Safari.
+  @supports not (-webkit-touch-callout: none) {
+    contain: layout paint;
+    will-change: scroll-position;
+  }
 
   &.table_resize,
   &.table_dragging {
@@ -140,6 +144,14 @@
     position: sticky;
     z-index: 10;
     left: var(--cell-left);
+
+    // Safari: sticky на flex-ячейках в position:absolute row отваливается
+    // после определённого скролла. Отключаем sticky и компенсируем
+    // через translateX в Header.checkStickyCells.
+    @supports (-webkit-touch-callout: none) {
+      position: relative;
+      left: 0;
+    }
 
     &.table__cell_stuck {
       z-index: 40;
@@ -266,7 +278,12 @@
   top: var(--row-start);
   left: 0;
   display: flex;
-  will-change: transform;
+  // Safari: will-change: transform создаёт containing block,
+  // sticky-ячейки начинают прилипать к строке вместо таблицы.
+  // @supports включает свойство только для не-Safari браузеров.
+  @supports not (-webkit-touch-callout: none) {
+    will-change: transform;
+  }
 
   &.table__row_edit {
     .form__item_status {

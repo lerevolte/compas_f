@@ -103,7 +103,7 @@ html {
     @include mixins.scrollBar();
 
     main:not(:has(.detail)) {
-        padding: 25px;
+        padding: 25px 15px;
     }
 
     main {

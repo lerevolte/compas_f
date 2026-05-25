@@ -4,7 +4,7 @@
             <div class="map__frame-title">
                 Карта
             </div>
-            <IconLaso 
+            <IconLaso
                 class="map__frame-selection"
                 :class="{'map__frame-selection_active': selectionActive}"
                 v-if="props.options.enableSelection"
@@ -58,7 +58,6 @@
     const mapContainer = ref(null);
     const mapInstance = ref(null);
     const markersLayer = ref(null);
-    const yandexLayer = ref(null);
     const routeLayer = ref(null);
     const routingControl = ref(null);
     const selectionPolygon = ref(null);
@@ -120,7 +119,7 @@
         if (hasCustomMarkerIcon.value) {
             const size = props.markerOptions.imageSize ?? [32, 32];
             const offset = props.markerOptions.imageOffset ?? [-16, -32];
-            
+
             // В Leaflet iconAnchor - это точка, которая будет совпадать с координатами маркера
             // offset обычно отрицательный для смещения вверх
             return L.icon({
@@ -178,7 +177,7 @@
      */
     const renderMarkers = (points) => {
         if (!mapInstance.value || !L) return;
-        
+
         console.log('renderMarkers, points:', points.map(p => p.coords));
 
         if (markersLayer.value) {
@@ -273,7 +272,7 @@
 
         const coords = normalizedPoints.value.map(({ coords }) => coords);
         const waypoints = coords.map(coord => L.latLng(coord));
-        
+
         try {
             // Загружаем RoutingMachine если еще не загружен
             await loadRoutingMachine();
@@ -290,10 +289,10 @@
                 useHints: false,
                 createMarker: () => null, // Отключаем создание маркеров, так как они уже есть
                 lineOptions: {
-                    styles: [{ 
-                        color: '#3b82f6', 
-                        opacity: 0.7, 
-                        weight: 4 
+                    styles: [{
+                        color: '#3b82f6',
+                        opacity: 0.7,
+                        weight: 4
                     }]
                 },
                 router: L.Routing.osrmv1({
@@ -322,7 +321,7 @@
             // Обработчик ошибки построения маршрута
             routingControl.value.on('routingerror', function() {
                 console.warn('[MapFrame] Не удалось построить маршрут через RoutingMachine, используется прямая линия');
-                
+
                 // В случае ошибки рисуем прямую линию
                 routeLayer.value = L.polyline(coords, {
                     color: '#3b82f6',
@@ -341,7 +340,7 @@
 
         } catch (error) {
             console.warn('[MapFrame] Не удалось построить маршрут через RoutingMachine, используется прямая линия', error);
-            
+
             // В случае ошибки рисуем прямую линию
             routeLayer.value = L.polyline(coords, {
                 color: '#3b82f6',
@@ -401,7 +400,7 @@
         // Обновляем полигон после завершения рисования
         if (!isDrawingPath.value && selectionPath.value.length >= 3) {
             const closedPath = [...selectionPath.value, selectionPath.value[0]];
-            
+
             if (selectionPolygon.value) {
                 selectionPolygon.value.setLatLngs([closedPath]);
             } else {
@@ -427,7 +426,7 @@
             mapInstance.value.getContainer().style.cursor = '';
             mapInstance.value.dragging.enable();
             mapInstance.value.doubleClickZoom.enable();
-            
+
             if (selectionMouseDownHandler) {
                 mapInstance.value.off('mousedown', selectionMouseDownHandler);
                 selectionMouseDownHandler = null;
@@ -471,7 +470,7 @@
         if (selectionPolygon.value) {
             const polygonBounds = selectionPolygon.value.getBounds();
             const polygonLatLngs = selectionPolygon.value.getLatLngs()[0];
-            
+
             /**
              * Проверяет находится ли точка внутри полигона
              * Использует алгоритм ray casting для определения принадлежности точки полигону
@@ -481,14 +480,14 @@
              */
             const isPointInPolygon = (point, polygon) => {
                 if (!L) return false;
-                
+
                 const latlng = L.latLng(point[0], point[1]);
-                
+
                 // Сначала проверяем bounding box для быстрой фильтрации
                 if (!polygonBounds.contains(latlng)) {
                     return false;
                 }
-                
+
                 // Проверка точки внутри полигона (ray casting algorithm)
                 let inside = false;
                 for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
@@ -496,15 +495,15 @@
                     const yi = polygon[i].lat;
                     const xj = polygon[j].lng;
                     const yj = polygon[j].lat;
-                    
+
                     const intersect = ((yi > latlng.lat) !== (yj > latlng.lat)) &&
                         (latlng.lng < (xj - xi) * (latlng.lat - yi) / (yj - yi) + xi);
                     if (intersect) inside = !inside;
                 }
-                
+
                 return inside;
             };
-            
+
             const insidePoints = normalizedPoints.value
                 .filter(({ coords }) => isPointInPolygon(coords, polygonLatLngs))
                 .map(({ raw }) => raw);
@@ -530,7 +529,7 @@
 
         const mouseMoveHandler = (e) => {
             if (!isDrawingPath.value) return;
-            
+
             const coords = [e.latlng.lat, e.latlng.lng];
             selectionPath.value = [...selectionPath.value, coords];
             updateSelectionPolygon();
@@ -538,10 +537,10 @@
 
         const mouseUpHandler = () => {
             if (!isDrawingPath.value) return;
-            
+
             mapInstance.value.off('mousemove', mouseMoveHandler);
             mapInstance.value.off('mouseup', mouseUpHandler);
-            
+
             finishSelection();
         };
 
@@ -568,7 +567,7 @@
 
         clearSelectionPolygon();
         selectionActive.value = true;
-        
+
         mapInstance.value.getContainer().style.cursor = 'crosshair';
         mapInstance.value.dragging.disable();
         mapInstance.value.doubleClickZoom.disable();
@@ -602,10 +601,10 @@
     const throttle = (func, delay) => {
         let timeoutId = null;
         let lastExecTime = 0;
-        
+
         return function (...args) {
             const currentTime = Date.now();
-            
+
             if (currentTime - lastExecTime > delay) {
                 func.apply(this, args);
                 lastExecTime = currentTime;
@@ -641,24 +640,11 @@
 
         renderMarkers(points);
 
-        // Снимаем yandex-слой только если ymaps уже инициализировался (_yandex выставлен в _initMapObject).
-        // Иначе removeLayer детачит контейнер до того, как ymaps.Map в нём создан — и тайлы навсегда битые.
-        const layer = (yandexLayer.value && yandexLayer.value._yandex) ? yandexLayer.value : null;
-        if (layer) mapInstance.value.removeLayer(layer);
-
         if (points.length === 1) {
             mapInstance.value.setView(points[0].coords, props.options.defaultZoom ?? 10, { animate: false });
         } else {
             const bounds = L.latLngBounds(points.map(({ coords }) => coords));
             mapInstance.value.fitBounds(bounds, { padding: [20, 20], animate: false });
-        }
-
-        if (layer) {
-            setTimeout(() => {
-                if (!mapInstance.value) return;
-                layer.addTo(mapInstance.value);
-                mapInstance.value.invalidateSize();
-            }, 50);
         }
 
         if (props.options?.enableRoute) {
@@ -698,17 +684,11 @@
                 const leafletModule = await import('leaflet');
                 L = leafletModule.default;
                 await import('leaflet/dist/leaflet.css');
-                
+
                 // Убеждаемся, что L доступен глобально для RoutingMachine
                 if (typeof window !== 'undefined') {
                     window.L = L;
                 }
-                
-                // Загружаем Yandex Maps API перед загрузкой плагина
-                await loadYandexMapsAPI();
-                
-                // Загружаем плагин Yandex для Leaflet только после загрузки API
-                await import('./Yandex.js');
             } catch (error) {
                 console.error('[MapFrame] Не удалось загрузить Leaflet', error);
                 return;
@@ -733,17 +713,11 @@
                 }
             });
 
-            // Используем цветные тайлы CartoDB Voyager - визуально похожи на Яндекс.Карты
-            // И используют стандартную проекцию Leaflet, что обеспечивает корректное отображение координат
-            // const mapLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            //     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-            //     subdomains: 'abcd',
-            //     maxZoom: 19
-            // });
-            
-            yandexLayer.value = L.yandex();
-            yandexLayer.value.addTo(mapInstance.value);
-            // mapLayer.addTo(mapInstance.value);
+            // OSM тайлы — стандартная проекция Leaflet (EPSG:3857), корректно работает setView/маркеры.
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(mapInstance.value);
 
             // Принудительно обновляем размер карты после инициализации
             setTimeout(() => {
@@ -838,6 +812,7 @@
 
     onMounted(async () => {
         await initMap();
+        syncPointsOnMap();
     });
 
     onBeforeUnmount(() => {
