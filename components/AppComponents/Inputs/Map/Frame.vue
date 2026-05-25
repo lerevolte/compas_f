@@ -641,7 +641,9 @@
 
         renderMarkers(points);
 
-        const layer = yandexLayer.value;
+        // Снимаем yandex-слой только если ymaps уже инициализировался (_yandex выставлен в _initMapObject).
+        // Иначе removeLayer детачит контейнер до того, как ymaps.Map в нём создан — и тайлы навсегда битые.
+        const layer = (yandexLayer.value && yandexLayer.value._yandex) ? yandexLayer.value : null;
         if (layer) mapInstance.value.removeLayer(layer);
 
         if (points.length === 1) {
