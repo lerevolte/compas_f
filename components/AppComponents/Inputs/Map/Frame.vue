@@ -58,6 +58,7 @@
     const mapContainer = ref(null);
     const mapInstance = ref(null);
     const markersLayer = ref(null);
+    const yandexLayer = ref(null);
     const routeLayer = ref(null);
     const routingControl = ref(null);
     const selectionPolygon = ref(null);
@@ -638,6 +639,12 @@
         const points = normalizedPoints.value;
         if (!points.length) return;
 
+        // Тот же приём, что в LogisticMap.safeSetView (LogisticMap.vue:1271-1280):
+        // Yandex tile-плагин не подхватывает программный setView без re-add'а,
+        // снимаем слой → setView → возвращаем через 50ms, чтобы триггернуть onAdd/_update.
+        const layerToRefresh = yandexLayer.value;
+        if (layerToRefresh) mapInstance.value.removeLayer(layerToRefresh);
+
         renderMarkers(points);
 
         if (points.length === 1) {
@@ -645,6 +652,12 @@
         } else {
             const bounds = L.latLngBounds(points.map(({ coords }) => coords));
             mapInstance.value.fitBounds(bounds, { padding: [20, 20], animate: false });
+        }
+
+        if (layerToRefresh) {
+            setTimeout(() => {
+                if (mapInstance.value) layerToRefresh.addTo(mapInstance.value);
+            }, 50);
         }
 
         if (props.options?.enableRoute) {
@@ -727,7 +740,8 @@
             //     maxZoom: 19
             // });
             
-            L.yandex().addTo(mapInstance.value);
+            yandexLayer.value = L.yandex();
+            yandexLayer.value.addTo(mapInstance.value);
             // mapLayer.addTo(mapInstance.value);
 
             // Принудительно обновляем размер карты после инициализации
