@@ -639,12 +639,10 @@
         const points = normalizedPoints.value;
         if (!points.length) return;
 
-        // То же, что в LogisticMap.safeSetView (LogisticMap.vue:1271-1280) — в проде работает:
-        // снимаем yandex по явной ссылке, делаем setView, возвращаем через 50ms.
+        renderMarkers(points);
+
         const layer = yandexLayer.value;
         if (layer) mapInstance.value.removeLayer(layer);
-
-        renderMarkers(points);
 
         if (points.length === 1) {
             mapInstance.value.setView(points[0].coords, props.options.defaultZoom ?? 10, { animate: false });
@@ -655,7 +653,9 @@
 
         if (layer) {
             setTimeout(() => {
-                if (mapInstance.value) layer.addTo(mapInstance.value);
+                if (!mapInstance.value) return;
+                layer.addTo(mapInstance.value);
+                mapInstance.value.invalidateSize();
             }, 50);
         }
 
@@ -835,8 +835,7 @@
 
 
     onMounted(async () => {
-        await initMap();   
-        syncPointsOnMap();
+        await initMap();
     });
 
     onBeforeUnmount(() => {
