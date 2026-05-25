@@ -639,12 +639,6 @@
         const points = normalizedPoints.value;
         if (!points.length) return;
 
-        // Тот же приём, что в LogisticMap.safeSetView (LogisticMap.vue:1271-1280):
-        // Yandex tile-плагин не подхватывает программный setView без re-add'а,
-        // снимаем слой → setView → возвращаем через 50ms, чтобы триггернуть onAdd/_update.
-        const layerToRefresh = yandexLayer.value;
-        if (layerToRefresh) mapInstance.value.removeLayer(layerToRefresh);
-
         renderMarkers(points);
 
         if (points.length === 1) {
@@ -654,10 +648,10 @@
             mapInstance.value.fitBounds(bounds, { padding: [20, 20], animate: false });
         }
 
-        if (layerToRefresh) {
-            setTimeout(() => {
-                if (mapInstance.value) layerToRefresh.addTo(mapInstance.value);
-            }, 50);
+        // Yandex tile-плагин подтягивает центр через свой _update (Yandex.js:108).
+        // На программный setView он опаздывает — дёргаем явно после смены viewport.
+        if (yandexLayer.value && typeof yandexLayer.value._update === 'function') {
+            yandexLayer.value._update();
         }
 
         if (props.options?.enableRoute) {
