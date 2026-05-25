@@ -638,6 +638,11 @@
         const points = normalizedPoints.value;
         if (!points.length) return;
 
+        // Без invalidateSize Leaflet опирается на _size, закешированный при init,
+        // и setView/fitBounds считают viewport от стейл-размера — маркер вешается,
+        // но картинка не перерисовывается до первого взаимодействия (zoom/drag).
+        mapInstance.value.invalidateSize(false);
+
         renderMarkers(points);
 
         if (points.length === 1) {
@@ -646,6 +651,9 @@
             const bounds = L.latLngBounds(points.map(({ coords }) => coords));
             mapInstance.value.fitBounds(bounds, { padding: [20, 20], animate: false });
         }
+
+        const c = mapInstance.value.getCenter();
+        console.log('after setView, center:', [c.lat, c.lng], 'zoom:', mapInstance.value.getZoom(), 'size:', mapInstance.value.getSize());
 
         if (props.options?.enableRoute) {
             clearRoute();
