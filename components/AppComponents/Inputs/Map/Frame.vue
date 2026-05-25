@@ -58,7 +58,6 @@
     const mapContainer = ref(null);
     const mapInstance = ref(null);
     const markersLayer = ref(null);
-    const yandexLayer = ref(null);
     const routeLayer = ref(null);
     const routingControl = ref(null);
     const selectionPolygon = ref(null);
@@ -639,6 +638,15 @@
         const points = normalizedPoints.value;
         if (!points.length) return;
 
+        // Remove Yandex layer temporarily
+        let yandexLayer = null;
+        mapInstance.value.eachLayer(layer => {
+            if (layer._type === 'yandex' || layer._yandex) {
+                yandexLayer = layer;
+            }
+        });
+        if (yandexLayer) mapInstance.value.removeLayer(yandexLayer);
+
         renderMarkers(points);
 
         if (points.length === 1) {
@@ -648,10 +656,11 @@
             mapInstance.value.fitBounds(bounds, { padding: [20, 20], animate: false });
         }
 
-        // Yandex tile-плагин подтягивает центр через свой _update (Yandex.js:108).
-        // На программный setView он опаздывает — дёргаем явно после смены viewport.
-        if (yandexLayer.value && typeof yandexLayer.value._update === 'function') {
-            yandexLayer.value._update();
+        // Re-add Yandex layer
+        if (yandexLayer) {
+            setTimeout(() => {
+                if (mapInstance.value) yandexLayer.addTo(mapInstance.value);
+            }, 50);
         }
 
         if (props.options?.enableRoute) {
@@ -734,8 +743,7 @@
             //     maxZoom: 19
             // });
             
-            yandexLayer.value = L.yandex();
-            yandexLayer.value.addTo(mapInstance.value);
+            L.yandex().addTo(mapInstance.value);
             // mapLayer.addTo(mapInstance.value);
 
             // Принудительно обновляем размер карты после инициализации
