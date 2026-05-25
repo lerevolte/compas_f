@@ -58,6 +58,7 @@
     const mapContainer = ref(null);
     const mapInstance = ref(null);
     const markersLayer = ref(null);
+    const yandexLayer = ref(null);
     const routeLayer = ref(null);
     const routingControl = ref(null);
     const selectionPolygon = ref(null);
@@ -638,14 +639,10 @@
         const points = normalizedPoints.value;
         if (!points.length) return;
 
-        // Remove Yandex layer temporarily
-        let yandexLayer = null;
-        mapInstance.value.eachLayer(layer => {
-            if (layer._type === 'yandex' || layer._yandex) {
-                yandexLayer = layer;
-            }
-        });
-        if (yandexLayer) mapInstance.value.removeLayer(yandexLayer);
+        // То же, что в LogisticMap.safeSetView (LogisticMap.vue:1271-1280) — в проде работает:
+        // снимаем yandex по явной ссылке, делаем setView, возвращаем через 50ms.
+        const layer = yandexLayer.value;
+        if (layer) mapInstance.value.removeLayer(layer);
 
         renderMarkers(points);
 
@@ -656,10 +653,9 @@
             mapInstance.value.fitBounds(bounds, { padding: [20, 20], animate: false });
         }
 
-        // Re-add Yandex layer
-        if (yandexLayer) {
+        if (layer) {
             setTimeout(() => {
-                if (mapInstance.value) yandexLayer.addTo(mapInstance.value);
+                if (mapInstance.value) layer.addTo(mapInstance.value);
             }, 50);
         }
 
@@ -743,7 +739,8 @@
             //     maxZoom: 19
             // });
             
-            L.yandex().addTo(mapInstance.value);
+            yandexLayer.value = L.yandex();
+            yandexLayer.value.addTo(mapInstance.value);
             // mapLayer.addTo(mapInstance.value);
 
             // Принудительно обновляем размер карты после инициализации
