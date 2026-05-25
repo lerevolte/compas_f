@@ -89,7 +89,7 @@ L.Yandex = L.Layer.extend({
 	_setEvents: function (map) {
 		var events = {
 			move: this._update,
-			moved: this._update,
+			moveend: this._update,
 			resize: function () {
 				this._yandex.container.fitToViewport();
 			}

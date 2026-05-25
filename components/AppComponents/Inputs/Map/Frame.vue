@@ -647,16 +647,6 @@
             mapInstance.value.fitBounds(bounds, { padding: [20, 20], animate: false });
         }
 
-        // Yandex tile-плагин не перерисовывает тайлы на чистый pan (setView без смены зума) —
-        // слушает только zoomend. Дёргаем зум на -1 и обратно, чтобы триггернуть redraw.
-        const z = mapInstance.value.getZoom();
-        mapInstance.value.setZoom(z - 1, { animate: false });
-        setTimeout(() => {
-            if (mapInstance.value) {
-                mapInstance.value.setZoom(z, { animate: false });
-            }
-        }, 50);
-
         if (props.options?.enableRoute) {
             clearRoute();
             buildRoute(true);
