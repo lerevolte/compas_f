@@ -638,11 +638,6 @@
         const points = normalizedPoints.value;
         if (!points.length) return;
 
-        // Без invalidateSize Leaflet опирается на _size, закешированный при init,
-        // и setView/fitBounds считают viewport от стейл-размера — маркер вешается,
-        // но картинка не перерисовывается до первого взаимодействия (zoom/drag).
-        mapInstance.value.invalidateSize(false);
-
         renderMarkers(points);
 
         if (points.length === 1) {
@@ -652,8 +647,15 @@
             mapInstance.value.fitBounds(bounds, { padding: [20, 20], animate: false });
         }
 
-        const c = mapInstance.value.getCenter();
-        console.log('after setView, center:', [c.lat, c.lng], 'zoom:', mapInstance.value.getZoom(), 'size:', mapInstance.value.getSize());
+        // Yandex tile-плагин не перерисовывает тайлы на чистый pan (setView без смены зума) —
+        // слушает только zoomend. Дёргаем зум на -1 и обратно, чтобы триггернуть redraw.
+        const z = mapInstance.value.getZoom();
+        mapInstance.value.setZoom(z - 1, { animate: false });
+        setTimeout(() => {
+            if (mapInstance.value) {
+                mapInstance.value.setZoom(z, { animate: false });
+            }
+        }, 50);
 
         if (props.options?.enableRoute) {
             clearRoute();
