@@ -35,15 +35,14 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         
         // Если меню есть, редиректим на первую видимую ссылку (не скрытую)
         if (menuStore.list && menuStore.list.length > 0) {
-            const visibleItems = menuStore.list.filter(item => !item.is_hidden)
-            // Ищем первый item с реальной ссылкой. Если первый — группа без link,
-            // спускаемся в его children. Если у группы тоже нет линка — следующий item.
+            // На верхнем уровне отсеиваем не только is_hidden, но и disabled (!enabled),
+            // потому что disabled-пункты в сайдбаре не видны.
+            const visibleItems = menuStore.list.filter(item => !item.is_hidden && !!item.enabled)
             const resolveLink = (item) => {
                 if (!item) return null
                 if (item.is_group) {
                     const children = item.children || []
-                    // Берём первого ребёнка с link в массиве. Порядок в массиве
-                    // = порядок отображения в сайдбаре.
+                    // Для группы — первый отображаемый ребёнок (в порядке массива).
                     const child = children.find(c => c?.link)
                     return child?.link || null
                 }

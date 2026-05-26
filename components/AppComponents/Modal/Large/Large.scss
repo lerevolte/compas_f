@@ -4,23 +4,16 @@
 .modal {
     &.modal_large {
         padding: 0px;
-        position: fixed;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        width: auto;
-        height: auto;
+        width: 100%;
+        height: 100%;
         margin: 0;
-        // <dialog> по умолчанию имеет border: 2px ridge и inset margins —
-        // именно эти линии видны как серые полоски сверху/снизу в Safari.
+        // <dialog> по умолчанию имеет border: 2px ridge — отдаёт серой рамкой в Safari.
         border: none;
-        inset: 0;
         max-width: none;
         max-height: none;
         display: flex;
         justify-content: end;
-        background: variables.$color-white;
+        background: transparent;
         z-index: var(--zIndex);
         
         & > .modal__content {
@@ -97,12 +90,13 @@
         }
 
         @media (max-width: 990px) {
+            // На мобильном модалка занимает весь viewport, фон белый.
+            position: fixed;
+            inset: 0;
             background: variables.$color-white;
 
             & > .modal__content {
                 width: 100%;
-                // На мобильном фон контента — белый, чтобы пустое пространство сверху/снизу
-                // не выглядело серым (раньше использовался $color-background = #fbfcfd).
                 background: variables.$color-white;
             }
 

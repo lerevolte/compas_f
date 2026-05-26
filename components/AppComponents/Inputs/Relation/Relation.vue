@@ -182,12 +182,23 @@
 
             // Закрытие опций
             this.closeOptions = (event) => {
+                // Если mousedown стартовал внутри селекта (пользователь выделяет текст
+                // в инпуте и тянет мышь наружу), родившийся при отпускании click на
+                // document не должен закрывать селект — иначе сбрасывается выделение.
+                if (this._mousedownInside) {
+                    this._mousedownInside = false
+                    return
+                }
                 if (this.selectRef && !this.selectRef.contains(event.target)) {
                     this.state.isOpen = false;
                     this.state.search = ''
                     this.state.isTop = false
                     this.setOptions()
                     document.removeEventListener('click', this.closeOptions);
+                    if (this._mousedownHandler) {
+                        document.removeEventListener('mousedown', this._mousedownHandler)
+                        this._mousedownHandler = null
+                    }
                 }
             };
 
@@ -276,14 +287,20 @@
 
             if (this.state.isOpen) {
                 document.addEventListener('click', this.closeOptions);
+                // Запоминаем где начался mousedown — если внутри селекта, не закрываем
+                // на последующем click (пользователь тянет выделение наружу).
+                this._mousedownHandler = (e) => {
+                    this._mousedownInside = !!(this.selectRef && this.selectRef.contains(e.target))
+                }
+                document.addEventListener('mousedown', this._mousedownHandler)
                 nextTick(() => this.checkPosition(event));
-                
+
                 // Fill search with current value text for editing
                 const activeOpt = getActiveOption(this.index);
                 if (activeOpt?.value) {
                     this.state.search = activeOpt.label?.text || '';
                 }
-                
+
                 // Focus input
                 nextTick(() => {
                     if (this.selectRef) {
@@ -302,6 +319,10 @@
                     if (input) input.blur();
                 }
                 document.removeEventListener('click', this.closeOptions);
+                if (this._mousedownHandler) {
+                    document.removeEventListener('mousedown', this._mousedownHandler)
+                    this._mousedownHandler = null
+                }
             }
         }
         

@@ -396,10 +396,11 @@
             }, 100);
         }
 
-        // Первый рабочий link для логотипа: если первый пункт меню — группа,
-        // берём первого ребёнка с link (порядок в массиве = порядок отображения).
+        // Первый рабочий link для логотипа.
+        // Пропускаем disabled (!enabled) на верхнем уровне — они не видны в сайдбаре.
+        // Если первый видимый пункт — группа, берём первого ребёнка с link.
         resolveFirstLink() {
-            const first = this.visible?.[0]
+            const first = (this.visible || []).find(it => !!it?.enabled)
             if (!first) return null
             if (first.is_group) {
                 const children = first.children || []
