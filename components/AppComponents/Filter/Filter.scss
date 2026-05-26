@@ -72,10 +72,11 @@
         }  
 
         @media (max-width: 990px) {
+            // viewport-fit=cover расширяет viewport в safe-area —
+            // покрываем всё экранное пространство, контент в безопасной зоне.
             position: fixed;
+            inset: 0;
             gap: 0px;
-            top: 0px;
-            left: 0px;
             margin: 0;
             width: 100%;
             border-radius: 0px;
@@ -84,13 +85,13 @@
             box-shadow: none;
             background: variables.$color-white;
             grid-template-columns: 1fr;
-            // Все ряды content-sized, иначе 1fr растягивал средний filter__group
-            // и создавал большой пустой зазор между секциями.
             grid-template-rows: auto auto auto;
             align-content: start;
             max-height: 100vh;
             max-height: 100dvh;
             overflow: auto;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
             @include mixins.scrollBar();
         }
     }

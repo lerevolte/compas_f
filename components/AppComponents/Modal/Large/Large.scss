@@ -91,6 +91,7 @@
 
         @media (max-width: 990px) {
             // На мобильном модалка занимает весь viewport, фон белый.
+            // viewport-fit=cover (в nuxt.config) расширяет viewport в safe-area.
             position: fixed;
             inset: 0;
             background: variables.$color-white;
@@ -102,6 +103,10 @@
 
             .modal__body {
                 background: variables.$color-white;
+                // Контент не лезет под нотч и home-indicator, при этом
+                // белый фон занимает весь экран.
+                padding-top: env(safe-area-inset-top);
+                padding-bottom: env(safe-area-inset-bottom);
             }
         }
     }

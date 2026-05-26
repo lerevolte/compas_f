@@ -28,10 +28,9 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
     // Если есть токен и путь корневой, редиректим на первую ссылку меню
     if (userStore.token && to.path === '/') {
-        // Если меню еще не загружено, загружаем его
-        if (!menuStore.list || menuStore.list.length === 0) {
-            await menuStore.get()
-        }
+        // Всегда тянем актуальное меню с бэка — в persisted state может лежать
+        // устаревший порядок children, из-за которого редирект уезжал не туда.
+        await menuStore.get()
         
         // Если меню есть, редиректим на первую видимую ссылку (не скрытую)
         if (menuStore.list && menuStore.list.length > 0) {

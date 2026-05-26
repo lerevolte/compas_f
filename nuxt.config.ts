@@ -5,6 +5,11 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-08-13',
   devtools: { enabled: false },
   ssr: false,
+  app: {
+    head: {
+      viewport: 'width=device-width, initial-scale=1, viewport-fit=cover'
+    }
+  },
   modules: [
     '@pinia/nuxt',
     'nuxt-lodash',
