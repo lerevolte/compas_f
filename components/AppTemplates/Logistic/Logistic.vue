@@ -256,30 +256,57 @@
         });
     };
 
-    // Highlight a row in table by adding clicked class directly
+    // Highlight a row in table by adding clicked class directly.
+    // Виртуализированная таблица грузится асинхронно (особенно когда переход
+    // пришёл с пустой страницы и нужно дождаться API), поэтому ретраим с
+    // нарастающей задержкой. Ищем строку сначала по data-column-key="id"
+    // (надёжно), затем падаем в текстовый поиск.
     const highlightTableRow = (taskId) => {
-        setTimeout(() => {
-            // Remove previous highlights
-            document.querySelectorAll('.table__row_clicked').forEach(r => r.classList.remove('table__row_clicked'));
-            
-            // Find row by checking each table's rows
+        const target = String(taskId);
+        const delays = [200, 400, 700, 1200, 1800, 2500, 3500];
+
+        const tryHighlight = () => {
             const tables = document.querySelectorAll('.section-table');
             for (const table of tables) {
                 const rows = table.querySelectorAll('.table__row');
                 for (const row of rows) {
-                    // Check all text cells for matching ID
+                    // Точный поиск — ячейка с data-column-key="id"
+                    const idCell = row.querySelector('.table__cell[data-column-key="id"] .table__text');
+                    if (idCell && idCell.textContent.trim() === target) {
+                        document.querySelectorAll('.table__row_clicked')
+                            .forEach(r => r.classList.remove('table__row_clicked'));
+                        row.classList.add('table__row_clicked');
+                        row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        return true;
+                    }
+                }
+            }
+            // Фолбэк: ищем по текстовому содержимому любых ячеек.
+            for (const table of tables) {
+                const rows = table.querySelectorAll('.table__row');
+                for (const row of rows) {
                     const cells = row.querySelectorAll('.table__cell .table__text, .table__cell-content .table__text');
                     for (const cell of cells) {
                         const text = cell.textContent.trim();
-                        if (text === String(taskId) || text.includes(`#${taskId}`)) {
+                        if (text === target || text.includes(`#${target}`)) {
+                            document.querySelectorAll('.table__row_clicked')
+                                .forEach(r => r.classList.remove('table__row_clicked'));
                             row.classList.add('table__row_clicked');
                             row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                            return;
+                            return true;
                         }
                     }
                 }
             }
-        }, 200);
+            return false;
+        };
+
+        let i = 0;
+        const next = () => {
+            if (tryHighlight() || i >= delays.length) return;
+            setTimeout(next, delays[i++]);
+        };
+        setTimeout(next, delays[i++]);
     };
 
     // Click on route task marker on map → highlight row in table
@@ -378,15 +405,15 @@
         if (props.activeDate) {
             logistic.value.updateActiveDate(props.activeDate);
         }
-        // Если задача пришла из поиска — подсвечиваем после рендера таблиц.
-        // 600мс даёт окно на загрузку маршрутов / задач маршрута.
-        if (props.activeTaskId) {
-            setTimeout(() => highlightTableRow(Number(props.activeTaskId)), 600);
-        }
         // Прямой переход с route_id в URL — сразу триггерим updateActiveRoute,
         // чтобы загрузились маршрутные данные и подсветилась задача.
         if (props.activeRoute) {
             logistic.value.updateActiveRoute(props.activeRoute);
+        }
+        // Подсветка задачи, пришедшей из URL. highlightTableRow ретраит
+        // самостоятельно, пока виртуализатор не отрисует строки.
+        if (props.activeTaskId) {
+            highlightTableRow(Number(props.activeTaskId));
         }
     });
 </script>
