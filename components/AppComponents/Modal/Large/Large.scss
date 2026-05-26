@@ -92,6 +92,9 @@
         @media (max-width: 990px) {
             & > .modal__content {
                 width: 100%;
+                // На мобильном фон контента — белый, чтобы пустое пространство сверху/снизу
+                // не выглядело серым (раньше использовался $color-background = #fbfcfd).
+                background: variables.$color-white;
             }
         }
     }

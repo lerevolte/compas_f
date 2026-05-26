@@ -1,11 +1,12 @@
 <template>
     <div 
-        class="tile-section" 
-        ref="sectionRef" 
-        :class="{ 
+        class="tile-section"
+        ref="sectionRef"
+        :class="{
             'tile-section_editting': section.fields.find(item => item.edit || (item.type == 'text_group' && item.fields.find(item => item.edit))),
-            'tile-section_short': section.isLocalShort, 
-            'tile-section_field': props.options.type == 'field' 
+            // 'tile-section_short' временно отключён — UI сворачивания скрыт, данные всегда развёрнуты.
+            // 'tile-section_short': section.isLocalShort,
+            'tile-section_field': props.options.type == 'field'
         }">
         <div class="tile-section__header" ref="headerRef" >
             <span class="blank__title" v-if="props.options.type == 'field'">
@@ -46,8 +47,9 @@
                         <IconSettings />
                     </template>
                     <template #content>
-                        <div class="popup__option popup__option_checkbox">
-                            <AppCheckbox 
+                        <!-- Временно скрыто, доработаем позже -->
+                        <div class="popup__option popup__option_checkbox" v-if="false">
+                            <AppCheckbox
                                 v-model="section.is_short"
                                 :options="{
                                     title: 'Свернуть'

@@ -291,6 +291,27 @@ export class Common {
 
     // Копирование внешней ссылки
     async copyExternalLink({slug, id}) {
+        // Safari: после await user gesture теряется, и navigator.clipboard.writeText бросает
+        // NotAllowedError. Передаём ClipboardItem с Promise<Blob> — Safari принимает такую
+        // отложенную запись в рамках исходного клика.
+        const buildBlob = async () => {
+            const response = await api.callMethod('POST', routes.external_link.create, {
+                model_slug: slug,
+                model_id: id
+            })
+            const url = `${window.location.origin}/external/${response.data.token}`
+            return new Blob([url], { type: 'text/plain' })
+        }
+
+        if (typeof window !== 'undefined' && navigator.clipboard && window.isSecureContext && typeof window.ClipboardItem !== 'undefined') {
+            try {
+                await navigator.clipboard.write([new ClipboardItem({ 'text/plain': buildBlob() })])
+                return
+            } catch (e) {
+                console.warn('[copyExternalLink] clipboard.write failed, fallback', e)
+            }
+        }
+
         const response = await api.callMethod('POST', routes.external_link.create, {
             model_slug: slug,
             model_id: id

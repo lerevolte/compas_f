@@ -689,6 +689,10 @@
                 if (typeof window !== 'undefined') {
                     window.L = L;
                 }
+
+                // Грузим Yandex API и плагин для тайлов
+                await loadYandexMapsAPI();
+                await import('./Yandex.js');
             } catch (error) {
                 console.error('[MapFrame] Не удалось загрузить Leaflet', error);
                 return;
@@ -713,11 +717,11 @@
                 }
             });
 
-            // OSM тайлы — стандартная проекция Leaflet (EPSG:3857), корректно работает setView/маркеры.
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                maxZoom: 19
-            }).addTo(mapInstance.value);
+            // Yandex тайлы. Дожидаемся load слоя (ymaps API создаёт ymaps.Map в контейнере
+            // асинхронно), и только потом делаем syncPointsOnMap, иначе ранний setView
+            // оставлял ymaps инстанс в недо-инициализированном состоянии и тайлы не рисовались.
+            const yandexLayer = L.yandex({ suppressMapOpenBlock: true, suppressObsoleteBrowserNotifier: true });
+            yandexLayer.addTo(mapInstance.value);
 
             // Принудительно обновляем размер карты после инициализации
             setTimeout(() => {
@@ -727,12 +731,30 @@
             }, 100);
 
             // Добавляем троттлинг на события передвижения карты
-            // Троттлинг с задержкой 100мс для плавной работы без излишней нагрузки
             throttledMoveHandler = throttle(handleMapMove, 100);
             mapInstance.value.on('move', throttledMoveHandler);
 
             emit('map-ready', mapInstance.value);
-            syncPointsOnMap();
+
+            // Если yandex API уже готов и инстанс уже есть — рендерим сразу;
+            // иначе ждём событие 'load' плагина.
+            if (yandexLayer._yandex) {
+                syncPointsOnMap();
+            } else {
+                yandexLayer.once('load', () => {
+                    if (mapInstance.value) {
+                        mapInstance.value.invalidateSize();
+                        syncPointsOnMap();
+                    }
+                });
+                // Подстраховка: если load не пришёл за 1.5с (например ymaps API недоступен)
+                // всё равно рендерим маркеры. Тайлы могут не появиться, но логика работает.
+                setTimeout(() => {
+                    if (mapInstance.value && !markersLayer.value) {
+                        syncPointsOnMap();
+                    }
+                }, 1500);
+            }
         } catch (error) {
             console.error('[MapFrame] Не удалось инициализировать карту', error);
         }

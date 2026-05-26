@@ -147,15 +147,17 @@
 
     // Safari: sticky на flex-ячейках в position:absolute row отваливается
     // после определённого скролла. Отключаем sticky и компенсируем
-    // через translateX в Header.checkStickyCells.
+    // через translateX в Header.checkStickyCells. will-change гарантирует
+    // плавную GPU-анимацию transform во время горизонтального скролла.
     @supports (-webkit-touch-callout: none) {
       position: relative;
       left: 0;
+      will-change: transform;
     }
 
     &.table__cell_stuck {
       z-index: 40;
-      background: #f9f9fa;  
+      background: #f9f9fa;
 
       &.table__cell_active {
         z-index: 41;
