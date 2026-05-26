@@ -75,6 +75,15 @@ html {
             @include mixins.userSelect(none);
         }
     }
+
+    // На мобильном делаем безопасную зону (под нотчем и нижним URL-баром Safari)
+    // белой, чтобы плашки браузерного chrome тонировались под фон страницы.
+    @media (max-width: 990px) {
+        background-color: variables.$color-white;
+        body {
+            background-color: variables.$color-white;
+        }
+    }
 }
 
 #app {
