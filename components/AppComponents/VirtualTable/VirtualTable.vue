@@ -26,7 +26,7 @@
     <TableFooter v-if="props.options?.isHaveFooter" />
   </section>
 
-  <teleport to="#mass-action-container" v-if="isClient">
+  <teleport to="#mass-action-container" v-if="isClient && !props.options?.isDisableMassAction">
     <MassAction
       :isChoosed="isChoosed"
       :checkedCount="checkedCount"

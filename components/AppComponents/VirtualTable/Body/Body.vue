@@ -708,9 +708,13 @@
 
     const getRow = (val, row) => {
         const activeOption = val.localOptions.find(option => option.value == val.value[0])?.label
+        if (!activeOption) return
+
+        // Подтягиваем поля выбранного товара. label может прийти как с числовыми
+        // полями (count/weight/price) — кладём их в product_-варианты,
+        // остальные ключи копируем в row напрямую.
         for (let key in row) {
             if (key in activeOption) {
-
                 if (["count", "weight", "price"].includes(key)) {
                     row[`product_${key}`] = activeOption[key];
                 } else {
@@ -718,9 +722,20 @@
                 }
             }
         }
+        // Явно подхватываем числовые поля даже если ключа нет в row.
+        if (activeOption.price !== undefined) row.product_price = activeOption.price
+        if (activeOption.count !== undefined) row.product_count = activeOption.count
+        if (activeOption.weight !== undefined) row.product_weight = activeOption.weight
 
         row.name = activeOption.text
         row.product_name = activeOption.text
+
+        // Без этого панель сохранения не появляется при добавлении товара
+        // (isChoosed-computed смотрит на edit / isChoose).
+        row.edit = true
+        if (table.value.state !== 'edit') {
+            table.value.state = 'edit'
+        }
     }
     
     const checkEnabledRow = (row) => {

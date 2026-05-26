@@ -45,7 +45,7 @@
         />
     
         <div class="dynamin__group" v-else-if="props.tabs.active?.tab == 'products'">
-            <AppVirtualTable 
+            <AppVirtualTable
                 :pageId="props.id"
                 :options="{
                     draggableTarget: '.icon_drag',
@@ -58,6 +58,7 @@
                     isTrash: false,
                     isHaveTopHeader: true,
                     isHaveFooter: false,
+                    isDisableSockets: true,
                     updatingCount: 0
                 }"
                 :table="detail.products"
