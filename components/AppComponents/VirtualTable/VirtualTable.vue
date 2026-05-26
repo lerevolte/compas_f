@@ -26,7 +26,7 @@
     <TableFooter v-if="props.options?.isHaveFooter" />
   </section>
 
-  <teleport to="#mass-action-container" v-if="isClient && !props.options?.isDisableMassAction">
+  <teleport :to="massActionTarget" v-if="isClient && !props.options?.isDisableMassAction">
     <MassAction
       :isChoosed="isChoosed"
       :checkedCount="checkedCount"
@@ -177,6 +177,9 @@
   const isClient = ref(false)
   const tableRef = ref(null)
   const sectionRef = ref(null)
+  // Когда таблица отрисована внутри модалки — Large.vue подкидывает
+  // персональный таргет, чтобы MassAction не прятался под модалкой.
+  const massActionTarget = inject('massActionTarget', '#mass-action-container')
 
   const table = ref(new Table({tableRef, slug: props.slug, path: props.path, pageId: props.pageId, options: props.options, emit}))
   const common = new Common()

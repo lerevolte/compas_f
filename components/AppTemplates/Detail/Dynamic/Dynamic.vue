@@ -199,17 +199,40 @@
                     emit('action', { action: 'getTabs', value: response.data.tabs })
                     emit('action', { action: 'getTitle', value: response.data.detail.title?.name })
                     emit('action', {action: 'checkIsTrash', value: Boolean(response.data.detail.deleted_at)})
-                    emit('action', { 
+                    emit('action', {
                         action: 'updateMetaHeader', value: {
                             title: response.data.detail.header_title || '',
                             href: {
-                                slug: props.slug, 
+                                slug: props.slug,
                                 id: props.id
                             }
                         }
                     })
                 }
-                
+
+                // При копировании бэкенд отдаёт title.name (имя источника), но в самих
+                // колонках поле name приходит пустым — модалка создания показывает
+                // пустое «Название». Подкладываем имя источника, чтобы пользователь
+                // мог сразу отредактировать его.
+                if (props.options.isCopy && response.data.detail?.title?.name && response.data.detail?.columns) {
+                    const sourceName = response.data.detail.title.name
+                    for (const colKey in response.data.detail.columns) {
+                        for (const section of response.data.detail.columns[colKey]) {
+                            for (const field of section.fields) {
+                                if (field.key === 'name') {
+                                    if (field.value && typeof field.value === 'object') {
+                                        if (field.value.value == null || field.value.value === '') {
+                                            field.value.value = sourceName
+                                        }
+                                    } else if (field.value == null || field.value === '') {
+                                        field.value = sourceName
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 this.products.table = response.data.table.tableKeys
                 this.products.list = response.data.table.tableBody
                 this.history.get(response.data)

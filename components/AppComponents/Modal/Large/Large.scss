@@ -74,6 +74,26 @@
                 position: relative;
                 @include mixins.scrollBar();
             }
+
+            // Контейнер для MassAction, телепортируемого из VirtualTable
+            // внутри модалки. Лежит поверх контента, но внутри стэкинг-
+            // контекста модалки — поэтому не прячется самой модалкой.
+            .modal__mass-action {
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 10;
+                pointer-events: none;
+
+                & > * {
+                    pointer-events: auto;
+                }
+
+                &:empty {
+                    display: none;
+                }
+            }
         }
 
         .modal__background {
@@ -94,10 +114,19 @@
             // viewport-fit=cover (в nuxt.config) расширяет viewport в safe-area.
             position: fixed;
             inset: 0;
+            width: 100%;
+            height: 100dvh;
             background: variables.$color-white;
+
+            // На фуллскрин-модалке тёмный оверлей не нужен и просвечивает
+            // в safe-area сверху/снизу серой плашкой над белым фоном.
+            .modal__background {
+                display: none;
+            }
 
             & > .modal__content {
                 width: 100%;
+                height: 100%;
                 background: variables.$color-white;
             }
 

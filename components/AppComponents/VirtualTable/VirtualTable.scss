@@ -390,6 +390,15 @@
       }
     }
 
+    &[data-column-key="product_weight"] {
+      align-items: center;
+
+      .table__cell-content {
+        display: flex;
+        align-items: center;
+      }
+    }
+
     &[data-column-key="product_id"] {
       .select__value {
         display: flex;
