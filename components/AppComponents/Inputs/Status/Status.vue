@@ -61,7 +61,8 @@
                 </div>
                 <div class="colorpicker__content">
                     <div class="colorpicker__preview" :style="`--colorValue: ${status.state.colorpicker.color}`"></div>
-                    <ColorPicker 
+                    <ColorPicker
+                        :key="status.state.colorpicker.openId"
                         :color="status.state.colorpicker.color"
                         default-format="hex"
                         :visible-formats="['hex']"
@@ -102,7 +103,8 @@
                 colorpicker: {
                     color: '#b6b6b6',
                     isActive: false,
-                    loading: false
+                    loading: false,
+                    openId: 0
                 }
             });
 
@@ -153,6 +155,13 @@
         }
 
         toogleColorpicker(state) {
+            // При открытии палитры подставляем цвет текущего значения статуса,
+            // иначе всегда показывался дефолтный #b6b6b6.
+            if (state) {
+                const current = activeOption.value?.label?.color
+                if (current) this.state.colorpicker.color = current
+                this.state.colorpicker.openId += 1
+            }
             this.state.colorpicker.isActive = state
         }
 
