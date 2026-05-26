@@ -397,15 +397,13 @@
         }
 
         // Первый рабочий link для логотипа: если первый пункт меню — группа,
-        // ищем первого enabled + не скрытого ребёнка с link.
+        // берём первого ребёнка с link (порядок в массиве = порядок отображения).
         resolveFirstLink() {
             const first = this.visible?.[0]
             if (!first) return null
             if (first.is_group) {
                 const children = first.children || []
-                // enabled приходит как 0/1, поэтому truthy-проверка через !!
-                const child = children.find(c => c?.link && !!c.enabled && !c.is_hidden)
-                    || children.find(c => c?.link)
+                const child = children.find(c => c?.link)
                 return child?.link || null
             }
             return first.link || null

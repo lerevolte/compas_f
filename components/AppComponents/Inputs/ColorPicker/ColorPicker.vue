@@ -16,7 +16,8 @@
                 <div class="colorpicker__preview">
                     <slot name="preview"></slot>
                 </div>
-                <ColorPicker 
+                <ColorPicker
+                    :key="props.modelValue || 'cp'"
                     :color="props.modelValue"
                     default-format="hex"
                     :visible-formats="['hex']"

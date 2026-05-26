@@ -62,7 +62,7 @@
             </div>
 
             <div class="filter__group">
-                <div class="filter__fields" v-if="filter.state.search">
+                <div class="filter__fields" v-if="filter.state.search || filter.state.searchEnabled">
                     <div class="filter__field" :class="{'filter__field_disabled': filter.state.activeTabs.length == 0}">
                         <AppInput
                             class="filter__field_search"
@@ -170,7 +170,12 @@
                         </AppButton>
                     </template>
                     <template #content>
-                        <AppCheckbox 
+                        <AppCheckbox
+                            class="popup__option popup__option_checkbox"
+                            v-model="filter.state.searchEnabled"
+                            :options="{title: 'Поиск'}"
+                        />
+                        <AppCheckbox
                             class="popup__option popup__option_checkbox"
                             v-for="field in filter.state.fields"
                             v-model="field.enabled"
@@ -299,6 +304,7 @@
                 activeTabs: [],
                 hiddenTabs: [],
                 search: '',
+                searchEnabled: false,
                 isOpen: false,
                 fields: [],
                 tabsValues: {}

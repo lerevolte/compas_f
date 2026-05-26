@@ -42,10 +42,9 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
                 if (!item) return null
                 if (item.is_group) {
                     const children = item.children || []
-                    // Сначала ищем первый enabled + не скрытый ребёнок, иначе первый с link.
-                    // enabled может приходить как 0/1, поэтому проверка через truthy.
-                    const child = children.find(c => c?.link && !!c.enabled && !c.is_hidden)
-                        || children.find(c => c?.link)
+                    // Берём первого ребёнка с link в массиве. Порядок в массиве
+                    // = порядок отображения в сайдбаре.
+                    const child = children.find(c => c?.link)
                     return child?.link || null
                 }
                 return item.link || null

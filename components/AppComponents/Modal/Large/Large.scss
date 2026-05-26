@@ -6,18 +6,21 @@
         padding: 0px;
         position: fixed;
         top: 0;
+        right: 0;
+        bottom: 0;
         left: 0;
-        width: 100vw;
-        height: 100vh;
-        height: 100dvh;
+        width: auto;
+        height: auto;
         margin: 0;
         // <dialog> по умолчанию имеет border: 2px ridge и inset margins —
         // именно эти линии видны как серые полоски сверху/снизу в Safari.
         border: none;
         inset: 0;
+        max-width: none;
+        max-height: none;
         display: flex;
         justify-content: end;
-        background: transparent;
+        background: variables.$color-white;
         z-index: var(--zIndex);
         
         & > .modal__content {

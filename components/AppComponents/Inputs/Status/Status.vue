@@ -159,8 +159,12 @@
         async createOption() {
             try {
                 this.state.colorpicker.loading = true
+                // В списке (Body.vue) options.id — это DOM-уникальный ключ вида `${rowIdx}_${columnKey}`,
+                // а реальный числовой field_id передаётся отдельно. В деталке (TileSection)
+                // options содержит spread поля, и options.id уже числовой — используем его как fallback.
+                const fieldId = props.options.field_id ?? props.options.id
                 const response = await api.callMethod('POST', routes.status.create, {
-                    field_id: props.options.id,
+                    field_id: fieldId,
                     color: this.state.colorpicker.color
                 })
                 this.state.list.push(response.data)

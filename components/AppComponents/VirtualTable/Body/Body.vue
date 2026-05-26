@@ -194,11 +194,12 @@
                                 @open="event => cell.setActiveCell({currentTarget: event.closest('.table__cell')}, row.index, column.key)"
                             />
 
-                            <AppStatus 
+                            <AppStatus
                                 v-else-if="column.type == 'status'"
                                 :parentContainer="sectionRef"
                                 :options="{
                                     id: `${row.index}_${column.key}`,
+                                    field_id: column.id,
                                     title: null,
                                     type: column.type,
                                     list: column.options,
@@ -208,7 +209,7 @@
                                     required: false,
                                     isHaveNull: true,
                                     isCanCreate: column.can_create ?? false,
-                                    placeholder: '' 
+                                    placeholder: ''
                                 }"
                                 v-model="cell.useCellModel(row.index, column).value"
                             />
@@ -263,10 +264,11 @@
 
                             <span class="table__text text" v-else-if="column.type == 'json'" v-html="cell.useCellModel(row.index, column).value"></span>
 
-                            <AppStatus 
+                            <AppStatus
                                 v-else-if="column.type == 'status'"
                                 :options="{
                                     id: `${row.index}_${column.key}`,
+                                    field_id: column.id,
                                     title: null,
                                     type: column.type,
                                     edit: table.body[row.index] && table.body[row.index].edit,
@@ -275,7 +277,7 @@
                                     required: false,
                                     isHaveNull: false,
                                     isCanCreate: column.can_create ?? false,
-                                    placeholder: '' 
+                                    placeholder: ''
                                 }"
                                 :model-value="cell.useCellModel(row.index, column).value"
                             />
