@@ -552,14 +552,16 @@
         }
 
         checkEditting(row, prevValue) {
-            if (row.isChoose) return
+            if (row.edit) return
 
             if (table.value.slug == 'products') {
                 table.value.backupLocalBody()
             } else {
                 table.value.backup.body = JSON.parse(JSON.stringify([...table.value.backup.body, row]))
             }
-            row.isChoose = true
+            // Раньше тут ставили row.isChoose = true, и чекбокс выделения
+            // визуально включался при любой правке поля в строке. Теперь
+            // isChoose отвечает только за явный клик пользователя на чекбокс.
             row.edit = true
             table.value.state = 'edit'
         }

@@ -632,6 +632,32 @@
      * Обновляет маркеры, центрирует карту на точках
      * Перестраивает маршрут если он был построен ранее
      */
+    // Поиск yandex-слоя на карте по плагиновским полям (_yandex / _container)
+    const findYandexLayer = () => {
+        if (!mapInstance.value) return null;
+        let found = null;
+        mapInstance.value.eachLayer(layer => {
+            if (layer && (layer._yandex || layer instanceof (L.Yandex || function(){}))) {
+                found = layer;
+            }
+        });
+        return found;
+    };
+
+    const refreshYandexTiles = () => {
+        const layer = findYandexLayer();
+        if (!layer || !layer._yandex) return;
+        try {
+            const center = mapInstance.value.getCenter();
+            layer._yandex.setCenter([center.lat, center.lng], mapInstance.value.getZoom());
+            if (layer._yandex.container && typeof layer._yandex.container.fitToViewport === 'function') {
+                layer._yandex.container.fitToViewport();
+            }
+        } catch (e) {
+            console.warn('[MapFrame] refreshYandexTiles failed', e);
+        }
+    };
+
     const syncPointsOnMap = () => {
         if (!mapInstance.value || !L) return;
 
@@ -646,6 +672,12 @@
             const bounds = L.latLngBounds(points.map(({ coords }) => coords));
             mapInstance.value.fitBounds(bounds, { padding: [20, 20], animate: false });
         }
+
+        // Принудительно синхронизируем yandex-тайлы с новой позицией.
+        // Без этого тайлы остаются на старом центре, хотя маркер двигается.
+        refreshYandexTiles();
+        // Иногда ymaps требует второй проход после layout settle.
+        setTimeout(refreshYandexTiles, 50);
 
         if (props.options?.enableRoute) {
             clearRoute();

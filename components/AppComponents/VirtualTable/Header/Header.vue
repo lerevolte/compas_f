@@ -368,7 +368,16 @@
     }
 
     class Fixed {
-        constructor() {}
+        constructor() {
+            // Кэш natural offsetLeft каждой fixed-ячейки (по data-column-key).
+            // Перечитываем только при vt-fixed-update / resize, а не при каждом скролле,
+            // чтобы убрать дёргание из-за layout-reads на 60 FPS в Safari.
+            this.naturalLeftCache = new Map()
+        }
+
+        invalidateCache() {
+            this.naturalLeftCache.clear()
+        }
 
         // Функция для проверки sticky позиционирования при горизонтальном скролле
         checkStickyCells() {
@@ -392,18 +401,33 @@
                     // Safari: эмулируем sticky через transform.
                     // Колонка должна "залипать" только когда её естественная видимая позиция
                     // (offsetLeft в строке минус scrollLeft) опускается ниже stickyLeft.
-                    cell.style.position = 'relative'
-                    cell.style.left = '0px'
+                    if (cell.style.position !== 'relative') {
+                        cell.style.position = 'relative'
+                        cell.style.left = '0px'
+                    }
 
-                    const cellOffsetLeft = cell.offsetLeft
+                    // Кэшируем offsetLeft по строке+колонке. offsetLeft = layout read,
+                    // если делать его 60 раз в секунду — получаем дёргание.
+                    const row = cell.parentElement
+                    const cacheKey = `${row?.getAttribute('data-index') ?? '?'}:${cell.getAttribute('data-column-key')}`
+                    let cellOffsetLeft = this.naturalLeftCache.get(cacheKey)
+                    if (cellOffsetLeft === undefined) {
+                        cellOffsetLeft = cell.offsetLeft
+                        this.naturalLeftCache.set(cacheKey, cellOffsetLeft)
+                    }
+
                     const naturalVisibleLeft = cellOffsetLeft - scrollLeft
                     if (naturalVisibleLeft < stickyLeft) {
                         const offset = stickyLeft - naturalVisibleLeft
                         cell.style.transform = `translate3d(${offset}px, 0, 0)`
-                        cell.classList.add('table__cell_stuck')
+                        if (!cell.classList.contains('table__cell_stuck')) {
+                            cell.classList.add('table__cell_stuck')
+                        }
                     } else {
-                        cell.style.transform = ''
-                        cell.classList.remove('table__cell_stuck')
+                        if (cell.style.transform) cell.style.transform = ''
+                        if (cell.classList.contains('table__cell_stuck')) {
+                            cell.classList.remove('table__cell_stuck')
+                        }
                     }
                     return
                 }
@@ -434,7 +458,7 @@
  
     onBeforeUnmount(() => {
         resizer.clear()
-        
+
         // Очищаем обработчики
         if (tableRef.value) {
             if (window._stickyScrollHandler) {
@@ -445,6 +469,10 @@
                 tableRef.value.removeEventListener('vt-fixed-update', window._stickyFixedUpdateHandler)
                 delete window._stickyFixedUpdateHandler
             }
+        }
+        if (window._stickyResizeHandler) {
+            window.removeEventListener('resize', window._stickyResizeHandler)
+            delete window._stickyResizeHandler
         }
     })
 
@@ -476,11 +504,18 @@
         
         // Добавляем обработчик для обновления позиций фиксированных колонок
         const handleFixedUpdate = () => {
+            // Конфигурация колонок изменилась — кэш natural offsetLeft устаревает.
+            fixed.invalidateCache()
             nextTick(() => fixed.checkStickyCells())
         }
-        
+
         tableRef.value.addEventListener('vt-fixed-update', handleFixedUpdate)
         window._stickyFixedUpdateHandler = handleFixedUpdate
+
+        // Сбрасываем кэш при ресайзе окна (ширины перерасчитываются).
+        const handleResize = () => fixed.invalidateCache()
+        window.addEventListener('resize', handleResize)
+        window._stickyResizeHandler = handleResize
     })
 
     // Автоматически пересчитывать позиции при динамическом изменении колонок (fixed/width/enabled)

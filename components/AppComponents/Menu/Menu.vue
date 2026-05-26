@@ -15,7 +15,7 @@
         </teleport>
 
         <div class="menu__content" ref="menuContentRef">
-            <NuxtLink class="menu__logo" :to="props.options?.type == 'default' ? menu.visible[0] && menu.visible[0].is_group ? menu.visible[0]?.children[0]?.link : menu.visible[0]?.link : null">
+            <NuxtLink class="menu__logo" :to="props.options?.type == 'default' ? menu.resolveFirstLink() : null">
                 <IconLogo />
             </NuxtLink>
 
@@ -394,6 +394,20 @@
             setTimeout(() => {
                 this.isOpen = false
             }, 100);
+        }
+
+        // Первый рабочий link для логотипа: если первый пункт меню — группа,
+        // ищем первого enabled + не скрытого ребёнка с link.
+        resolveFirstLink() {
+            const first = this.visible?.[0]
+            if (!first) return null
+            if (first.is_group) {
+                const children = first.children || []
+                const child = children.find(c => c?.link && c.enabled !== false && !c.is_hidden)
+                    || children.find(c => c?.link)
+                return child?.link || null
+            }
+            return first.link || null
         }
     }
 

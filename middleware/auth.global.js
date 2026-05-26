@@ -41,7 +41,10 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
             const resolveLink = (item) => {
                 if (!item) return null
                 if (item.is_group) {
-                    const child = (item.children || []).find(c => c?.link)
+                    const children = item.children || []
+                    // Сначала ищем первый enabled + не скрытый ребёнок, иначе первый с link
+                    const child = children.find(c => c?.link && c.enabled !== false && !c.is_hidden)
+                        || children.find(c => c?.link)
                     return child?.link || null
                 }
                 return item.link || null

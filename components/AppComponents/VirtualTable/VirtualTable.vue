@@ -183,10 +183,12 @@
   const socket = inject('socket')
 
   const isChoosed = computed(() => {
-        return table.value.body.filter(item => item.isChoose).length > 0
+        // MassAction показываем и при чекбокс-выделении, и при правке строки.
+        return table.value.body.some(item => item.isChoose || item.edit)
     })
 
   const checkedCount = computed(() => {
+        // «Выбрано» считает только реально отмеченные чекбоксом строки.
         return table.value.body.filter(item => item.isChoose).length
     })
 
