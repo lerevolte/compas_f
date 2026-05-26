@@ -100,11 +100,6 @@
 					id: 'common'
 				},
 				{
-					label: 'Сущности',
-					value: 'entities',
-					id: 'entities'
-				},
-				{
 					label: 'Модули',
 					value: 'modules',
 					children: [

@@ -2472,41 +2472,6 @@ export class Settings {
                         can_read: 1,
                         can_edit: 1,
                         options: []
-                    },
-                    {
-                        id: 3,
-                        title: "Сколько дней хранить историю входа",
-                        key: "login_days",
-                        type: "select_dropdown",
-                        is_plural: 0,
-                        required: 1,
-                        value: null,
-                        can_read: 1,
-                        visible_always: 1,
-                        can_edit: 1,
-                        options: Array.from({length: 12}, (_, i) => ({label: String((i+1)*30), value: (i+1)*30}))
-                    },
-                    {
-                        id: 4,
-                        title: "Отображение подсказок",
-                        key: "hints",
-                        type: "select_dropdown",
-                        is_plural: 0,
-                        required: 1,
-                        visible_always: 1,
-                        value: null,
-                        can_read: 1,
-                        can_edit: 1,
-                        options: [
-                            {
-                                label: 'Включено',
-                                value: '1'
-                            },
-                            {
-                                label: 'Отключено',
-                                value: '0'
-                            }
-                        ]
                     }
                 ]
         
@@ -3055,7 +3020,11 @@ class socketObject {
 
     // Обновление строки
     ObjectUpdated({data, isModal, userId}) {
-        if (!isModal && userId == data.changed_by) return
+        // Свои правки скрываем всегда — не показывать плашку «X изменений»
+        // на родительских таблицах за модалкой, в которой пользователь сам
+        // только что и сделал правку. Раньше при isModal=true мы пропускали
+        // проверку и плашка всплывала в таблице задач за модалкой задачи.
+        if (userId == data.changed_by) return
 
         let findedRow = this.table.find(row => row.id == data.id)
 
@@ -3067,9 +3036,6 @@ class socketObject {
                 state: 'update'
             })
         }
-
-        console.log(this.table);
-        
     }
 
     ObjectCreated({data}) {
