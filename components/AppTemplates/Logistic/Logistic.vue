@@ -182,11 +182,26 @@
     const props = defineProps({
         activeDate: { default: null, type: [String, Date] },
         filterTabs: { default: null, type: Array },
-        activeRoute: { default: null, type: Object }
+        activeRoute: { default: null, type: Object },
+        // Приходит из URL через поиск задач — подсветить конкретную задачу
+        // в таблице и на карте после загрузки.
+        activeTaskId: { default: null, type: [Number, String] }
     });
 
     const logistic = ref(new LogisticWithMap(props.activeDate));
     logistic.value.onRouteChanged = () => emit('routeChanged');
+
+    // Прокидываем activeTaskId из URL в state, чтобы карта/таблица подсветили
+    // нужную задачу. Watch на случай позднего получения данных.
+    if (props.activeTaskId) {
+        logistic.value.activeTaskId = Number(props.activeTaskId);
+    }
+    watch(() => props.activeTaskId, (val) => {
+        logistic.value.activeTaskId = val ? Number(val) : null;
+        if (val) {
+            highlightTableRow(Number(val));
+        }
+    });
 
     // ── Map ↔ Table interaction ──
     
@@ -362,6 +377,16 @@
         // updateActiveDate calls loadUnassignedTasks internally
         if (props.activeDate) {
             logistic.value.updateActiveDate(props.activeDate);
+        }
+        // Если задача пришла из поиска — подсвечиваем после рендера таблиц.
+        // 600мс даёт окно на загрузку маршрутов / задач маршрута.
+        if (props.activeTaskId) {
+            setTimeout(() => highlightTableRow(Number(props.activeTaskId)), 600);
+        }
+        // Прямой переход с route_id в URL — сразу триггерим updateActiveRoute,
+        // чтобы загрузились маршрутные данные и подсветилась задача.
+        if (props.activeRoute) {
+            logistic.value.updateActiveRoute(props.activeRoute);
         }
     });
 </script>

@@ -1188,6 +1188,15 @@ export class Filter {
                 response.push(`page=${saved_query.page ?? this.setter.pages.current}`)
                 response.push(`sort_field=${saved_query.sort_field ?? this.setter.sortItem.sort_field}`)
                 response.push(`sort_order=${saved_query.sort_order ?? this.setter.sortItem.sort_order}`)
+                // Пропускаем filter[...] из URL прямо в запрос. Без этого
+                // прямые ссылки вида /objects/<slug>?filter[id]=N не применяли
+                // фильтр — saved_query содержал ключ «filter[id]» как
+                // плоскую строку и setFilter его игнорировал.
+                for (const key in saved_query) {
+                    if (key.startsWith('filter[') && saved_query[key] != null && saved_query[key] !== '') {
+                        response.push(`${key}=${saved_query[key]}`)
+                    }
+                }
             }
 
             if (this.setter.dependences.state) {

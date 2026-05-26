@@ -93,33 +93,35 @@
 						</div>
 					</template>
 				</AppPopup>
-				<AppRelation 
-					v-model="logisticPage.activeRoute"
+				<AppRelation
+					v-model="taskSearchValue"
 					:isPreventBottom="true"
 					:options="{
 						id: 0,
 						title: null,
 						list: [],
-						name: 'routes',
+						name: 'logistic_tasks',
 						edit: true,
-						slug: 'routes',
-						relation: '3121',
+						slug: 'logistic_tasks',
+						relation_type: 'logistic_tasks',
 						searchable: true,
 						required: false,
 						isHaveNull: true,
 						multiple: false,
 						type: 'select',
 						isSetDefault: false,
-						placeholder: 'Поиск по маршруту' 
+						placeholder: 'Поиск по задаче'
 					}"
+					@update:modelValue="onTaskSearchSelected"
 				/>
 			</div>
 		</div>
 		
-		<LogisticTemplate 
+		<LogisticTemplate
 			:filterTabs="logisticPage.filter"
 			:activeDate="logisticPage.activeDate"
 			:activeRoute="logisticPage.activeRoute"
+			:activeTaskId="logisticPage.activeTaskId"
 			@openModal="item => emit('openModal', item)"
 			@routeChanged="loadDaySummary"
 		/>
@@ -144,6 +146,7 @@
 		constructor() {
 			this.activeDate = new Date()
 			this.activeRoute = null
+			this.activeTaskId = null
 			this.activeChart = null
 			this.charts = []
 		}
@@ -155,6 +158,13 @@
 		get() {
 			const query = common.getQueryUrl()
 			this.activeDate = query && query['active-date'] ? format(new Date(query['active-date']), 'yyyy-MM-dd') : new Date()
+			// route_id и task_id приходят из поиска по задачам (см. onTaskSearchSelected)
+			// либо при прямой ссылке. Маршрут оборачиваем в формат, который понимает
+			// LogisticTemplate.updateActiveRoute (использует activeRoute.value[0]).
+			this.activeRoute = query && query['route_id']
+				? { value: [Number(query['route_id'])], localOptions: [null] }
+				: null
+			this.activeTaskId = query && query['task_id'] ? Number(query['task_id']) : null
 		}
 		set() {
 			common.setQueryUrl(`?active-date=${format(this.activeDate, 'yyyy-MM-dd')}`)
@@ -166,6 +176,42 @@
 	const daySummary = ref(null)
 	const activeCarrierId = ref(null)
 	const carriersOpen = ref(false)
+
+	// Поиск по задачам логистики. v-model значение сбрасываем сразу после
+	// клика, потому что само поле — это просто триггер навигации, а не
+	// постоянное «состояние страницы».
+	const taskSearchValue = ref({ value: [null], localOptions: [null] })
+
+	const onTaskSearchSelected = (newValue) => {
+		const opt = newValue?.localOptions?.find(o => o && o.value) || null
+		if (!opt || !opt.value) return
+
+		const taskId = opt.value
+		const routeId = opt.label?.route_id ?? null
+		const deliveryDate = opt.label?.delivery_date ?? null
+
+		// Сбрасываем выбор в самом поле — иначе локально остаётся «выбран»
+		// тот элемент, на который только что кликнули.
+		nextTick(() => {
+			taskSearchValue.value = { value: [null], localOptions: [null] }
+		})
+
+		if (routeId) {
+			// Задача в маршруте — на /logistic с автовыбором маршрута и задачи.
+			// Дата берётся из delivery_date (которое уже синхронизировано
+			// с датой маршрута через Task::saving в бэкенде).
+			const date = deliveryDate ?? format(new Date(), 'yyyy-MM-dd')
+			navigateTo(`/logistic?active-date=${date}&route_id=${routeId}&task_id=${taskId}`)
+		} else if (deliveryDate) {
+			// Без маршрута, но с датой — на /logistic на эту дату, без авто-маршрута.
+			navigateTo(`/logistic?active-date=${deliveryDate}&task_id=${taskId}`)
+		} else {
+			// Без даты — на список задач логистики с фильтром по id.
+			// URL-параметры filter[…] подхватываются на init таблицы через
+			// фикс в Filter.get (см. helpers/classes.js, обработка saved_query).
+			navigateTo(`/objects/logistic_tasks?filter[id]=${taskId}`)
+		}
+	}
 
 	const activeStatsData = computed(() => {
 		if (!daySummary.value) return null;
@@ -217,6 +263,13 @@
 		})
 		logisticPage.value.getStatistics()
 		loadDaySummary()
+	})
+
+	// Перенавигация в пределах /logistic (например, из поиска по задачам) не
+	// размонтирует страницу — приходится вручную перечитать query-параметры.
+	const route = useRoute()
+	watch(() => route.fullPath, () => {
+		logisticPage.value.get()
 	})
 
 	// Reload summary when date changes
