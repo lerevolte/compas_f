@@ -107,6 +107,13 @@
             this.closeOptions = (event) => {
                 console.log('closeOptions ENTER, isOpen:', this.state.isOpen, 'search:', this.state.search);
                 if (!this.state.isOpen) return;
+                // Если mousedown был внутри селекта (пользователь начал выделять текст),
+                // то возникающий click — это «продолжение» этого жеста, и закрывать
+                // селект не нужно, иначе сбрасывается выделение.
+                if (this._mousedownInside) {
+                    this._mousedownInside = false
+                    return
+                }
                 if (selectRef.value && !selectRef.value.contains(event.target)) {
                     // For address type - save typed text as value
                     if (props.options.type == 'address' && this.state.search && this.state.search.trim()) {
@@ -217,6 +224,13 @@
 
             if (this.state.isOpen) {
                 document.addEventListener('click', this.closeOptions);
+                // Запоминаем где начался mousedown — если внутри селекта (пользователь
+                // выделяет текст и тянет мышь), последующий click на document не должен
+                // закрывать селект (иначе выделение сбрасывается).
+                this._mousedownHandler = (e) => {
+                    this._mousedownInside = !!(selectRef.value && selectRef.value.contains(e.target))
+                }
+                document.addEventListener('mousedown', this._mousedownHandler)
                 nextTick(() => this.checkPosition());
                 if (props.options.isSaveSearch) {
                     this.state.search = activeOption.value?.label ?? ''
@@ -234,6 +248,10 @@
                 }
                 selectRef.value.querySelector('input').blur();
                 document.removeEventListener('click', this.closeOptions);
+                if (this._mousedownHandler) {
+                    document.removeEventListener('mousedown', this._mousedownHandler)
+                    this._mousedownHandler = null
+                }
             }
         }
         

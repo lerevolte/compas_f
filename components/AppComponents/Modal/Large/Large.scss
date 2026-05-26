@@ -11,6 +11,10 @@
         height: 100vh;
         height: 100dvh;
         margin: 0;
+        // <dialog> по умолчанию имеет border: 2px ridge и inset margins —
+        // именно эти линии видны как серые полоски сверху/снизу в Safari.
+        border: none;
+        inset: 0;
         display: flex;
         justify-content: end;
         background: transparent;

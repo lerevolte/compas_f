@@ -62,13 +62,13 @@
             </div>
 
             <div class="filter__group">
-                <div class="filter__fields">
+                <div class="filter__fields" v-if="filter.state.search">
                     <div class="filter__field" :class="{'filter__field_disabled': filter.state.activeTabs.length == 0}">
-                        <AppInput 
+                        <AppInput
                             class="filter__field_search"
-                            @keyup.enter="filter.updateInfo()" 
-                            v-model="filter.state.search" 
-                            :options="{ id: 0, title: 'Поиск', type: 'text', name: 'search', placeholder: '', autocomplete: 'off' }" 
+                            @keyup.enter="filter.updateInfo()"
+                            v-model="filter.state.search"
+                            :options="{ id: 0, title: 'Поиск', type: 'text', name: 'search', placeholder: '', autocomplete: 'off' }"
                         />
                     </div>
                 </div>

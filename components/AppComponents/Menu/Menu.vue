@@ -403,7 +403,8 @@
             if (!first) return null
             if (first.is_group) {
                 const children = first.children || []
-                const child = children.find(c => c?.link && c.enabled !== false && !c.is_hidden)
+                // enabled приходит как 0/1, поэтому truthy-проверка через !!
+                const child = children.find(c => c?.link && !!c.enabled && !c.is_hidden)
                     || children.find(c => c?.link)
                 return child?.link || null
             }

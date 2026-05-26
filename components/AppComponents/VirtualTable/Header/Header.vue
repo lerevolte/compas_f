@@ -388,6 +388,21 @@
             const scrollLeft = tableRef.value.scrollLeft
             const isScrolledHorizontally = scrollLeft > 0
 
+            // На мобильных ячейки выводятся друг под другом (карточный вид) —
+            // фиксация и transform только мешают. Сбрасываем все позиционные стили.
+            const isMobileLayout = typeof window !== 'undefined' && window.innerWidth <= 990
+            if (isMobileLayout) {
+                fixedCells.forEach(cell => {
+                    if (cell.style.transform) cell.style.transform = ''
+                    if (cell.style.position) cell.style.position = ''
+                    if (cell.style.left) cell.style.left = ''
+                    if (cell.classList.contains('table__cell_stuck')) {
+                        cell.classList.remove('table__cell_stuck')
+                    }
+                })
+                return
+            }
+
             // Safari: position:sticky на flex-ячейках внутри position:absolute row'a
             // местами теряет фиксацию при горизонтальной прокрутке. В этом случае
             // компенсируем смещение через translateX(scrollLeft).
