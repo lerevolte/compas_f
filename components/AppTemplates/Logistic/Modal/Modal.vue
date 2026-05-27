@@ -44,7 +44,7 @@
             </div>
         </div>
 
-        <AppSelect 
+        <AppSelect
             class="logistic-modal__filter"
             :style="`--selectPadding: ${selectPadding}px`"
             :options="{
@@ -67,6 +67,7 @@
                 multiple: false,
             }"
             v-model="route.computedFilter"
+            @searchEnter="text => route.applySearch(text)"
         >
             <div class="select__values" ref="selectValuesRef" v-if="route.computedSavedOptions">
                 <div class="select__value" v-for="option in route.computedSavedOptions" @click="route.deleteOption(option)">
@@ -78,21 +79,7 @@
 
         <div class="logistic-modal__section">
             <div class="logistic-modal__section-header">
-                <span>{{ route.steps.active?.sectionTitle }}</span>
-                <AppInput
-                    class="logistic-modal__search"
-                    :options="{
-                        id: 'logistic-modal-search',
-                        title: '',
-                        type: 'text',
-                        name: 'logistic-modal-search',
-                        placeholder: 'Поиск, Enter для применения',
-                        autocomplete: 'off'
-                    }"
-                    :model-value="route.searchQueries[route.steps.active?.slug]"
-                    @update:modelValue="val => route.searchQueries[route.steps.active.slug] = val"
-                    @keyup.enter="route.runSearch()"
-                />
+                {{ route.steps.active?.sectionTitle }}
             </div>
             <div class="logistic-modal__section-body">
                 <div
@@ -118,7 +105,6 @@
     import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'
 	import AppCategories from '@AppComponents/Categories/Categories.vue';
     import AppSelect from '@AppComponents/Inputs/Select/Select.vue'
-    import AppInput from '@AppComponents/Inputs/Input/Input.vue'
     import IconClose from '@AppIcons/Close.vue';
     import ModalItemValue from './Value.vue'
     
@@ -200,12 +186,14 @@
                 cars: {
                     company: null,
                     cars: null,
-                    employees: null
+                    employees: null,
+                    q: null
                 },
                 employees: {
                     company: null,
                     cars: null,
-                    employees: null
+                    employees: null,
+                    q: null
                 }
             })
 
@@ -226,25 +214,21 @@
             this.filter = reactive({
                 cars: null,
                 company: null,
-                employees: null
-            })
-
-            // Поиск по нажатию Enter в шапке секции — отдельная строка q
-            // для каждой вкладки, чтобы переключение туда-обратно не сбрасывало
-            // введённый запрос.
-            this.searchQueries = reactive({
-                cars: '',
-                employees: ''
+                employees: null,
+                q: null
             })
         }
 
-        runSearch() {
+        // Применить поиск из общего фильтр-инпута: сохранить как чип «Поиск: ...»
+        // и перезагрузить список активной вкладки. Срабатывает по Enter.
+        applySearch(text) {
             const tab = this.steps.active?.slug
-            if (tab === 'cars') {
-                this.entities.cars.filterMachine()
-            } else if (tab === 'employees') {
-                this.entities.employees.filterEmployee()
-            }
+            if (!tab) return
+            const q = (text || '').trim()
+            // Маршрутизируем через стандартный setFilterValue, чтобы строка
+            // попала в чипы наравне с прочими фильтрами, и крестик «×» на чипе
+            // работал из коробки (deleteOption → setFilterValue с пустым value).
+            this.setFilterValue('q', { value: q || null, label: q || null })
         }
 
         // Инициализация вычисляемых свойств
@@ -406,8 +390,8 @@
             const filters = route.value.tabFilters.cars
             if (filters.company) request.push(`filter[company_id]=${filters.company}`)
             if (filters.employees) request.push(`filter[employee_id]=${filters.employees}`)
-            // q — поиск по названию/полям машины (введённый в шапке секции).
-            const q = route.value.searchQueries?.cars?.trim?.()
+            // q — поиск, добавленный пользователем через Enter в фильтр-инпуте.
+            const q = (filters.q || '').trim()
             const baseUrl = q
                 ? `${routes.logistic.getModalCars}${encodeURIComponent(q)}`
                 : routes.logistic.getModalCars
@@ -434,7 +418,7 @@
             const filters = route.value.tabFilters.employees
             if (filters.company) request.push(`filter[company_id]=${filters.company}`)
             if (filters.cars) request.push(`filter[car_id]=${filters.cars}`)
-            const q = route.value.searchQueries?.employees?.trim?.()
+            const q = (filters.q || '').trim()
             const baseUrl = q
                 ? `${routes.logistic.getModalEmployees}${encodeURIComponent(q)}`
                 : routes.logistic.getModalEmployees

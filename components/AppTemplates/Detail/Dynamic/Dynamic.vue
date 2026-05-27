@@ -71,14 +71,18 @@
         </div>
 
         <!--
-            Список «Маршрут»: только на вкладке с title='Маршрут' (НЕ на вкладке
-            «Задачи» — там оставляем стандартную таблицу) и только в деталке маршрута.
+            Список «Маршрут»: на вкладке, чей title содержит "Маршрут" (например
+            "Маршрут", "Маршрут списком"), НО НЕ "Маршруты"/"Задачи" — последний
+            оставляем стандартной таблицей объектов. Подходит только для деталки
+            маршрута (slug=routes) и не для системных вкладок order/history/products.
         -->
         <RouteTasksView
             v-else-if="props.slug === 'routes'
                 && !['order', 'history', 'products'].includes(props.tabs.active?.tab)
                 && typeof props.tabs.active?.title === 'string'
-                && props.tabs.active.title.trim() === 'Маршрут'"
+                && /\bМаршрут\b/i.test(props.tabs.active.title.trim())
+                && !/Задач/i.test(props.tabs.active.title.trim())
+                && props.tabs.active.title.trim() !== 'Маршруты'"
             :routeId="props.id"
         />
 

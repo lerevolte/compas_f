@@ -15,7 +15,7 @@
             <div class="select__content" @click="event => select.toggleOptions(event)">
                 <IconWarning v-if="props.options.required && !activeOption"/>
 
-                <AppInput 
+                <AppInput
                     ref="searchRef"
                     :options="{
                         id: `${props.options.id}_search`,
@@ -28,6 +28,7 @@
                     }"
                     :model-value="select.state.search"
                     @update:modelValue="(value) => { select.state.search = value; select.filterOptions(value); }"
+                    @keyup.enter="emit('searchEnter', select.state.search)"
                 />
     
                 <div class="select__values" ref="selectValuesRef" v-if="props.options.multiple">
@@ -90,7 +91,8 @@
     const emit = defineEmits([
         'update:modelValue',
         'update:prevValue',
-        'update:modelList'
+        'update:modelList',
+        'searchEnter'
     ])
 
     class Select {

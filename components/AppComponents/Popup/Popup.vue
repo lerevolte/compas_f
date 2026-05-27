@@ -40,6 +40,7 @@
 
 <script setup>
     import './Popup.scss';
+    import { ref, reactive, nextTick, onMounted, onBeforeUnmount } from 'vue'
 
     const popupRef = ref(null)
     const contentRef = ref(null)
@@ -104,7 +105,11 @@
             this.state.isOpen = !this.state.isOpen;
             if (this.state.isOpen) {
                 document.addEventListener('mousedown', this.closeOptions);
-                nextTick(() => this.checkPosition());
+                // Двойной nextTick: первый — Vue добавляет popup_open и (для
+                // forceFloating) перемещает контент в body, второй — гарантирует,
+                // что DOM полностью смонтирован, и getBoundingClientRect отдаёт
+                // правильные размеры.
+                nextTick(() => nextTick(() => this.checkPosition()));
             } else {
                 this.state.isTop = false
                 this.state.useFloating = false
@@ -161,10 +166,30 @@
             this._setupFloatingScroll();
         }
 
-        _recalcFloatingStyle(bottomBound) {
+        _recalcFloatingStyle(bottomBound, retry = 0) {
             const headerEl = this.popupRef.value?.querySelector('.popup__header');
             const contentEl = this.contentRef.value;
-            if (!headerEl || !contentEl) return;
+            if (!headerEl || !contentEl) {
+                // contentRef для теле-портированного попапа может быть ещё не
+                // привязан на первом тике. Ретраим через rAF до 5 раз.
+                if (retry < 5 && typeof requestAnimationFrame !== 'undefined') {
+                    requestAnimationFrame(() => this._recalcFloatingStyle(bottomBound, retry + 1));
+                }
+                return;
+            }
+
+            // Сбрасываем fallback-смещение (-9999), чтобы getBoundingClientRect
+            // померил реальные ширину/высоту контента.
+            contentEl.style.left = '0px';
+            contentEl.style.top = '0px';
+            contentEl.style.right = 'auto';
+            contentEl.style.bottom = 'auto';
+            contentEl.style.position = 'fixed';
+            contentEl.style.margin = '0';
+            // visibility:hidden позволяет померить размеры, не показывая мигание.
+            const prevVisibility = contentEl.style.visibility;
+            contentEl.style.visibility = 'hidden';
+
             const anchorRect = headerEl.getBoundingClientRect();
             const contentRect = contentEl.getBoundingClientRect();
             const viewportRight = window.innerWidth;
@@ -177,6 +202,7 @@
             if (left + width > viewportRight - 5) {
                 left = Math.max(5, anchorRect.right - width);
             }
+            left = Math.max(5, left);
 
             // В floating-режиме решение «вниз/вверх» принимаем по реальному
             // положению якоря в viewport, а не по устаревшему isTop из абсолютного
@@ -187,9 +213,16 @@
                 : Math.max(5, anchorRect.top - height - 5);
             this.state.isTop = !openBelow;
 
+            // Пишем стили НАПРЯМУЮ в DOM, чтобы не зависеть от реактивности
+            // Vue (раньше state.floatingStyle иногда не доезжал до v-bind:style,
+            // и попап оставался на fallback-позиции).
+            contentEl.style.left = `${left}px`;
+            contentEl.style.top = `${top}px`;
+            contentEl.style.visibility = prevVisibility || '';
+
             this.state.floatingStyle = {
                 position: 'fixed',
-                left: `${Math.max(5, left)}px`,
+                left: `${left}px`,
                 top: `${top}px`,
                 right: 'auto',
                 bottom: 'auto',

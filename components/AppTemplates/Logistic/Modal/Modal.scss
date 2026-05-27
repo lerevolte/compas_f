@@ -120,14 +120,14 @@
     display: flex;
     filter: opacity(.5);
     gap: 20px;
-    padding: 10px 15px;
+    padding: 8px 15px;
     width: 100%;
     max-width: 21vw;
     position: relative;
-    // Высота должна быть одинаковой и для пустой плашки, и с выбранным значением,
-    // поэтому фиксируем высоту строки.
-    min-height: 50px;
-    height: 50px;
+    // Высота 40px (с учётом паддингов и border), одинаковая для пустой плашки
+    // и с выбранным значением, чтобы плашка не «скакала» по высоте.
+    min-height: 40px;
+    height: 40px;
     box-sizing: border-box;
     overflow: hidden;
 
@@ -281,19 +281,10 @@
     align-items: center;
     border-bottom: 1px solid #eeeff1;
     display: flex;
-    gap: 15px;
+    gap: 0;
     justify-content: space-between;
     padding: 10px 15px;
     font-weight: 600;
-
-    .logistic-modal__search {
-        flex: 0 1 220px;
-        font-weight: 400;
-
-        input {
-            padding: 6px 10px;
-        }
-    }
 }
 
 .logistic-modal__section-body {
