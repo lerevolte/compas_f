@@ -71,18 +71,14 @@
         </div>
 
         <!--
-            Список «Маршрут»: на вкладке, чей title содержит "Маршрут" (например
-            "Маршрут", "Маршрут списком"), НО НЕ "Маршруты"/"Задачи" — последний
-            оставляем стандартной таблицей объектов. Подходит только для деталки
-            маршрута (slug=routes) и не для системных вкладок order/history/products.
+            Список «Маршрут»: вкладка с title='Маршрут' / 'Маршрут списком' /
+            'Маршрут списокм' (опечатка) в деталке маршрута. НЕ 'Маршруты' и
+            не вкладка «Задачи» — там оставляем стандартную таблицу.
+            \b в JS-регексах не работает с кириллицей, поэтому используем
+            startsWith + явное исключение «Маршруты».
         -->
         <RouteTasksView
-            v-else-if="props.slug === 'routes'
-                && !['order', 'history', 'products'].includes(props.tabs.active?.tab)
-                && typeof props.tabs.active?.title === 'string'
-                && /\bМаршрут\b/i.test(props.tabs.active.title.trim())
-                && !/Задач/i.test(props.tabs.active.title.trim())
-                && props.tabs.active.title.trim() !== 'Маршруты'"
+            v-else-if="isRouteTasksTab"
             :routeId="props.id"
         />
 
@@ -128,6 +124,19 @@
     import ColumnFields from '@AppComponents/ColumnFields/ColumnFields.vue';
     import AppVirtualTable from '@AppComponents/VirtualTable/VirtualTable.vue';
     import RouteTasksView from '@AppTemplates/Detail/RouteTasksView/RouteTasksView.vue';
+
+    const isRouteTasksTab = computed(() => {
+        if (props.slug !== 'routes') return false
+        const active = props.tabs?.active
+        if (!active) return false
+        if (['order', 'history', 'products'].includes(active.tab)) return false
+        const title = (typeof active.title === 'string' ? active.title : '').trim()
+        if (!title) return false
+        // Исключаем стандартные «Маршруты»/«Задачи».
+        if (title === 'Маршруты' || /Задач/i.test(title)) return false
+        // Подходят: 'Маршрут', 'Маршрут списком', 'Маршрут списокм' и др.
+        return title === 'Маршрут' || title.startsWith('Маршрут ')
+    })
 
     const emit = defineEmits([
         'action',

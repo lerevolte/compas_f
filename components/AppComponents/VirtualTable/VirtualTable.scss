@@ -18,9 +18,10 @@
   max-height: 100%;
   max-width: calc(100vw - 282px);
   // Safari: contain + will-change ломают position: sticky на ячейках.
-  // @supports включает их только для не-Safari.
+  // contain: layout|paint создаёт containing block для position:fixed —
+  // в результате action-попап в строке клипается границами таблицы.
+  // Оставляем только will-change, который не делает containing block.
   @supports not (-webkit-touch-callout: none) {
-    contain: layout paint;
     will-change: scroll-position;
   }
 

@@ -3,34 +3,9 @@
         <div class="popup__header" @click="event => popup.toggleOptions(event)">
             <slot name="header"></slot>
         </div>
-        <!--
-            forceFloating: всегда телепортируем content в body — обходим
-            ситуацию, когда .table { contain: layout paint } делает position:fixed
-            «контейнером» и popup всё равно клипается.
-        -->
-        <Teleport v-if="props.forceFloating" to="body">
-            <div
-                v-show="popup.state.isOpen"
-                class="popup__content popup__content_floating"
-                :class="{
-                    'popup__content_top': popup.state.isTop,
-                    'popup_open': popup.state.isOpen
-                }"
-                :style="popup.state.floatingStyle || floatingFallbackStyle"
-                ref="contentRef"
-            >
-                <slot name="content"></slot>
-            </div>
-        </Teleport>
         <div
-            v-else
             class="popup__content"
-            :class="{
-                'popup__content_top': popup.state.isTop,
-                'popup__content_floating': popup.state.useFloating,
-                'popup_open': popup.state.useFloating && popup.state.isOpen
-            }"
-            :style="popup.state.useFloating ? popup.state.floatingStyle : null"
+            :class="{ 'popup__content_top': popup.state.isTop }"
             ref="contentRef"
         >
             <slot name="content"></slot>
@@ -40,7 +15,7 @@
 
 <script setup>
     import './Popup.scss';
-    import { ref, reactive, nextTick, onMounted, onBeforeUnmount } from 'vue'
+    import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 
     const popupRef = ref(null)
     const contentRef = ref(null)
@@ -57,38 +32,27 @@
 
             this.state = reactive({
                 isOpen: false,
-                isTop: false,
-                useFloating: false,
-                floatingStyle: null
+                isTop: false
             });
 
-            // Закрытие опций
             this.closeOptions = this.closeOptions.bind(this);
-            this._floatingScrollHandler = null;
+            this._scrollHandler = null;
         }
 
-        closeOptions(event) {          
-            
+        closeOptions(event) {
             if (!this.popupRef.value) return;
 
             for (const sel of props.ignoreSelectors) {
                 const el = document.querySelector(sel);
-                if (el && el.contains(event.target)) {
-                    return;
-                }
+                if (el && el.contains(event.target)) return;
             }
 
-            // В режиме floating контент рендерится через position: fixed и DOM-узел
-            // лежит вне popupRef-поддерева для целей hit-test'а? Нет, всё ещё внутри
-            // popupRef, но визуально выше. Проверяем по contentRef отдельно.
             const insidePopup = this.popupRef.value.contains(event.target);
             const insideContent = this.contentRef?.value?.contains?.(event.target);
             if (!insidePopup && !insideContent) {
                 this.state.isOpen = false;
                 this.state.isTop = false
-                this.state.useFloating = false
-                this.state.floatingStyle = null
-                this._teardownFloatingScroll()
+                this._teardownScroll()
                 document.removeEventListener('mousedown', this.closeOptions);
                 emit('close', true)
             }
@@ -105,96 +69,61 @@
             this.state.isOpen = !this.state.isOpen;
             if (this.state.isOpen) {
                 document.addEventListener('mousedown', this.closeOptions);
-                // Двойной nextTick: первый — Vue добавляет popup_open и (для
-                // forceFloating) перемещает контент в body, второй — гарантирует,
-                // что DOM полностью смонтирован, и getBoundingClientRect отдаёт
-                // правильные размеры.
-                nextTick(() => nextTick(() => this.checkPosition()));
+                // Дважды nextTick: даём Vue показать content (.popup_open),
+                // потом измеряем и позиционируем.
+                nextTick(() => nextTick(() => this.applyPosition()));
             } else {
                 this.state.isTop = false
-                this.state.useFloating = false
-                this.state.floatingStyle = null
-                this._teardownFloatingScroll()
+                this._teardownScroll()
+                this._clearStyles()
                 document.removeEventListener('mousedown', this.closeOptions);
                 emit('close', true)
             }
         }
 
-        checkPosition() {
-            if (!this.popupRef || !this.contentRef) return;
-            let bottomBound;
-            if (props.parentContainer) {
-                bottomBound = props.parentContainer.getBoundingClientRect().bottom;
-            } else {
-                // Учитываем плавающую панель массовых действий внизу страницы.
-                bottomBound = window.innerHeight;
-                if (typeof document !== 'undefined') {
-                    const massAction = document.querySelector('.mass-action');
-                    if (massAction) {
-                        const massRect = massAction.getBoundingClientRect();
-                        if (massRect.top > 0 && massRect.top < bottomBound) {
-                            bottomBound = massRect.top;
-                        }
-                    }
-                }
-            }
-            const contentRect = contentRef.value.getBoundingClientRect();
-            this.state.isTop = props.isPreventBottom ? false : contentRect.bottom > bottomBound;
-
-            // Если popup живёт внутри прокручиваемого/обрезающего родителя
-            // (например, виртуализированная таблица), переключаем content в режим
-            // position: fixed и сами позиционируем поверх — иначе попап обрезается.
-            this.updateFloatingPosition(bottomBound);
-        }
-
-        // Включает «плавающее» позиционирование, когда обычный absolute обрезается
-        // ближайшим overflow-scroll-родителем, и пересчитывает координаты.
-        updateFloatingPosition(bottomBound) {
-            if (!this.popupRef.value || !this.contentRef.value) return;
-            if (typeof window === 'undefined') return;
-
-            const needFloating = !!props.forceFloating || this._hasClippingAncestor(this.popupRef.value);
-            this.state.useFloating = needFloating;
-
-            if (!needFloating) {
-                this.state.floatingStyle = null;
-                this._teardownFloatingScroll();
-                return;
-            }
-
-            this._recalcFloatingStyle(bottomBound);
-            this._setupFloatingScroll();
-        }
-
-        _recalcFloatingStyle(bottomBound, retry = 0) {
+        // Вычисляет позицию контента в координатах viewport и пишет её
+        // прямо в style контента. Position: fixed, чтобы попап «выходил»
+        // из любых overflow-родителей (таблица и пр.).
+        applyPosition(retry = 0) {
             const headerEl = this.popupRef.value?.querySelector('.popup__header');
             const contentEl = this.contentRef.value;
             if (!headerEl || !contentEl) {
-                // contentRef для теле-портированного попапа может быть ещё не
-                // привязан на первом тике. Ретраим через rAF до 5 раз.
-                if (retry < 5 && typeof requestAnimationFrame !== 'undefined') {
-                    requestAnimationFrame(() => this._recalcFloatingStyle(bottomBound, retry + 1));
+                if (retry < 8 && typeof requestAnimationFrame !== 'undefined') {
+                    requestAnimationFrame(() => this.applyPosition(retry + 1));
                 }
                 return;
             }
 
-            // Сбрасываем fallback-смещение (-9999), чтобы getBoundingClientRect
-            // померил реальные ширину/высоту контента.
+            // Сначала сбрасываем фикс-позицию, чтобы померить контент в реальной
+            // ширине. Также прячем для «без мигания».
+            const prevVisibility = contentEl.style.visibility;
+            contentEl.style.position = 'fixed';
+            contentEl.style.visibility = 'hidden';
             contentEl.style.left = '0px';
             contentEl.style.top = '0px';
             contentEl.style.right = 'auto';
             contentEl.style.bottom = 'auto';
-            contentEl.style.position = 'fixed';
             contentEl.style.margin = '0';
-            // visibility:hidden позволяет померить размеры, не показывая мигание.
-            const prevVisibility = contentEl.style.visibility;
-            contentEl.style.visibility = 'hidden';
+            contentEl.style.zIndex = '10000';
 
             const anchorRect = headerEl.getBoundingClientRect();
             const contentRect = contentEl.getBoundingClientRect();
-            const viewportRight = window.innerWidth;
-            const viewportBottom = bottomBound ?? window.innerHeight;
 
+            // Нижняя граница: учитываем плавающую панель массовых действий.
+            let bottomBound;
+            if (props.parentContainer) {
+                bottomBound = props.parentContainer.getBoundingClientRect().bottom;
+            } else {
+                bottomBound = window.innerHeight;
+                const massAction = typeof document !== 'undefined'
+                    ? document.querySelector('.mass-action')
+                    : null;
+                if (massAction) {
+                    const r = massAction.getBoundingClientRect();
+                    if (r.top > 0 && r.top < bottomBound) bottomBound = r.top;
+                }
+            }
+            const viewportRight = window.innerWidth;
             const width = contentRect.width || 200;
             const height = contentRect.height || 0;
 
@@ -204,67 +133,49 @@
             }
             left = Math.max(5, left);
 
-            // В floating-режиме решение «вниз/вверх» принимаем по реальному
-            // положению якоря в viewport, а не по устаревшему isTop из абсолютного
-            // позиционирования (тот меряет высоту от старого места).
-            const openBelow = anchorRect.bottom + height + 5 <= viewportBottom;
+            const openBelow = !props.isPreventBottom
+                && (anchorRect.bottom + height + 5 <= bottomBound);
             const top = openBelow
                 ? anchorRect.bottom + 5
                 : Math.max(5, anchorRect.top - height - 5);
             this.state.isTop = !openBelow;
 
-            // Пишем стили НАПРЯМУЮ в DOM, чтобы не зависеть от реактивности
-            // Vue (раньше state.floatingStyle иногда не доезжал до v-bind:style,
-            // и попап оставался на fallback-позиции).
             contentEl.style.left = `${left}px`;
             contentEl.style.top = `${top}px`;
             contentEl.style.visibility = prevVisibility || '';
 
-            this.state.floatingStyle = {
-                position: 'fixed',
-                left: `${left}px`,
-                top: `${top}px`,
-                right: 'auto',
-                bottom: 'auto',
-                margin: '0'
-            };
+            // Подписываемся на скролл/resize чтобы попап ехал вместе с anchor.
+            this._setupScroll();
         }
 
-        _hasClippingAncestor(el) {
-            let node = el?.parentElement;
-            while (node && node !== document.body) {
-                const style = window.getComputedStyle(node);
-                const ox = style.overflowX;
-                const oy = style.overflowY;
-                if (
-                    (ox !== 'visible' && ox) ||
-                    (oy !== 'visible' && oy) ||
-                    (style.transform && style.transform !== 'none') ||
-                    (style.filter && style.filter !== 'none') ||
-                    (style.contain && /\b(layout|paint|strict|content)\b/.test(style.contain))
-                ) {
-                    return true;
-                }
-                node = node.parentElement;
-            }
-            return false;
+        _clearStyles() {
+            const contentEl = this.contentRef?.value;
+            if (!contentEl) return;
+            contentEl.style.position = '';
+            contentEl.style.left = '';
+            contentEl.style.top = '';
+            contentEl.style.right = '';
+            contentEl.style.bottom = '';
+            contentEl.style.margin = '';
+            contentEl.style.zIndex = '';
+            contentEl.style.visibility = '';
         }
 
-        _setupFloatingScroll() {
-            if (this._floatingScrollHandler) return;
-            this._floatingScrollHandler = () => {
+        _setupScroll() {
+            if (this._scrollHandler) return;
+            this._scrollHandler = () => {
                 if (!this.state.isOpen) return;
-                this._recalcFloatingStyle();
+                this.applyPosition();
             };
-            window.addEventListener('scroll', this._floatingScrollHandler, true);
-            window.addEventListener('resize', this._floatingScrollHandler);
+            window.addEventListener('scroll', this._scrollHandler, true);
+            window.addEventListener('resize', this._scrollHandler);
         }
 
-        _teardownFloatingScroll() {
-            if (!this._floatingScrollHandler) return;
-            window.removeEventListener('scroll', this._floatingScrollHandler, true);
-            window.removeEventListener('resize', this._floatingScrollHandler);
-            this._floatingScrollHandler = null;
+        _teardownScroll() {
+            if (!this._scrollHandler) return;
+            window.removeEventListener('scroll', this._scrollHandler, true);
+            window.removeEventListener('resize', this._scrollHandler);
+            this._scrollHandler = null;
         }
     }
 
@@ -276,10 +187,9 @@
             default: false,
             type: Boolean
         },
-        // Принудительно включает floating-режим (position: fixed + Teleport),
-        // даже если эвристика поиска clip-родителя не сработала. Нужно для
-        // action-меню в строках таблиц, где table имеет contain:layout и обычный
-        // position:fixed клипается.
+        // Совместимость с прежним API — теперь не нужен (всегда работаем
+        // через position:fixed), но оставлен, чтобы не ломать существующие
+        // места, где он передаётся.
         forceFloating: {
             default: false,
             type: Boolean
@@ -292,17 +202,6 @@
 
     const popup = ref(new Popup(popupRef, contentRef))
 
-    // Стиль на случай если floatingStyle ещё не пересчитан (первый кадр).
-    // Прячем content за пределами экрана, чтобы он не мигал в (0,0).
-    const floatingFallbackStyle = {
-        position: 'fixed',
-        left: '-9999px',
-        top: '-9999px',
-        right: 'auto',
-        bottom: 'auto',
-        margin: '0'
-    }
-
     onMounted(() => {
         if (!popupRef.value) return;
 
@@ -314,6 +213,8 @@
             if (!hasOpenClass && popup.value.state.isOpen) {
                 popup.value.state.isOpen = false;
                 popup.value.state.isTop = false;
+                popup.value._teardownScroll?.();
+                popup.value._clearStyles?.();
                 document.removeEventListener('mousedown', popup.value.closeOptions);
                 emit('close', true)
             }
@@ -325,7 +226,7 @@
     onBeforeUnmount(() => {
         if (classObserver.value) classObserver.value.disconnect();
         document.removeEventListener('mousedown', popup.value.closeOptions);
-        popup.value._teardownFloatingScroll?.();
+        popup.value._teardownScroll?.();
     })
 
     defineExpose({ popup });
