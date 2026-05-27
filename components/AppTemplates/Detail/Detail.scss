@@ -54,7 +54,9 @@
             margin: 0px;
             max-height: none;
 
-            .show-more {
+            // Скрываем только верхний show-more (рядом с заголовком таблицы),
+            // не задевая action-попапы в строках.
+            .section-table__top .show-more {
                 display: none;
             }
         }

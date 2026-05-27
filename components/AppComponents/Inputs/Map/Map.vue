@@ -1,30 +1,28 @@
 <template>
     <div class="form__item form__item_map map">
-        <template v-if="props.options.showSelect || props.options.showSelect == undefined">
-            <AppSelect 
-                v-if="props.options.edit"
-                :parentContainer="props.parentContainer"
-                :isPreventBottom="props.isPreventBottom"
-                :options="{
-                    ...props.options,
-                    isSaveSearch: true,
-                    searchable: true
-                }"
-                v-model="setModelValue"
-            />
-    
-            <AppBlank 
-                v-else
-                :item="{
-                    title: props.options.title,
-                    text: props.modelValue ? props.modelValue?.text ?? null : null
-                }"
-                :options="{
-                    isLink: false,
-                    isCheckEmpty: true
-                }"
-            />
-        </template>
+        <AppSelect
+            v-if="showSelectVisible && props.options.edit"
+            :parentContainer="props.parentContainer"
+            :isPreventBottom="props.isPreventBottom"
+            :options="{
+                ...props.options,
+                isSaveSearch: true,
+                searchable: true
+            }"
+            v-model="setModelValue"
+        />
+
+        <AppBlank
+            v-else-if="showSelectVisible"
+            :item="{
+                title: props.options.title,
+                text: props.modelValue ? props.modelValue?.text ?? null : null
+            }"
+            :options="{
+                isLink: false,
+                isCheckEmpty: true
+            }"
+        />
 
         <AppButton 
             v-show="props.modelValue && props.modelValue.text" 
@@ -111,6 +109,10 @@
             emit('update:modelValue', val)
         }
     })
+
+    // showSelect управляет верхним полем (Select / Blank). По умолчанию показываем,
+    // если showSelect не передан явно как false.
+    const showSelectVisible = computed(() => props.options.showSelect !== false)
 
     const copyText = (value, buttonRef) => {
         buttonRef.classList.add('button_copy_active')

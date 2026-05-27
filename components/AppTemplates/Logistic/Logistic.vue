@@ -63,18 +63,15 @@
                             isTrash: false,
                             isHaveTopHeader: true,
                             isHaveFooter: false,
-                            group: 'logistic_tasks',
                             isDisablePull: true,
-                            isDisablePut: false,
+                            isDisablePut: true,
                             isDisableSort: true,
-                            onMove: onRoutesTableMove,
                             updatingCount: logistic.routes.updatingCount
                         }"
                         @saveTable="data => logistic.updateRoute(data)"
                         @openModal="item => emit('openModal', item)"
                         @choseRow="data => logistic.choseRoute(data)"
                         @initCreateRoute="logistic.initCreateRoute()"
-                        @addRow="row => onTaskDroppedToRouteRow(row)"
                     />
 
                     <div class="logistic__section" v-else-if="section.key == 'tasks'">
@@ -210,31 +207,34 @@
     });
 
     // ── Drag&drop задачи на строку маршрута в таблице Маршруты ──
-    // vuedraggable не различает "дроп на конкретную строку". Поэтому пока пользователь
-    // тянет задачу над таблицей маршрутов, через move-колбэк подсматриваем, над каким
-    // именно маршрутом сейчас курсор, и подсвечиваем его. На дропе берём этот id —
-    // настоящий API-вызов делается в onTaskDroppedToRouteRow.
+    // vuedraggable не различает "дроп на конкретную строку", а также если разрешить
+    // ему принимать дроп в таблицу маршрутов, задача на секунду появляется как
+    // отдельная строка. Поэтому таблица Маршруты put: false, а само наведение и
+    // дроп отслеживаем глобально по mousemove / mouseup, используя
+    // elementFromPoint и data-id, который Body.vue ставит на строки.
     const dropTargetRouteId = ref(null);
+    let draggedTaskId = null;
+    let dragSourceTable = null; // 'unassigned' | 'route'
 
-    const onRoutesTableMove = (evt) => {
-        // evt.related — DOM-узел строки, над которой курсор внутри таблицы Маршруты.
-        // Body.vue ставит на каждую строку data-id с id маршрута — берём оттуда.
-        const related = evt.related;
-        if (related && related.classList?.contains('table__row')) {
-            let routeId = related.getAttribute?.('data-id');
-            if (!routeId) {
-                const idCell = related.querySelector('.table__cell[data-column-key="id"] .table__text');
-                if (idCell) routeId = idCell.textContent.trim();
-            }
-            routeId = routeId ? Number(routeId) : null;
-            if (routeId) {
-                dropTargetRouteId.value = routeId;
-                document.querySelectorAll('.logistic__drop-target')
-                    .forEach(el => el.classList.remove('logistic__drop-target'));
-                related.classList.add('logistic__drop-target');
+    const findRoutesSection = () => {
+        const sections = document.querySelectorAll('.logistic .section-table');
+        for (const sec of sections) {
+            const title = sec.querySelector('.section-table__top-title');
+            if (title && title.textContent && title.textContent.trim().startsWith('Маршруты')) {
+                return sec;
             }
         }
-        return true;
+        return null;
+    };
+
+    const findTaskSourceSection = (el) => {
+        const sec = el?.closest?.('.logistic .section-table');
+        if (!sec) return null;
+        const title = sec.querySelector('.section-table__top-title');
+        const text = title?.textContent?.trim() || '';
+        if (text.startsWith('Задачи логистики')) return 'unassigned';
+        if (text.startsWith('Задачи в машине')) return 'route';
+        return null;
     };
 
     const clearDropTargetHighlight = () => {
@@ -242,20 +242,95 @@
             .forEach(el => el.classList.remove('logistic__drop-target'));
     };
 
-    const onTaskDroppedToRouteRow = (data) => {
-        // data: { list, row } — row это перетащенная задача
-        const taskId = data?.row?.id;
-        const routeId = dropTargetRouteId.value;
-        clearDropTargetHighlight();
-        dropTargetRouteId.value = null;
-        if (!taskId || !routeId) {
-            // Не удалось определить целевой маршрут — просто перерисовываем,
-            // чтобы откатить визуальное добавление задачи в таблицу маршрутов.
-            logistic.value.routes.updatingCount++;
+    const onGlobalMouseDown = (e) => {
+        // Запоминаем задачу, по которой нажали — если начнётся drag, она тянется.
+        const row = e.target?.closest?.('.table__row');
+        if (!row) return;
+        if (row.closest('.table__header')) return;
+        const source = findTaskSourceSection(row);
+        if (!source) return;
+        const id = row.getAttribute('data-id');
+        if (!id) return;
+        draggedTaskId = Number(id);
+        dragSourceTable = source;
+    };
+
+    const onGlobalMouseMove = (e) => {
+        // Активны только когда vuedraggable пометил body как «идёт перетаскивание».
+        if (!document.body.classList.contains('body_unselected')) return;
+        if (!draggedTaskId) return;
+
+        const routesSection = findRoutesSection();
+        if (!routesSection) return;
+
+        // elementsFromPoint, потому что fallback-клон vuedraggable, ползущий за
+        // курсором, может «прикрыть» строку маршрута и сбить elementFromPoint.
+        const stack = (typeof document.elementsFromPoint === 'function')
+            ? document.elementsFromPoint(e.clientX, e.clientY)
+            : [document.elementFromPoint(e.clientX, e.clientY)];
+        let row = null;
+        for (const el of stack) {
+            if (!el) continue;
+            if (el.classList?.contains('draggable-fallback')) continue;
+            if (el.closest?.('.draggable-fallback')) continue;
+            const candidate = el.closest?.('.table__row');
+            if (candidate && routesSection.contains(candidate) && !candidate.closest('.table__header')) {
+                row = candidate;
+                break;
+            }
+        }
+
+        if (!row) {
+            if (dropTargetRouteId.value !== null) {
+                dropTargetRouteId.value = null;
+                clearDropTargetHighlight();
+            }
             return;
         }
+
+        let routeId = row.getAttribute('data-id');
+        if (!routeId) {
+            const idCell = row.querySelector('.table__cell[data-column-key="id"] .table__text');
+            if (idCell) routeId = idCell.textContent.trim();
+        }
+        routeId = routeId ? Number(routeId) : null;
+        if (!routeId) return;
+
+        if (dropTargetRouteId.value !== routeId) {
+            dropTargetRouteId.value = routeId;
+            clearDropTargetHighlight();
+            row.classList.add('logistic__drop-target');
+        }
+    };
+
+    const onGlobalMouseUp = () => {
+        const taskId = draggedTaskId;
+        const routeId = dropTargetRouteId.value;
+        const source = dragSourceTable;
+        draggedTaskId = null;
+        dragSourceTable = null;
+        dropTargetRouteId.value = null;
+        clearDropTargetHighlight();
+        if (!taskId || !routeId) return;
+        // Если задача уже в маршруте, в который её перетащили — assignTaskToRoute сам
+        // обработает no-op. Для маршрута-источника совпадение маршрутов невозможно,
+        // потому что в Задачах в машине route_id == текущий машинный маршрут, а
+        // assignTaskToRoute сам обновит обе таблицы.
         logistic.value.assignTaskToRoute(taskId, routeId);
     };
+
+    onMounted(() => {
+        document.addEventListener('mousedown', onGlobalMouseDown, true);
+        document.addEventListener('mousemove', onGlobalMouseMove);
+        document.addEventListener('mouseup', onGlobalMouseUp);
+    });
+
+    onBeforeUnmount(() => {
+        document.removeEventListener('mousedown', onGlobalMouseDown, true);
+        document.removeEventListener('mousemove', onGlobalMouseMove);
+        document.removeEventListener('mouseup', onGlobalMouseUp);
+        clearDropTargetHighlight();
+    });
 
     // ── Map ↔ Table interaction ──
 

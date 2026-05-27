@@ -3,7 +3,15 @@
         <div class="popup__header" @click="event => popup.toggleOptions(event)">
             <slot name="header"></slot>
         </div>
-        <div class="popup__content" :class="{ 'popup__content_top': popup.state.isTop }" ref="contentRef">
+        <div
+            class="popup__content"
+            :class="{
+                'popup__content_top': popup.state.isTop,
+                'popup__content_floating': popup.state.useFloating
+            }"
+            :style="popup.state.useFloating ? popup.state.floatingStyle : null"
+            ref="contentRef"
+        >
             <slot name="content"></slot>
         </div>
     </div>
@@ -27,11 +35,14 @@
 
             this.state = reactive({
                 isOpen: false,
-                isTop: false
+                isTop: false,
+                useFloating: false,
+                floatingStyle: null
             });
 
             // Закрытие опций
             this.closeOptions = this.closeOptions.bind(this);
+            this._floatingScrollHandler = null;
         }
 
         closeOptions(event) {          
@@ -45,9 +56,17 @@
                 }
             }
 
-            if (!this.popupRef.value.contains(event.target)) {
+            // В режиме floating контент рендерится через position: fixed и DOM-узел
+            // лежит вне popupRef-поддерева для целей hit-test'а? Нет, всё ещё внутри
+            // popupRef, но визуально выше. Проверяем по contentRef отдельно.
+            const insidePopup = this.popupRef.value.contains(event.target);
+            const insideContent = this.contentRef?.value?.contains?.(event.target);
+            if (!insidePopup && !insideContent) {
                 this.state.isOpen = false;
                 this.state.isTop = false
+                this.state.useFloating = false
+                this.state.floatingStyle = null
+                this._teardownFloatingScroll()
                 document.removeEventListener('mousedown', this.closeOptions);
                 emit('close', true)
             }
@@ -67,6 +86,9 @@
                 nextTick(() => this.checkPosition());
             } else {
                 this.state.isTop = false
+                this.state.useFloating = false
+                this.state.floatingStyle = null
+                this._teardownFloatingScroll()
                 document.removeEventListener('mousedown', this.closeOptions);
                 emit('close', true)
             }
@@ -92,6 +114,96 @@
             }
             const contentRect = contentRef.value.getBoundingClientRect();
             this.state.isTop = props.isPreventBottom ? false : contentRect.bottom > bottomBound;
+
+            // Если popup живёт внутри прокручиваемого/обрезающего родителя
+            // (например, виртуализированная таблица), переключаем content в режим
+            // position: fixed и сами позиционируем поверх — иначе попап обрезается.
+            this.updateFloatingPosition(bottomBound);
+        }
+
+        // Включает «плавающее» позиционирование, когда обычный absolute обрезается
+        // ближайшим overflow-scroll-родителем, и пересчитывает координаты.
+        updateFloatingPosition(bottomBound) {
+            if (!this.popupRef.value || !this.contentRef.value) return;
+            if (typeof window === 'undefined') return;
+
+            const needFloating = this._hasClippingAncestor(this.popupRef.value);
+            this.state.useFloating = needFloating;
+
+            if (!needFloating) {
+                this.state.floatingStyle = null;
+                this._teardownFloatingScroll();
+                return;
+            }
+
+            this._recalcFloatingStyle(bottomBound);
+            this._setupFloatingScroll();
+        }
+
+        _recalcFloatingStyle(bottomBound) {
+            const headerEl = this.popupRef.value?.querySelector('.popup__header');
+            const contentEl = this.contentRef.value;
+            if (!headerEl || !contentEl) return;
+            const anchorRect = headerEl.getBoundingClientRect();
+            const contentRect = contentEl.getBoundingClientRect();
+            const viewportRight = window.innerWidth;
+            const viewportBottom = bottomBound ?? window.innerHeight;
+
+            const width = contentRect.width || 200;
+            const height = contentRect.height || 0;
+
+            let left = anchorRect.left;
+            if (left + width > viewportRight - 5) {
+                left = Math.max(5, anchorRect.right - width);
+            }
+
+            const openBelow = !this.state.isTop && (anchorRect.bottom + height + 5 <= viewportBottom);
+            const top = openBelow
+                ? anchorRect.bottom + 5
+                : Math.max(5, anchorRect.top - height - 5);
+
+            this.state.floatingStyle = {
+                position: 'fixed',
+                left: `${Math.max(5, left)}px`,
+                top: `${top}px`,
+                right: 'auto',
+                bottom: 'auto',
+                margin: '0'
+            };
+        }
+
+        _hasClippingAncestor(el) {
+            let node = el?.parentElement;
+            while (node && node !== document.body) {
+                const style = window.getComputedStyle(node);
+                const ox = style.overflowX;
+                const oy = style.overflowY;
+                if (
+                    ox === 'auto' || ox === 'scroll' || ox === 'hidden' ||
+                    oy === 'auto' || oy === 'scroll' || oy === 'hidden'
+                ) {
+                    return true;
+                }
+                node = node.parentElement;
+            }
+            return false;
+        }
+
+        _setupFloatingScroll() {
+            if (this._floatingScrollHandler) return;
+            this._floatingScrollHandler = () => {
+                if (!this.state.isOpen) return;
+                this._recalcFloatingStyle();
+            };
+            window.addEventListener('scroll', this._floatingScrollHandler, true);
+            window.addEventListener('resize', this._floatingScrollHandler);
+        }
+
+        _teardownFloatingScroll() {
+            if (!this._floatingScrollHandler) return;
+            window.removeEventListener('scroll', this._floatingScrollHandler, true);
+            window.removeEventListener('resize', this._floatingScrollHandler);
+            this._floatingScrollHandler = null;
         }
     }
 
@@ -133,6 +245,7 @@
     onBeforeUnmount(() => {
         if (classObserver.value) classObserver.value.disconnect();
         document.removeEventListener('mousedown', popup.value.closeOptions);
+        popup.value._teardownFloatingScroll?.();
     })
 
     defineExpose({ popup });

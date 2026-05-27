@@ -36,6 +36,12 @@
     &.popup__content_top {
         bottom: calc(100% + 5px);
     }
+
+    // Когда попап «уплыл» из-за overflow-родителя, рендерим через fixed +
+    // координаты из JS. inline-стили перекрывают абсолютное позиционирование.
+    &.popup__content_floating {
+        z-index: 10000;
+    }
 }
 
 .popup__option {

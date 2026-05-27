@@ -45,10 +45,13 @@
 
     const calculateContent = computed({
         get() {
+            // product_weight — это вес единицы товара; общий вес строки = count × weight.
+            // Раньше Общий вес не реагировал на изменение количества из-за того, что
+            // суммировался без умножения на product_count.
             return {
-                count: table.value.body.reduce((count, row) => count + Number(row.product_count), 0),
-                weight: table.value.body.reduce((weight, row) => weight + Number(row.product_weight), 0),
-                sum: table.value.body.reduce((sum, row) => sum + (Number(row.product_count) * Number(row.product_price)), 0)
+                count: table.value.body.reduce((count, row) => count + Number(row.product_count || 0), 0),
+                weight: table.value.body.reduce((weight, row) => weight + (Number(row.product_count || 0) * Number(row.product_weight || 0)), 0),
+                sum: table.value.body.reduce((sum, row) => sum + (Number(row.product_count || 0) * Number(row.product_price || 0)), 0)
             }
         }
     })
