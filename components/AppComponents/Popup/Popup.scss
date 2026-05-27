@@ -18,10 +18,11 @@
 
 .popup__content {
     border-radius: 5px;
-    z-index: 10000;
+    bottom: auto;
+    z-index: 1000;
     display: none;
-    margin-top: 0;
-    position: fixed;
+    margin-top: 5px;
+    position: absolute;
     flex-direction: column;
     width: 100%;
     max-width: 200px;
@@ -32,11 +33,10 @@
     overflow: auto;
     @include mixins.scrollBar();
 
-    // Совместимость со старыми селекторами — фактически top считается в JS
-    // и пишется через inline-style; этот класс ничего особого не делает.
-    &.popup__content_top,
-    &.popup__content_floating {
-        // empty by design
+    // Открытие вверх — переключается JS через класс popup__content_top.
+    &.popup__content_top {
+        bottom: calc(100% + 5px);
+        top: auto;
     }
 }
 
