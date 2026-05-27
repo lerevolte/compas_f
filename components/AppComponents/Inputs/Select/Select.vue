@@ -50,15 +50,15 @@
                     Не выбрано
                 </div>
 
-                <div 
-                    class="select__option" 
-                    v-for="option in select.state.visibleList" 
+                <div
+                    class="select__option"
+                    v-for="option in select.state.visibleList"
                     :class="{ 'select__option_active': props.modelValue && (!Array.isArray(props.modelValue) ? props.modelValue == option.value : props.modelValue.length > 0 && props.modelValue.includes(option.value))}"
-                    :value="option.value" 
+                    :value="option.value"
                     @click="select.changeValue(option)"
                 >
                     <span class="value__text">
-                        {{ option.label.text ? option.label.text : option.label }} 
+                        {{ (option.label && typeof option.label === 'object') ? (option.label.text ?? '') : (option.label ?? '') }}
                     </span>
                 </div>
             </div>
@@ -256,15 +256,20 @@
         }
         
         setOptions() {
-            console.log('setOptions called', new Error().stack.split('\n')[2]);
             if (props.options.type == 'address') {
-                console.log('setOptions address, modelValue:', JSON.stringify(props.modelValue));
                 this.state.list = props.options.list ?? []
                 this.state.visibleList = props.options.list ?? []
-                
+
                 if (props.modelValue && Array.isArray(this.state.list) && !this.state.list.find(p => isEqual(p.value, props.modelValue))) {
-                    const option = JSON.parse(JSON.stringify(props.modelValue))
-                    this.state.list.push({label: option.text, value: option})
+                    // Legacy: значение могло прийти строкой (например, "Москва" для
+                    // Главного города). Приводим к {text, coords}, чтобы дальше
+                    // работала единая схема и не падал option.label.text.
+                    let option = JSON.parse(JSON.stringify(props.modelValue))
+                    if (typeof option === 'string') {
+                        option = { text: option, coords: null }
+                    }
+                    const label = (option && typeof option === 'object') ? (option.text ?? '') : String(option ?? '')
+                    this.state.list.push({label, value: option})
                 }
             } else {
                 this.state.list = props.options.list ?? []

@@ -3,17 +3,20 @@
         <div class="popup__header" @click="event => popup.toggleOptions(event)">
             <slot name="header"></slot>
         </div>
-        <div
-            class="popup__content"
-            :class="{
-                'popup__content_top': popup.state.isTop,
-                'popup__content_floating': popup.state.useFloating
-            }"
-            :style="popup.state.useFloating ? popup.state.floatingStyle : null"
-            ref="contentRef"
-        >
-            <slot name="content"></slot>
-        </div>
+        <Teleport to="body" :disabled="!popup.state.useFloating">
+            <div
+                class="popup__content"
+                :class="{
+                    'popup__content_top': popup.state.isTop,
+                    'popup__content_floating': popup.state.useFloating,
+                    'popup_open': popup.state.useFloating && popup.state.isOpen
+                }"
+                :style="popup.state.useFloating ? popup.state.floatingStyle : null"
+                ref="contentRef"
+            >
+                <slot name="content"></slot>
+            </div>
+        </Teleport>
     </div>
 </template>
 
@@ -157,10 +160,14 @@
                 left = Math.max(5, anchorRect.right - width);
             }
 
-            const openBelow = !this.state.isTop && (anchorRect.bottom + height + 5 <= viewportBottom);
+            // В floating-режиме решение «вниз/вверх» принимаем по реальному
+            // положению якоря в viewport, а не по устаревшему isTop из абсолютного
+            // позиционирования (тот меряет высоту от старого места).
+            const openBelow = anchorRect.bottom + height + 5 <= viewportBottom;
             const top = openBelow
                 ? anchorRect.bottom + 5
                 : Math.max(5, anchorRect.top - height - 5);
+            this.state.isTop = !openBelow;
 
             this.state.floatingStyle = {
                 position: 'fixed',

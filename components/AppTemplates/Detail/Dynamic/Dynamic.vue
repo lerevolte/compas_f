@@ -70,7 +70,17 @@
             />
         </div>
 
-        <AppVirtualTable 
+        <RouteTasksView
+            v-else-if="props.slug === 'routes' && (
+                props.tabs.active?.slug === 'logistic_tasks'
+                || props.tabs.active?.tab === 'logistic_tasks'
+                || props.tabs.active?.tab === 'task_id'
+                || (typeof props.tabs.active?.title === 'string' && props.tabs.active.title.trim() === 'Маршрут')
+            )"
+            :routeId="props.id"
+        />
+
+        <AppVirtualTable
             v-else
             :pageId="props.id"
             :key="props.tabs.active?.tab"
@@ -108,9 +118,10 @@
     import routes from '@/helpers/routes.js'
     import IconLoader from '@AppIcons/Loader.vue'
     import { History, Columns } from '@/helpers/classes.js'
-    import AppHistory from '@AppComponents/History/History.vue'; 
+    import AppHistory from '@AppComponents/History/History.vue';
     import ColumnFields from '@AppComponents/ColumnFields/ColumnFields.vue';
     import AppVirtualTable from '@AppComponents/VirtualTable/VirtualTable.vue';
+    import RouteTasksView from '@AppTemplates/Detail/RouteTasksView/RouteTasksView.vue';
 
     const emit = defineEmits([
         'action',

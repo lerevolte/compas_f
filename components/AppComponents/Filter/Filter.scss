@@ -15,15 +15,6 @@
     .filter__header {
         width: 100%;
         position: relative;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-
-        // Поле ввода занимает оставшееся пространство справа от чипсов фильтров.
-        .form__item_input {
-            flex: 1 1 100px;
-            min-width: 100px;
-        }
 
         .icon_search {
             position: absolute;
@@ -31,9 +22,15 @@
             right: 15px;
         }
 
-        // Раньше при наличии чипсов фильтров инпут «прятался» через font-size:0,
-        // и пользователь не мог ввести поисковый запрос. Теперь чипсы и инпут
-        // лежат во flex-ряду — каретка остаётся доступной справа от чипсов.
+        // Когда применены фильтры, визуально чипсы лежат поверх инпута слева.
+        // Раньше инпут «прятался» через font-size:0 и набрать строку поиска было
+        // нельзя. Теперь оставляем шрифт нормальным, а каретку сдвигаем
+        // padding-left'ом, равным ширине чипсов (см. --filter-tabs-width).
+        &.filter__header_fill {
+            input {
+                padding-left: calc(var(--filter-tabs-width, 0px) + 14px);
+            }
+        }
 
         @media (max-width: 1450px) {
             width: 100%;
@@ -147,14 +144,18 @@
     }
 
     .filter__tabs {
+        top: 0px;
+        left: 2px;
+        width: auto;
+        height: 100%;
         gap: 5px;
         cursor: pointer;
         display: flex;
         overflow: hidden;
         max-width: calc(100% - 110px);
-        flex: 0 1 auto;
-        order: -1;
+        position: absolute;
         align-items: center;
+        pointer-events: auto;
         @include mixins.userSelect(none);
     }
 

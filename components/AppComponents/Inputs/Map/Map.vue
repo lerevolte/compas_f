@@ -16,7 +16,7 @@
             v-else-if="showSelectVisible"
             :item="{
                 title: props.options.title,
-                text: props.modelValue ? props.modelValue?.text ?? null : null
+                text: blankText
             }"
             :options="{
                 isLink: false,
@@ -113,6 +113,15 @@
     // showSelect управляет верхним полем (Select / Blank). По умолчанию показываем,
     // если showSelect не передан явно как false.
     const showSelectVisible = computed(() => props.options.showSelect !== false)
+
+    // modelValue для address-полей бывает в двух форматах: {text, coords} или просто
+    // строка (legacy main_city). AppBlank ожидает строку — нормализуем здесь.
+    const blankText = computed(() => {
+        const v = props.modelValue
+        if (!v) return null
+        if (typeof v === 'string') return v
+        return v.text ?? null
+    })
 
     const copyText = (value, buttonRef) => {
         buttonRef.classList.add('button_copy_active')

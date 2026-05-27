@@ -523,6 +523,27 @@
     width: 12px;
   }
 }
+
+// Колонка «Действие» — иконка действий должна быть в центре ячейки.
+// Иначе при узких ячейках (например, order_products) кнопка прижата к левому краю.
+.table__cell[data-column-key="actions"] {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+
+  .show-more {
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+  }
+
+  .show-more .popup__header {
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
 .page main {
   min-height: 100vh;
 }

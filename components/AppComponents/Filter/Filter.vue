@@ -282,8 +282,20 @@
     const common = new Common()
     const classObserver = ref(null)
     const resizeObserver = ref(null)
+    const tabsWidthObserver = ref(null)
     let checkTabsWidthTimeout = null
     let isCheckingTabs = false
+
+    // Сдвигаем каретку инпута за чипсами фильтров: ставим на .filter__header
+    // CSS-переменную --filter-tabs-width, равную фактической ширине .filter__tabs.
+    // Иначе пользователь не может ввести поисковый запрос, когда фильтры применены.
+    const updateTabsWidthVar = () => {
+        if (typeof document === 'undefined') return
+        const headers = document?.querySelectorAll?.('.filter > .filter__header') || []
+        const tabsEls = filterTabsRef.value
+        const w = tabsEls ? Math.round(tabsEls.getBoundingClientRect().width) : 0
+        headers.forEach(h => h.style.setProperty('--filter-tabs-width', `${w}px`))
+    }
 
     const props = defineProps({
         filter: {
@@ -687,6 +699,12 @@
     const initObservers = () => {
         if (!filterTabsRef.value || !filterRef.value) return;
 
+        // Следим за реальной шириной чипсов и прокидываем её через CSS-переменную.
+        if (tabsWidthObserver.value) tabsWidthObserver.value.disconnect()
+        tabsWidthObserver.value = new ResizeObserver(() => updateTabsWidthVar())
+        tabsWidthObserver.value.observe(filterTabsRef.value)
+        updateTabsWidthVar()
+
         // Отслеживание изменения длины плашек
         const checkTabsWidth = () => {
             if (isCheckingTabs) return;
@@ -841,6 +859,7 @@
         }
         if (classObserver.value) classObserver.value.disconnect();
         if (resizeObserver.value) resizeObserver.value.disconnect();
+        if (tabsWidthObserver.value) tabsWidthObserver.value.disconnect();
         document.removeEventListener('click', filter.closeContent);
     });
 
