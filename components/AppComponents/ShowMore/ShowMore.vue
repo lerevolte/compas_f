@@ -1,5 +1,11 @@
 <template>
-    <AppPopup ref="popupRef" class="show-more settings" :parentContainer="props.parentContainer" :isPreventBottom="props.isPreventBottom">
+    <AppPopup
+        ref="popupRef"
+        class="show-more settings"
+        :parentContainer="props.parentContainer"
+        :isPreventBottom="props.isPreventBottom"
+        :forceFloating="true"
+    >
         <template #header>
             <IconShowMore />
         </template>

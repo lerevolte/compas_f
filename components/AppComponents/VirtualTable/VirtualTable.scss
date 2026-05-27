@@ -544,6 +544,19 @@
     justify-content: center;
   }
 }
+
+// Колонка с иконкой drag — figure внутри статически центрируем по вертикали,
+// иначе SVG прижат к верху и индекс «1» болтается рядом без выравнивания.
+.table__cell[data-column-key="iconDrag"] {
+  justify-content: center;
+  align-items: center;
+
+  .table__icon-drag {
+    display: inline-flex;
+    align-items: center;
+    margin: 0;
+  }
+}
 .page main {
   min-height: 100vh;
 }

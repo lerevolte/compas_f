@@ -130,7 +130,7 @@
             if (!this.popupRef.value || !this.contentRef.value) return;
             if (typeof window === 'undefined') return;
 
-            const needFloating = this._hasClippingAncestor(this.popupRef.value);
+            const needFloating = !!props.forceFloating || this._hasClippingAncestor(this.popupRef.value);
             this.state.useFloating = needFloating;
 
             if (!needFloating) {
@@ -219,6 +219,14 @@
             default: null
         },
         isPreventBottom: {
+            default: false,
+            type: Boolean
+        },
+        // Принудительно включает floating-режим (position: fixed + Teleport),
+        // даже если эвристика поиска clip-родителя не сработала. Нужно для
+        // action-меню в строках таблиц, где table имеет contain:layout и обычный
+        // position:fixed клипается.
+        forceFloating: {
             default: false,
             type: Boolean
         },

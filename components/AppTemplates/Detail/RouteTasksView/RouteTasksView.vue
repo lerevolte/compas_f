@@ -213,6 +213,26 @@
         const raw = task[field.key]
         if (raw === null || raw === undefined || raw === '') return '—'
 
+        // products хранится JSON-строкой и не декодируется на бэке (поле явно
+        // исключено). Рендерим как "Название × количество" через запятую.
+        if (field.key === 'products') {
+            let products = raw
+            if (typeof products === 'string') {
+                try { products = JSON.parse(products) } catch (e) { return raw }
+            }
+            if (!Array.isArray(products) || products.length === 0) return '—'
+            return products.map(p => {
+                let name = p?.name
+                if (typeof name === 'object' && name !== null) {
+                    name = name.value ?? name.text ?? ''
+                }
+                if (Array.isArray(name)) name = name[0] ?? ''
+                name = String(name || 'Товар').trim()
+                const count = p?.count ?? 1
+                return `${name} × ${count}`
+            }).join('; ')
+        }
+
         if (field.type === 'address') {
             if (typeof raw === 'string') {
                 try {
@@ -257,8 +277,35 @@
             return labels.filter(x => x !== null && x !== undefined && x !== '').join(', ') || '—'
         }
 
+        // Если значение оказалось JSON-строкой массива/объекта — попытаемся раскрыть.
+        if (typeof raw === 'string') {
+            const trimmed = raw.trim()
+            if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+                try {
+                    const parsed = JSON.parse(trimmed)
+                    if (Array.isArray(parsed)) {
+                        return parsed.map(v => (typeof v === 'object'
+                            ? (v?.name ?? v?.label ?? v?.text ?? v?.value ?? '')
+                            : v)
+                        ).filter(Boolean).join(', ') || '—'
+                    }
+                    if (parsed && typeof parsed === 'object') {
+                        return parsed.value ?? parsed.text ?? parsed.name ?? JSON.stringify(parsed)
+                    }
+                } catch (e) { /* not JSON */ }
+            }
+            return raw
+        }
+
+        if (Array.isArray(raw)) {
+            return raw.map(v => (typeof v === 'object'
+                ? (v?.name ?? v?.label ?? v?.text ?? v?.value ?? '')
+                : v)
+            ).filter(Boolean).join(', ') || '—'
+        }
+
         if (typeof raw === 'object') {
-            return raw?.value ?? raw?.text ?? JSON.stringify(raw)
+            return raw?.value ?? raw?.text ?? raw?.name ?? JSON.stringify(raw)
         }
 
         return String(raw)
