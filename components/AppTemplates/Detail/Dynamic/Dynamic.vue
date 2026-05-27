@@ -142,13 +142,14 @@
     // не имеют автогенерируемого relation-поля на стороне Route (связь обратная
     // через task.route_id). Стандартный queryTab из Detail.Tabs.set() в этом
     // случае получается пустой («?is_slug=true») и не возвращает задач.
-    // Подставляем filter[route_id] вручную.
+    // Filter.get сам оборачивает ключи в filter[...], поэтому передаём
+    // имя поля без префикса — иначе получится filter[filter[route_id]]=...
     const tabQuery = computed(() => {
         const base = props.tabs?.queryTab || {}
         if (props.slug === 'routes' && props.tabs?.active?.slug === 'logistic_tasks') {
             return {
                 ...base,
-                'filter[route_id]': props.id
+                route_id: props.id
             }
         }
         return base

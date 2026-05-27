@@ -5,8 +5,7 @@
         </div>
         <div
             class="popup__content"
-            :class="{ 'popup__content_top': popup.state.isTop, 'popup__content_fixed': popup.state.isOpen }"
-            :style="popup.state.isOpen ? popup.state.fixedStyle : null"
+            :class="{ 'popup__content_top': popup.state.isTop }"
             ref="contentRef"
         >
             <slot name="content"></slot>
@@ -26,18 +25,6 @@
         'close'
     ])
 
-    // Fallback стиль, пока applyPosition не отработал. Прячем за viewport,
-    // чтобы попап не моргнул в (0,0) или у левого края контейнера.
-    const offscreenStyle = {
-        position: 'fixed',
-        left: '-9999px',
-        top: '-9999px',
-        right: 'auto',
-        bottom: 'auto',
-        margin: '0',
-        zIndex: 10000
-    }
-
     class Popup {
         constructor(popupRef, contentRef) {
             this.popupRef = popupRef;
@@ -45,12 +32,12 @@
 
             this.state = reactive({
                 isOpen: false,
-                isTop: false,
-                fixedStyle: offscreenStyle
+                isTop: false
             });
 
             this.closeOptions = this.closeOptions.bind(this);
             this._scrollHandler = null;
+            this._rafId = null;
         }
 
         closeOptions(event) {
@@ -64,13 +51,17 @@
             const insidePopup = this.popupRef.value.contains(event.target);
             const insideContent = this.contentRef?.value?.contains?.(event.target);
             if (!insidePopup && !insideContent) {
-                this.state.isOpen = false;
-                this.state.isTop = false
-                this.state.fixedStyle = offscreenStyle;
-                this._teardownScroll()
-                document.removeEventListener('mousedown', this.closeOptions);
-                emit('close', true)
+                this._close();
             }
+        }
+
+        _close() {
+            this.state.isOpen = false;
+            this.state.isTop = false;
+            this._teardownScroll();
+            this._clearStyles();
+            document.removeEventListener('mousedown', this.closeOptions);
+            emit('close', true);
         }
 
         toggleOptions(event) {
@@ -81,42 +72,46 @@
                 }
             }
 
-            this.state.isOpen = !this.state.isOpen;
             if (this.state.isOpen) {
-                document.addEventListener('mousedown', this.closeOptions);
-                // Сначала пытаемся посчитать в nextTick (Vue уже отрисовал
-                // popup_open и контент видим), но НА ВСЯКИЙ — повторяем
-                // через rAF: иногда первый getBoundingClientRect отдаёт 0.
-                nextTick(() => this.applyPosition());
-                requestAnimationFrame(() => this.applyPosition());
-            } else {
-                this.state.isTop = false
-                this.state.fixedStyle = offscreenStyle;
-                this._teardownScroll()
-                document.removeEventListener('mousedown', this.closeOptions);
-                emit('close', true)
+                this._close();
+                return;
             }
+
+            this.state.isOpen = true;
+            document.addEventListener('mousedown', this.closeOptions);
+            this._scheduleApply();
         }
 
-        // Меряет позицию anchor и контента, вычисляет фиксированные координаты.
-        // Записывает И в reactive state (через :style), И напрямую в DOM —
-        // чтобы не зависеть от того, что именно сработает быстрее.
+        // Несколько попыток рассчитать позицию: nextTick (после Vue render),
+        // двойной rAF (после layout) и финальный setTimeout 50ms на случай
+        // медленных дочерних компонентов.
+        _scheduleApply() {
+            nextTick(() => this.applyPosition());
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => this.applyPosition());
+            });
+            setTimeout(() => this.applyPosition(), 50);
+        }
+
         applyPosition(retry = 0) {
             if (!this.state.isOpen) return;
             const headerEl = this.popupRef.value?.querySelector('.popup__header');
             const contentEl = this.contentRef.value;
             if (!headerEl || !contentEl) {
-                if (retry < 12 && typeof requestAnimationFrame !== 'undefined') {
-                    requestAnimationFrame(() => this.applyPosition(retry + 1));
+                if (retry < 20) {
+                    this._rafId = requestAnimationFrame(() => this.applyPosition(retry + 1));
                 }
                 return;
             }
 
-            // Меряем без мигания.
-            const prevVisibility = contentEl.style.visibility;
+            // Принудительно показываем контент (на случай если CSS .popup_open
+            // .popup__content { display: flex } по какой-то причине не сработал).
+            if (contentEl.style.display !== 'flex') {
+                contentEl.style.display = 'flex';
+            }
+            // Сброс позиции, чтобы getBoundingClientRect отдал реальные размеры.
+            const prevVis = contentEl.style.visibility;
             contentEl.style.visibility = 'hidden';
-            // Сбрасываем offscreen, чтобы getBoundingClientRect показал реальные
-            // размеры (max-width 200px из css сохраняется).
             contentEl.style.position = 'fixed';
             contentEl.style.left = '0px';
             contentEl.style.top = '0px';
@@ -128,10 +123,9 @@
             const anchorRect = headerEl.getBoundingClientRect();
             const contentRect = contentEl.getBoundingClientRect();
             if (!contentRect.width || !contentRect.height) {
-                // Размеры ещё не доехали — пробуем ещё раз.
-                contentEl.style.visibility = prevVisibility || '';
-                if (retry < 12 && typeof requestAnimationFrame !== 'undefined') {
-                    requestAnimationFrame(() => this.applyPosition(retry + 1));
+                contentEl.style.visibility = prevVis || '';
+                if (retry < 20) {
+                    this._rafId = requestAnimationFrame(() => this.applyPosition(retry + 1));
                 }
                 return;
             }
@@ -150,19 +144,19 @@
                 }
             }
             const viewportRight = window.innerWidth;
-            const width = contentRect.width || 200;
-            const height = contentRect.height || 0;
+            const width = contentRect.width;
+            const height = contentRect.height;
 
-            // Горизонталь: по умолчанию открываем ВПРАВО от anchor.left.
-            // Если не помещается — анкорим к anchor.right (открываем влево).
-            // На очень узких viewport — прижимаем к левому краю.
+            // Горизонталь: по умолчанию вправо от anchor.left.
+            // Если не помещается — влево от anchor.right.
+            // Clamp в окно [5, viewportRight - width - 5].
             let left = anchorRect.left;
             if (left + width > viewportRight - 5) {
                 left = anchorRect.right - width;
             }
             left = Math.max(5, Math.min(left, viewportRight - width - 5));
 
-            // Вертикаль: по умолчанию вниз. Если не хватает места — вверх.
+            // Вертикаль: предпочтительно вниз, иначе вверх (если хватает места).
             const openBelow = !props.isPreventBottom
                 && (anchorRect.bottom + height + 5 <= bottomBound);
             const top = openBelow
@@ -170,23 +164,29 @@
                 : Math.max(5, anchorRect.top - height - 5);
             this.state.isTop = !openBelow;
 
-            // Пишем И в state (reactive путь), И в DOM (на случай если style-bind
-            // не успеет применить inline-style до отрисовки).
-            const style = {
-                position: 'fixed',
-                left: `${left}px`,
-                top: `${top}px`,
-                right: 'auto',
-                bottom: 'auto',
-                margin: '0',
-                zIndex: 10000
-            };
-            this.state.fixedStyle = style;
             contentEl.style.left = `${left}px`;
             contentEl.style.top = `${top}px`;
-            contentEl.style.visibility = prevVisibility || '';
+            contentEl.style.visibility = prevVis || '';
 
             this._setupScroll();
+        }
+
+        _clearStyles() {
+            const contentEl = this.contentRef?.value;
+            if (!contentEl) return;
+            contentEl.style.position = '';
+            contentEl.style.left = '';
+            contentEl.style.top = '';
+            contentEl.style.right = '';
+            contentEl.style.bottom = '';
+            contentEl.style.margin = '';
+            contentEl.style.zIndex = '';
+            contentEl.style.display = '';
+            contentEl.style.visibility = '';
+            if (this._rafId) {
+                cancelAnimationFrame(this._rafId);
+                this._rafId = null;
+            }
         }
 
         _setupScroll() {
@@ -215,9 +215,6 @@
             default: false,
             type: Boolean
         },
-        // Совместимость со старым API (больше не нужен — всегда работаем
-        // через position:fixed), но пусть остаётся, чтобы не ломать места,
-        // которые этот проп всё ещё передают.
         forceFloating: {
             default: false,
             type: Boolean
@@ -230,13 +227,10 @@
 
     const popup = ref(new Popup(popupRef, contentRef))
 
-    // Если isOpen меняется не через toggleOptions (например, из родителя через
-    // popupRef.classList) — всё равно гарантируем пересчёт позиции.
+    // Подстраховка: если кто-то сменит isOpen в обход toggleOptions
+    // (например, через popupRef.classList.add('popup_open')).
     watch(() => popup.value.state.isOpen, (next) => {
-        if (next) {
-            nextTick(() => popup.value.applyPosition());
-            requestAnimationFrame(() => popup.value.applyPosition());
-        }
+        if (next) popup.value._scheduleApply();
     })
 
     onMounted(() => {
@@ -247,13 +241,13 @@
             if (!rootEl) return;
 
             const hasOpenClass = rootEl.classList.contains('popup_open');
-            if (!hasOpenClass && popup.value.state.isOpen) {
-                popup.value.state.isOpen = false;
-                popup.value.state.isTop = false;
-                popup.value.state.fixedStyle = offscreenStyle;
-                popup.value._teardownScroll?.();
-                document.removeEventListener('mousedown', popup.value.closeOptions);
-                emit('close', true)
+            if (hasOpenClass && !popup.value.state.isOpen) {
+                // Класс добавили извне — синхронизируем state и считаем позицию.
+                popup.value.state.isOpen = true;
+                document.addEventListener('mousedown', popup.value.closeOptions);
+                popup.value._scheduleApply();
+            } else if (!hasOpenClass && popup.value.state.isOpen) {
+                popup.value._close();
             }
         });
 
