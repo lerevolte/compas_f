@@ -124,12 +124,45 @@
     width: 100%;
     max-width: 21vw;
     position: relative;
+    // Высота должна быть одинаковой и для пустой плашки, и с выбранным значением,
+    // поэтому фиксируем высоту строки.
+    min-height: 50px;
+    height: 50px;
+    box-sizing: border-box;
+    overflow: hidden;
+
+    // Содержимое плашки — название/фото/иконка-закрытие — в одну строку,
+    // длинное название обрезаем троеточием, не уходя на 2-ю строку.
+    > * {
+        min-width: 0;
+    }
+    .modal-step__title,
+    figcaption,
+    .modal-step__icon {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .modal-step__icon {
+        flex: 1 1 auto;
+        min-width: 0;
+
+        figcaption {
+            min-width: 0;
+        }
+
+        .modal-step__title {
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+    }
 
     .icon__close {
         position: relative;
         width: 12px;
         min-width: 12px;
         aspect-ratio: 1;
+        flex-shrink: 0;
 
         svg {
             position: absolute;
@@ -248,10 +281,19 @@
     align-items: center;
     border-bottom: 1px solid #eeeff1;
     display: flex;
-    gap: 0;
+    gap: 15px;
     justify-content: space-between;
     padding: 10px 15px;
     font-weight: 600;
+
+    .logistic-modal__search {
+        flex: 0 1 220px;
+        font-weight: 400;
+
+        input {
+            padding: 6px 10px;
+        }
+    }
 }
 
 .logistic-modal__section-body {

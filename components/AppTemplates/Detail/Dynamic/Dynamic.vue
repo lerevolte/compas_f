@@ -70,13 +70,15 @@
             />
         </div>
 
+        <!--
+            Список «Маршрут»: только на вкладке с title='Маршрут' (НЕ на вкладке
+            «Задачи» — там оставляем стандартную таблицу) и только в деталке маршрута.
+        -->
         <RouteTasksView
-            v-else-if="props.slug === 'routes' && (
-                props.tabs.active?.slug === 'logistic_tasks'
-                || props.tabs.active?.tab === 'logistic_tasks'
-                || props.tabs.active?.tab === 'task_id'
-                || (typeof props.tabs.active?.title === 'string' && props.tabs.active.title.trim() === 'Маршрут')
-            )"
+            v-else-if="props.slug === 'routes'
+                && !['order', 'history', 'products'].includes(props.tabs.active?.tab)
+                && typeof props.tabs.active?.title === 'string'
+                && props.tabs.active.title.trim() === 'Маршрут'"
             :routeId="props.id"
         />
 

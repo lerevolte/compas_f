@@ -78,16 +78,30 @@
 
         <div class="logistic-modal__section">
             <div class="logistic-modal__section-header">
-                {{ route.steps.active?.sectionTitle }}
+                <span>{{ route.steps.active?.sectionTitle }}</span>
+                <AppInput
+                    class="logistic-modal__search"
+                    :options="{
+                        id: 'logistic-modal-search',
+                        title: '',
+                        type: 'text',
+                        name: 'logistic-modal-search',
+                        placeholder: 'Поиск, Enter для применения',
+                        autocomplete: 'off'
+                    }"
+                    :model-value="route.searchQueries[route.steps.active?.slug]"
+                    @update:modelValue="val => route.searchQueries[route.steps.active.slug] = val"
+                    @keyup.enter="route.runSearch()"
+                />
             </div>
             <div class="logistic-modal__section-body">
-                <div 
-                    class="logistic-modal__section-item" 
-                    v-for="item in route.entities[route.steps?.active?.slug]?.list" 
+                <div
+                    class="logistic-modal__section-item"
+                    v-for="item in route.entities[route.steps?.active?.slug]?.list"
                     :class="{'logistic-modal__section-item_active': item.value == route.filter[route.steps.active.slug]}"
                     @click="route.setFilterValue(route.steps.active.slug, {label: item.label.text, value: item.value, origin: item})"
                 >
-                    <ModalItemValue 
+                    <ModalItemValue
                         :item="item"
                     />
                 </div>
@@ -104,6 +118,7 @@
     import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'
 	import AppCategories from '@AppComponents/Categories/Categories.vue';
     import AppSelect from '@AppComponents/Inputs/Select/Select.vue'
+    import AppInput from '@AppComponents/Inputs/Input/Input.vue'
     import IconClose from '@AppIcons/Close.vue';
     import ModalItemValue from './Value.vue'
     
@@ -213,7 +228,23 @@
                 company: null,
                 employees: null
             })
-         
+
+            // Поиск по нажатию Enter в шапке секции — отдельная строка q
+            // для каждой вкладки, чтобы переключение туда-обратно не сбрасывало
+            // введённый запрос.
+            this.searchQueries = reactive({
+                cars: '',
+                employees: ''
+            })
+        }
+
+        runSearch() {
+            const tab = this.steps.active?.slug
+            if (tab === 'cars') {
+                this.entities.cars.filterMachine()
+            } else if (tab === 'employees') {
+                this.entities.employees.filterEmployee()
+            }
         }
 
         // Инициализация вычисляемых свойств
@@ -296,13 +327,16 @@
                 this.computedSavedOptions.find(p => p.origin?.value == this.filter.employees),
             ].filter(p => p).map(p => p.value)
 
+            // car_id, employee_id, company_id у route — одиночные relation, поэтому
+            // передаём скаляром. Раньше car_id уходил массивом [id] и backend
+            // (CrudService.batch) при определённой нормализации мог потерять значение.
             emit('create', {
                 id: 0,
                 date: format(new Date(), 'yyyy-MM-dd'),
-                company_id: this.filter.company ? [this.filter.company] : null,
-                car_id: this.filter.cars ? [this.filter.cars] : null,
+                company_id: this.filter.company ?? null,
+                car_id: this.filter.cars ?? null,
                 name: name.length ? name.join(', ') : null,
-                employee_id: this.filter.employees ? [this.filter.employees] : null
+                employee_id: this.filter.employees ?? null
             })
         }
 
@@ -372,7 +406,12 @@
             const filters = route.value.tabFilters.cars
             if (filters.company) request.push(`filter[company_id]=${filters.company}`)
             if (filters.employees) request.push(`filter[employee_id]=${filters.employees}`)
-            const response = await api.callMethod('GET', `${routes.logistic.getModalCars}&${request.join('&')}`)
+            // q — поиск по названию/полям машины (введённый в шапке секции).
+            const q = route.value.searchQueries?.cars?.trim?.()
+            const baseUrl = q
+                ? `${routes.logistic.getModalCars}${encodeURIComponent(q)}`
+                : routes.logistic.getModalCars
+            const response = await api.callMethod('GET', `${baseUrl}&${request.join('&')}`)
             this.list = response.data
         }
 
@@ -395,7 +434,11 @@
             const filters = route.value.tabFilters.employees
             if (filters.company) request.push(`filter[company_id]=${filters.company}`)
             if (filters.cars) request.push(`filter[car_id]=${filters.cars}`)
-            const response = await api.callMethod('GET', `${routes.logistic.getModalEmployees}&${request.join('&')}`)
+            const q = route.value.searchQueries?.employees?.trim?.()
+            const baseUrl = q
+                ? `${routes.logistic.getModalEmployees}${encodeURIComponent(q)}`
+                : routes.logistic.getModalEmployees
+            const response = await api.callMethod('GET', `${baseUrl}&${request.join('&')}`)
             this.list = response.data
         }
     }

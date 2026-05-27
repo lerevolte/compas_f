@@ -3,20 +3,38 @@
         <div class="popup__header" @click="event => popup.toggleOptions(event)">
             <slot name="header"></slot>
         </div>
-        <Teleport to="body" :disabled="!popup.state.useFloating">
+        <!--
+            forceFloating: всегда телепортируем content в body — обходим
+            ситуацию, когда .table { contain: layout paint } делает position:fixed
+            «контейнером» и popup всё равно клипается.
+        -->
+        <Teleport v-if="props.forceFloating" to="body">
             <div
-                class="popup__content"
+                v-show="popup.state.isOpen"
+                class="popup__content popup__content_floating"
                 :class="{
                     'popup__content_top': popup.state.isTop,
-                    'popup__content_floating': popup.state.useFloating,
-                    'popup_open': popup.state.useFloating && popup.state.isOpen
+                    'popup_open': popup.state.isOpen
                 }"
-                :style="popup.state.useFloating ? popup.state.floatingStyle : null"
+                :style="popup.state.floatingStyle || floatingFallbackStyle"
                 ref="contentRef"
             >
                 <slot name="content"></slot>
             </div>
         </Teleport>
+        <div
+            v-else
+            class="popup__content"
+            :class="{
+                'popup__content_top': popup.state.isTop,
+                'popup__content_floating': popup.state.useFloating,
+                'popup_open': popup.state.useFloating && popup.state.isOpen
+            }"
+            :style="popup.state.useFloating ? popup.state.floatingStyle : null"
+            ref="contentRef"
+        >
+            <slot name="content"></slot>
+        </div>
     </div>
 </template>
 
@@ -186,8 +204,11 @@
                 const ox = style.overflowX;
                 const oy = style.overflowY;
                 if (
-                    ox === 'auto' || ox === 'scroll' || ox === 'hidden' ||
-                    oy === 'auto' || oy === 'scroll' || oy === 'hidden'
+                    (ox !== 'visible' && ox) ||
+                    (oy !== 'visible' && oy) ||
+                    (style.transform && style.transform !== 'none') ||
+                    (style.filter && style.filter !== 'none') ||
+                    (style.contain && /\b(layout|paint|strict|content)\b/.test(style.contain))
                 ) {
                     return true;
                 }
@@ -237,6 +258,17 @@
     })
 
     const popup = ref(new Popup(popupRef, contentRef))
+
+    // Стиль на случай если floatingStyle ещё не пересчитан (первый кадр).
+    // Прячем content за пределами экрана, чтобы он не мигал в (0,0).
+    const floatingFallbackStyle = {
+        position: 'fixed',
+        left: '-9999px',
+        top: '-9999px',
+        right: 'auto',
+        bottom: 'auto',
+        margin: '0'
+    }
 
     onMounted(() => {
         if (!popupRef.value) return;
