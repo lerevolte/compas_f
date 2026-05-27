@@ -88,7 +88,7 @@
             :key="props.tabs.active?.tab"
             :options="{
                 isHaveQuery: true,
-                query: props.tabs.queryTab,
+                query: tabQuery,
                 isHaveFilter: false,
                 title: null,
                 isCheckClicked: false,
@@ -136,6 +136,22 @@
         if (title === 'Маршруты' || /Задач/i.test(title)) return false
         // Подходят: 'Маршрут', 'Маршрут списком', 'Маршрут списокм' и др.
         return title === 'Маршрут' || title.startsWith('Маршрут ')
+    })
+
+    // Для деталки маршрута: вкладки, ссылающиеся на logistic_tasks (Задачи),
+    // не имеют автогенерируемого relation-поля на стороне Route (связь обратная
+    // через task.route_id). Стандартный queryTab из Detail.Tabs.set() в этом
+    // случае получается пустой («?is_slug=true») и не возвращает задач.
+    // Подставляем filter[route_id] вручную.
+    const tabQuery = computed(() => {
+        const base = props.tabs?.queryTab || {}
+        if (props.slug === 'routes' && props.tabs?.active?.slug === 'logistic_tasks') {
+            return {
+                ...base,
+                'filter[route_id]': props.id
+            }
+        }
+        return base
     })
 
     const emit = defineEmits([

@@ -19,10 +19,10 @@
 .popup__content {
     border-radius: 5px;
     bottom: auto;
-    z-index: 1000;
+    z-index: 10000;
     display: none;
-    margin-top: 5px;
-    position: absolute;
+    margin-top: 0;
+    position: fixed;
     flex-direction: column;
     width: 100%;
     max-width: 200px;
@@ -33,20 +33,23 @@
     overflow: auto;
     @include mixins.scrollBar();
 
-    &.popup__content_top {
-        bottom: calc(100% + 5px);
+    // Класс popup__content_fixed подставляется, когда state.isOpen=true,
+    // и работает в паре с inline-стилем (left/top/position из JS).
+    &.popup__content_fixed {
+        position: fixed;
     }
 
-    // Когда попап «уплыл» из-за overflow-родителя, рендерим через fixed +
-    // координаты из JS. inline-стили перекрывают абсолютное позиционирование.
-    // В этом режиме контент телепортируется в body — display:flex привязан
-    // к собственной .popup_open-классу контента (а не родительскому .popup).
+    // popup__content_top — синтаксическая совместимость, фактически top
+    // считается в JS и пишется через inline-style. Здесь оставляем пустым,
+    // чтобы старые селекторы не «вытесняли» fixed-позиционирование.
+    &.popup__content_top {
+        bottom: auto;
+    }
+
+    // Старый класс из эпохи Teleport — больше не используется логически,
+    // но оставляем, чтобы не ломать сторонние стилизации.
     &.popup__content_floating {
         z-index: 10000;
-
-        &.popup_open {
-            display: flex;
-        }
     }
 }
 

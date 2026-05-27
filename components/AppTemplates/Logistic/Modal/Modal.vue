@@ -306,21 +306,37 @@
         }
 
         create() {
-            const name = [
-                this.computedSavedOptions.find(p => p.origin?.value == this.filter.cars),
-                this.computedSavedOptions.find(p => p.origin?.value == this.filter.employees),
-            ].filter(p => p).map(p => p.value)
+            // Берём значения из ПРОФИЛЬНЫХ вкладок:
+            // car_id из вкладки «Машины» (там реально выбирали машину),
+            // employee_id из вкладки «Сотрудники».
+            // company_id — то, что выбрано на любой из вкладок (если убрали
+            // компанию на сотрудниках — может остаться на машинах, и наоборот).
+            // Из this.filter не берём: он отражает только последнее изменение
+            // и обнуляется при удалении чипа в любой из вкладок.
+            const carsTab = this.tabFilters?.cars || {}
+            const empTab = this.tabFilters?.employees || {}
+            const car = carsTab.cars ?? empTab.cars ?? null
+            const employee = empTab.employees ?? carsTab.employees ?? null
+            const company = carsTab.company ?? empTab.company ?? null
 
-            // car_id, employee_id, company_id у route — одиночные relation, поэтому
-            // передаём скаляром. Раньше car_id уходил массивом [id] и backend
-            // (CrudService.batch) при определённой нормализации мог потерять значение.
+            // Берём подписи (labels) для имени маршрута из чипов обеих вкладок.
+            const allOptions = [
+                ...((this.tabSavedOptions?.cars) || []),
+                ...((this.tabSavedOptions?.employees) || [])
+            ]
+            const carLabel = allOptions.find(p => p.origin?.value == car)?.value
+            const empLabel = allOptions.find(p => p.origin?.value == employee)?.value
+            const name = [carLabel, empLabel].filter(Boolean)
+
+            // car_id, employee_id, company_id у route — одиночные relation,
+            // передаём скаляром.
             emit('create', {
                 id: 0,
                 date: format(new Date(), 'yyyy-MM-dd'),
-                company_id: this.filter.company ?? null,
-                car_id: this.filter.cars ?? null,
+                company_id: company,
+                car_id: car,
                 name: name.length ? name.join(', ') : null,
-                employee_id: this.filter.employees ?? null
+                employee_id: employee
             })
         }
 
