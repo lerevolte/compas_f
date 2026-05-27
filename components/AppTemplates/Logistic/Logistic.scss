@@ -245,3 +245,9 @@
         display: none !important;
     }
 }
+
+.logistic__drop-target {
+    background-color: rgba(134, 1, 255, 0.12) !important;
+    outline: 2px dashed #8601ff;
+    outline-offset: -2px;
+}

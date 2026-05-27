@@ -330,14 +330,25 @@
             let popupRef = event.target.closest('.select')
             let contentRef = popupRef.querySelector('.select__options')
 
-            
-
             if (!popupRef || !contentRef) return;
-            
-            
-            const parentRect = props.parentContainer ? props.parentContainer.getBoundingClientRect() : {bottom: window.innerHeight};
+
+            let bottomBound;
+            if (props.parentContainer) {
+                bottomBound = props.parentContainer.getBoundingClientRect().bottom;
+            } else {
+                bottomBound = window.innerHeight;
+                if (typeof document !== 'undefined') {
+                    const massAction = document.querySelector('.mass-action');
+                    if (massAction) {
+                        const massRect = massAction.getBoundingClientRect();
+                        if (massRect.top > 0 && massRect.top < bottomBound) {
+                            bottomBound = massRect.top;
+                        }
+                    }
+                }
+            }
             const contentRect = contentRef.getBoundingClientRect();
-            this.state.isTop = props.isPreventBottom ? false : contentRect.bottom > parentRect.bottom;
+            this.state.isTop = props.isPreventBottom ? false : contentRect.bottom > bottomBound;
         }
 
         setOptions() {

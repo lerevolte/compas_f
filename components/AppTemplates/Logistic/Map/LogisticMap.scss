@@ -52,13 +52,13 @@
 .route-popup {
     position: relative;
     display: inline-block;
-    height: 20px;
+    height: 24px;
 }
 
 .route-popup__main {
     display: inline-flex;
     align-items: center;
-    height: 20px;
+    height: 24px;
     padding: 0 14px 0 0;
     border-radius: 7px;
     border: solid 1px #8601ff;
@@ -90,8 +90,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     margin: 0 10px 0 0;
     border-radius: 7px;
     font-family: Helvetica, sans-serif;
@@ -99,6 +99,10 @@
     font-weight: bold;
     text-align: center;
     color: #fff;
+}
+
+.point-attrs {
+    padding: 5px 0;
 }
 
 .route-popup__indicator {

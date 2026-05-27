@@ -30,11 +30,12 @@
             @change="event => table.changeDrag(event)"
         >
             <template #item="{ element: row, index }">
-                <div 
-                    :key="row.key" 
+                <div
+                    :key="row.key"
                     class="table__row"
-                    :ref="el => el && !table.isDragging && table.rowVirtualizer.measureElement(el)" 
+                    :ref="el => el && !table.isDragging && table.rowVirtualizer.measureElement(el)"
                     :data-index="row.index"
+                    :data-id="row.original?.id"
                     :data-height="row.size"
                     :style="table.isDragging ? `position: relative; top: 0; --color-row: ${row.index % 2 === 0  ? '#f7fbff' : '#FFF'};` : `--row-start: ${row.start}px; --color-row: ${row.index % 2 === 0  ? '#f7fbff' : '#FFF'};`"
                     :class="{
@@ -80,9 +81,13 @@
                                 })
                             }" 
                         />
-                        <AppShowMore 
+                        <AppShowMore
                             v-else-if="column.key == 'actions' && table.body[row.index]"
-                            :options="table.options.isTrash ? cell.actions.trash : table.body[row.index].edit ? cell.actions.edit : cell.actions.default"
+                            :options="table.options.isTrash
+                                ? cell.actions.trash
+                                : table.slug == 'products'
+                                    ? cell.actions.products
+                                    : table.body[row.index].edit ? cell.actions.edit : cell.actions.default"
                             @initClick="action => table[action](table.body[row.index], table.slug)"
                         />
 
@@ -418,12 +423,26 @@
                         name: 'Открыть',
                         action: 'open',
                         enabled: true
-                    },    
+                    },
                     {
                         name: 'Восстановить',
                         action: 'initRestore',
                         enabled: true
                     },
+                ],
+                // Колонка действий в order_products — только два пункта.
+                // Удалять надо локально (таблица локальная), а не дергать API.
+                products: [
+                    {
+                        name: 'Посмотреть',
+                        action: 'open',
+                        enabled: true
+                    },
+                    {
+                        name: 'Удалить',
+                        action: 'localDelete',
+                        enabled: true
+                    }
                 ]
             }
             this.activeCell = null
@@ -696,6 +715,10 @@
     const onMoveCheck = (evt) => {
         // Разрешаем перемещение - виртуализатор сам управляет позициями
         // Не нужно вручную менять позиции, это вызывает конфликт с виртуализатором
+        if (typeof props.options?.onMove === 'function') {
+            const result = props.options.onMove(evt)
+            if (result === false) return false
+        }
         return true;
     };
 

@@ -25,12 +25,12 @@
                     class="table__cell-border"
                     @mousedown.prevent="(e) => resizer.onRightResizeMouseDown(e, idx)"
                 />
-                <AppCheckbox 
+                <AppCheckbox
                     v-if="column.key == 'isChoose'"
                     v-model="column.value"
                     :options="{
                         title: column.title,
-                        disabled: table.options?.isShort
+                        disabled: table.options?.isDisableMassAction
                     }"
                     @update:model-value="table.chooseAll(column.value)"
                 />

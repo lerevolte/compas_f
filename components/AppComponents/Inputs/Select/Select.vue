@@ -275,10 +275,26 @@
         checkPosition() {
             if (!contentRef.value || !selectRef.value) return;
 
-            const parentRect = props.parentContainer ? props.parentContainer.getBoundingClientRect() : {bottom: window.innerHeight};
+            let bottomBound;
+            if (props.parentContainer) {
+                bottomBound = props.parentContainer.getBoundingClientRect().bottom;
+            } else {
+                // Учитываем плавающую панель массовых действий внизу страницы —
+                // иначе выпадающий список перекрывается ею.
+                bottomBound = window.innerHeight;
+                if (typeof document !== 'undefined') {
+                    const massAction = document.querySelector('.mass-action');
+                    if (massAction) {
+                        const massRect = massAction.getBoundingClientRect();
+                        if (massRect.top > 0 && massRect.top < bottomBound) {
+                            bottomBound = massRect.top;
+                        }
+                    }
+                }
+            }
             const contentRect = contentRef.value.getBoundingClientRect();
-            
-            this.state.isTop = props.isPreventBottom ? false : contentRect.bottom > parentRect.bottom;
+
+            this.state.isTop = props.isPreventBottom ? false : contentRect.bottom > bottomBound;
         }
     }
 

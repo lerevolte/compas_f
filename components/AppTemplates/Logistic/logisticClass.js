@@ -317,4 +317,39 @@ export class LogisticWithMap extends Logistic {
         this.loadUnassignedTasks();
         this.logistic_tasks.updatingCount++;
     }
+
+    // Прикрепление задачи к маршруту по drag&drop на строку маршрута в таблице Маршруты.
+    // Использует существующий PUT /routes/{id}/tasks с полным списком ids — берём текущие
+    // задачи маршрута и добавляем перенесённую. Параллельно эта же ручка снимает задачу
+    // с предыдущего маршрута (если она там была), поэтому работает и для перемещения
+    // между маршрутами.
+    async assignTaskToRoute(taskId, routeId) {
+        if (!taskId || !routeId) return;
+        try {
+            const response = await api.callMethod('GET', `/routes/${routeId}/tasks`);
+            const currentIds = (response.data?.data || []).map(t => t.id);
+            if (currentIds.includes(Number(taskId)) || currentIds.includes(String(taskId))) {
+                // Уже в этом маршруте — ничего не делаем
+                return;
+            }
+            const newIds = [...currentIds, taskId];
+            await api.callMethod('PUT', `/routes/${routeId}/tasks`, { ids: newIds });
+        } catch (error) {
+            console.error('🔴 Error assigning task to route:', error);
+        } finally {
+            // Перерисовать таблицу маршрутов (вернёт исходное состояние без вставленной задачи)
+            this.routes.updatingCount++;
+            // Обновить список нераспределённых задач
+            this.loadUnassignedTasks();
+            this.logistic_tasks.updatingCount++;
+            // Если активный маршрут (Задачи в машине) совпадает — перерисовать его
+            if (this.machine_tasks.route_id == routeId || this.machine_tasks.route_id) {
+                this.machine_tasks.updatingCount++;
+                if (this.machine_tasks.route_id) {
+                    this.loadRouteForMap(this.machine_tasks.route_id);
+                }
+            }
+            if (this.onRouteChanged) this.onRouteChanged();
+        }
+    }
 }

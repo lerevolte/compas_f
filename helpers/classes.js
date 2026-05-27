@@ -2357,9 +2357,12 @@ export class Field {
             } else if (field.type == 'file') {
                 if (field.edit || (!target.classList.contains('file') && !target.classList.contains('file__values'))) return
             } else if (field.type == 'address') {
+                // Для address клик по тексту значения раньше блокировал переход в edit —
+                // в настройках Логистики из-за этого нельзя было поправить «Главный город»,
+                // потому что весь видимый блок поля был либо .blank__text, либо картой.
+                // Оставляем блокировку только для копировать-кнопки и самой карты.
                 if (
                     field.edit ||
-                    (target.classList.contains('blank__text') && !target.classList.contains('blank__text_empty')) ||
                     target.classList.contains('button_copy') ||
                     target.classList.contains('map__frame-map')
                 ) return

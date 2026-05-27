@@ -36,7 +36,7 @@
                         @unassignedTaskClick="task => onUnassignedTaskClickOnMap(task)"
                     />
 
-                    <AppVirtualTable 
+                    <AppVirtualTable
                         v-else-if="section.key == 'routes'"
                         :slug="'routes'"
                         :key="'routes'"
@@ -63,12 +63,18 @@
                             isTrash: false,
                             isHaveTopHeader: true,
                             isHaveFooter: false,
+                            group: 'logistic_tasks',
+                            isDisablePull: true,
+                            isDisablePut: false,
+                            isDisableSort: true,
+                            onMove: onRoutesTableMove,
                             updatingCount: logistic.routes.updatingCount
                         }"
                         @saveTable="data => logistic.updateRoute(data)"
                         @openModal="item => emit('openModal', item)"
                         @choseRow="data => logistic.choseRoute(data)"
                         @initCreateRoute="logistic.initCreateRoute()"
+                        @addRow="row => onTaskDroppedToRouteRow(row)"
                     />
 
                     <div class="logistic__section" v-else-if="section.key == 'tasks'">
@@ -203,8 +209,56 @@
         }
     });
 
+    // ── Drag&drop задачи на строку маршрута в таблице Маршруты ──
+    // vuedraggable не различает "дроп на конкретную строку". Поэтому пока пользователь
+    // тянет задачу над таблицей маршрутов, через move-колбэк подсматриваем, над каким
+    // именно маршрутом сейчас курсор, и подсвечиваем его. На дропе берём этот id —
+    // настоящий API-вызов делается в onTaskDroppedToRouteRow.
+    const dropTargetRouteId = ref(null);
+
+    const onRoutesTableMove = (evt) => {
+        // evt.related — DOM-узел строки, над которой курсор внутри таблицы Маршруты.
+        // Body.vue ставит на каждую строку data-id с id маршрута — берём оттуда.
+        const related = evt.related;
+        if (related && related.classList?.contains('table__row')) {
+            let routeId = related.getAttribute?.('data-id');
+            if (!routeId) {
+                const idCell = related.querySelector('.table__cell[data-column-key="id"] .table__text');
+                if (idCell) routeId = idCell.textContent.trim();
+            }
+            routeId = routeId ? Number(routeId) : null;
+            if (routeId) {
+                dropTargetRouteId.value = routeId;
+                document.querySelectorAll('.logistic__drop-target')
+                    .forEach(el => el.classList.remove('logistic__drop-target'));
+                related.classList.add('logistic__drop-target');
+            }
+        }
+        return true;
+    };
+
+    const clearDropTargetHighlight = () => {
+        document.querySelectorAll('.logistic__drop-target')
+            .forEach(el => el.classList.remove('logistic__drop-target'));
+    };
+
+    const onTaskDroppedToRouteRow = (data) => {
+        // data: { list, row } — row это перетащенная задача
+        const taskId = data?.row?.id;
+        const routeId = dropTargetRouteId.value;
+        clearDropTargetHighlight();
+        dropTargetRouteId.value = null;
+        if (!taskId || !routeId) {
+            // Не удалось определить целевой маршрут — просто перерисовываем,
+            // чтобы откатить визуальное добавление задачи в таблицу маршрутов.
+            logistic.value.routes.updatingCount++;
+            return;
+        }
+        logistic.value.assignTaskToRoute(taskId, routeId);
+    };
+
     // ── Map ↔ Table interaction ──
-    
+
     // Lasso filter for unassigned tasks — hide rows via DOM
     const lassoFilterIds = ref([]);
 
