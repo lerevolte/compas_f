@@ -608,9 +608,14 @@
         try {
             await loadRoutingMachine();
 
-            // Build OSRM URL and fetch through API proxy (works on both localhost and production)
+            // Build OSRM URL and fetch through API proxy (works on both localhost and production).
+            // overview=full отдаёт ОДНУ полную геометрию маршрута. Раньше использовался
+            // overview=false + steps=true и геометрия собиралась конкатенацией step.geometry —
+            // для длинных маршрутов (~1000 км) это давало визуальные «обрывы» линии
+            // (часть шагов отдаётся без геометрии или с одной точкой), плюс alternatives
+            // на длинных маршрутах ощутимо нагружает OSRM.
             const coordsStr = waypoints.map(wp => `${wp.lng},${wp.lat}`).join(';');
-            const osrmUrl = `/route/v1/driving/${coordsStr}?overview=false&alternatives=true&steps=true`;
+            const osrmUrl = `/route/v1/driving/${coordsStr}?overview=full&alternatives=false&steps=false&geometries=polyline`;
             
             console.log('🟢 Fetching OSRM route:', osrmUrl);
             
@@ -635,16 +640,21 @@
             console.log('🟢 OSRM response OK');
             const osrmRoute = osrmResponse.routes[0];
 
-            // Decode route geometry from steps
-            const routeCoordinates = [];
-            osrmRoute.legs.forEach(leg => {
-                leg.steps.forEach(step => {
-                    if (step.geometry) {
-                        const decoded = decodePolyline(step.geometry);
-                        routeCoordinates.push(...decoded);
-                    }
+            // Декодируем одну общую геометрию маршрута (overview=full).
+            // Если по каким-то причинам geometry не пришла — собираем по шагам
+            // (фолбэк для совместимости).
+            let routeCoordinates = [];
+            if (osrmRoute.geometry) {
+                routeCoordinates = decodePolyline(osrmRoute.geometry);
+            } else if (osrmRoute.legs) {
+                osrmRoute.legs.forEach(leg => {
+                    (leg.steps || []).forEach(step => {
+                        if (step.geometry) {
+                            routeCoordinates.push(...decodePolyline(step.geometry));
+                        }
+                    });
                 });
-            });
+            }
 
             // Build tasks with proper travel times
             const [startHours, startMinutes] = (routeData.loading_time || '07:00').split(':').map(Number);

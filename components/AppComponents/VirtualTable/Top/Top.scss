@@ -31,4 +31,35 @@
 .section-table__top-title {
     font-weight: 600;
     white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-table__top-loading {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #1a56a0;
+    background: #e8f0fe;
+    padding: 3px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+.section-table__top-loading-spinner {
+    width: 10px;
+    height: 10px;
+    border: 2px solid #1a56a0;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: section-table-spin 0.8s linear infinite;
+    display: inline-block;
+    box-sizing: border-box;
+}
+
+@keyframes section-table-spin {
+    to { transform: rotate(360deg); }
 }

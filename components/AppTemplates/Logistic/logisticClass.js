@@ -21,6 +21,31 @@ export class LogisticWithMap extends Logistic {
         this.loadRouteForMap(row.id);
     }
 
+    // Сохранение строки в таблице маршрутов. Базовый Logistic.updateRoute
+    // просто перезагружает таблицу; здесь дополнительно отслеживаем смену
+    // цвета у активного (выбранного на карте) маршрута, чтобы перерисовать
+    // линию маршрута новым цветом. data — массив изменённых строк, который
+    // прилетает из Table.save() через @saveTable.
+    updateRoute(data) {
+        super.updateRoute?.(data);
+        this.routes.updatingCount++;
+        this.machine_tasks.updatingCount++;
+
+        const rows = Array.isArray(data) ? data : [];
+        const activeId = this.machine_tasks.route_id ?? this.selectedRouteData?.id;
+        if (!activeId) return;
+
+        const touchedActive = rows.some(r => {
+            if (!r || Number(r.id) !== Number(activeId)) return false;
+            // Если в запросе есть поле color (любое значение, включая null —
+            // сброс) — это смена цвета, нужно перерисовать карту.
+            return Object.prototype.hasOwnProperty.call(r, 'color');
+        });
+        if (touchedActive) {
+            this.loadRouteForMap(activeId);
+        }
+    }
+
     async loadRouteForMap(routeId) {
         console.log('🟢 loadRouteForMap called, routeId:', routeId);
         
