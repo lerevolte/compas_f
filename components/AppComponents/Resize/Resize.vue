@@ -98,8 +98,22 @@
         // Изменение высоты секции
         resizeBlock(obj_event) {
             let point = this.getXY(obj_event);
-            if (this.deltaHeight + point[1] < 160) return
-            sectionRef.value.style.setProperty("--heightSection", `${this.deltaHeight + point[1]}px`)
+            let newHeight = this.deltaHeight + point[1]
+            if (newHeight < 160) return
+
+            // Ограничение сверху: секция не должна доходить до самого низа
+            // экрана. Считаем максимально допустимую высоту так, чтобы между
+            // нижним краем секции и нижним краем viewport оставался отступ.
+            if (typeof window !== 'undefined' && sectionRef.value) {
+                const BOTTOM_MARGIN = 24
+                const rect = sectionRef.value.getBoundingClientRect()
+                const sectionTopInPage = rect.top + window.scrollY
+                const viewportBottomInPage = window.scrollY + window.innerHeight
+                const maxHeight = viewportBottomInPage - sectionTopInPage - BOTTOM_MARGIN
+                if (maxHeight > 160 && newHeight > maxHeight) newHeight = maxHeight
+            }
+
+            sectionRef.value.style.setProperty("--heightSection", `${newHeight}px`)
         }
     }
 
