@@ -6,9 +6,21 @@
     align-items: center;
 
     .popup__header {
-        padding: 0px 10px;
+        // Иконка из 3 точек очень узкая (3×13). Раньше клик ловился только
+        // по самой иконке — попадание было неудобным. Расширяем зону клика
+        // до квадрата ~28×28, включая центрирование самой иконки.
+        padding: 6px 12px;
+        min-width: 28px;
+        min-height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        transition: background 0.12s;
 
         &:hover {
+            background: rgba(166, 183, 212, 0.15);
+
             .icon-action {
                 svg {
                     * {

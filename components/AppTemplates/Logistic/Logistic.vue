@@ -405,53 +405,24 @@
         return result;
     };
 
-    // Сбрасываем .table__row_clicked И флаг clicked у row.body во всех task-таблицах
-    // одновременно — выделенная задача общая на «Задачи логистики» и «Задачи в машине».
-    const clearTaskRowsClicked = () => {
-        const sections = getTaskSections();
-        sections.forEach(sec => {
-            sec.querySelectorAll('.table__row.table__row_clicked')
-                .forEach(r => r.classList.remove('table__row_clicked'));
-        });
-    };
-
-    // Highlight a row in table by adding clicked class directly.
-    // Виртуализированная таблица грузится асинхронно (особенно когда переход
-    // пришёл с пустой страницы и нужно дождаться API), поэтому ретраим с
-    // нарастающей задержкой. Ищем строку сначала по data-column-key="id"
-    // (надёжно), затем падаем в текстовый поиск. Скоуп — только task-таблицы.
+    // Scroll-only «дотягивание» строки задачи в видимую область task-таблицы.
+    // Класс table__row_clicked / галочку в checkbox-колонке выставляет
+    // setTaskRowClicked через body[i].clicked, чтобы Vue-реактивность была
+    // единым источником истины. Здесь только скроллим — с ретраями, потому
+    // что строка может быть ещё не в DOM из-за virtualizer.
     const highlightTableRow = (taskId) => {
         const target = String(taskId);
         const delays = [200, 400, 700, 1200, 1800, 2500, 3500];
 
-        const tryHighlight = () => {
+        const tryScroll = () => {
             const tables = getTaskSections();
             for (const table of tables) {
                 const rows = table.querySelectorAll('.table__row');
                 for (const row of rows) {
-                    // Точный поиск — ячейка с data-column-key="id"
                     const idCell = row.querySelector('.table__cell[data-column-key="id"] .table__text');
                     if (idCell && idCell.textContent.trim() === target) {
-                        clearTaskRowsClicked();
-                        row.classList.add('table__row_clicked');
                         row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                         return true;
-                    }
-                }
-            }
-            // Фолбэк: ищем по текстовому содержимому любых ячеек (только task-таблицы).
-            for (const table of tables) {
-                const rows = table.querySelectorAll('.table__row');
-                for (const row of rows) {
-                    const cells = row.querySelectorAll('.table__cell .table__text, .table__cell-content .table__text');
-                    for (const cell of cells) {
-                        const text = cell.textContent.trim();
-                        if (text === target || text.includes(`#${target}`)) {
-                            clearTaskRowsClicked();
-                            row.classList.add('table__row_clicked');
-                            row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                            return true;
-                        }
                     }
                 }
             }
@@ -460,7 +431,7 @@
 
         let i = 0;
         const next = () => {
-            if (tryHighlight() || i >= delays.length) return;
+            if (tryScroll() || i >= delays.length) return;
             setTimeout(next, delays[i++]);
         };
         setTimeout(next, delays[i++]);
@@ -483,16 +454,27 @@
         routesTableComp = el || null;
     };
 
-    // Установить clicked=true для строки с указанным id в данной task-таблице,
-    // во ВСЕХ task-таблицах все остальные строки делаем clicked=false. Это и
-    // даёт «одна галочка на две таблицы». Возвращает true, если совпавшая
-    // строка реально нашлась хотя бы в одной таблице.
+    // defineExpose в Vue 3 АВТОматически распаковывает рефы на parent-стороне:
+    // tableComp.table — уже сам Table instance (не ref), .value на нём
+    // даёт undefined. Берём напрямую table.body.
+    const getTableBody = (tableComp) => {
+        const t = tableComp?.table;
+        if (!t) return null;
+        // Подстраховка для разных версий Vue: и если ref не распакован, и если
+        // распакован напрямую инстанс.
+        const inst = (t && typeof t === 'object' && 'value' in t && !Array.isArray(t.body)) ? t.value : t;
+        return Array.isArray(inst?.body) ? inst.body : null;
+    };
+
+    // Установить clicked=true для строки с указанным id в любой task-таблице,
+    // и одновременно clicked=false для всех остальных строк ВО ВСЕХ
+    // task-таблицах. Это и даёт «одна галочка на две таблицы». Возвращает
+    // true, если совпавшая строка реально нашлась.
     const setTaskRowClicked = (taskId) => {
         let found = false;
         for (const key in taskTableRefs) {
-            const tableComp = taskTableRefs[key];
-            const body = tableComp?.table?.value?.body;
-            if (!Array.isArray(body)) continue;
+            const body = getTableBody(taskTableRefs[key]);
+            if (!body) continue;
             for (const row of body) {
                 if (!row) continue;
                 const isMatch = taskId != null && Number(row.id) === Number(taskId);
@@ -505,8 +487,8 @@
 
     // Аналогично для routes-таблицы — одна выделенная строка.
     const setRouteRowClicked = (routeId) => {
-        const body = routesTableComp?.table?.value?.body;
-        if (!Array.isArray(body)) return;
+        const body = getTableBody(routesTableComp);
+        if (!body) return;
         for (const row of body) {
             if (!row) continue;
             const isMatch = routeId != null && Number(row.id) === Number(routeId);
