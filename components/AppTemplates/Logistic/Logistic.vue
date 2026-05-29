@@ -57,7 +57,7 @@
                             isShort: true,
                             isEnableCreateOption: false,
                             isHaveFilter: false,
-                            isDisableSockets: true,
+                            isDisableSockets: false,
                             isPermanentEdit: false,
                             isCheckClicked: true,
                             isTrash: false,
@@ -69,6 +69,7 @@
                             updatingCount: logistic.routes.updatingCount
                         }"
                         @saveTable="data => logistic.updateRoute(data)"
+                        @getData="data => logistic.onRoutesTableLoaded(data)"
                         @openModal="item => emit('openModal', item)"
                         @choseRow="data => logistic.choseRoute(data)"
                         @initCreateRoute="logistic.initCreateRoute()"

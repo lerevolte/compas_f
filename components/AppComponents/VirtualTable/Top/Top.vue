@@ -2,10 +2,6 @@
     <div class="section-table__top">
         <div class="section-table__top-group section-table__top-title">
             {{ props.title }}
-            <span class="section-table__top-loading" v-if="isUpdating">
-                <span class="section-table__top-loading-spinner"></span>
-                <span>Загрузка изменений…</span>
-            </span>
         </div>
         <div class="section-table__top-group">
             <AppSave
@@ -53,21 +49,6 @@
     import AppShowMore from '@AppComponents/ShowMore/ShowMore.vue'
 
     const table = inject('table')
-
-    // Плашка "Загрузка изменений…" в заголовке таблицы.
-    // Показываем во время сохранения и во время фонового перечитывания
-    // (когда updatingCount был увеличен извне), но НЕ при первом наполнении
-    // таблицы — иначе плашка будет каждый раз мигать на старте.
-    const hasLoadedOnce = ref(false)
-    watch(() => table.value?.body?.length, (len) => {
-        if (len > 0) hasLoadedOnce.value = true
-    }, { immediate: true })
-
-    const isUpdating = computed(() => {
-        if (!table.value) return false
-        if (table.value.saving) return true
-        return hasLoadedOnce.value && table.value.loading
-    })
 
     const props = defineProps({
         title: {

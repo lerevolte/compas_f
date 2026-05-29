@@ -2337,7 +2337,12 @@ export class Field {
     
     // Инициализация изменения поля
     initChangeField(field, target, type = 'target') {
-        if (!field.can_edit || field.type == 'text_group') return 
+        if (!field.can_edit || field.type == 'text_group') return
+
+        // Если только что был драг — не открываем редактирование. Например,
+        // пользователь начал тянуть поле и вернул на исходное место: click
+        // долетает и без этого флага мы переходили бы в edit-режим.
+        if (this._isDraggingField && type == 'target') return
 
         if (type == 'target') {
             if (target.closest('.icon_drag') || target.closest('.field__settings') || target.closest('.blank__title')) return
@@ -2380,6 +2385,11 @@ export class Field {
         if (this.dragger) {
             this.dragger.classList.add('column-fields_dragging-field')
         }
+        // Запоминаем, что это был именно драг — в setTimeout пока непонятно, но к
+        // моменту dragEnd флаг будет выставлен. Используется в initChangeField,
+        // чтобы возврат на исходное место не приводил к переходу в редактирование.
+        this._isDraggingField = true
+        this._dragStartedAt = Date.now()
     }
 
     // Конец перетаскивания поля
@@ -2387,6 +2397,36 @@ export class Field {
         if (this.dragger) {
             this.dragger.classList.remove('column-fields_dragging-field')
             this.dragger = null
+        }
+        // Чуть откладываем сброс флага, чтобы успел сработать click на исходном
+        // поле (его HTML-event приходит ПОСЛЕ end в большинстве браузеров).
+        setTimeout(() => { this._isDraggingField = false }, 250)
+
+        const toContainer = event?.to
+        const fromContainer = event?.from
+        const toType = toContainer?.dataset?.tileType || (options?.type === 'field' ? 'field' : 'section')
+        const fromType = fromContainer?.dataset?.tileType || (options?.type === 'field' ? 'field' : 'section')
+
+        // Если поле уезжает В text_group (внутрь группы) — порядок и group_id
+        // прописывает обработчик внутреннего draggable через dragGroupField.
+        // change_order_field тут вызывать нельзя: itemKey внутри группы — это
+        // id поля-группы, а не id секции, и section_id у поля затрётся в мусор.
+        if (toType === 'field') return
+
+        // Если поле уехало ИЗ text_group в обычную секцию — внутренний @change
+        // у группы уже выполнил update_field (убрав поле из subfields, что
+        // сбрасывает group_id). Дополнительно отправляем change_order_field,
+        // чтобы зафиксировать новую section_id и порядок в принимающей секции.
+        if (options && options.type === 'field' && fromType === 'field' && toType === 'section') {
+            await api.callMethod('POST', routes.detail.change_order_field, {
+                id: event.item._underlying_vm_.id,
+                section_id: event.to.__draggable_component__.itemKey,
+                fields: event.to.__draggable_component__.modelValue.map((field, index) => ({
+                    id: field.id,
+                    sort: index
+                }))
+            })
+            return
         }
 
         if (options && options.type == 'field') return
@@ -2408,10 +2448,16 @@ export class Field {
             this.dragger.classList.remove('column-fields_dragging-field')
             this.dragger = null
         }
-        
+
         if (options && options.type == 'field') {
             this.emit('actionSection', {action: 'dragGroupField', value: {groupField, event}})
         }
+    }
+
+    // Сообщает initChangeField, что только что был драг — чтобы клик по
+    // исходному полю не открывал редактор. Возвращает true ~250 мс после end.
+    isJustDragged() {
+        return Boolean(this._isDraggingField)
     }
 }
 
@@ -2440,6 +2486,8 @@ export class Settings {
         try {
             this.loading = true
             if (this.category == 'common') {
+                // Поле «Город» скрыто из общих настроек портала — его значение
+                // продолжает храниться на бэке, но в UI больше не показываем.
                 this.section.fields = [
                     {
                         id: 0,
@@ -2469,36 +2517,15 @@ export class Settings {
                         can_read: 1,
                         can_edit: 1,
                         options: []
-                    },
-                    {
-                        id: 2,
-                        title: "Город",
-                        key: "city",
-                        type: "select_dropdown",
-                        subtype: 'map_suggest',
-                        is_plural: 0,
-                        required: 1,
-                        value: null,
-                        searchable: true,
-                        visible_always: 1,
-                        can_read: 1,
-                        can_edit: 1,
-                        options: []
                     }
                 ]
-        
+
                 const response = await api.callMethod('GET', routes.settings.common.get)
                 for (let field of this.section.fields) {
                     field.value = field.key == 'hints' ? String(response.data.common[field.key]) : response.data.common[field.key]
                 }
-        
+
                 this.section.fields[this.section.fields.findIndex(f => f.key == 'timezone')].options = response.data.timezones
-                this.section.fields[this.section.fields.findIndex(f => f.key == 'city')].options = [
-                    {
-                        label: JSON.parse(JSON.stringify(response.data.common.city)),
-                        value: JSON.parse(JSON.stringify(response.data.common.city))
-                    }
-                ]
             } else if (this.category == 'documents') {
                 const response = await api.callMethod('GET', routes.settings.common.get)
                 this.section.fields = [
@@ -3032,11 +3059,13 @@ class socketObject {
 
     // Обновление строки
     ObjectUpdated({data, isModal, userId}) {
-        // Свои правки скрываем всегда — не показывать плашку «X изменений»
-        // на родительских таблицах за модалкой, в которой пользователь сам
-        // только что и сделал правку. Раньше при isModal=true мы пропускали
-        // проверку и плашка всплывала в таблице задач за модалкой задачи.
-        if (userId == data.changed_by) return
+        // Свои правки игнорируем ТОЛЬКО пока открыта модалка — иначе плашка
+        // «X изменений» всплывала на родительской таблице в момент, когда
+        // пользователь ещё редактирует объект в модалке (тот самый объект,
+        // что в фоне). После закрытия модалки плашка должна появляться по
+        // событию ObjectUpdated и для собственных правок — это тот сигнал,
+        // что в таблице есть свежие данные с сервера.
+        if (userId == data.changed_by && isModal) return
 
         let findedRow = this.table.find(row => row.id == data.id)
 

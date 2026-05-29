@@ -83,10 +83,11 @@
             requestAnimationFrame(() => this.applyPosition());
         }
 
-        // Позиционирование через position:absolute относительно .popup-врапа:
-        // дефолт — left:0, top:15 (popup рядом с anchor). Если контент уезжает
-        // за правый край viewport — переворачиваем (right:0, left:auto).
-        // Если внизу мало места — поднимаем вверх через popup__content_top.
+        // Позиционируем popup-контент через position:fixed относительно
+        // viewport (top/left считаем от anchorRect, который сам в координатах
+        // viewport). Это снимает проблему с обрезкой overflow:hidden у
+        // родителей таблиц/секций и позволяет надёжно перевернуть контент
+        // вверх или прижать к правому/левому краю в пределах viewport.
         applyPosition(retry = 0) {
             if (!this.state.isOpen) return;
             const headerEl = this.popupRef.value?.querySelector('.popup__header');
@@ -96,10 +97,13 @@
                 return;
             }
 
-            // Сбрасываем inline-стили, чтобы CSS дефолты применились заново
-            // (на случай повторного открытия после флипа).
-            contentEl.style.left = '';
-            contentEl.style.right = '';
+            // Перед измерением сбрасываем inline-позицию — иначе предыдущее
+            // позиционирование на правом/верхнем краю исказит contentRect.
+            contentEl.style.left = '0px';
+            contentEl.style.right = 'auto';
+            contentEl.style.top = '0px';
+            contentEl.style.bottom = 'auto';
+            contentEl.style.position = 'fixed';
 
             const anchorRect = headerEl.getBoundingClientRect();
             const contentRect = contentEl.getBoundingClientRect();
@@ -108,36 +112,64 @@
                 return;
             }
 
-            // Горизонтальный флип: если popup от anchor.left уезжает за правый
-            // край viewport, привязываем правый край к anchor.right.
-            const overflowsRight = anchorRect.left + contentRect.width > window.innerWidth - 5;
-            if (overflowsRight) {
-                contentEl.style.left = 'auto';
-                contentEl.style.right = '0';
-            } else {
-                contentEl.style.left = '0';
-                contentEl.style.right = 'auto';
-            }
+            const GAP = 5;
+            const MARGIN = 5; // отступ от края viewport
 
-            // Вертикальный флип: если ниже не хватает места (с учётом панели
-            // массовых действий), открываем вверх через popup__content_top.
-            let bottomBound;
+            // Вертикальное позиционирование: предпочитаем вниз. Если внизу не
+            // помещается (или isPreventBottom) — открываем вверх. Если и сверху
+            // не помещается — берём ту сторону, где места больше, и обрезаем по
+            // ней через max-height в стилях (.popup__content max-height).
+            let bottomBound = window.innerHeight - MARGIN;
             if (props.parentContainer) {
-                bottomBound = props.parentContainer.getBoundingClientRect().bottom;
+                bottomBound = Math.min(bottomBound, props.parentContainer.getBoundingClientRect().bottom);
             } else {
-                bottomBound = window.innerHeight;
                 const massAction = typeof document !== 'undefined'
                     ? document.querySelector('.mass-action')
                     : null;
                 if (massAction) {
                     const r = massAction.getBoundingClientRect();
-                    if (r.top > 0 && r.top < bottomBound) bottomBound = r.top;
+                    if (r.top > 0 && r.top < bottomBound) bottomBound = r.top - MARGIN;
                 }
             }
 
-            const openBelow = !props.isPreventBottom
-                && (anchorRect.bottom + contentRect.height + 5 <= bottomBound);
+            const spaceBelow = bottomBound - anchorRect.bottom - GAP;
+            const spaceAbove = anchorRect.top - MARGIN - GAP;
+            const fitsBelow = contentRect.height <= spaceBelow;
+            const fitsAbove = contentRect.height <= spaceAbove;
+
+            let openBelow;
+            if (props.isPreventBottom) {
+                openBelow = fitsAbove ? false : (fitsBelow ? true : (spaceBelow >= spaceAbove));
+            } else {
+                openBelow = fitsBelow ? true : (fitsAbove ? false : (spaceBelow >= spaceAbove));
+            }
             this.state.isTop = !openBelow;
+
+            let top;
+            if (openBelow) {
+                top = anchorRect.bottom + GAP;
+            } else {
+                top = anchorRect.top - GAP - contentRect.height;
+                // Если не помещается выше — прижимаем к верхнему краю.
+                if (top < MARGIN) top = MARGIN;
+            }
+            contentEl.style.top = `${Math.round(top)}px`;
+            contentEl.style.bottom = 'auto';
+
+            // Горизонтальное позиционирование: по дефолту left анкера.
+            // Если уезжает вправо за viewport — выравниваем по правому краю
+            // анкера (right-edge alignment). Если и так не помещается —
+            // прижимаем к правому краю viewport с отступом.
+            let left = anchorRect.left;
+            if (left + contentRect.width > window.innerWidth - MARGIN) {
+                left = anchorRect.right - contentRect.width;
+            }
+            if (left + contentRect.width > window.innerWidth - MARGIN) {
+                left = window.innerWidth - MARGIN - contentRect.width;
+            }
+            if (left < MARGIN) left = MARGIN;
+            contentEl.style.left = `${Math.round(left)}px`;
+            contentEl.style.right = 'auto';
 
             this._setupScroll();
         }
@@ -149,6 +181,7 @@
             contentEl.style.right = '';
             contentEl.style.top = '';
             contentEl.style.bottom = '';
+            contentEl.style.position = '';
         }
 
         _setupScroll() {

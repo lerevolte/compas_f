@@ -17,31 +17,50 @@ export class LogisticWithMap extends Logistic {
         console.log('🟢 choseRoute called, row.id:', row.id);
         this.machine_tasks.route_id = row.id;
         this.machine_tasks.updatingCount++;
+        // При смене активного маршрута забываем «последний известный цвет»,
+        // иначе onRoutesTableLoaded подумает, что цвет не менялся, и не
+        // перерисует карту.
+        this._lastKnownActiveColorId = null;
         this.getRouteFilters(row.id);
         this.loadRouteForMap(row.id);
     }
 
-    // Сохранение строки в таблице маршрутов. Базовый Logistic.updateRoute
-    // просто перезагружает таблицу; здесь дополнительно отслеживаем смену
-    // цвета у активного (выбранного на карте) маршрута, чтобы перерисовать
-    // линию маршрута новым цветом. data — массив изменённых строк, который
-    // прилетает из Table.save() через @saveTable.
+    // Сохранение строки в таблице маршрутов: базовый Logistic.updateRoute
+    // просто инкрементит updatingCount для перезагрузки таблицы. Отдельно
+    // на смену цвета здесь не реагируем — есть универсальный обработчик
+    // onRoutesTableLoaded, который ловит ЛЮБОЕ обновление таблицы маршрутов
+    // (inline-правка, modal-правка через socket "Загрузить", внешняя правка
+    // другим пользователем) и перерисовывает линию маршрута, если цвет
+    // активного маршрута поменялся.
     updateRoute(data) {
         super.updateRoute?.(data);
         this.routes.updatingCount++;
         this.machine_tasks.updatingCount++;
+    }
 
-        const rows = Array.isArray(data) ? data : [];
+    // Колбэк @getData таблицы маршрутов: вызывается каждый раз, когда
+    // таблица отрисовалась со свежими данными. Если активный маршрут
+    // присутствует и его цвет отличается от того, что сейчас на карте,
+    // перезапрашиваем map_data, чтобы линия маршрута стала нового цвета.
+    onRoutesTableLoaded(rows) {
         const activeId = this.machine_tasks.route_id ?? this.selectedRouteData?.id;
-        if (!activeId) return;
+        if (!activeId || !Array.isArray(rows)) return;
+        const row = rows.find(r => Number(r?.id) === Number(activeId));
+        if (!row) return;
 
-        const touchedActive = rows.some(r => {
-            if (!r || Number(r.id) !== Number(activeId)) return false;
-            // Если в запросе есть поле color (любое значение, включая null —
-            // сброс) — это смена цвета, нужно перерисовать карту.
-            return Object.prototype.hasOwnProperty.call(r, 'color');
-        });
-        if (touchedActive) {
+        // color у строки может быть скаляром (id field_value) или объектом
+        // {value, localOptions:[{label:{color:...}}]} — приводим к скаляру.
+        const extract = (v) => {
+            if (v == null) return null;
+            if (typeof v === 'object') {
+                return v.value ?? v.id ?? null;
+            }
+            return v;
+        };
+        const newColorId = extract(row.color);
+        const oldColorId = this._lastKnownActiveColorId ?? null;
+        if (newColorId !== oldColorId) {
+            this._lastKnownActiveColorId = newColorId;
             this.loadRouteForMap(activeId);
         }
     }

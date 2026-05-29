@@ -67,13 +67,15 @@
 
         <draggable
             tag="div"
-            :group="props.options.type == 'field' ? 'field' : 'section'"
-            v-model="props.section.fields" 
+            group="tile-fields"
+            v-model="props.section.fields"
             :forceFallback="true"
             :fallbackOnBody="true"
-            :item-key="String(props.section.id)" 
+            :item-key="String(props.section.id)"
             handle=".icon_drag-field"
             class="tile-section__body"
+            :data-tile-type="props.options.type == 'field' ? 'field' : 'section'"
+            :data-tile-id="String(props.section.id)"
             drag-class="draggable-drag"
             ghost-class="draggable-ghost"
             fallback-class="draggable-fallback"

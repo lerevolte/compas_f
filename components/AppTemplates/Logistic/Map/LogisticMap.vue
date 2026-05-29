@@ -609,13 +609,13 @@
             await loadRoutingMachine();
 
             // Build OSRM URL and fetch through API proxy (works on both localhost and production).
-            // overview=full отдаёт ОДНУ полную геометрию маршрута. Раньше использовался
-            // overview=false + steps=true и геометрия собиралась конкатенацией step.geometry —
-            // для длинных маршрутов (~1000 км) это давало визуальные «обрывы» линии
-            // (часть шагов отдаётся без геометрии или с одной точкой), плюс alternatives
-            // на длинных маршрутах ощутимо нагружает OSRM.
+            // overview=full отдаёт ПОЛНУЮ геометрию маршрута, geometries=geojson —
+            // в виде массива [lng, lat], без нашего собственного декодера polyline5
+            // (он иногда «не дотягивал» хвост длинных маршрутов на ~1000 км — линия
+            // прерывалась, см. bug2). geojson избавляет от ошибок декодирования и
+            // от потери точек на границах шагов.
             const coordsStr = waypoints.map(wp => `${wp.lng},${wp.lat}`).join(';');
-            const osrmUrl = `/route/v1/driving/${coordsStr}?overview=full&alternatives=false&steps=false&geometries=polyline`;
+            const osrmUrl = `/route/v1/driving/${coordsStr}?overview=full&alternatives=false&steps=false&geometries=geojson`;
             
             console.log('🟢 Fetching OSRM route:', osrmUrl);
             
@@ -640,21 +640,29 @@
             console.log('🟢 OSRM response OK');
             const osrmRoute = osrmResponse.routes[0];
 
-            // Декодируем одну общую геометрию маршрута (overview=full).
-            // Если по каким-то причинам geometry не пришла — собираем по шагам
-            // (фолбэк для совместимости).
+            // С geometries=geojson получаем готовый массив координат
+            // [lng, lat] — перекладываем в [lat, lng] для Leaflet.
+            // Фолбэк: если по какой-то причине вернулся encoded-полилайн
+            // (например, OSRM проксирован с другим default), декодируем им.
             let routeCoordinates = [];
-            if (osrmRoute.geometry) {
-                routeCoordinates = decodePolyline(osrmRoute.geometry);
+            const geom = osrmRoute.geometry;
+            if (geom && typeof geom === 'object' && Array.isArray(geom.coordinates)) {
+                routeCoordinates = geom.coordinates.map(c => [c[1], c[0]]);
+            } else if (typeof geom === 'string') {
+                routeCoordinates = decodePolyline(geom);
             } else if (osrmRoute.legs) {
                 osrmRoute.legs.forEach(leg => {
                     (leg.steps || []).forEach(step => {
                         if (step.geometry) {
-                            routeCoordinates.push(...decodePolyline(step.geometry));
+                            const dec = typeof step.geometry === 'string'
+                                ? decodePolyline(step.geometry)
+                                : (step.geometry.coordinates || []).map(c => [c[1], c[0]]);
+                            routeCoordinates.push(...dec);
                         }
                     });
                 });
             }
+            console.log('🟢 OSRM geometry points:', routeCoordinates.length);
 
             // Build tasks with proper travel times
             const [startHours, startMinutes] = (routeData.loading_time || '07:00').split(':').map(Number);

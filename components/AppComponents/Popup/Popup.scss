@@ -21,8 +21,10 @@
     bottom: auto;
     z-index: 1000;
     display: none;
-    margin-top: 5px;
-    position: absolute;
+    // position:fixed нужен, чтобы попап не обрезался родителями с
+    // overflow:hidden / max-height — JS-обработчик applyPosition() сам
+    // считает координаты от viewport и расставляет inline top/left.
+    position: fixed;
     flex-direction: column;
     width: 100%;
     max-width: 200px;
@@ -32,12 +34,6 @@
     max-height: 300px;
     overflow: auto;
     @include mixins.scrollBar();
-
-    // Открытие вверх — переключается JS через класс popup__content_top.
-    &.popup__content_top {
-        bottom: calc(100% + 5px);
-        top: auto;
-    }
 }
 
 .popup__option {
