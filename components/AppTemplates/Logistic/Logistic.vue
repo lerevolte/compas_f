@@ -478,8 +478,8 @@
     const clearOtherTaskTablesClicked = (exceptKey) => {
         for (const key in taskTableRefs) {
             if (key === exceptKey) continue;
-            const ref = taskTableRefs[key];
-            const body = ref?.table?.value?.body;
+            const tableComp = taskTableRefs[key];
+            const body = tableComp?.table?.value?.body;
             if (!Array.isArray(body)) continue;
             for (const row of body) {
                 if (row && row.clicked) row.clicked = false;
