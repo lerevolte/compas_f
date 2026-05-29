@@ -573,8 +573,9 @@ export class Table {
             data = data.map(p => this.options?.disabledKeys.find(k => k == p.key) ? { ...p, read_only: true } : p)
         }
 
+        let header = data
         if (this.options.isCheckClicked) {
-            this.header = [{
+            header = [{
                 "id": 0,
                 "title": "Выбранная строка",
                 "key": "clicked",
@@ -589,15 +590,47 @@ export class Table {
                 "mask": null,
                 "left": 0,
                 "value": false
-            }, ...data]
-        } else {
-            this.header = data
+            }, ...header]
         }
+        // Колонка-порядок: используется, например, в «Задачах в машине» —
+        // чтобы видеть номер задачи в маршруте (1, 2, 3 …). Рендерится в
+        // Body.vue по column.key == 'iconDrag' и выводит index + 1.
+        if (this.options.isHaveOrder) {
+            header = [{
+                "id": -1,
+                "title": "№",
+                "key": "iconDrag",
+                "width": "40px",
+                "enabled": true,
+                "hover": false,
+                "sort_order": null,
+                "type": "text",
+                "fixed": true,
+                "fixTarget": "0px",
+                "index": 0,
+                "mask": null,
+                "left": 0,
+                "value": null
+            }, ...header]
+        }
+        this.header = header
     }
 
     // Получение контента
     getBody(data) {
-        this.body = data
+        // Сохраняем id строки, которая была отмечена .table__row_clicked
+        // (флаг row.clicked), и переносим на свежие данные. Без этого после
+        // socket-loader/updatingCount таблица обновляется и пользователь
+        // теряет визуально активную строку (выбранный маршрут / задачу).
+        const clickedId = this.body?.find?.(r => r && r.clicked)?.id ?? null
+        if (clickedId != null && Array.isArray(data)) {
+            this.body = data.map(row => ({
+                ...row,
+                clicked: row && row.id == clickedId ? true : false
+            }))
+        } else {
+            this.body = data
+        }
     }
 
     // Сортировка

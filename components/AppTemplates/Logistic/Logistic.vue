@@ -76,11 +76,12 @@
                     />
 
                     <div class="logistic__section" v-else-if="section.key == 'tasks'">
-                        <LogisticFilter 
+                        <LogisticFilter
                             v-model="logistic.filterFields"
                             @update:modelValue="data => logistic.changeFilter(data)"
                         />
-                        <AppVirtualTable 
+                        <AppVirtualTable
+                            :ref="el => setTaskTableRef('unassigned', el)"
                             :slug="'logistic_tasks'"
                             :key="'logistic_tasks'"
                             :options="{
@@ -90,7 +91,7 @@
                                     ...filteredFields,
                                     route_id: 'null',
                                     delivery_date: logistic.activeDate,
-                                    per_page: 12 
+                                    per_page: 12
                                 },
                                 isShort: true,
                                 overscan: 5,
@@ -116,7 +117,8 @@
                     </div>
 
 
-                    <AppVirtualTable 
+                    <AppVirtualTable
+                        :ref="el => setTaskTableRef('route', el)"
                         v-else-if="section.key == 'route_tasks' && logistic.machine_tasks.route_id"
                         :slug="'logistic_tasks'"
                         :key="'logistic_tasks_route_' + (logistic.machine_tasks.route_id || 'none')"
@@ -127,6 +129,7 @@
                             group: 'logistic_tasks',
                             isHaveQuery: true,
                             isCheckClicked: true,
+                            isHaveOrder: true,
                             query: {
                                 route_id: String(logistic.machine_tasks.route_id)
                             },
@@ -386,32 +389,55 @@
         });
     };
 
+    // Только секции-таблицы задач (Задачи логистики + Задачи в машине).
+    // Маршруты исключаем — у них своя выделенная строка (выбранный маршрут).
+    // Иначе highlightTableRow(task.id) случайно подсвечивал маршрут с тем же
+    // числовым id, что приводило к жалобе «тыкаю по маркеру маршрута, а
+    // выделяется строка маршрутов, а не задача».
+    const getTaskSections = () => {
+        const result = [];
+        document.querySelectorAll('.section-table').forEach(sec => {
+            const title = sec.querySelector('.section-table__top-title')?.textContent?.trim() || '';
+            if (title.startsWith('Задачи')) result.push(sec);
+        });
+        return result;
+    };
+
+    // Сбрасываем .table__row_clicked И флаг clicked у row.body во всех task-таблицах
+    // одновременно — выделенная задача общая на «Задачи логистики» и «Задачи в машине».
+    const clearTaskRowsClicked = () => {
+        const sections = getTaskSections();
+        sections.forEach(sec => {
+            sec.querySelectorAll('.table__row.table__row_clicked')
+                .forEach(r => r.classList.remove('table__row_clicked'));
+        });
+    };
+
     // Highlight a row in table by adding clicked class directly.
     // Виртуализированная таблица грузится асинхронно (особенно когда переход
     // пришёл с пустой страницы и нужно дождаться API), поэтому ретраим с
     // нарастающей задержкой. Ищем строку сначала по data-column-key="id"
-    // (надёжно), затем падаем в текстовый поиск.
+    // (надёжно), затем падаем в текстовый поиск. Скоуп — только task-таблицы.
     const highlightTableRow = (taskId) => {
         const target = String(taskId);
         const delays = [200, 400, 700, 1200, 1800, 2500, 3500];
 
         const tryHighlight = () => {
-            const tables = document.querySelectorAll('.section-table');
+            const tables = getTaskSections();
             for (const table of tables) {
                 const rows = table.querySelectorAll('.table__row');
                 for (const row of rows) {
                     // Точный поиск — ячейка с data-column-key="id"
                     const idCell = row.querySelector('.table__cell[data-column-key="id"] .table__text');
                     if (idCell && idCell.textContent.trim() === target) {
-                        document.querySelectorAll('.table__row_clicked')
-                            .forEach(r => r.classList.remove('table__row_clicked'));
+                        clearTaskRowsClicked();
                         row.classList.add('table__row_clicked');
                         row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                         return true;
                     }
                 }
             }
-            // Фолбэк: ищем по текстовому содержимому любых ячеек.
+            // Фолбэк: ищем по текстовому содержимому любых ячеек (только task-таблицы).
             for (const table of tables) {
                 const rows = table.querySelectorAll('.table__row');
                 for (const row of rows) {
@@ -419,8 +445,7 @@
                     for (const cell of cells) {
                         const text = cell.textContent.trim();
                         if (text === target || text.includes(`#${target}`)) {
-                            document.querySelectorAll('.table__row_clicked')
-                                .forEach(r => r.classList.remove('table__row_clicked'));
+                            clearTaskRowsClicked();
                             row.classList.add('table__row_clicked');
                             row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                             return true;
@@ -439,10 +464,36 @@
         setTimeout(next, delays[i++]);
     };
 
+    // Сслыки на инстансы двух task-таблиц — нужны, чтобы синхронизировать
+    // выделение строки (focused task общий между «Задачи логистики» и
+    // «Задачи в машине», по требованию).
+    const taskTableRefs = { unassigned: null, route: null };
+    const setTaskTableRef = (key, el) => {
+        taskTableRefs[key] = el || null;
+    };
+
+    // Сбрасываем body[i].clicked во всех task-таблицах, кроме переданной.
+    // Без этого после клика в одной задаче в другой оставалась прежняя
+    // отмеченная строка — пользователь видел сразу два выделения.
+    const clearOtherTaskTablesClicked = (exceptKey) => {
+        for (const key in taskTableRefs) {
+            if (key === exceptKey) continue;
+            const ref = taskTableRefs[key];
+            const body = ref?.table?.value?.body;
+            if (!Array.isArray(body)) continue;
+            for (const row of body) {
+                if (row && row.clicked) row.clicked = false;
+            }
+        }
+    };
+
     // Click on route task marker on map → highlight row in table
     const onRouteTaskClickOnMap = (task) => {
         logistic.value.activeTaskId = null;
         nextTick(() => { logistic.value.activeTaskId = task.id; });
+        // Маркеры маршрута относятся к задачам в машине — выделяем
+        // соответствующую строку только в task-таблицах (Logic в
+        // highlightTableRow уже скоупит к ним).
         highlightTableRow(task.id);
     };
 
@@ -450,6 +501,7 @@
         const taskId = row.id || row;
         logistic.value.activeTaskId = null;
         nextTick(() => { logistic.value.activeTaskId = taskId; });
+        clearOtherTaskTablesClicked('route');
     };
 
     const onUnassignedTaskClickOnMap = (task) => {
@@ -462,6 +514,7 @@
         const taskId = row.id || row;
         logistic.value.activeTaskId = null;
         nextTick(() => { logistic.value.activeTaskId = taskId; });
+        clearOtherTaskTablesClicked('unassigned');
     };
 
     const filteredFields = computed(() => {

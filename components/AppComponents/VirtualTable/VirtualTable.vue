@@ -253,4 +253,9 @@
   provide('filter', table.value.filter)
   provide('tableRef', tableRef)
   provide('sectionRef', sectionRef)
+
+  // Внешнему коду (например, Logistic.vue) нужен доступ к state-объекту таблицы,
+  // чтобы синхронизировать выделение строк между связанными таблицами
+  // («Задачи логистики» ↔ «Задачи в машине» делят общий focused-task).
+  defineExpose({ table, sectionRef })
 </script>

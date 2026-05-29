@@ -88,22 +88,40 @@
       this.modal = []
       this.active = metaJSON[router.params.slug]
       this.addresses = []
-      this.currentTitle = `${metaJSON[router.params.slug]?.title} | Compas.pro` 
+      this.currentTitle = `${metaJSON[router.params.slug]?.title} | Compas.pro`
+      // Заголовок «нижней» страницы — то, к чему всегда нужно вернуться, когда
+      // стек модалок опустеет. Захватываем один раз при открытии первой
+      // модалки, чтобы каскад nested-модалок не «застрял» с заголовком
+      // последней открывавшейся сущности (см. /logistic — раньше после
+      // закрытия деталки маршрута/задачи title оставался на их имени вместо
+      // «Логистика»).
+      this.basePageTitle = null
+      this.basePageLink = null
+    }
+
+    _resolvePageTitle() {
+      const fromMeta = `${metaJSON[router.params.slug]?.title} | Compas.pro`
+      if (!fromMeta.startsWith('undefined')) return fromMeta
+      if (typeof document !== 'undefined' && document.title) return document.title
+      return ''
     }
 
     openModal(item) {
       item.slug = item.slug ?? router.params.slug
       item.tab_slug = item.tab_slug ?? null
 
-      // На страницах без slug-параметра (например, /logistic, /settings)
-      // metaJSON[router.params.slug] === undefined и currentTitle получался
-      // вида "undefined | Compas.pro". При закрытии деталки этот мусор
-      // подставлялся обратно в title. Берём актуальный document.title,
-      // который страница уже выставила через useHead в onMounted.
-      const fallbackTitle = (typeof document !== 'undefined' && document.title) ? document.title : ''
+      // Захватываем заголовок/URL «нижней» страницы один раз при открытии
+      // первой модалки. Дальше при закрытии стека модалок гарантированно
+      // вернёмся именно к нему, даже если внутри открывались дочерние
+      // сущности с другими заголовками.
+      if (this.modal.length === 0) {
+        this.basePageTitle = this._resolvePageTitle()
+        this.basePageLink = (typeof window !== 'undefined') ? window.location.href : ''
+      }
+
       const savedTitle = (typeof this.currentTitle === 'string' && !this.currentTitle.startsWith('undefined'))
         ? this.currentTitle
-        : fallbackTitle
+        : this._resolvePageTitle()
 
       if (this.modal.length >= 9 && !['create', 'copy'].includes(item.type)) {
         this.modal = []
@@ -138,10 +156,26 @@
 
     closeDetail() {
       let prevAddress = this.addresses.pop()
-      window.history.replaceState({}, document.title, prevAddress?.link);
+      // Если закрыли последнюю модалку — насильно возвращаемся к заголовку
+      // страницы, который захватили в openModal(). Иначе title мог застрять
+      // на имени дочерней сущности (для /logistic это и был баг с
+      // подставляющимся именем задачи/маршрута).
+      const isLast = this.modal.length === 0
+      const targetTitle = isLast && this.basePageTitle ? this.basePageTitle : prevAddress?.title
+      const targetLink  = isLast && this.basePageLink  ? this.basePageLink  : prevAddress?.link
+
+      if (targetLink) {
+        window.history.replaceState({}, document.title, targetLink);
+      }
       useHead({
-        title: prevAddress.title
+        title: targetTitle
       })
+      this.currentTitle = targetTitle
+
+      if (isLast) {
+        this.basePageTitle = null
+        this.basePageLink = null
+      }
     }
   }
 

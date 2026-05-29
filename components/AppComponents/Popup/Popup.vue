@@ -16,7 +16,6 @@
                 class="popup__content"
                 :class="[popup.state.contentClass, { 'popup__content_top': popup.state.isTop, 'popup__content_open': popup.state.isOpen }]"
                 ref="contentRef"
-                v-show="popup.state.isOpen"
             >
                 <slot name="content"></slot>
             </div>
@@ -106,8 +105,12 @@
         }
 
         _scheduleApply() {
-            nextTick(() => this.applyPosition());
-            requestAnimationFrame(() => this.applyPosition());
+            // Сначала Vue должен довести до DOM факт открытия (nextTick),
+            // потом даём браузеру layout-цикл (rAF), и только после этого
+            // запускаем замеры. Без чейна applyPosition мог сработать ДО
+            // того, как Vue переключит видимость, и getBoundingClientRect
+            // возвращал 0×0 — попап оставался без inline top/left.
+            nextTick(() => requestAnimationFrame(() => this.applyPosition()));
         }
 
         // Позиционируем popup-контент через position:fixed относительно

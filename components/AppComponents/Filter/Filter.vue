@@ -62,7 +62,13 @@
             </div>
 
             <div class="filter__group">
-                <div class="filter__fields" v-if="filter.state.search || filter.state.searchEnabled">
+                <!--
+                    Инпут «Поиск» показываем, когда есть текст в поле, активен
+                    тоггл «Поиск» или уже применён поисковый чип. Без проверки
+                    activeTabs (после сабмита state.search обнуляется) инпут
+                    исчезал при включённом поиске.
+                -->
+                <div class="filter__fields" v-if="filter.state.search || filter.state.searchEnabled || filter.state.activeTabs.some(t => t.key === 'search')">
                     <div class="filter__field" :class="{'filter__field_disabled': filter.state.activeTabs.length == 0}">
                         <AppInput
                             class="filter__field_search"
