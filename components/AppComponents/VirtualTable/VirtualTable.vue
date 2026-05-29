@@ -7,12 +7,20 @@
     <TableTop v-if="props.options?.isHaveTopHeader" :options="props.options" :showMore="props.showMore" :title="props.options?.title ?? null"/>
     <div ref="tableRef" class="table" :class="{'table_permanent-edit': props.options.isPermanentEdit, 'table_short': props.options?.isShort}">
       <TableHeader>
-        
+
       </TableHeader>
       <div class="socket-row" v-if="!props.options?.isDisableSockets && table.socket?.table?.length > 0" >
           {{ table.socket?.table?.length }} изменения в таблице <span class="socket-row__button" @click="table.getSocketRows(); table.get()"> Загрузить </span>
         </div>
-      <TableBody 
+      <!--
+        ScrollButtons вынесены ПЕРЕД телом таблицы. Sticky-стрелки нуждаются
+        в element, который изначально находится выше своей sticky-позиции,
+        чтобы как только пользователь начинает скроллить вниз — sticky
+        активировался и стрелки парили посередине viewport контейнера.
+        Размещаем их в зоне 0×0 (height:0) — они не «отжимают» строки.
+      -->
+      <ScrollButtons />
+      <TableBody
         :options="props.options"
         @choseRow="row => emit('choseRow', row)"
         @changeActive="row => emit('changeActive', row)"
@@ -21,7 +29,6 @@
       <div class="loader__wrapper" v-if="table.loading">
         <IconLoader />
       </div>
-      <ScrollButtons />
     </div>
     <TableFooter v-if="props.options?.isHaveFooter" />
   </section>

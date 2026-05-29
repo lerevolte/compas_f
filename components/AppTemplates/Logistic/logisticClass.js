@@ -249,11 +249,18 @@ export class LogisticWithMap extends Logistic {
 
     updateActiveDate(activeDate) {
         this.activeDate = format(activeDate, 'yyyy-MM-dd');
+        // При смене даты сбрасываем активный маршрут и все связанные с ним
+        // состояния — иначе таблица «Задачи в машине» оставалась подвязанной
+        // к route_id с прошлой даты, а на карте висел старый selectedRoute.
+        this.machine_tasks.route_id = null;
+        this.routes.id = null;
+        this._lastKnownActiveColorId = null;
+        this.activeTaskId = null;
+        this.selectedRouteData = null;
+        this.unassignedTasks = [];
         this.machine_tasks.updatingCount++;
         this.logistic_tasks.updatingCount++;
         this.routes.updatingCount++;
-        this.selectedRouteData = null;
-        this.unassignedTasks = [];
         this.loadUnassignedTasks();
     }
 

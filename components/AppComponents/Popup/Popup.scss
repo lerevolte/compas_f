@@ -13,7 +13,10 @@
 .popup__content {
     border-radius: 5px;
     bottom: auto;
-    z-index: 1000;
+    // Поднимаем выше менюшек/модалок — на странице Логистики во вкладке
+    // «Товары и услуги» попап с действиями оказывался под другим overlay
+    // с z-index: 1000, и был не виден.
+    z-index: 1001;
     // Контент попапа выносится Teleport-ом в body. Видимость переключаем
     // через opacity/visibility, чтобы getBoundingClientRect (нужен JS-у в
     // applyPosition) возвращал реальные размеры ДО первой отрисовки —
@@ -56,6 +59,8 @@
     padding: 10px;
     color: variables.$color-default;
     text-align: left;
+    width: 100%;
+    box-sizing: border-box;
 
     &:hover {
         color: variables.$color-default;

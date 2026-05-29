@@ -356,13 +356,19 @@
         const rowIndex = el?.getAttribute ? el.getAttribute('data-index') : null
         if (table.value.body[rowIndex]?.clicked) return
 
-        table.value.body = table.value.body.map((item, index) => {
-            return {
-                ...item,
-                clicked: table.value.body[rowIndex]?.id == item.id ? true : false
-            }
-        })
-        
+        // Мутируем .clicked у каждой строки in-place вместо body.map() с
+        // пересборкой массива. body.map создаёт новые объекты, и хотя массив
+        // становится новым, Vue в виртуализированной таблице иногда не успевал
+        // переотрисовать чекбоксы в `clicked`-колонке у строк, которые ушли
+        // из видимой области виртуализатора — старая галочка визуально
+        // оставалась. Прямая мутация реактивного свойства гарантирует
+        // обновление всех потребителей.
+        const targetId = table.value.body[rowIndex]?.id
+        for (const row of table.value.body) {
+            if (!row) continue
+            const isMatch = row.id == targetId
+            if (!!row.clicked !== isMatch) row.clicked = isMatch
+        }
 
         emit('choseRow', {
             ...table.value.body[rowIndex],
