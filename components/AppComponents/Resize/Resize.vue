@@ -79,11 +79,17 @@
                     document.removeEventListener("mouseup", this.mouseUpHandler);
                 }
 
-                // Спейсер был нужен только во время drag для прокрутки;
-                // на финальной высоте секции он не нужен — page.scrollHeight
-                // и так включает секцию (и .logistic margin-bottom: 40
-                // обеспечит 40px gap, когда страница прокручена в самый низ).
-                this._removeSpacer()
+                // Спейсер ОСТАВЛЯЕМ — он нужен и после релиза, чтобы у
+                // .page оставался scroll-room, при котором нижний край
+                // секции виден в 40px от низа viewport. Если убрать спейсер,
+                // scrollHeight сжимается, scrollTop клампится вниз, и
+                // пользователь видит, как «отступ пропал» — секция
+                // упирается в нижний край экрана.
+                // Под текущий scrollTop нормализуем высоту так, чтобы
+                // максимальный scroll был ровно у позиции, в которой секция
+                // имеет 40px gap (без хвоста из всех промежуточных
+                // overflow'ов, накопленных в процессе drag'а).
+                this._compactSpacerToFinal()
 
                 emit('endResize', sectionRef.value.offsetHeight)
             }
@@ -207,6 +213,9 @@
             }
             this._spacerHeight = (this._spacerHeight || 0) + need
             this._spacerEl.style.height = `${this._spacerHeight}px`
+            // Запоминаем scroller — нужен для нормализации высоты спейсера
+            // в _compactSpacerToFinal на endResize.
+            this._scroller = scroller
         }
 
         _removeSpacer() {
@@ -215,6 +224,32 @@
             }
             this._spacerEl = null
             this._spacerHeight = 0
+        }
+
+        // На релизе нормализуем размер спейсера так, чтобы maxScroll у
+        // scroll-контейнера был ровно равен текущему scrollTop. То есть
+        // страница «как бы» прокручена до самого низа, и при дальнейшем
+        // отпускании мыши секция не теряет 40px gap и не появляется
+        // «лишнего» серого свободного места под секцией.
+        _compactSpacerToFinal() {
+            if (!this._spacerEl || typeof window === 'undefined') return
+            const scroller = this._scroller || document.scrollingElement
+            if (!scroller) return
+
+            // Расчёт: scrollHeight без спейсера = scrollHeight - spacerHeight.
+            // Нужно: scrollHeight_final = scrollTop + clientHeight (max=scrollTop).
+            // => нужный spacer = max(0, (scrollTop+clientHeight) - (scrollHeight - currentSpacer)).
+            const currentSpacer = this._spacerHeight || 0
+            const naturalScrollHeight = scroller.scrollHeight - currentSpacer
+            const targetScrollHeight = scroller.scrollTop + scroller.clientHeight
+            const need = Math.max(0, targetScrollHeight - naturalScrollHeight)
+
+            if (need <= 0) {
+                this._removeSpacer()
+                return
+            }
+            this._spacerHeight = need
+            this._spacerEl.style.height = `${need}px`
         }
     }
 
