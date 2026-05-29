@@ -3,12 +3,6 @@
 
 .popup {
     position: relative;
-
-    &.popup_open {
-        .popup__content {
-            display: flex;
-        }
-    }
 }
 
 .popup__header {
@@ -20,10 +14,10 @@
     border-radius: 5px;
     bottom: auto;
     z-index: 1000;
-    display: none;
-    // position:fixed нужен, чтобы попап не обрезался родителями с
-    // overflow:hidden / max-height — JS-обработчик applyPosition() сам
-    // считает координаты от viewport и расставляет inline top/left.
+    // Контент попапа выносится Teleport-ом в body и видим только когда
+    // открыт (v-show). position:fixed + координаты от viewport ставит
+    // applyPosition() через inline top/left.
+    display: flex;
     position: fixed;
     flex-direction: column;
     width: 100%;

@@ -3,13 +3,24 @@
         <div class="popup__header" @click="event => popup.toggleOptions(event)">
             <slot name="header"></slot>
         </div>
-        <div
-            class="popup__content"
-            :class="{ 'popup__content_top': popup.state.isTop }"
-            ref="contentRef"
-        >
-            <slot name="content"></slot>
-        </div>
+        <!--
+            Содержимое попапа выносим в body через Teleport, иначе любой предок
+            с will-change/transform/filter создаёт containing block для position:
+            fixed и popup «уезжает» в случайное место относительно этого предка.
+            Прокидываем модификатор-классы родительского .popup на сам контент,
+            чтобы каскадные стили вида ".popup.settings .popup__content { ... }"
+            и т.п. продолжали работать.
+        -->
+        <Teleport to="body">
+            <div
+                class="popup__content"
+                :class="[popup.state.contentClass, { 'popup__content_top': popup.state.isTop, 'popup__content_open': popup.state.isOpen }]"
+                ref="contentRef"
+                v-show="popup.state.isOpen"
+            >
+                <slot name="content"></slot>
+            </div>
+        </Teleport>
     </div>
 </template>
 
@@ -32,11 +43,26 @@
 
             this.state = reactive({
                 isOpen: false,
-                isTop: false
+                isTop: false,
+                // Классы, скопированные с корневого .popup (кроме сервисных
+                // popup/popup_open). Нужны, чтобы каскадные стили вида
+                // ".my-popup .popup__content { ... }" работали и после
+                // переноса контента в body через Teleport — без этого
+                // селектор-предок «.my-popup» больше не относится к контенту.
+                contentClass: ''
             });
 
             this.closeOptions = this.closeOptions.bind(this);
             this._scrollHandler = null;
+        }
+
+        _syncContentClass() {
+            const root = this.popupRef.value;
+            if (!root) return;
+            const classes = Array.from(root.classList).filter(
+                c => c !== 'popup' && c !== 'popup_open'
+            );
+            this.state.contentClass = classes.join(' ');
         }
 
         closeOptions(event) {
@@ -74,6 +100,7 @@
             }
 
             this.state.isOpen = true;
+            this._syncContentClass();
             document.addEventListener('mousedown', this.closeOptions);
             this._scheduleApply();
         }

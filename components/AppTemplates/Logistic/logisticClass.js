@@ -86,7 +86,7 @@ export class LogisticWithMap extends Logistic {
                 console.log('🟠 Route has no tasks');
                 this.selectedRouteData = {
                     id: routeId, name: `Маршрут ${routeId}`, loading_time: '07:00',
-                    color: '#8601ff', tasks: [], actual_path: [],
+                    color: '#b6b6b6', tasks: [], actual_path: [],
                     service_stops: [], parking_stops: [], signal_loss_events: []
                 };
                 return;
@@ -123,7 +123,7 @@ export class LogisticWithMap extends Logistic {
             let actualPath = [];
             let routeName = `Маршрут ${routeId}`;
             let loadingTime = '07:00';
-            let routeColor = '#8601ff';
+            let routeColor = '#b6b6b6';
 
             try {
                 const mapDataResponse = await api.callMethod('GET', `/routes/${routeId}/map_data`);
@@ -131,7 +131,7 @@ export class LogisticWithMap extends Logistic {
                 actualPath = mapData.actual_path || [];
                 routeName = mapData.name || routeName;
                 loadingTime = mapData.loading_time || loadingTime;
-                // Color might be hex (#8601ff) or an ID (1484) — only use if it looks like a color
+                // Color might be hex (#b6b6b6) or an ID (1484) — only use if it looks like a color
                 const rawColor = mapData.color || '';
                 if (rawColor && /^(#|rgb|hsl|linear)/.test(rawColor)) {
                     routeColor = rawColor;
@@ -308,7 +308,7 @@ export class LogisticWithMap extends Logistic {
                 let actualPath = [];
                 let routeName = `Маршрут ${routeId}`;
                 let loadingTime = '07:00';
-                let routeColor = '#8601ff';
+                let routeColor = '#b6b6b6';
 
                 try {
                     const mapDataResponse = await api.callMethod('GET', `/routes/${routeId}/map_data`);

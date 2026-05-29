@@ -383,9 +383,15 @@
         }
     }
 
-    .popup__content  {
-        overflow-x: hidden;
-    }    
+    @media (max-width: 990px) {
+        padding: 0px 25px;
+    }
+}
+
+// .filter__popup .popup__content уехал в body (Teleport), классы родителя
+// копируются на сам контент — селектор переписан напрямую.
+.popup__content.filter__popup {
+    overflow-x: hidden;
 
     .popup__option {
         padding: 0px;
@@ -395,11 +401,6 @@
             width: 100%;
             max-width: none;
         }
-    }
-
-
-    @media (max-width: 990px) {
-        padding: 0px 25px;
     }
 }
 

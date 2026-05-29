@@ -53,17 +53,20 @@
 }
 
 
-.settings {
-    .popup__content {
-        width: 200px;
-    }
+// Контент попапа уходит в body через Teleport, и класс .settings копируется
+// уже на .popup__content (см. _syncContentClass в Popup.vue). Поэтому
+// селекторы переписаны на прямой матч `.popup__content.settings`.
+.popup__content.settings {
+    width: 200px;
 
     .menu__item-subtitle,
-    .menu__item-hide:after, 
+    .menu__item-hide:after,
     .menu__item-hide:before {
         background-color: #a6b7d4;
     }
+}
 
+.settings {
     &.settings_dragging {
         .settings__item {
             cursor: grabbing !important;

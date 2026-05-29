@@ -4,7 +4,7 @@
 .show-more {
     display: flex;
     align-items: center;
-    
+
     .popup__header {
         padding: 0px 10px;
 
@@ -18,13 +18,7 @@
             }
         }
     }
-
-    .popup__content {
-        top: 15px;
-
-        &.popup__content_top {
-            top: auto;
-            bottom: 15px;
-        }
-    }
 }
+// .show-more .popup__content { top: 15px } больше не нужен — координаты
+// контенту попапа теперь ставит JS (applyPosition в Popup.vue) после
+// Teleport-а в body, и старая absolute-вёрстка не работает.

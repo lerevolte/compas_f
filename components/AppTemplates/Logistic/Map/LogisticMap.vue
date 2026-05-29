@@ -312,7 +312,7 @@
         });
 
         const center = fetchedCenter.value || props.defaultCenter;
-        mapInstance.value = L.map(mapContainerRef.value, { center, zoom: 14, zoomControl: true, minZoom: 3, maxZoom: 18, doubleClickZoom: false });
+        mapInstance.value = L.map(mapContainerRef.value, { center, zoom: 10, zoomControl: true, minZoom: 3, maxZoom: 18, doubleClickZoom: false });
 
         // Monkey-patch L.Marker to prevent _animateZoom crash on removed markers
         const origAnimateZoom = L.Marker.prototype._animateZoom;
@@ -464,7 +464,7 @@
             const listHtml = group.map(item => {
                 const m = item.marker;
                 const routeTask = item.type === 'route' ? processedRoute?.tasks?.find(t => t.id === item.id) : null;
-                const color = routeTask ? (routeTask.routeColor || '#8601ff') : '#999';
+                const color = routeTask ? (routeTask.routeColor || '#b6b6b6') : '#999';
                 const order = routeTask ? (routeTask.order || '') : '';
                 const planTime = routeTask?.departureTime?.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) || routeTask?.planTime || '';
                 let name = '';
@@ -483,7 +483,7 @@
             }).join('');
 
             const firstRoute = group.find(g => g.type === 'route');
-            const counterColor = firstRoute ? (processedRoute?.tasks?.find(t => t.id === firstRoute.id)?.routeColor || '#8601ff') : '#999';
+            const counterColor = firstRoute ? (processedRoute?.tasks?.find(t => t.id === firstRoute.id)?.routeColor || '#b6b6b6') : '#999';
 
             // Collect order numbers for display
             const orders = group.map(item => {
@@ -497,7 +497,7 @@
             // Build stacked counters showing actual order numbers
             const countersHtml = group.map(item => {
                 const routeTask = item.type === 'route' ? processedRoute?.tasks?.find(t => t.id === item.id) : null;
-                const color = routeTask ? (routeTask.routeColor || '#8601ff') : '#999';
+                const color = routeTask ? (routeTask.routeColor || '#b6b6b6') : '#999';
                 const order = routeTask ? (routeTask.order || '') : '';
                 return `<span class="task-cluster-counter-item" style="background:${color}">${order}</span>`;
             }).join('');
@@ -597,7 +597,7 @@
                     departureTime,
                     adjustedTime: departureTime,
                     routeId: routeData.id,
-                    routeColor: routeData.color || '#8601ff',
+                    routeColor: routeData.color || '#b6b6b6',
                     routeName: routeData.name || `Маршрут ${routeData.id}`
                 };
             }).filter(t => t.latLng && t.arrivalTime);
@@ -608,17 +608,24 @@
         try {
             await loadRoutingMachine();
 
-            // Build OSRM URL and fetch through API proxy (works on both localhost and production).
-            // overview=full отдаёт ПОЛНУЮ геометрию маршрута, geometries=geojson —
-            // в виде массива [lng, lat], без нашего собственного декодера polyline5
-            // (он иногда «не дотягивал» хвост длинных маршрутов на ~1000 км — линия
-            // прерывалась, см. bug2). geojson избавляет от ошибок декодирования и
-            // от потери точек на границах шагов.
+            // Build OSRM URL и тянем геометрию маршрута. На длинных маршрутах
+            // (>500 км) OSRM с default-конфигом часто упирается в лимиты по
+            // сэмплированию (`max-matching-radius`/`max-table-size`), и при
+            // `overview=simplified` или `overview=false` отдаёт сильно «обрезанную»
+            // или ступенчатую геометрию — отсюда визуальные обрывы (см. bug2).
+            // Просим `overview=full` + `geometries=geojson`: один массив [lng,lat]
+            // на весь маршрут, без полилайн-кодирования.
+            //
+            // Параллельно делаем дополнительную проверку «полноты»: если
+            // декодированная геометрия не дотягивает до последнего waypoint
+            // (> ~3 км от него) — считаем это обрывом и достраиваем хвост
+            // прямой линией от последней точки геометрии до последнего
+            // waypoint. Лучше пунктир-намёк, чем «полпути в никуда».
             const coordsStr = waypoints.map(wp => `${wp.lng},${wp.lat}`).join(';');
             const osrmUrl = `/route/v1/driving/${coordsStr}?overview=full&alternatives=false&steps=false&geometries=geojson`;
-            
+
             console.log('🟢 Fetching OSRM route:', osrmUrl);
-            
+
             let osrmResponse;
             try {
                 // Try relative URL first (works on production)
@@ -642,8 +649,8 @@
 
             // С geometries=geojson получаем готовый массив координат
             // [lng, lat] — перекладываем в [lat, lng] для Leaflet.
-            // Фолбэк: если по какой-то причине вернулся encoded-полилайн
-            // (например, OSRM проксирован с другим default), декодируем им.
+            // Фолбэк: если вернулся encoded-полилайн или geometry только
+            // по шагам — декодируем доступным способом.
             let routeCoordinates = [];
             const geom = osrmRoute.geometry;
             if (geom && typeof geom === 'object' && Array.isArray(geom.coordinates)) {
@@ -663,6 +670,34 @@
                 });
             }
             console.log('🟢 OSRM geometry points:', routeCoordinates.length);
+
+            // Защита от «обрыва»: проверяем, что геометрия не оборвана раньше
+            // последнего waypoint. Если последняя точка маршрута дальше ~3 км
+            // от целевой — достраиваем прямую к ней, чтобы линия дошла до
+            // конечного маркера, а не зависала где-то посередине.
+            if (routeCoordinates.length && waypoints.length) {
+                const lastGeo = routeCoordinates[routeCoordinates.length - 1];
+                const lastWp = waypoints[waypoints.length - 1];
+                if (lastGeo && lastWp && typeof lastWp.lat === 'number' && typeof lastWp.lng === 'number') {
+                    const dist = L.latLng(lastGeo[0], lastGeo[1]).distanceTo(lastWp);
+                    if (dist > 3000) {
+                        console.warn('🟠 OSRM geometry ends', Math.round(dist), 'm from last waypoint — patching');
+                        routeCoordinates.push([lastWp.lat, lastWp.lng]);
+                    }
+                }
+                // Симметрично — проверяем стартовый waypoint, бывает что
+                // OSRM «срезает» начало (например, если стартовая точка — на
+                // обочине, и OSRM нанизывает геометрию от ближайшей дороги).
+                const firstGeo = routeCoordinates[0];
+                const firstWp = waypoints[0];
+                if (firstGeo && firstWp && typeof firstWp.lat === 'number' && typeof firstWp.lng === 'number') {
+                    const dist = L.latLng(firstGeo[0], firstGeo[1]).distanceTo(firstWp);
+                    if (dist > 3000) {
+                        console.warn('🟠 OSRM geometry starts', Math.round(dist), 'm from first waypoint — patching');
+                        routeCoordinates.unshift([firstWp.lat, firstWp.lng]);
+                    }
+                }
+            }
 
             // Build tasks with proper travel times
             const [startHours, startMinutes] = (routeData.loading_time || '07:00').split(':').map(Number);
@@ -698,7 +733,7 @@
                     latLng: addr ? L.latLng(addr.coords[0], addr.coords[1]) : null,
                     arrivalTime, departureTime,
                     routeId: routeData.id,
-                    routeColor: routeData.color || '#8601ff',
+                    routeColor: routeData.color || '#b6b6b6',
                     routeName: routeData.name || `Маршрут ${routeData.id}`
                 };
             }).filter(t => t.latLng && t.arrivalTime);
@@ -769,7 +804,7 @@
         routeDecoratorsLayer.clearLayers();
         
         const coords = processedRoute.coordinates;
-        const color = processedRoute.color || '#8601ff';
+        const color = processedRoute.color || '#b6b6b6';
         const wpCoords = processedRoute.waypointCoords;
 
         console.log('🟢 drawPlannedRoute, style:', settings.route_display, 'coords:', coords?.length, 'waypoints:', wpCoords?.length);
@@ -866,8 +901,8 @@
                 const radius = props.serviceRadius || 500;
                 serviceRadiusCircle = L.circle(task.latLng, {
                     radius,
-                    color: task.routeColor || '#8601ff',
-                    fillColor: task.routeColor || '#8601ff',
+                    color: task.routeColor || '#b6b6b6',
+                    fillColor: task.routeColor || '#b6b6b6',
                     fillOpacity: 0.1,
                     weight: 1,
                     dashArray: '5,5'
@@ -1532,7 +1567,7 @@
             if (serviceRadiusCircle) { mapInstance.value.removeLayer(serviceRadiusCircle); serviceRadiusCircle = null; }
             const radius = props.serviceRadius || 500;
             const task = processedRoute?.tasks?.find(t => t.id === id);
-            const color = task?.routeColor || '#8601ff';
+            const color = task?.routeColor || '#b6b6b6';
             serviceRadiusCircle = L.circle(latlng, {
                 radius,
                 color,

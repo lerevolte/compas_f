@@ -2365,11 +2365,17 @@ export class Field {
                 // Для address клик по тексту значения раньше блокировал переход в edit —
                 // в настройках Логистики из-за этого нельзя было поправить «Главный город»,
                 // потому что весь видимый блок поля был либо .blank__text, либо картой.
-                // Оставляем блокировку только для копировать-кнопки и самой карты.
+                // Оставляем блокировку для копировать-кнопки и для любых кликов
+                // внутри карты (Yandex отрисовывает внутри .map__frame-map свою
+                // DOM-структуру, и target обычно — её внутренние ноды, поэтому
+                // нужен closest, а не classList.contains).
                 if (
                     field.edit ||
                     target.classList.contains('button_copy') ||
-                    target.classList.contains('map__frame-map')
+                    target.closest?.('.map__frame-map') ||
+                    target.closest?.('.map__frame') ||
+                    target.closest?.('[class*="ymaps"]') ||
+                    target.closest?.('.leaflet-container')
                 ) return
             }
         }
@@ -3017,10 +3023,21 @@ export class Socket {
         delete this.entities[slug].details[id]
     }
 
+    // Сброс собственных правок, отложенных пока была открыта модалка.
+    // Вызывается app.vue в watcher'е entity.modal, когда модалок не осталось.
+    flushPendingOwn() {
+        for (const slug in this.entities) {
+            const ent = this.entities[slug]
+            if (ent && typeof ent.flushPendingOwn === 'function') {
+                ent.flushPendingOwn()
+            }
+        }
+    }
+
     // Обновление строк в таблице и объектов
     ObjectUpdated(data) {
         console.log(data);
-        
+
         // Проверяем, существует ли объект для данного slug
         if (!data.data || !data.data.slug || !this.entities[data.data.slug]) return
 
@@ -3055,18 +3072,26 @@ class socketObject {
     constructor() {
         this.table = []
         this.details = {}
+        // Очередь собственных правок, прилетевших во время открытой модалки.
+        // Пока модалка открыта, мы НЕ добавляем их в socket.table (иначе
+        // плашка «X изменений» появится прямо за модалкой, на её же объекте).
+        // После закрытия модалки Socket.flushPendingOwn() переносит их в
+        // table, чтобы родительская таблица показала «Загрузить».
+        this.pendingOwn = []
     }
 
     // Обновление строки
     ObjectUpdated({data, isModal, userId}) {
-        // Свои правки игнорируем ТОЛЬКО пока открыта модалка — иначе плашка
-        // «X изменений» всплывала на родительской таблице в момент, когда
-        // пользователь ещё редактирует объект в модалке (тот самый объект,
-        // что в фоне). После закрытия модалки плашка должна появляться по
-        // событию ObjectUpdated и для собственных правок — это тот сигнал,
-        // что в таблице есть свежие данные с сервера.
-        if (userId == data.changed_by && isModal) return
+        // Своя правка В модалке — откладываем до её закрытия (см. flushPendingOwn).
+        if (userId == data.changed_by && isModal) {
+            this._enqueueOwn('update', data)
+            return
+        }
 
+        this._applyUpdate(data)
+    }
+
+    _applyUpdate(data) {
         let findedRow = this.table.find(row => row.id == data.id)
 
         if (findedRow) {
@@ -3076,6 +3101,27 @@ class socketObject {
                 row: data.viewList,
                 state: 'update'
             })
+        }
+    }
+
+    _enqueueOwn(kind, data) {
+        // Если уже есть такая же отложенная правка — обновляем, не плодим.
+        const idx = this.pendingOwn.findIndex(p => p.data.id == data.id)
+        if (idx >= 0) this.pendingOwn[idx] = { kind, data }
+        else this.pendingOwn.push({ kind, data })
+    }
+
+    flushPendingOwn() {
+        if (!this.pendingOwn.length) return
+        const batch = this.pendingOwn
+        this.pendingOwn = []
+        for (const item of batch) {
+            if (item.kind === 'update') this._applyUpdate(item.data)
+            else if (item.kind === 'delete') {
+                let findedRow = this.table.find(row => row.id == item.data.id)
+                if (findedRow) findedRow.state = 'delete'
+                else this.table.push({ row: item.data.viewList, state: 'delete' })
+            }
         }
     }
 

@@ -94,7 +94,17 @@
     openModal(item) {
       item.slug = item.slug ?? router.params.slug
       item.tab_slug = item.tab_slug ?? null
- 
+
+      // На страницах без slug-параметра (например, /logistic, /settings)
+      // metaJSON[router.params.slug] === undefined и currentTitle получался
+      // вида "undefined | Compas.pro". При закрытии деталки этот мусор
+      // подставлялся обратно в title. Берём актуальный document.title,
+      // который страница уже выставила через useHead в onMounted.
+      const fallbackTitle = (typeof document !== 'undefined' && document.title) ? document.title : ''
+      const savedTitle = (typeof this.currentTitle === 'string' && !this.currentTitle.startsWith('undefined'))
+        ? this.currentTitle
+        : fallbackTitle
+
       if (this.modal.length >= 9 && !['create', 'copy'].includes(item.type)) {
         this.modal = []
         this.addresses = []
@@ -106,7 +116,7 @@
       } else {
         this.modal.push(item)
         this.addresses.push({
-          title: this.currentTitle,
+          title: savedTitle,
           link: window.location.href
         })
 
@@ -155,7 +165,16 @@
   const entity = ref(new Entity())
 
   watch(entity.value.modal, () => {
-      socket.value.isModal = entity.value.modal.length > 0
+      const wasModal = socket.value.isModal
+      const isModalNow = entity.value.modal.length > 0
+      socket.value.isModal = isModalNow
+      // Когда модалка закрылась — материализуем собственные правки, которые
+      // были отложены пока пользователь редактировал в модалке. Так в
+      // родительской таблице появляется стандартная плашка «1 изменение…
+      // [Загрузить]» сразу после закрытия деталки.
+      if (wasModal && !isModalNow) {
+        socket.value.flushPendingOwn?.()
+      }
     })
 
   provide('socket', socket)
