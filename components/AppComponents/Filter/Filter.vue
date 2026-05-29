@@ -63,17 +63,18 @@
 
             <div class="filter__group">
                 <!--
-                    Инпут «Поиск» показываем, когда есть текст в поле, активен
-                    тоггл «Поиск» или уже применён поисковый чип. Без проверки
-                    activeTabs (после сабмита state.search обнуляется) инпут
-                    исчезал при включённом поиске.
+                    Инпут «Поиск» в попапе показываем, когда есть текст,
+                    активен тоггл «Поиск» или уже применён чип. v-model
+                    отдельный — попапный инпут отображает ТЕКУЩИЙ применённый
+                    поиск (как в чипе), а внешний (header) инпут после
+                    submit чистится.
                 -->
-                <div class="filter__fields" v-if="filter.state.search || filter.state.searchEnabled || filter.state.activeTabs.some(t => t.key === 'search')">
+                <div class="filter__fields" v-if="filter.state.search || filter.state.searchInPopup || filter.state.searchEnabled || filter.state.activeTabs.some(t => t.key === 'search')">
                     <div class="filter__field" :class="{'filter__field_disabled': filter.state.activeTabs.length == 0}">
                         <AppInput
                             class="filter__field_search"
-                            @keyup.enter="filter.updateInfo()"
-                            v-model="filter.state.search"
+                            @keyup.enter="filter.updateInfo({ fromPopup: true })"
+                            v-model="filter.state.searchInPopup"
                             :options="{ id: 0, title: 'Поиск', type: 'text', name: 'search', placeholder: '', autocomplete: 'off' }"
                         />
                     </div>
@@ -321,7 +322,11 @@
             this.state = reactive({
                 activeTabs: [],
                 hiddenTabs: [],
+                // search — значение во внешнем (header) инпуте, чистится после
+                // submit. searchInPopup — значение в попапном инпуте «Поиск»,
+                // отражает ТЕКУЩИЙ применённый запрос (как в чипе), не чистится.
                 search: '',
+                searchInPopup: '',
                 searchEnabled: false,
                 isOpen: false,
                 fields: [],
@@ -343,15 +348,16 @@
             for (let key in this.state.tabsValues) {
                 this.state.tabsValues[key] = null
             }
-            this.state.search = null
+            this.state.search = ''
+            this.state.searchInPopup = ''
             this.state.activeTabs = []
-            
+
             this.updateInfo()
             this.closeContent(null, true)
         }
 
         // Обновление информации
-        updateInfo() {
+        updateInfo(opts = {}) {
             const setValue = (key, type = null) => {
                 // Трансформация селекта
                 const transformSelect = (item, key, type = null) => {
@@ -385,20 +391,24 @@
                         return this.state.tabsValues[key]
                 }
             }
+            // Текст применяемого поиска: если Enter в попапном инпуте — берём
+            // searchInPopup, иначе — search (внешний header-инпут).
+            const effectiveSearch = opts.fromPopup ? this.state.searchInPopup : this.state.search
+
             this.state.hiddenTabs = []
             this.state.activeTabs = Object.keys(this.state.tabsValues).filter(key => (this.state.tabsValues[key] || typeof this.state.tabsValues[key] == 'boolean') && key != 'search').map(key => (
                 {
                     label: this.state.fields.find(field => field.key == key)?.title,
                     key: key,
-                    value: setValue(key) 
+                    value: setValue(key)
                 }
             ))
 
-            if (this.state.search && this.state.activeTabs.find(tab => tab.key == 'search')) {
+            if (effectiveSearch && this.state.activeTabs.find(tab => tab.key == 'search')) {
                 let findedTab = this.state.activeTabs.findIndex(tab => tab.key == 'search')
-                this.state.activeTabs[findedTab] = { label: 'Поиск', key: 'search', value: this.state.search }
-            } else if (this.state.search && this.state.activeTabs.find(tab => tab.key == 'search') == undefined) {
-                this.state.activeTabs.push({ label: 'Поиск', key: 'search', value: this.state.search })
+                this.state.activeTabs[findedTab] = { label: 'Поиск', key: 'search', value: effectiveSearch }
+            } else if (effectiveSearch && this.state.activeTabs.find(tab => tab.key == 'search') == undefined) {
+                this.state.activeTabs.push({ label: 'Поиск', key: 'search', value: effectiveSearch })
             }
 
             this.closeContent(null, true)
@@ -410,17 +420,17 @@
                     value: setValue(key, 'request')
                 }
             ))
-            if (this.state.search) {
-                request.push({ label: 'Поиск', key: 'search', value: this.state.search })
+            if (effectiveSearch) {
+                request.push({ label: 'Поиск', key: 'search', value: effectiveSearch })
             }
             console.log('updateInfo request:', request);
             injectedFilter.get(request)
 
-            // После применения поиск дублировался: одно и то же значение лежало
-            // и в инпуте, и в чипе. Сбрасываем value инпута — чип в filter__tabs
-            // остаётся единственным источником, в нём пользователь видит активный
-            // поиск и может его сбросить крестиком.
+            // Чистим внешний header-инпут (дублировал значение чипа). Попапный
+            // оставляем с текущим применённым значением, чтобы пользователь
+            // мог его поправить и снова отправить Enter.
             this.state.search = ''
+            this.state.searchInPopup = effectiveSearch || ''
         }
 
         // Открытие/закрытие опций
@@ -443,6 +453,7 @@
 
             if (tab.key == 'search') {
                 this.state.search = ''
+                this.state.searchInPopup = ''
             }
 
             this.updateInfo()
@@ -452,9 +463,10 @@
             for (let tab of this.state.hiddenTabs) {
                 this.state.activeTabs = this.state.activeTabs.filter(p => p.key != tab.key)
                 this.state.tabsValues[tab.key] = null
-    
+
                 if (tab.key == 'search') {
                     this.state.search = ''
+                    this.state.searchInPopup = ''
                 }
             }
 

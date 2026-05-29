@@ -37,6 +37,7 @@
                     />
 
                     <AppVirtualTable
+                        :ref="el => setRoutesTableRef(el)"
                         v-else-if="section.key == 'routes'"
                         :slug="'routes'"
                         :key="'routes'"
@@ -71,7 +72,7 @@
                         @saveTable="data => logistic.updateRoute(data)"
                         @getData="data => logistic.onRoutesTableLoaded(data)"
                         @openModal="item => emit('openModal', item)"
-                        @choseRow="data => logistic.choseRoute(data)"
+                        @choseRow="data => onRouteRowChosen(data)"
                         @initCreateRoute="logistic.initCreateRoute()"
                     />
 
@@ -100,7 +101,7 @@
                                 isCheckClicked: true,
                                 isDisableSort: false,
                                 isDisablePull: false,
-                                isDisablePut: true,
+                                isDisablePut: false,
                                 draggableTarget: '.table__row',
                                 group: 'logistic_tasks',
                                 isHaveFilter: false,
@@ -113,6 +114,7 @@
                             @openModal="item => emit('openModal', item)"
                             @choseRow="row => onUnassignedTaskClickInTable(row)"
                             @addRow="row => logistic.onTaskDroppedToUnassigned(row)"
+                            @removeRow="row => logistic.onTaskDroppedToUnassigned(row)"
                         />
                     </div>
 
@@ -464,36 +466,78 @@
         setTimeout(next, delays[i++]);
     };
 
-    // Сслыки на инстансы двух task-таблиц — нужны, чтобы синхронизировать
-    // выделение строки (focused task общий между «Задачи логистики» и
-    // «Задачи в машине», по требованию).
+    // Ссылки на инстансы трёх таблиц логистики — нужны, чтобы централизованно
+    // управлять выделением строк. Сценарии:
+    //   1) Routes-таблица: только одна выделенная строка (= активный маршрут).
+    //   2) Task-таблицы (Задачи логистики + Задачи в машине): ОДНА общая
+    //      выделенная строка на обе — focused task. Нажатие на задачу в одной
+    //      сбрасывает выделение в другой.
+    //   3) Клик по маркеру задачи на карте: переводит focused task на
+    //      соответствующую задачу в той из task-таблиц, где она физически есть.
     const taskTableRefs = { unassigned: null, route: null };
     const setTaskTableRef = (key, el) => {
         taskTableRefs[key] = el || null;
     };
+    let routesTableComp = null;
+    const setRoutesTableRef = (el) => {
+        routesTableComp = el || null;
+    };
 
-    // Сбрасываем body[i].clicked во всех task-таблицах, кроме переданной.
-    // Без этого после клика в одной задаче в другой оставалась прежняя
-    // отмеченная строка — пользователь видел сразу два выделения.
-    const clearOtherTaskTablesClicked = (exceptKey) => {
+    // Установить clicked=true для строки с указанным id в данной task-таблице,
+    // во ВСЕХ task-таблицах все остальные строки делаем clicked=false. Это и
+    // даёт «одна галочка на две таблицы». Возвращает true, если совпавшая
+    // строка реально нашлась хотя бы в одной таблице.
+    const setTaskRowClicked = (taskId) => {
+        let found = false;
         for (const key in taskTableRefs) {
-            if (key === exceptKey) continue;
             const tableComp = taskTableRefs[key];
             const body = tableComp?.table?.value?.body;
             if (!Array.isArray(body)) continue;
             for (const row of body) {
-                if (row && row.clicked) row.clicked = false;
+                if (!row) continue;
+                const isMatch = taskId != null && Number(row.id) === Number(taskId);
+                if (isMatch) found = true;
+                if (!!row.clicked !== isMatch) row.clicked = isMatch;
             }
+        }
+        return found;
+    };
+
+    // Аналогично для routes-таблицы — одна выделенная строка.
+    const setRouteRowClicked = (routeId) => {
+        const body = routesTableComp?.table?.value?.body;
+        if (!Array.isArray(body)) return;
+        for (const row of body) {
+            if (!row) continue;
+            const isMatch = routeId != null && Number(row.id) === Number(routeId);
+            if (!!row.clicked !== isMatch) row.clicked = isMatch;
         }
     };
 
-    // Click on route task marker on map → highlight row in table
+    // Полный сброс выделения во всех task-таблицах.
+    const clearAllTaskRowsClicked = () => {
+        setTaskRowClicked(null);
+    };
+
+    // Обёртка вокруг @choseRow для routes-таблицы: сначала ставим выделение
+    // только на выбранную строку (исключая старую галочку у предыдущего
+    // маршрута, которую Body.handleClick иногда не успевал перетереть из-за
+    // virtualizer/reactivity-таймингов), затем триггерим обычный choseRoute.
+    const onRouteRowChosen = (data) => {
+        setRouteRowClicked(data?.id ?? null);
+        // Смена маршрута сбрасывает focused task — он мог принадлежать
+        // предыдущему маршруту и больше не релевантен.
+        clearAllTaskRowsClicked();
+        logistic.value.choseRoute(data);
+    };
+
+    // Click on route task marker on map → highlight row in task tables
     const onRouteTaskClickOnMap = (task) => {
         logistic.value.activeTaskId = null;
         nextTick(() => { logistic.value.activeTaskId = task.id; });
-        // Маркеры маршрута относятся к задачам в машине — выделяем
-        // соответствующую строку только в task-таблицах (Logic в
-        // highlightTableRow уже скоупит к ним).
+        // Маркер задачи → ставим галочку (clicked) в правильной task-таблице
+        // и DOM-класс table__row_clicked, очищая выделение в обеих остальных.
+        setTaskRowClicked(task.id);
         highlightTableRow(task.id);
     };
 
@@ -501,12 +545,16 @@
         const taskId = row.id || row;
         logistic.value.activeTaskId = null;
         nextTick(() => { logistic.value.activeTaskId = taskId; });
-        clearOtherTaskTablesClicked('route');
+        // body.map в handleClick таблицы уже поставил clicked текущей строке,
+        // но в ВТОРОЙ task-таблице clicked мог остаться от прошлого клика —
+        // сбрасываем централизованно.
+        setTaskRowClicked(taskId);
     };
 
     const onUnassignedTaskClickOnMap = (task) => {
         logistic.value.activeTaskId = null;
         nextTick(() => { logistic.value.activeTaskId = task.id; });
+        setTaskRowClicked(task.id);
         highlightTableRow(task.id);
     };
 
@@ -514,7 +562,7 @@
         const taskId = row.id || row;
         logistic.value.activeTaskId = null;
         nextTick(() => { logistic.value.activeTaskId = taskId; });
-        clearOtherTaskTablesClicked('unassigned');
+        setTaskRowClicked(taskId);
     };
 
     const filteredFields = computed(() => {

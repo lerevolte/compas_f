@@ -246,8 +246,32 @@
     }
 }
 
+// Цель drop'а в таблице Маршрутов (наводим задачу). Используем тот же
+// «синий выделенный» оттенок, что и table__row_clicked, и добавляем
+// dashed-рамку сверху+снизу (повторяя визуал draggable-ghost у задачи) —
+// чтобы пользователь видел согласованную пару источник↔приёмник.
+.logistic__drop-target,
+.logistic__drop-target .table__cell {
+    background-color: #d9e4f0 !important;
+}
 .logistic__drop-target {
-    background-color: rgba(134, 1, 255, 0.12) !important;
-    outline: 2px dashed #8601ff;
-    outline-offset: -2px;
+    box-shadow:
+        inset 0 2px 0 0 #a6b7d4,
+        inset 0 -2px 0 0 #a6b7d4 !important;
+}
+
+// В логистике таблицы Маршруты / Задачи логистики / Задачи в машине часто
+// бывают пустыми (нет задач у маршрута, нет нераспределённых). Дефолтный
+// min-height: 50px в .table__body даёт крошечную зону для drop, и пользователь
+// промахивается. Растягиваем body на остаток высоты секции — drop-зона теперь
+// весь свободный кусок таблицы.
+.logistic .section-table {
+    .table {
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+    .table__body {
+        flex: 1 1 auto;
+        min-height: 150px;
+    }
 }

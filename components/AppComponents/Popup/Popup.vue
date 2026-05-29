@@ -25,7 +25,7 @@
 
 <script setup>
     import './Popup.scss';
-    import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
+    import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch, markRaw } from 'vue'
 
     const popupRef = ref(null)
     const contentRef = ref(null)
@@ -250,7 +250,13 @@
         }
     })
 
-    const popup = ref(new Popup(popupRef, contentRef))
+    // markRaw, чтобы Vue не оборачивал инстанс Popup в reactive-прокси.
+    // Внутри Popup мы держим this.popupRef = popupRef (Vue ref). Если бы инстанс
+    // был реактивным прокси, доступ this.popupRef через прокси АВТОматически
+    // распаковывал бы ref → this.popupRef.value становился бы undefined
+    // (DOM-элементы не имеют .value). Из-за этого applyPosition не находил
+    // anchor/content и попап оставался без inline top/left.
+    const popup = ref(markRaw(new Popup(popupRef, contentRef)))
 
     watch(() => popup.value.state.isOpen, (next) => {
         if (next) popup.value._scheduleApply();
