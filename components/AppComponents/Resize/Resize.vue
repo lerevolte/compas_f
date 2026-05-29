@@ -95,13 +95,31 @@
             return new Array(x, y);
         }
 
+        // Ищем ближайший прокручиваемый предок выше секции (overflow auto/scroll
+        // по вертикали). Это, скорее всего, .page (max-height: 100vh +
+        // overflow:auto), но мы не хардкодим селектор. ScrollHeight НЕ
+        // проверяем — нам нужен элемент, который СПОСОБЕН скроллиться;
+        // overflow добавится по мере роста секции.
+        findScroller() {
+            if (!sectionRef.value) return null
+            let el = sectionRef.value.parentElement
+            while (el && el !== document.body && el !== document.documentElement) {
+                const cs = window.getComputedStyle(el)
+                const oy = cs.overflowY
+                if (oy === 'auto' || oy === 'scroll') {
+                    return el
+                }
+                el = el.parentElement
+            }
+            return document.scrollingElement || document.documentElement
+        }
+
         // Изменение высоты секции. Секцию растим 1:1 с движением курсора
         // (deltaHeight + pageY). Если визуально её нижний край подходит
         // ближе 40px к низу viewport — параллельно докручиваем
-        // скролл-контейнер (.page) ровно на эту дельту, чтобы визуально
-        // между нижним краем секции и нижним краем экрана всегда оставалось
-        // ≥40px. deltaHeight за скролл НЕ компенсируем — иначе секция
-        // начинает расти быстрее курсора.
+        // скролл-контейнер ровно на эту дельту. Если scroll-контейнера нет
+        // или он не может прокрутиться дальше — ограничиваем рост секции,
+        // чтобы её нижний край не залезал ближе 40px к низу экрана.
         resizeBlock(obj_event) {
             let point = this.getXY(obj_event);
             let newHeight = this.deltaHeight + point[1]
@@ -109,14 +127,31 @@
 
             sectionRef.value.style.setProperty("--heightSection", `${newHeight}px`)
 
-            if (typeof window !== 'undefined' && sectionRef.value) {
-                const BOTTOM_MARGIN = 40
-                const rect = sectionRef.value.getBoundingClientRect()
-                const sectionBottom = rect.top + newHeight
-                const overflow = sectionBottom - (window.innerHeight - BOTTOM_MARGIN)
-                if (overflow > 0) {
-                    const scroller = sectionRef.value.closest?.('.page') || document.scrollingElement
-                    if (scroller) scroller.scrollTop = scroller.scrollTop + overflow
+            if (typeof window === 'undefined' || !sectionRef.value) return
+
+            const BOTTOM_MARGIN = 40
+            // Сначала пробуем подскроллить ближайший scroll-container,
+            // чтобы секция «уехала» вверх и снизу остался 40px.
+            const rect = sectionRef.value.getBoundingClientRect()
+            const overflow = (rect.top + newHeight) - (window.innerHeight - BOTTOM_MARGIN)
+            if (overflow > 0) {
+                const scroller = this.findScroller()
+                if (scroller) {
+                    const before = scroller.scrollTop
+                    scroller.scrollTop = before + overflow
+                    const actuallyScrolled = scroller.scrollTop - before
+                    const remainingOverflow = overflow - actuallyScrolled
+                    // Если scroll-container уперся в max и не смог отъехать на
+                    // всю величину overflow — урезаем высоту секции на этот
+                    // остаток, чтобы нижний край всё равно остался в 40px от
+                    // низа viewport. Иначе на низком разрешении или когда
+                    // нечего скроллить, секция бы пересекла нижний край.
+                    if (remainingOverflow > 0) {
+                        const cappedHeight = newHeight - remainingOverflow
+                        if (cappedHeight >= 160) {
+                            sectionRef.value.style.setProperty('--heightSection', `${cappedHeight}px`)
+                        }
+                    }
                 }
             }
         }
