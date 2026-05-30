@@ -104,8 +104,8 @@
                                 // плашка зажигалась на обеих task-таблицах
                                 // одновременно — даже на «не своих» задачах.
                                 socketFilter: (row) => {
-                                    const rid = (row && typeof row === 'object' && 'route_id' in row) ? row.route_id : undefined
-                                    if (rid !== null && rid !== undefined && rid !== '') return false
+                                    const rid = extractRouteId(row?.route_id)
+                                    if (rid != null) return false
                                     return matchesActiveDate(row)
                                 },
                                 isCheckClicked: true,
@@ -147,9 +147,8 @@
                             },
                             // Плашка только для задач этого маршрута.
                             socketFilter: (row) => {
-                                const rid = (row && typeof row === 'object' && 'route_id' in row) ? row.route_id : undefined
-                                if (rid == null || String(rid) !== String(logistic.machine_tasks.route_id)) return false
-                                return true
+                                const rid = extractRouteId(row?.route_id)
+                                return rid != null && String(rid) === String(logistic.machine_tasks.route_id)
                             },
                             disabledKeys: ['delivery_date'],
                             isShort: true,
@@ -537,6 +536,22 @@
         setTaskRowClicked(id);
     };
 
+    // viewList у relation-полей приходит в виде объекта
+    // { value: [id]|null|[], localOptions: [...] }. Достаём из этой
+    // структуры скалярный route_id (или null, если задача без маршрута).
+    const extractRouteId = (raw) => {
+        if (raw == null || raw === '') return null;
+        if (typeof raw === 'object') {
+            const v = raw.value;
+            if (Array.isArray(v)) {
+                const first = v.find(x => x != null && x !== '');
+                return first != null ? first : null;
+            }
+            return v != null && v !== '' ? v : null;
+        }
+        return raw;
+    };
+
     // Проверка, что задача относится к текущей выбранной дате.
     // Используется в socketFilter таблиц логистики, чтобы плашка
     // «N изменений» появлялась только для задач, которые реально
@@ -544,10 +559,14 @@
     const matchesActiveDate = (row) => {
         if (!row || typeof row !== 'object') return false;
         const dv = row.delivery_date;
-        const date = (typeof dv === 'object' && dv !== null) ? (dv.value ?? dv.date ?? null) : dv;
+        let date = dv;
+        if (typeof date === 'object' && date !== null) {
+            date = date.value ?? date.date ?? null;
+        }
         if (!date) return false;
         const active = logistic.value.activeDate;
-        return String(date).slice(0, 10) === String(active).slice(0, 10);
+        const activeStr = typeof active === 'string' ? active : (active?.toISOString?.() ?? '');
+        return String(date).slice(0, 10) === String(activeStr).slice(0, 10);
     };
 
     // Обёртка вокруг @choseRow для routes-таблицы: сначала ставим выделение

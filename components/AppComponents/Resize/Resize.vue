@@ -84,9 +84,6 @@
                 // viewport (mousemove'ов было мало и scroll не успел
                 // отыграть полностью) — здесь точно ставим section.bottom =
                 // viewport - 40, добавляя спейсер/скролл или урезая высоту.
-                // Делаем 2 прохода через rAF, чтобы layout успел применить
-                // все промежуточные изменения (height из CSS-переменной,
-                // scrollTop из ensureSpacer, и т.п.).
                 this._snapToBottomMargin()
                 requestAnimationFrame(() => {
                     this._snapToBottomMargin()
@@ -95,6 +92,13 @@
                         this._compactSpacerToFinal()
                     })
                 })
+                // Отдельный setTimeout: на случай, если rAF блокирован
+                // (например, вкладка ушла в фон) или браузер не успел
+                // прокрутить scroll-контейнер за один кадр.
+                setTimeout(() => {
+                    this._snapToBottomMargin()
+                    this._compactSpacerToFinal()
+                }, 80)
 
                 emit('endResize', sectionRef.value.offsetHeight)
             }
