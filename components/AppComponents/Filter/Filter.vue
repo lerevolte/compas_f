@@ -391,9 +391,15 @@
                         return this.state.tabsValues[key]
                 }
             }
-            // Текст применяемого поиска: если Enter в попапном инпуте — берём
-            // searchInPopup, иначе — search (внешний header-инпут).
-            const effectiveSearch = opts.fromPopup ? this.state.searchInPopup : this.state.search
+            // Текст применяемого поиска: новый ввод из инпута (header/popup)
+            // или, если ввода нет, — уже применённый ранее чип «Поиск».
+            // Без этого fallback на existing chip применение любого фильтра
+            // снимало активный поисковый чип (state.search чистится после
+            // submit, и effectiveSearch стало пустым → updateInfo строил
+            // activeTabs без 'search').
+            const inputSearch = opts.fromPopup ? this.state.searchInPopup : this.state.search
+            const existingSearchChip = this.state.activeTabs.find(t => t.key == 'search')?.value || ''
+            const effectiveSearch = inputSearch || existingSearchChip
 
             this.state.hiddenTabs = []
             this.state.activeTabs = Object.keys(this.state.tabsValues).filter(key => (this.state.tabsValues[key] || typeof this.state.tabsValues[key] == 'boolean') && key != 'search').map(key => (

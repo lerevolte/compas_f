@@ -1347,19 +1347,29 @@
     };
 
     // ── Fit bounds ──
+    // При выборе маршрута карта фокусируется на его центре, СОХРАНЯЯ
+    // текущий пользовательский zoom. Раньше fitBounds сбрасывала zoom под
+    // bounding box маршрута, и пользователь жаловался на «вылетающий» zoom.
     const fitBounds = () => {
         if (!mapInstance.value || !L) return;
         const pts = [];
         if (processedRoute?.tasks) processedRoute.tasks.forEach(t => { if (t.latLng) pts.push(t.latLng); });
-        if (shouldShowUnassigned()) {
-            props.unassignedTasks.forEach(t => {
-                const a = parseAddress(t.address);
-                if (a) pts.push(L.latLng(a.coords[0], a.coords[1]));
-            });
+        if (pts.length === 0) {
+            // Fallback: если в маршруте нет задач, центрируем по
+            // unassigned-точкам, иначе вообще ничего не двигаем.
+            if (shouldShowUnassigned()) {
+                props.unassignedTasks.forEach(t => {
+                    const a = parseAddress(t.address);
+                    if (a) pts.push(L.latLng(a.coords[0], a.coords[1]));
+                });
+            }
+            if (pts.length === 0) return;
         }
-        if (pts.length === 0) return;
-        if (pts.length === 1) safeSetView(pts[0], 15);
-        else safeFitBounds(L.latLngBounds(pts), { padding: [30, 30] });
+        const center = (pts.length === 1)
+            ? pts[0]
+            : L.latLngBounds(pts).getCenter();
+        // Сохраняем текущий zoom.
+        safeSetView(center, mapInstance.value.getZoom());
     };
 
     // ── Apply settings (called when user changes any setting) ──
@@ -1538,6 +1548,8 @@
     };
 
     // ── Public: focus on an unassigned task from table click ──
+    // При фокусе на задаче СОХРАНЯЕМ текущий zoom — пользователь жаловался,
+    // что любой клик по задаче «зумирует» карту. Просто панорамируем к точке.
     const focusUnassignedTask = (taskId) => {
         if (!mapInstance.value) return;
         const id = Number(taskId);
@@ -1546,7 +1558,7 @@
         const marker = unassignedMarkers.find(m => Number(m._taskId) === id);
         if (marker) {
             const latlng = marker.getLatLng();
-            safeSetView(latlng, 16);
+            safeSetView(latlng, mapInstance.value.getZoom());
             const el = marker.getElement();
             if (el) handleMarkerClick(el);
         }
@@ -1560,7 +1572,7 @@
         const marker = routeMarkers.find(m => Number(m._taskId) === id);
         if (marker) {
             const latlng = marker.getLatLng();
-            safeSetView(latlng, 16);
+            safeSetView(latlng, mapInstance.value.getZoom());
             const el = marker.getElement();
             if (el) handleMarkerClick(el);
             // Show service radius
@@ -1587,7 +1599,7 @@
             const item = el.querySelector(`.cluster-task-item[data-task-id="${taskId}"]`);
             if (item) {
                 const latlng = gm.getLatLng();
-                safeSetView(latlng, 16);
+                safeSetView(latlng, mapInstance.value.getZoom());
                 // Always open (not toggle)
                 handleMarkerClick(el, true);
                 // Highlight the specific item and bind clicks

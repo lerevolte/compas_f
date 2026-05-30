@@ -10,7 +10,7 @@
 
       </TableHeader>
       <div class="socket-row" v-if="!props.options?.isDisableSockets && table.socket?.table?.length > 0" >
-          {{ table.socket?.table?.length }} изменения в таблице <span class="socket-row__button" @click="table.getSocketRows(); table.get()"> Загрузить </span>
+          {{ table.socket?.table?.length }} изменения в таблице <span class="socket-row__button" @click="reloadFromSocket()"> Загрузить </span>
         </div>
       <!--
         ScrollButtons вынесены ПЕРЕД телом таблицы. Sticky-стрелки нуждаются
@@ -265,4 +265,21 @@
   // чтобы синхронизировать выделение строк между связанными таблицами
   // («Задачи логистики» ↔ «Задачи в машине» делят общий focused-task).
   defineExpose({ table, sectionRef })
+
+  // Перезагрузка таблицы при клике «Загрузить» в socket-плашке. Прежняя
+  // реализация делала table.get(), но это игнорировало isHaveQuery (на
+  // странице Логистики таблица маршрутов фильтруется по дате) и в
+  // результате после загрузки прилетали ВСЕ маршруты, а не на текущую дату.
+  // Используем тот же путь, что и initTable, чтобы query учитывался.
+  const reloadFromSocket = () => {
+    table.value.getSocketRows()
+    if (props.options.isHaveQuery) {
+      table.value.dependences = { state: true, query: props.options.query }
+      table.value.getWithQuery(common.getQueryUrl())
+    } else if (common.getQueryUrl()) {
+      table.value.getWithQuery(common.getQueryUrl())
+    } else {
+      table.value.get()
+    }
+  }
 </script>

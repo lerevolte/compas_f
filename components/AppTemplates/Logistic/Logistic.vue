@@ -52,7 +52,6 @@
                             title: 'Маршруты',
                             isHaveQuery: true,
                             query: {
-                                id: logistic.routes.id ?? null,
                                 date: logistic.activeDate
                             },
                             isShort: true,
@@ -70,7 +69,7 @@
                             updatingCount: logistic.routes.updatingCount
                         }"
                         @saveTable="data => logistic.updateRoute(data)"
-                        @getData="data => logistic.onRoutesTableLoaded(data)"
+                        @getData="data => { logistic.onRoutesTableLoaded(data); restoreRoutesSelection(data); }"
                         @openModal="item => emit('openModal', item)"
                         @choseRow="data => onRouteRowChosen(data)"
                         @initCreateRoute="logistic.initCreateRoute()"
@@ -85,6 +84,7 @@
                             :ref="el => setTaskTableRef('unassigned', el)"
                             :slug="'logistic_tasks'"
                             :key="'logistic_tasks'"
+                            @getData="restoreTaskSelection"
                             :options="{
                                 title: 'Задачи логистики',
                                 isHaveQuery: true,
@@ -97,7 +97,7 @@
                                 isShort: true,
                                 overscan: 5,
                                 isDraggable: true,
-                                isDisableSockets: true,
+                                isDisableSockets: false,
                                 isCheckClicked: true,
                                 isDisableSort: false,
                                 isDisablePull: false,
@@ -144,13 +144,13 @@
                             isDisablePut: false,
                             isDisableSort: true,
                             isHaveTopHeader: true,
-                            isDisableSockets: true,
+                            isDisableSockets: false,
                             isHaveFooter: false,
                             isHaveLocalFilter: false,
                             updatingCount: logistic.machine_tasks.updatingCount
                         }"
                         @openModal="item => emit('openModal', { ...item, slug: item.slug || 'logistic_tasks', route_id: logistic.machine_tasks.route_id })"
-                        @getData="data => logistic.getRoutes(data)"
+                        @getData="data => { logistic.getRoutes(data); restoreTaskSelection(data); }"
                         @addRow="row => logistic.changeRouteTasks(row.list)"
                         @removeRow="row => logistic.changeRouteTasks(row.list)"
                         @changePositionRow="row => logistic.changeRouteTasks(row.list)"
@@ -499,6 +499,26 @@
     // Полный сброс выделения во всех task-таблицах.
     const clearAllTaskRowsClicked = () => {
         setTaskRowClicked(null);
+    };
+
+    // После загрузки таблицы маршрутов восстанавливаем визуальное выделение
+    // активного маршрута (приходящего из URL ?route_id=, или просто сохранённого
+    // в логистике). Раньше выделение терялось при socket-перезагрузке /
+    // переходе по поисковой ссылке.
+    const restoreRoutesSelection = (rows) => {
+        const id = logistic.value.routes?.id ?? logistic.value.machine_tasks?.route_id ?? null;
+        if (id == null || !Array.isArray(rows)) return;
+        if (!rows.some(r => Number(r?.id) === Number(id))) return;
+        setRouteRowClicked(id);
+    };
+
+    // Аналог для task-таблиц: подсветить активную задачу (из URL ?task_id=)
+    // после загрузки данных, неважно в какой именно task-таблице она лежит.
+    const restoreTaskSelection = (rows) => {
+        const id = logistic.value.activeTaskId ?? null;
+        if (id == null || !Array.isArray(rows)) return;
+        // Ищем во ВСЕХ task-таблицах — setTaskRowClicked сам разберётся.
+        setTaskRowClicked(id);
     };
 
     // Обёртка вокруг @choseRow для routes-таблицы: сначала ставим выделение

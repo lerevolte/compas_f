@@ -105,20 +105,14 @@
   height: 40px;
   left: 0px;
   justify-content: center;
-  width: calc(100vw - 280px);
-
-  @supports (-webkit-touch-callout: none) {
-    /* Safari only */
-    width: calc(100vw - 280px);
-    min-width: calc(100vw - 280px);
-    max-width: calc(100vw - 280px);
-  }
-}
-
-@media (max-width: 990px) {
-  .socket-row {
-    width: calc(100vw - 45px);
-  }
+  // Раньше использовался calc(100vw - 280px) — это привязка к viewport,
+  // которая ломалась внутри логистических колонок (там таблица ~50vw).
+  // Надпись «N изменений» оказывалась в середине ВСЕЙ ширины таблицы,
+  // которая шире видимой области; чтобы её увидеть, нужно было скроллить
+  // вправо. Берём ширину видимой области у sticky-элемента: 100% — это
+  // ширина контейнера .table, и центрирование становится корректным.
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .socket-row__button {

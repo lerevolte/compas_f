@@ -79,19 +79,58 @@
                     document.removeEventListener("mouseup", this.mouseUpHandler);
                 }
 
+                // Финальная корректировка: даже если в процессе быстрого
+                // drag'а нижний край секции «проскочил» в нижние 40px
+                // viewport (mousemove'ов было мало и scroll не успел
+                // отыграть полностью) — здесь точно ставим section.bottom =
+                // viewport - 40, добавляя спейсер/скролл или урезая высоту.
+                this._snapToBottomMargin()
+
                 // Спейсер ОСТАВЛЯЕМ — он нужен и после релиза, чтобы у
                 // .page оставался scroll-room, при котором нижний край
-                // секции виден в 40px от низа viewport. Если убрать спейсер,
-                // scrollHeight сжимается, scrollTop клампится вниз, и
-                // пользователь видит, как «отступ пропал» — секция
-                // упирается в нижний край экрана.
-                // Под текущий scrollTop нормализуем высоту так, чтобы
-                // максимальный scroll был ровно у позиции, в которой секция
-                // имеет 40px gap (без хвоста из всех промежуточных
-                // overflow'ов, накопленных в процессе drag'а).
+                // секции виден в 40px от низа viewport. Под текущий
+                // scrollTop нормализуем его высоту, чтобы не оставлять
+                // лишнего «хвоста» от промежуточных drag-итераций.
                 this._compactSpacerToFinal()
 
                 emit('endResize', sectionRef.value.offsetHeight)
+            }
+        }
+
+        // Гарантирует, что в момент завершения drag'а нижний край секции
+        // ровно в BOTTOM_MARGIN от низа viewport: сперва пробуем
+        // подкорректировать через spacer + scroll, если не помогает —
+        // подрезаем высоту секции.
+        _snapToBottomMargin() {
+            if (typeof window === 'undefined' || !sectionRef.value) return
+            const BOTTOM_MARGIN = 40
+            let height = sectionRef.value.offsetHeight
+            const rect = sectionRef.value.getBoundingClientRect()
+            let overflow = (rect.top + height) - (window.innerHeight - BOTTOM_MARGIN)
+            if (overflow <= 0) return
+
+            const scrollers = this.findScrollers()
+            const primary = scrollers[0] || document.scrollingElement
+            if (primary) this._ensureSpacer(primary, overflow)
+
+            for (const scroller of scrollers) {
+                if (overflow <= 0) break
+                const before = scroller.scrollTop
+                scroller.scrollTop = before + overflow
+                const actuallyScrolled = scroller.scrollTop - before
+                if (actuallyScrolled > 0) overflow -= actuallyScrolled
+            }
+            if (overflow > 0 && typeof window.scrollBy === 'function') {
+                const before = window.scrollY
+                window.scrollBy(0, overflow)
+                overflow -= (window.scrollY - before)
+            }
+            if (overflow > 0) {
+                const capped = height - overflow
+                sectionRef.value.style.setProperty(
+                    '--heightSection',
+                    `${capped >= 160 ? capped : 160}px`
+                )
             }
         }
 

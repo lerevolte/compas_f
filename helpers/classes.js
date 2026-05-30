@@ -2008,6 +2008,42 @@ export class Section {
             subfields: item.groupField.fields.map(p => p.id)
         })
     }
+
+    // Принудительное удаление поля из subfields группы. Используется когда
+    // nested sortable (vuedraggable) уронил поле в outer-секцию того же
+    // column, но не убрал его из source-группы (известный квирк sortable.js
+    // на вложенных листах с одинаковым group-name). Дёргаем то же backend-API,
+    // что и dragGroupField, но с уже-уменьшенным списком subfields.
+    async dragRemoveFromGroup(item, column_key, slug, columns) {
+        const sourceGroupId = item?.sourceGroupId
+        const movedFieldId = item?.movedFieldId
+        if (!sourceGroupId || !movedFieldId) return
+
+        let groupField = null
+        for (const column in columns) {
+            for (const section of columns[column]) {
+                for (const f of section.fields) {
+                    if (f.id == sourceGroupId && Array.isArray(f.fields)) {
+                        groupField = f
+                        break
+                    }
+                }
+                if (groupField) break
+            }
+            if (groupField) break
+        }
+        if (!groupField) return
+
+        // Чистим reactive-массив (vuedraggable пропустил эту операцию).
+        const beforeLen = groupField.fields.length
+        groupField.fields = groupField.fields.filter(p => p.id != movedFieldId)
+        if (groupField.fields.length === beforeLen) return // не было — выходим
+
+        await api.callMethod('PUT', routes.detail.update_field.replace('${id}', groupField.id), {
+            id: groupField.id,
+            subfields: groupField.fields.map(p => p.id)
+        })
+    }
 }
 
 // Поля
@@ -2490,6 +2526,26 @@ export class Field {
 
         if (options && options.type == 'field') {
             this.emit('actionSection', {action: 'dragGroupField', value: {groupField, event}})
+            return
+        }
+
+        // type=='section' (внешний draggable секции). Если сюда «прилетело»
+        // поле ИЗ вложенной группы (event.added + source.dataset.tileType=='field'),
+        // Sortable иногда не удаляет его из исходной group.fields (поведение
+        // nested-sortable в одной group-name). Просим обработать это явно:
+        // даём родительскому уровню источник-id, чтобы он почистил group.fields
+        // и отправил backend-update для группы.
+        if (event && event.added && event.from && event.from.dataset?.tileType === 'field') {
+            const sourceGroupId = event.from.dataset?.tileId
+            if (sourceGroupId) {
+                this.emit('actionSection', {
+                    action: 'dragRemoveFromGroup',
+                    value: {
+                        sourceGroupId: Number(sourceGroupId),
+                        movedFieldId: event.added.element?.id
+                    }
+                })
+            }
         }
     }
 
