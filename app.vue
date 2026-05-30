@@ -198,9 +198,13 @@
 
   const entity = ref(new Entity())
 
-  watch(entity.value.modal, () => {
-      const wasModal = socket.value.isModal
-      const isModalNow = entity.value.modal.length > 0
+  // Watch именно по getter'у на длину массива — иначе watch(массив, cb)
+  // в Vue не реагирует на push/pop (ссылка не меняется), и
+  // флаг isModal + flushPendingOwn не срабатывали → socket-плашка
+  // не появлялась после закрытия деталки.
+  watch(() => entity.value.modal.length, (newLen, oldLen) => {
+      const wasModal = (oldLen || 0) > 0
+      const isModalNow = (newLen || 0) > 0
       socket.value.isModal = isModalNow
       // Когда модалка закрылась — материализуем собственные правки, которые
       // были отложены пока пользователь редактировал в модалке. Так в
