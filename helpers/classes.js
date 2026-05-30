@@ -2009,6 +2009,35 @@ export class Section {
         })
     }
 
+    // Чистка subfields всех групп после cross-container drop в outer-секцию.
+    // Вызывается из Field.dragChange (событие added на outer). Сканируем
+    // ВСЕ группы во всех колонках: если movedFieldId всё ещё лежит в
+    // subfields какой-то группы (nested-sortable не убрал) — splice + PUT
+    // update_field с новым списком. Безопасно вызывать даже когда поле
+    // не было в группе (просто ничего не найдёт).
+    async dragCleanupAfterAdd(item, column_key, slug, columns) {
+        const fieldId = item?.fieldId
+        if (!fieldId) return
+        const calls = []
+        for (const column in columns) {
+            for (const section of columns[column]) {
+                for (const f of section.fields) {
+                    if (f.type === 'text_group' && Array.isArray(f.fields)) {
+                        const idx = f.fields.findIndex(p => Number(p.id) === Number(fieldId))
+                        if (idx !== -1) {
+                            f.fields.splice(idx, 1)
+                            calls.push(api.callMethod('PUT', routes.detail.update_field.replace('${id}', f.id), {
+                                id: f.id,
+                                subfields: f.fields.map(p => p.id)
+                            }))
+                        }
+                    }
+                }
+            }
+        }
+        if (calls.length) await Promise.all(calls)
+    }
+
     // Принудительное удаление поля из subfields группы. Используется когда
     // nested sortable (vuedraggable) уронил поле в outer-секцию того же
     // column, но не убрал его из source-группы (известный квирк sortable.js
@@ -2471,7 +2500,14 @@ export class Field {
         this._dragStartedAt = Date.now()
     }
 
-    // Конец перетаскивания поля
+    // Конец перетаскивания поля.
+    // Раньше тут лежали ВСЕ backend-вызовы. Но для случая inner-group →
+    // outer-секция, которая является родителем этой группы, nested Sortable
+    // нестабилен: event.to/event.from могут указывать в один и тот же
+    // контейнер (либо inner, либо outer) — и тогда мы ничего не вызывали,
+    // а поле визуально оставалось в группе. Поэтому cross-container moves
+    // переехали в dragChange (там есть надёжное {added|removed} на каждой
+    // стороне). Здесь оставлен ТОЛЬКО sort внутри одной outer-секции.
     async dragEnd(event, options = {type: 'section'}) {
         if (this.dragger) {
             this.dragger.classList.remove('column-fields_dragging-field')
@@ -2481,41 +2517,10 @@ export class Field {
         // поле (его HTML-event приходит ПОСЛЕ end в большинстве браузеров).
         setTimeout(() => { this._isDraggingField = false }, 250)
 
-        // @change в vuedraggable отдаёт только {added|removed|moved}.
-        // Полный Sortable-event (с event.to.__draggable_component__,
-        // event.from.dataset и т.п.) приходит только в @end — поэтому ВСЕ
-        // backend-вызовы делаем здесь.
-        const toContainer = event?.to
-        const fromContainer = event?.from
-        const toType = toContainer?.dataset?.tileType || (options?.type === 'field' ? 'field' : 'section')
-        const fromType = fromContainer?.dataset?.tileType || (options?.type === 'field' ? 'field' : 'section')
-
-        // Если поле уезжает В text_group (внутрь группы) — порядок и
-        // group_id прописывает обработчик внутреннего draggable через
-        // dragGroupField (вызывается из dragChange). change_order_field тут
-        // вызывать нельзя: itemKey внутри группы — это id поля-группы,
-        // не id секции, и section_id затрётся в мусор.
-        if (toType === 'field') return
-
-        // Источник — text_group; приёмник — обычная секция.
-        // Чистим group.fields через actionSection (страховка, если
-        // Sortable не успел убрать поле из source-массива), и потом
-        // обновляем section_id+sort через change_order_field. Backend
-        // changeSort сам сбросит group_id.
-        if (fromType === 'field' && toType === 'section') {
-            const sourceGroupId = fromContainer?.dataset?.tileId
-            const movedFieldId = event?.item?._underlying_vm_?.id
-            if (sourceGroupId && movedFieldId) {
-                this.emit('actionSection', {
-                    action: 'dragRemoveFromGroup',
-                    value: { sourceGroupId: Number(sourceGroupId), movedFieldId }
-                })
-            }
-        }
-
-        // change_order_field — для любого drop'а в outer-секцию
-        // (cross-section move ИЛИ sort внутри секции).
-        if (event?.to?.__draggable_component__) {
+        const sameContainer = event?.to && event?.from && event.to === event.from
+        const toIsOuter = event?.to?.dataset?.tileType === 'section'
+        // Sort внутри одной outer-секции.
+        if (sameContainer && toIsOuter && event?.to?.__draggable_component__) {
             await api.callMethod('POST', routes.detail.change_order_field, {
                 id: event.item._underlying_vm_.id,
                 section_id: event.to.__draggable_component__.itemKey,
@@ -2527,17 +2532,46 @@ export class Field {
         }
     }
 
-    dragChange(event, options = {type: 'section'}, groupField) {
+    // dragChange срабатывает на каждое изменение модели после v-model'ной
+    // мутации vuedraggable (added/removed/moved). У @change есть критичное
+    // преимущество перед @end: он стреляет НА КАЖДОЙ из сторон nested
+    // drag-операции независимо — и на inner-группе, и на outer-секции, —
+    // даже когда @end путается с event.to/from.
+    //
+    // Поэтому:
+    // - cross-section/inner→outer добавление обрабатываем тут (added на outer);
+    // - любое изменение subfields группы обрабатываем тут (через dragGroupField).
+    async dragChange(event, options = {type: 'section'}, groupField) {
         if (this.dragger) {
             this.dragger.classList.remove('column-fields_dragging-field')
             this.dragger = null
         }
 
-        // dragChange срабатывает на каждое изменение модели (added/removed/
-        // moved). Для внутренней группы (type='field') любое изменение —
-        // повод пересобрать её subfields через update_field на бэке.
+        // Inner группа — пересобираем её subfields на каждое изменение.
         if (options && options.type == 'field') {
             this.emit('actionSection', {action: 'dragGroupField', value: {groupField, event}})
+            return
+        }
+
+        // Outer секция получила поле (cross-section ИЛИ inner→outer).
+        // groupField тут — это сама секция (props.section из TileSection).
+        if (event?.added && groupField) {
+            const fieldId = event.added.element?.id
+            if (!fieldId) return
+
+            await api.callMethod('POST', routes.detail.change_order_field, {
+                id: fieldId,
+                section_id: groupField.id,
+                fields: (groupField.fields || []).map((f, index) => ({
+                    id: f.id,
+                    sort: index
+                }))
+            })
+            // Страховка: если nested Sortable не убрал поле из source-группы
+            // (квирк, когда inner находится внутри той же outer-секции, в
+            // которую мы дропнули), — чистим явно и пересохраняем subfields
+            // той группы.
+            this.emit('actionSection', {action: 'dragCleanupAfterAdd', value: {fieldId}})
         }
     }
 

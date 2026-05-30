@@ -98,16 +98,11 @@
                                 overscan: 5,
                                 isDraggable: true,
                                 isDisableSockets: false,
-                                // Плашка «N изменений» здесь только для задач,
-                                // которые в этой таблице (route_id == null
-                                // и совпадает delivery_date). Без фильтра
-                                // плашка зажигалась на обеих task-таблицах
-                                // одновременно — даже на «не своих» задачах.
-                                socketFilter: (row) => {
-                                    const rid = extractRouteId(row?.route_id)
-                                    if (rid != null) return false
-                                    return matchesActiveDate(row)
-                                },
+                                // socketFilter не задаём: дефолт VirtualTable
+                                // показывает плашку только для строк, чьи id
+                                // уже есть в body этой таблицы. Это автоматически
+                                // делит правки между «Задачи логистики» и
+                                // «Задачи в машине» по принадлежности задачи.
                                 isCheckClicked: true,
                                 isDisableSort: false,
                                 isDisablePull: false,
@@ -145,11 +140,8 @@
                             query: {
                                 route_id: String(logistic.machine_tasks.route_id)
                             },
-                            // Плашка только для задач этого маршрута.
-                            socketFilter: (row) => {
-                                const rid = extractRouteId(row?.route_id)
-                                return rid != null && String(rid) === String(logistic.machine_tasks.route_id)
-                            },
+                            // socketFilter не задаём — см. unassigned-таблицу
+                            // выше: дефолт фильтрует по id-in-body.
                             disabledKeys: ['delivery_date'],
                             isShort: true,
                             isHaveFilter: false,
@@ -534,39 +526,6 @@
         if (id == null || !Array.isArray(rows)) return;
         // Ищем во ВСЕХ task-таблицах — setTaskRowClicked сам разберётся.
         setTaskRowClicked(id);
-    };
-
-    // viewList у relation-полей приходит в виде объекта
-    // { value: [id]|null|[], localOptions: [...] }. Достаём из этой
-    // структуры скалярный route_id (или null, если задача без маршрута).
-    const extractRouteId = (raw) => {
-        if (raw == null || raw === '') return null;
-        if (typeof raw === 'object') {
-            const v = raw.value;
-            if (Array.isArray(v)) {
-                const first = v.find(x => x != null && x !== '');
-                return first != null ? first : null;
-            }
-            return v != null && v !== '' ? v : null;
-        }
-        return raw;
-    };
-
-    // Проверка, что задача относится к текущей выбранной дате.
-    // Используется в socketFilter таблиц логистики, чтобы плашка
-    // «N изменений» появлялась только для задач, которые реально
-    // могут попасть в эту таблицу при reload (та же дата + тот же route).
-    const matchesActiveDate = (row) => {
-        if (!row || typeof row !== 'object') return false;
-        const dv = row.delivery_date;
-        let date = dv;
-        if (typeof date === 'object' && date !== null) {
-            date = date.value ?? date.date ?? null;
-        }
-        if (!date) return false;
-        const active = logistic.value.activeDate;
-        const activeStr = typeof active === 'string' ? active : (active?.toISOString?.() ?? '');
-        return String(date).slice(0, 10) === String(activeStr).slice(0, 10);
     };
 
     // Обёртка вокруг @choseRow для routes-таблицы: сначала ставим выделение

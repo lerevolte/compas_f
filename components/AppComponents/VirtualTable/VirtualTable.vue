@@ -269,17 +269,29 @@
   // Несколько таблиц могут делить один slug (например, в логистике
   // 'logistic_tasks' рендерится дважды: Задачи логистики и Задачи в
   // машине). Socket-плашка раньше «загоралась» на ОБОИХ инстансах при
-  // правке любой задачи. Через options.socketFilter (необязательный
-  // предикат) фильтруем socket.table так, чтобы каждая таблица показывала
-  // плашку только для своих строк (по route_id и по delivery_date).
+  // правке любой задачи.
+  //
+  // Дефолт: показываем плашку только для строк, чьи id присутствуют в
+  // body этой таблицы. Это автоматически даёт правильную раскладку «своя
+  // плашка в своей таблице» без необходимости парсить поля viewList и без
+  // зависимости от конкретного формата relation/date.
+  //
+  // options.socketFilter — необязательный override-предикат, если нужна
+  // более тонкая логика (например, показывать плашку и для новых строк,
+  // которых ещё нет в body).
   const socketRelevantCount = computed(() => {
     const rows = table.value.socket?.table || []
     if (!rows.length) return 0
     const filter = props.options?.socketFilter
-    if (typeof filter !== 'function') return rows.length
-    return rows.filter(item => {
-      try { return filter(item?.row || {}) } catch (e) { return true }
-    }).length
+    if (typeof filter === 'function') {
+      return rows.filter(item => {
+        try { return filter(item?.row || {}) } catch (e) { return true }
+      }).length
+    }
+    const body = table.value.body || []
+    if (!body.length) return 0
+    const bodyIds = new Set(body.map(r => r?.id).filter(id => id != null))
+    return rows.filter(item => bodyIds.has(item?.row?.id)).length
   })
 
   // Перезагрузка таблицы при клике «Загрузить» в socket-плашке. Прежняя
