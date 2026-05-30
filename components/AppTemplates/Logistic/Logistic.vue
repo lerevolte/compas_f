@@ -98,6 +98,16 @@
                                 overscan: 5,
                                 isDraggable: true,
                                 isDisableSockets: false,
+                                // Плашка «N изменений» здесь только для задач,
+                                // которые в этой таблице (route_id == null
+                                // и совпадает delivery_date). Без фильтра
+                                // плашка зажигалась на обеих task-таблицах
+                                // одновременно — даже на «не своих» задачах.
+                                socketFilter: (row) => {
+                                    const rid = (row && typeof row === 'object' && 'route_id' in row) ? row.route_id : undefined
+                                    if (rid !== null && rid !== undefined && rid !== '') return false
+                                    return matchesActiveDate(row)
+                                },
                                 isCheckClicked: true,
                                 isDisableSort: false,
                                 isDisablePull: false,
@@ -134,6 +144,12 @@
                             isHaveOrder: true,
                             query: {
                                 route_id: String(logistic.machine_tasks.route_id)
+                            },
+                            // Плашка только для задач этого маршрута.
+                            socketFilter: (row) => {
+                                const rid = (row && typeof row === 'object' && 'route_id' in row) ? row.route_id : undefined
+                                if (rid == null || String(rid) !== String(logistic.machine_tasks.route_id)) return false
+                                return true
                             },
                             disabledKeys: ['delivery_date'],
                             isShort: true,
@@ -519,6 +535,19 @@
         if (id == null || !Array.isArray(rows)) return;
         // Ищем во ВСЕХ task-таблицах — setTaskRowClicked сам разберётся.
         setTaskRowClicked(id);
+    };
+
+    // Проверка, что задача относится к текущей выбранной дате.
+    // Используется в socketFilter таблиц логистики, чтобы плашка
+    // «N изменений» появлялась только для задач, которые реально
+    // могут попасть в эту таблицу при reload (та же дата + тот же route).
+    const matchesActiveDate = (row) => {
+        if (!row || typeof row !== 'object') return false;
+        const dv = row.delivery_date;
+        const date = (typeof dv === 'object' && dv !== null) ? (dv.value ?? dv.date ?? null) : dv;
+        if (!date) return false;
+        const active = logistic.value.activeDate;
+        return String(date).slice(0, 10) === String(active).slice(0, 10);
     };
 
     // Обёртка вокруг @choseRow для routes-таблицы: сначала ставим выделение

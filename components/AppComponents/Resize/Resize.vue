@@ -84,14 +84,17 @@
                 // viewport (mousemove'ов было мало и scroll не успел
                 // отыграть полностью) — здесь точно ставим section.bottom =
                 // viewport - 40, добавляя спейсер/скролл или урезая высоту.
+                // Делаем 2 прохода через rAF, чтобы layout успел применить
+                // все промежуточные изменения (height из CSS-переменной,
+                // scrollTop из ensureSpacer, и т.п.).
                 this._snapToBottomMargin()
-
-                // Спейсер ОСТАВЛЯЕМ — он нужен и после релиза, чтобы у
-                // .page оставался scroll-room, при котором нижний край
-                // секции виден в 40px от низа viewport. Под текущий
-                // scrollTop нормализуем его высоту, чтобы не оставлять
-                // лишнего «хвоста» от промежуточных drag-итераций.
-                this._compactSpacerToFinal()
+                requestAnimationFrame(() => {
+                    this._snapToBottomMargin()
+                    requestAnimationFrame(() => {
+                        this._snapToBottomMargin()
+                        this._compactSpacerToFinal()
+                    })
+                })
 
                 emit('endResize', sectionRef.value.offsetHeight)
             }

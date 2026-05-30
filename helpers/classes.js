@@ -2023,7 +2023,7 @@ export class Section {
         for (const column in columns) {
             for (const section of columns[column]) {
                 for (const f of section.fields) {
-                    if (f.id == sourceGroupId && Array.isArray(f.fields)) {
+                    if (Number(f.id) === Number(sourceGroupId) && Array.isArray(f.fields)) {
                         groupField = f
                         break
                     }
@@ -2034,10 +2034,14 @@ export class Section {
         }
         if (!groupField) return
 
-        // Чистим reactive-массив (vuedraggable пропустил эту операцию).
-        const beforeLen = groupField.fields.length
-        groupField.fields = groupField.fields.filter(p => p.id != movedFieldId)
-        if (groupField.fields.length === beforeLen) return // не было — выходим
+        // splice in-place: гарантированно мутирует тот же массив, на который
+        // ссылается props.section.fields у inner TileSection. Раньше делали
+        // reassign (groupField.fields = filter(...)) — это создавало новый
+        // массив, и до следующего ре-рендера inner draggable продолжал
+        // показывать поле в группе.
+        const idx = groupField.fields.findIndex(p => Number(p.id) === Number(movedFieldId))
+        if (idx === -1) return
+        groupField.fields.splice(idx, 1)
 
         await api.callMethod('PUT', routes.detail.update_field.replace('${id}', groupField.id), {
             id: groupField.id,
@@ -2488,10 +2492,28 @@ export class Field {
         // id поля-группы, а не id секции, и section_id у поля затрётся в мусор.
         if (toType === 'field') return
 
-        // Если поле уехало ИЗ text_group в обычную секцию — внутренний @change
-        // у группы уже выполнил update_field (убрав поле из subfields, что
-        // сбрасывает group_id). Дополнительно отправляем change_order_field,
-        // чтобы зафиксировать новую section_id и порядок в принимающей секции.
+        // Поле уехало ИЗ text_group (fromType==field) в обычную секцию.
+        // Sortable.js с nested same-group иногда «забывает» вызвать @change
+        // на источнике; тогда поле и на фронте, и на бэке остаётся в группе.
+        // Защита (срабатывает независимо от того, какой @end триггерится —
+        // inner или outer): шлём dragRemoveFromGroup, чтобы родительский
+        // обработчик принудительно очистил group.fields + сбросил group_id
+        // на бэке через update_field.
+        if (fromType === 'field' && toType === 'section') {
+            const sourceGroupId = fromContainer?.dataset?.tileId
+            const movedFieldId = event?.item?._underlying_vm_?.id
+            if (sourceGroupId && movedFieldId) {
+                this.emit('actionSection', {
+                    action: 'dragRemoveFromGroup',
+                    value: { sourceGroupId: Number(sourceGroupId), movedFieldId }
+                })
+            }
+        }
+
+        // change_order_field вызываем для outer-секции (или для drag
+        // inner→outer, который тоже должен обновить section_id+sort).
+        // Внутренние перестановки в group обрабатывает dragGroupField — там
+        // change_order_field вызывать нельзя.
         if (options && options.type === 'field' && fromType === 'field' && toType === 'section') {
             await api.callMethod('POST', routes.detail.change_order_field, {
                 id: event.item._underlying_vm_.id,

@@ -9,8 +9,8 @@
       <TableHeader>
 
       </TableHeader>
-      <div class="socket-row" v-if="!props.options?.isDisableSockets && table.socket?.table?.length > 0" >
-          {{ table.socket?.table?.length }} изменения в таблице <span class="socket-row__button" @click="reloadFromSocket()"> Загрузить </span>
+      <div class="socket-row" v-if="!props.options?.isDisableSockets && socketRelevantCount > 0" >
+          {{ socketRelevantCount }} изменения в таблице <span class="socket-row__button" @click="reloadFromSocket()"> Загрузить </span>
         </div>
       <!--
         ScrollButtons вынесены ПЕРЕД телом таблицы. Sticky-стрелки нуждаются
@@ -265,6 +265,22 @@
   // чтобы синхронизировать выделение строк между связанными таблицами
   // («Задачи логистики» ↔ «Задачи в машине» делят общий focused-task).
   defineExpose({ table, sectionRef })
+
+  // Несколько таблиц могут делить один slug (например, в логистике
+  // 'logistic_tasks' рендерится дважды: Задачи логистики и Задачи в
+  // машине). Socket-плашка раньше «загоралась» на ОБОИХ инстансах при
+  // правке любой задачи. Через options.socketFilter (необязательный
+  // предикат) фильтруем socket.table так, чтобы каждая таблица показывала
+  // плашку только для своих строк (по route_id и по delivery_date).
+  const socketRelevantCount = computed(() => {
+    const rows = table.value.socket?.table || []
+    if (!rows.length) return 0
+    const filter = props.options?.socketFilter
+    if (typeof filter !== 'function') return rows.length
+    return rows.filter(item => {
+      try { return filter(item?.row || {}) } catch (e) { return true }
+    }).length
+  })
 
   // Перезагрузка таблицы при клике «Загрузить» в socket-плашке. Прежняя
   // реализация делала table.get(), но это игнорировало isHaveQuery (на
