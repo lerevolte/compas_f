@@ -69,8 +69,8 @@
             tag="div"
             :group="{
                 name: props.options.type == 'field' ? 'tile-group-fields' : 'tile-section-fields',
-                pull: ['tile-group-fields', 'tile-section-fields'],
-                put: ['tile-group-fields', 'tile-section-fields']
+                pull: true,
+                put: true
             }"
             v-model="props.section.fields"
             :forceFallback="true"

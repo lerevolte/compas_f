@@ -111,6 +111,10 @@
         _snapToBottomMargin() {
             if (typeof window === 'undefined' || !sectionRef.value) return
             const BOTTOM_MARGIN = 40
+            // Force reflow перед чтением rect, чтобы получить актуальные
+            // координаты после применения CSS-переменной и scrollTop.
+            // eslint-disable-next-line no-unused-expressions
+            sectionRef.value.offsetHeight
             let height = sectionRef.value.offsetHeight
             const rect = sectionRef.value.getBoundingClientRect()
             let overflow = (rect.top + height) - (window.innerHeight - BOTTOM_MARGIN)
@@ -119,6 +123,11 @@
             const scrollers = this.findScrollers()
             const primary = scrollers[0] || document.scrollingElement
             if (primary) this._ensureSpacer(primary, overflow)
+
+            // Ещё один reflow после установки спейсера — scrollHeight
+            // у scroll-предков должен учесть новую высоту.
+            // eslint-disable-next-line no-unused-expressions
+            sectionRef.value.offsetHeight
 
             for (const scroller of scrollers) {
                 if (overflow <= 0) break
@@ -132,8 +141,17 @@
                 window.scrollBy(0, overflow)
                 overflow -= (window.scrollY - before)
             }
-            if (overflow > 0) {
-                const capped = height - overflow
+
+            // ФИНАЛЬНАЯ ПРОВЕРКА: после всех скроллов перечитываем rect.
+            // Если по-прежнему overflow — урезаем высоту до предела, чтобы
+            // нижний край секции точно встал в 40px от низа viewport.
+            // eslint-disable-next-line no-unused-expressions
+            sectionRef.value.offsetHeight
+            const finalRect = sectionRef.value.getBoundingClientRect()
+            const finalHeight = sectionRef.value.offsetHeight
+            const finalOverflow = (finalRect.top + finalHeight) - (window.innerHeight - BOTTOM_MARGIN)
+            if (finalOverflow > 0) {
+                const capped = finalHeight - finalOverflow
                 sectionRef.value.style.setProperty(
                     '--heightSection',
                     `${capped >= 160 ? capped : 160}px`
