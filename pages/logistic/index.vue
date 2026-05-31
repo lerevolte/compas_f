@@ -93,8 +93,16 @@
 						</div>
 					</template>
 				</AppPopup>
+				<!--
+					@update:modelValue убран — onTaskSearchSelected
+					зовётся ТОЛЬКО через watch на taskSearchValue ниже.
+					Иначе при повторном выборе той же задачи
+					@update-handler не срабатывал у AppRelation (внутренний
+					state считал её уже выбранной), а watch на самом
+					ref'е срабатывает безусловно при любом изменении
+					значения через v-model.
+				-->
 				<AppRelation
-					:key="`task-search-${taskSearchKey}`"
 					v-model="taskSearchValue"
 					:isPreventBottom="true"
 					:options="{
@@ -113,7 +121,6 @@
 						isSetDefault: false,
 						placeholder: 'Поиск по задаче'
 					}"
-					@update:modelValue="onTaskSearchSelected"
 				/>
 			</div>
 		</div>
@@ -184,14 +191,19 @@
 	// клика, потому что само поле — это просто триггер навигации, а не
 	// постоянное «состояние страницы».
 	const taskSearchValue = ref({ value: [null], localOptions: [null] })
-	// Счётчик-key для AppRelation: инкрементим после каждого выбора, чтобы
-	// AppRelation полностью пере-смонтировался. Без этого его внутренний
-	// state (selectInstances, normalizedModelValue, search/list cache) мог
-	// проигнорировать повторный выбор той же опции — клик регистрировался,
-	// но эмит update:modelValue не доходил до родителя, и onTaskSearchSelected
-	// не запускался. Force re-mount гарантирует, что каждый search — это
-	// «чистый» инстанс, как при первом открытии страницы.
-	const taskSearchKey = ref(0)
+
+	// Safety-net: иногда AppRelation эмитит update:modelValue, но
+	// слушатель @update:modelValue на родителе по неясной причине не
+	// дёргает onTaskSearchSelected при повторном выборе той же опции.
+	// Watch на самом taskSearchValue гарантированно срабатывает на
+	// любое изменение модели (v-model его обновляет независимо от
+	// отдельных слушателей).
+	watch(taskSearchValue, (newVal) => {
+		const opt = newVal?.localOptions?.find(o => o && o.value) || null
+		if (opt && opt.value) {
+			onTaskSearchSelected(newVal)
+		}
+	}, { deep: true })
 
 	const onTaskSearchSelected = (newValue) => {
 		const opt = newValue?.localOptions?.find(o => o && o.value) || null
@@ -201,14 +213,19 @@
 		const routeId = opt.label?.route_id ?? null
 		const deliveryDate = opt.label?.delivery_date ?? null
 
-		// Сбрасываем выбор в самом поле + увеличиваем key, чтобы
-		// AppRelation полностью пере-смонтировался — внутренние state'ы
-		// (selectInstances, search-кеш, normalizedModelValue) могли
-		// помнить предыдущий выбор и блокировать повторный select той
-		// же опции (опция помечалась disabled / клик не эмитил).
+		// dispatchMapFocus сразу первым — до любых ранних return / любых
+		// async tick'ов. Window-event это бесусловный сигнал карте даже
+		// если последующая логика спотыкнётся.
+		if (typeof window !== 'undefined') {
+			window.dispatchEvent(new CustomEvent('logistic:focusTask', {
+				detail: { taskId: Number(taskId) }
+			}))
+		}
+
+		// Сбрасываем выбор в самом поле — иначе локально остаётся «выбран»
+		// тот элемент, на который только что кликнули.
 		nextTick(() => {
 			taskSearchValue.value = { value: [null], localOptions: [null] }
-			taskSearchKey.value++
 		})
 
 		if (!routeId && !deliveryDate) {
