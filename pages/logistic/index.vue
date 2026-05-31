@@ -94,6 +94,7 @@
 					</template>
 				</AppPopup>
 				<AppRelation
+					:key="`task-search-${taskSearchKey}`"
 					v-model="taskSearchValue"
 					:isPreventBottom="true"
 					:options="{
@@ -183,6 +184,14 @@
 	// клика, потому что само поле — это просто триггер навигации, а не
 	// постоянное «состояние страницы».
 	const taskSearchValue = ref({ value: [null], localOptions: [null] })
+	// Счётчик-key для AppRelation: инкрементим после каждого выбора, чтобы
+	// AppRelation полностью пере-смонтировался. Без этого его внутренний
+	// state (selectInstances, normalizedModelValue, search/list cache) мог
+	// проигнорировать повторный выбор той же опции — клик регистрировался,
+	// но эмит update:modelValue не доходил до родителя, и onTaskSearchSelected
+	// не запускался. Force re-mount гарантирует, что каждый search — это
+	// «чистый» инстанс, как при первом открытии страницы.
+	const taskSearchKey = ref(0)
 
 	const onTaskSearchSelected = (newValue) => {
 		const opt = newValue?.localOptions?.find(o => o && o.value) || null
@@ -192,10 +201,14 @@
 		const routeId = opt.label?.route_id ?? null
 		const deliveryDate = opt.label?.delivery_date ?? null
 
-		// Сбрасываем выбор в самом поле — иначе локально остаётся «выбран»
-		// тот элемент, на который только что кликнули.
+		// Сбрасываем выбор в самом поле + увеличиваем key, чтобы
+		// AppRelation полностью пере-смонтировался — внутренние state'ы
+		// (selectInstances, search-кеш, normalizedModelValue) могли
+		// помнить предыдущий выбор и блокировать повторный select той
+		// же опции (опция помечалась disabled / клик не эмитил).
 		nextTick(() => {
 			taskSearchValue.value = { value: [null], localOptions: [null] }
+			taskSearchKey.value++
 		})
 
 		if (!routeId && !deliveryDate) {
