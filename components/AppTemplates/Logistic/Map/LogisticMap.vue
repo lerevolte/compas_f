@@ -1728,22 +1728,44 @@
     // Когда activeTaskId приходит из поиска по задачам (URL ?task_id=…),
     // markers могут быть ещё не отрисованы — это асинхронная цепочка
     // (загрузка route/unassigned → renderRoute → addTo(map)). Поэтому
-    // делаем несколько ретраев с короткой паузой: как только marker
-    // появится — центрируем карту.
-    const focusTaskWithRetry = (taskId, attempt = 0) => {
+    // делаем ретраи: как только marker появится — центрируем карту.
+    // 30×200ms = ~6с, должно хватить даже на медленную загрузку route.
+    // force=true — пропустить clickedFromMap-блокировку (исп. для search-
+    // инициированного фокуса, где блокировки быть не должно).
+    const focusTaskWithRetry = (taskId, attempt = 0, force = false) => {
         if (!taskId || !mapInstance.value) return;
-        if (clickedFromMap) return;
+        if (!force && clickedFromMap) return;
         const id = Number(taskId);
         const routeMarker = routeMarkers.find(m => Number(m._taskId) === id);
         if (routeMarker) { focusRouteTask(id); return; }
         const unassignedMarker = unassignedMarkers.find(m => Number(m._taskId) === id);
         if (unassignedMarker) { focusUnassignedTask(id); return; }
-        // Маркер ещё не отрендерился — ретрай. ~10×200ms = 2s максимум.
-        if (attempt < 10) {
-            setTimeout(() => focusTaskWithRetry(taskId, attempt + 1), 200);
+        if (attempt < 30) {
+            setTimeout(() => focusTaskWithRetry(taskId, attempt + 1, force), 200);
         }
     };
     watch(() => props.activeTaskId, (taskId) => {
         focusTaskWithRetry(taskId);
     }, { immediate: true });
+
+    // Самый надёжный путь для search-инициированного фокуса. Минует
+    // Vue ref/expose/prop-watch — page просто dispatch'ит
+    // window-event 'logistic:focusTask', LogisticMap ловит и центрирует.
+    // Работает даже когда mapComp в Logistic.vue по каким-то причинам
+    // null или defineExpose не пробросил метод.
+    const handleSearchFocusEvent = (e) => {
+        const id = Number(e?.detail?.taskId);
+        if (!id) return;
+        focusTaskWithRetry(id, 0, true);
+    };
+    onMounted(() => {
+        if (typeof window !== 'undefined') {
+            window.addEventListener('logistic:focusTask', handleSearchFocusEvent);
+        }
+    });
+    onBeforeUnmount(() => {
+        if (typeof window !== 'undefined') {
+            window.removeEventListener('logistic:focusTask', handleSearchFocusEvent);
+        }
+    });
 </script>

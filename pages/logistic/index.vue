@@ -217,6 +217,17 @@
 		// / activeTaskId), а URL обновляем silent'ом через
 		// history.replaceState — bookmarkability сохраняется, Vue Router
 		// не дёргается.
+		// Универсальная отправка фокуса карте — через window-event.
+		// LogisticMap ловит его и сам ретраит focusTaskWithRetry пока
+		// маркер не появится. Не зависит от Vue ref/expose/prop-watch'ей.
+		const dispatchMapFocus = () => {
+			if (typeof window !== 'undefined') {
+				window.dispatchEvent(new CustomEvent('logistic:focusTask', {
+					detail: { taskId: Number(taskId) }
+				}))
+			}
+		}
+
 		if (route.path === '/logistic') {
 			if (String(logisticPage.value.activeDate) !== String(date)) {
 				logisticPage.value.activeDate = date
@@ -228,17 +239,14 @@
 					? { value: [wantRouteId], localOptions: [null] }
 					: null
 			}
-			// activeTaskId ВСЕГДА reset+set, чтобы prop watch в
-			// LogisticTemplate стрельнул даже если значение совпало.
-			// Сам watch внутри LogisticTemplate тянет setTaskRowClicked
-			// и обновляет logistic.activeTaskId → propagation в LogisticMap.
+			// activeTaskId ВСЕГДА reset+set — prop watch в LogisticTemplate
+			// тянет setTaskRowClicked, плюс мы дублируем focusTaskById через
+			// ref, плюс отдельно сразу dispatch window-event для карты.
 			logisticPage.value.activeTaskId = null
 			nextTick(() => {
 				logisticPage.value.activeTaskId = Number(taskId)
-				// Дополнительно дёргаем focusTaskById через ref — на случай,
-				// если prop watch почему-то не среагирует (например, value
-				// батчится Vue в один tick между null и id).
 				logisticRef.value?.focusTaskById?.(Number(taskId))
+				dispatchMapFocus()
 			})
 			if (typeof window !== 'undefined') {
 				window.history.replaceState({}, '', targetPath)
@@ -248,8 +256,13 @@
 
 		// Не на /logistic — обычная навигация. На /logistic state
 		// проинициализируется через get() в onMounted и фоновый
-		// fullPath watch.
+		// fullPath watch. Окно-евент тоже шлём — LogisticMap при
+		// маунте подцепит listener и focusTaskWithRetry отретраит
+		// до появления маркера (после загрузки route-данных).
 		navigateTo(targetPath)
+		nextTick(() => {
+			dispatchMapFocus()
+		})
 	}
 
 	const activeStatsData = computed(() => {
