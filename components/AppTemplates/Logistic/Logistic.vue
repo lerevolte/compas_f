@@ -26,6 +26,7 @@
                 >
                     <!-- ★ LogisticMap instead of AppMap -->
                     <LogisticMap v-if="section.key == 'map'"
+                        :ref="el => setMapRef(el)"
                         :routeData="logistic.selectedRouteData"
                         :unassignedTasks="logistic.unassignedTasks"
                         :showUnassigned="true"
@@ -224,12 +225,17 @@
         }
     });
 
-    // Вызывается из родительской страницы при повторном поиске по той же
-    // задаче: navigateTo тогда no-op, prop activeTaskId не меняется,
-    // watch выше не срабатывает, и пользователь видит «ничего не
-    // произошло». Здесь форсим null → nextTick → id, чтобы все watchers
-    // (карта/таблицы) гарантированно перезапустились даже при том же
-    // самом значении.
+    // LogisticMap живёт внутри v-for + v-if, поэтому используем функцию-ref
+    // (template ref внутри v-for собрался бы в массив, что лишнее).
+    let mapComp = null;
+    const setMapRef = (el) => { mapComp = el || null; };
+
+    // Вызывается из родительской страницы при поиске по задаче. Делает
+    // всё императивно (без полагания на цепочку prop watchers), потому
+    // что цепочка ненадёжна: route.fullPath/get()/reset-set/Vue-batching
+    // могут проглотить null→id transition, и карта не пере-центрируется.
+    // Тут мы напрямую обновляем logistic.activeTaskId И зовём
+    // focusTaskWithRetry на mapComp (он сам ретраит, пока marker не появится).
     const focusTaskById = (taskId) => {
         const id = Number(taskId);
         if (!id) return;
@@ -238,6 +244,10 @@
             logistic.value.activeTaskId = id;
             setTaskRowClicked(id);
             highlightTableRow(id);
+            // Императивный вызов на карту — не зависим от prop-watch'а.
+            // focusTaskWithRetry внутри LogisticMap сам ретраит до появления
+            // маркера (загрузка route-данных асинхронна).
+            mapComp?.focusTaskWithRetry?.(id);
         });
     };
 

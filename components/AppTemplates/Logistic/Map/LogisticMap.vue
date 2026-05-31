@@ -1643,7 +1643,7 @@
         return false;
     };
 
-    defineExpose({ focusUnassignedTask, focusRouteTask });
+    defineExpose({ focusUnassignedTask, focusRouteTask, focusTaskWithRetry: (id) => focusTaskWithRetry(id) });
 
     // Подтянуть пользовательские настройки модуля «Логистика» и применить к карте.
     const fetchedCenter = ref(null);

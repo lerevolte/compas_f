@@ -290,8 +290,14 @@
     padding: 0;
 }
 
+// vue-datepicker отдаёт `.dp__sidebar_right` со своим padding по дефолту,
+// и его селектор `.dp__menu .dp__sidebar_right` имеет более высокую
+// специфичность — поэтому простой `.dp__sidebar_right { padding: 0 }`
+// не побеждает. Дублируем с повышенной специфичностью + !important как
+// гарантию (после teleport menu лежит в body, под глобальным правилом).
+.dp__menu .dp__sidebar_right,
 .dp__sidebar_right {
-    padding: 0;
+    padding: 0 !important;
     position: relative;
     border-left: none;
 

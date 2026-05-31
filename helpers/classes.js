@@ -1159,6 +1159,16 @@ export class Table {
             acc[item.key] = item.type == 'number' ? 0 : null
             return acc;
         }, {});
+        // Новая строка ДОЛЖНА иметь edit:true и isChoose:true. Map выше
+        // эти флаги ставит только существующим строкам — новая (push) шла
+        // без них и получала ТОЛЬКО class table__row, без table__row_edit /
+        // table__row_choose. Из-за этого CSS-стили активной/редактируемой
+        // строки не применялись и кнопка меню действий у неё не открывалась
+        // (попап ShowMore рендерился, но click перехватывался MassAction'ом
+        // / её родительский table__row не получал pointer-events: auto
+        // нужного для edit-режима).
+        newObj.edit = true
+        newObj.isChoose = true
         // local_id раньше считался как body.length+1. Если пользователь
         // удалял строки в середине, индекс мог совпасть с уже существующим
         // local_id — тогда у row.key (getItemKey использует local_id)
