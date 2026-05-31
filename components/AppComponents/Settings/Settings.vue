@@ -277,7 +277,7 @@
 
         // Вернуть настройки по умолчанию
         reset() {
-            popupRef.value.popup.popupRef.classList.remove('popup_open');
+            // Popup закроется сам по клику на .popup__option (см. Popup.vue).
             emit('reset', true)
         }
     }
@@ -476,7 +476,10 @@
     const popupRef = ref(null)
 
     const closePopup = () => {
-        popupRef.value.popup.popupRef.classList.remove('popup_open');
+        // Через публичный API Popup, а не через ручную манипуляцию class'ом
+        // (тот ломался после markRaw — popup.popupRef стал ref'ом, у него
+        // нет .classList).
+        popupRef.value?.popup?._close?.()
         settings.value.nest.close()
     }
 

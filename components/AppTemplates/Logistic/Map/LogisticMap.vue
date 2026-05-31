@@ -880,7 +880,6 @@
                         <div class="point-attrs">
                             <span class="point-attrs__item"><span class="point-attrs__label">Название:</span><span class="point-attrs__val">${taskName}</span></span>
                             <span class="point-attrs__item"><span class="point-attrs__label">План. время:</span><span class="point-attrs__val">${planTime}</span></span>
-                            <span class="point-attrs__item"><span class="point-attrs__label">Факт. время:</span><span class="point-attrs__val fact-time">${factTimeStr || '—'}</span></span>
                         </div>
                     </div>
                 </div>`;
@@ -1713,21 +1712,25 @@
         }
     }, { deep: true });
     watch(() => props.showUnassigned, () => applySettings());
-    watch(() => props.activeTaskId, (taskId) => {
+    // Когда activeTaskId приходит из поиска по задачам (URL ?task_id=…),
+    // markers могут быть ещё не отрисованы — это асинхронная цепочка
+    // (загрузка route/unassigned → renderRoute → addTo(map)). Поэтому
+    // делаем несколько ретраев с короткой паузой: как только marker
+    // появится — центрируем карту.
+    const focusTaskWithRetry = (taskId, attempt = 0) => {
         if (!taskId || !mapInstance.value) return;
-        // Skip if click came from map marker — already handled
         if (clickedFromMap) return;
         const id = Number(taskId);
-        // Try route markers first
         const routeMarker = routeMarkers.find(m => Number(m._taskId) === id);
-        if (routeMarker) {
-            focusRouteTask(id);
-            return;
-        }
-        // Try unassigned markers
+        if (routeMarker) { focusRouteTask(id); return; }
         const unassignedMarker = unassignedMarkers.find(m => Number(m._taskId) === id);
-        if (unassignedMarker) {
-            focusUnassignedTask(id);
+        if (unassignedMarker) { focusUnassignedTask(id); return; }
+        // Маркер ещё не отрендерился — ретрай. ~10×200ms = 2s максимум.
+        if (attempt < 10) {
+            setTimeout(() => focusTaskWithRetry(taskId, attempt + 1), 200);
         }
-    });
+    };
+    watch(() => props.activeTaskId, (taskId) => {
+        focusTaskWithRetry(taskId);
+    }, { immediate: true });
 </script>

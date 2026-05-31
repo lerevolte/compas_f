@@ -16,6 +16,7 @@
                 class="popup__content"
                 :class="[popup.state.contentClass, { 'popup__content_top': popup.state.isTop, 'popup__content_open': popup.state.isOpen }]"
                 ref="contentRef"
+                @click="popup.onContentClick($event)"
             >
                 <slot name="content"></slot>
             </div>
@@ -86,6 +87,26 @@
             this._clearStyles();
             document.removeEventListener('mousedown', this.closeOptions);
             emit('close', true);
+        }
+
+        // Делегированный обработчик клика по контенту popup'а.
+        // Закрывает popup, когда пользователь выбрал любой .popup__option,
+        // КРОМЕ чекбокса/disable/empty/checkbox-обёртки. Раньше каждый
+        // консьюмер сам пытался убрать класс popup_open через DOM —
+        // (1) после Teleport контент уехал в body, и closest('.popup') стал
+        // null; (2) markRaw на Popup-инстансе сделал popupRef ВНУТРИ объекта
+        // обычным Vue-ref'ом (не auto-unwrap), и `popup.popupRef.classList`
+        // снаружи стал undefined → TypeError. Делаем close централизованно.
+        onContentClick(event) {
+            const option = event?.target?.closest?.('.popup__option');
+            if (!option) return;
+            if (option.classList.contains('popup__option_checkbox')) return;
+            if (option.classList.contains('popup__option_disable')) return;
+            if (option.classList.contains('popup__option_empty')) return;
+            // Закрытие через _close — оно само снимает класс, отписывает
+            // обработчики, кикает MutationObserver. Делаем после клика по
+            // опции, т.е. её собственный @click уже отработал (bubble).
+            this._close();
         }
 
         toggleOptions(event) {

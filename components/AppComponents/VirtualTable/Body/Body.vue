@@ -15,6 +15,8 @@
             :delay="props.options?.dragDelay ?? 120"
             :delayOnTouchOnly="props.options?.dragDelayOnTouchOnly ?? false"
             :touchStartThreshold="props.options?.touchStartThreshold ?? 3"
+            :filter="props.options?.dragFilter ?? '.table__cell-content, .blank__text, .blank__link, input, textarea, select, [contenteditable]'"
+            :preventOnFilter="false"
             :scroll="false"
             :bubbleScroll="false"
             :item-key="getItemKey"

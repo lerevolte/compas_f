@@ -82,7 +82,9 @@
         close() {
             this.active = null,
             this.history = []
-            popupRef.value.popup.popupRef.classList.remove('popup_open');
+            // popup.popupRef после markRaw — Vue-ref, не DOM. Используем
+            // публичный _close() вместо classList.remove.
+            popupRef.value?.popup?._close?.()
         }
 
         save(role) {

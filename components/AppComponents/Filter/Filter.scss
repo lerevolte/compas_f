@@ -359,10 +359,14 @@
     }
 }
 
-.filter__popup {
+// Скоп .popup чтобы стили wrapper'а НЕ применялись к .popup__content,
+// который через Teleport унаследовал тот же class 'filter__popup'.
+// Раньше padding: 0 15px падал и на teleport-content, появлялись лишние
+// отступы по краям списка опций фильтра — это и есть баг #3.
+.popup.filter__popup {
     padding: 0px 15px;
     max-width: max-content;
-    
+
     .button_text {
         color: variables.$color-icon;
         text-decoration: none;

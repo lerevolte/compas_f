@@ -59,7 +59,11 @@
     const popupRef = ref(null)
 
     const initClick = (action) => {
-        popupRef.value.popup.popupRef.classList.remove('popup_open');
+        // Popup закрывает себя сам через делегированный @click по
+        // .popup__option (см. Popup.vue → onContentClick). Раньше тут было
+        // popupRef.value.popup.popupRef.classList.remove('popup_open'), но
+        // после markRaw popupRef внутри Popup стал обычным Vue-ref'ом,
+        // и `popup.popupRef.classList` снаружи — undefined → TypeError.
         emit('initClick', action)
     }
 

@@ -17,24 +17,24 @@
       </div>
 
       <div class="detail__overlay" id="detail__overlay" v-if="entity.modal.length > 0">
-        <AppWarningLarge 
-          v-for="(modal, index) in entity.modal" 
+        <AppWarningLarge
+          v-for="(modal, index) in entity.modal"
           :options="{
               index: index,
               ...entitiesJSON[modal.slug],
           }"
-          @close="entity.modal.pop()"
+          @close="popModal()"
         >
-          <AppAnalyticDetail 
+          <AppAnalyticDetail
             v-if="modal.template == 'chart'"
             :slug="modal.slug"
             :dateRange="modal.dateRange"
-            @close="entity.modal.pop()"
-            @closeDetail="() => entity.closeDetail()"
+            @close="popModal()"
+            @closeDetail="() => closeDetail()"
             @updateMetaHeader="item => entity.updateMetaHeader(item)"
             @openModal="item => entity.openModal(item)"
           />
-          <AppDetail 
+          <AppDetail
             v-else
             :id="modal.id"
             :tab_slug="modal.tab_slug"
@@ -43,8 +43,8 @@
             :is_modal="true"
             :isGlobalEdit="['create', 'copy'].includes(modal.type)"
             :isCopy="modal.type === 'copy'"
-            @close="entity.modal.pop()"
-            @closeDetail="() => entity.closeDetail()"
+            @close="popModal()"
+            @closeDetail="() => closeDetail()"
             @updateMetaHeader="item => entity.updateMetaHeader(item)"
             @openModal="item => entity.openModal(item)"
         />
@@ -198,22 +198,52 @@
 
   const entity = ref(new Entity())
 
-  // Watch именно по getter'у на длину массива — иначе watch(массив, cb)
-  // в Vue не реагирует на push/pop (ссылка не меняется), и
-  // флаг isModal + flushPendingOwn не срабатывали → socket-плашка
-  // не появлялась после закрытия деталки.
+  // Toggle isModal и flushPendingOwn — теперь делаем явно в обёртках
+  // popModal/closeDetail, ВЫЗЫВАЕМЫХ из шаблона вместо прямого
+  // entity.modal.pop(). watch на длину остаётся как fallback на случай,
+  // если кто-то ещё мутирует modal иначе (e.g. push снаружи).
+  const popModal = () => {
+    entity.value.modal.pop()
+    syncSocketModal()
+  }
+
+  const closeDetail = () => {
+    entity.value.closeDetail()
+    syncSocketModal()
+  }
+
+  const syncSocketModal = () => {
+    const wasModal = socket.value.isModal === true
+    const isModalNow = entity.value.modal.length > 0
+    socket.value.isModal = isModalNow
+    // Модалка закрылась — переносим отложенные собственные правки в
+    // socket.table, чтобы родительская таблица показала плашку
+    // «N изменений [Загрузить]». Делается тут, а не в watch, чтобы не
+    // зависеть от тонкостей Vue-реактивности на .length массива.
+    if (wasModal && !isModalNow) {
+      socket.value.flushPendingOwn?.()
+    }
+  }
+
   watch(() => entity.value.modal.length, (newLen, oldLen) => {
       const wasModal = (oldLen || 0) > 0
       const isModalNow = (newLen || 0) > 0
-      socket.value.isModal = isModalNow
-      // Когда модалка закрылась — материализуем собственные правки, которые
-      // были отложены пока пользователь редактировал в модалке. Так в
-      // родительской таблице появляется стандартная плашка «1 изменение…
-      // [Загрузить]» сразу после закрытия деталки.
+      if (socket.value.isModal !== isModalNow) {
+        socket.value.isModal = isModalNow
+      }
       if (wasModal && !isModalNow) {
         socket.value.flushPendingOwn?.()
       }
     })
+
+  // openModal вызывается из дочерних страниц — обернём через эмит:
+  // он уже идёт через entity.openModal в шаблоне. Чтобы покрыть и его,
+  // сразу после изменения modal.push синхронизируем флаг.
+  const origOpenModal = entity.value.openModal.bind(entity.value)
+  entity.value.openModal = (item) => {
+    origOpenModal(item)
+    syncSocketModal()
+  }
 
   provide('socket', socket)
 </script>

@@ -204,14 +204,14 @@
                         <IconArrowBack class='menu__arrow' />
                     </template>
                     <template #content>
-                        <NuxtLink class="popup__option" to="/profile" @click="popupRef.popup.popupRef.classList.remove('popup_open');">
+                        <NuxtLink class="popup__option" to="/profile">
                             Настройки
                         </NuxtLink>
-                        <a href="https://compas.pro/auth/entry" class="popup__option" @click="popupRef.popup.popupRef.classList.remove('popup_open');">
+                        <a href="https://compas.pro/auth/entry" class="popup__option">
                             Сменить портал
                         </a>
-                        <div class="popup__option popup__option_red" @click="() => {userStore.logout(); popupRef.popup.popupRef.classList.remove('popup_open');}">
-                            Выйти                    
+                        <div class="popup__option popup__option_red" @click="userStore.logout()">
+                            Выйти
                         </div>
                     </template>
                 </AppPopup>

@@ -36,6 +36,7 @@
                 @isChanged="table.isChanged = true"
                 @update:modelValue="(val) => {table.header = val; table.isChanged = true}"
                 @update:modelVisible="(val) => {table.header = val; table.isChanged = true}"
+                @update:modelList="(val) => {table.header = val; table.isChanged = true}"
             />
         </div>
     </div>

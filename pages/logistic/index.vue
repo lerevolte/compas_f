@@ -196,20 +196,30 @@
 			taskSearchValue.value = { value: [null], localOptions: [null] }
 		})
 
+		let targetPath = ''
 		if (routeId) {
-			// Задача в маршруте — на /logistic с автовыбором маршрута и задачи.
-			// Дата берётся из delivery_date (которое уже синхронизировано
-			// с датой маршрута через Task::saving в бэкенде).
 			const date = deliveryDate ?? format(new Date(), 'yyyy-MM-dd')
-			navigateTo(`/logistic?active-date=${date}&route_id=${routeId}&task_id=${taskId}`)
+			targetPath = `/logistic?active-date=${date}&route_id=${routeId}&task_id=${taskId}`
 		} else if (deliveryDate) {
-			// Без маршрута, но с датой — на /logistic на эту дату, без авто-маршрута.
-			navigateTo(`/logistic?active-date=${deliveryDate}&task_id=${taskId}`)
+			targetPath = `/logistic?active-date=${deliveryDate}&task_id=${taskId}`
 		} else {
-			// Без даты — на список задач логистики с фильтром по id.
-			// URL-параметры filter[…] подхватываются на init таблицы через
-			// фикс в Filter.get (см. helpers/classes.js, обработка saved_query).
 			navigateTo(`/objects/logistic_tasks?filter[id]=${taskId}`)
+			return
+		}
+
+		// Если URL не меняется (пользователь повторно ищет ту же задачу с
+		// тем же маршрутом/датой) — navigateTo это no-op, watch на
+		// route.fullPath не сработает, activeTaskId не переустановится,
+		// и карта не пере-центрируется. Дёргаем get() явно с reset,
+		// чтобы watch на activeTaskId стрельнул заново.
+		const currentPath = `${route.path}${route.fullPath.includes('?') ? route.fullPath.slice(route.fullPath.indexOf('?')) : ''}`
+		if (targetPath === currentPath) {
+			logisticPage.value.activeTaskId = null
+			nextTick(() => {
+				logisticPage.value.activeTaskId = Number(taskId)
+			})
+		} else {
+			navigateTo(targetPath)
 		}
 	}
 
