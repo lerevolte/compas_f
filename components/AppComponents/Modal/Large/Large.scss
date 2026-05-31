@@ -73,6 +73,15 @@
                 max-height: 100dvh;
                 position: relative;
                 @include mixins.scrollBar();
+
+                // Запас под телепортированный MassAction
+                // (.modal__mass-action: position:absolute; bottom:0). Без
+                // этого запаса при редактировании таблицы (например, продукты
+                // в задаче) панель «Сохранить/Удалить» физически перекрывает
+                // последние строки, и у новой добавленной кнопка меню
+                // действий оказывалась НЕ кликабельной — пользователь
+                // тыкал в MassAction.
+                padding-bottom: 80px;
             }
 
             // Контейнер для MassAction, телепортируемого из VirtualTable

@@ -118,6 +118,7 @@
 		</div>
 		
 		<LogisticTemplate
+			ref="logisticRef"
 			:filterTabs="logisticPage.filter"
 			:activeDate="logisticPage.activeDate"
 			:activeRoute="logisticPage.activeRoute"
@@ -172,6 +173,7 @@
 	}
 
 	const logisticPage = ref(new LogisticPage())
+	const logisticRef = ref(null)
 	const statView = ref('total')
 	const daySummary = ref(null)
 	const activeCarrierId = ref(null)
@@ -207,18 +209,16 @@
 			return
 		}
 
-		// Навигация: если URL совпадает с текущим, Vue Router сделает no-op
-		// и watch(route.fullPath) не отработает — activeTaskId останется
-		// прежним и карта не пере-центрируется. Поэтому ВСЕГДА явно
-		// сбрасываем и заново выставляем activeTaskId после nextTick —
-		// это гарантированно дёргает watch в LogisticTemplate/LogisticMap
-		// и заставляет focusTaskWithRetry заново найти marker и
-		// панорамировать карту. URL-сравнение делать не нужно.
+		// navigateTo: если URL отличается — обычная навигация, watch на
+		// route.fullPath сам запустит get() и propagation. Если URL тот же,
+		// navigateTo это no-op и watch не сработает.
+		// В обоих случаях ДОПОЛНИТЕЛЬНО зовём ref.focusTaskById — он внутри
+		// LogisticTemplate сам делает null → nextTick → id, что гарантированно
+		// дёргает все watcher'ы (карта, таблица, подсветка), даже если
+		// activeTaskId уже был этим же значением.
 		navigateTo(targetPath)
-		const targetTaskId = Number(taskId)
-		logisticPage.value.activeTaskId = null
 		nextTick(() => {
-			logisticPage.value.activeTaskId = targetTaskId
+			logisticRef.value?.focusTaskById?.(Number(taskId))
 		})
 	}
 

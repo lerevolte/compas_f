@@ -215,9 +215,33 @@
     watch(() => props.activeTaskId, (val) => {
         logistic.value.activeTaskId = val ? Number(val) : null;
         if (val) {
+            // Помимо scroll'а ставим row.clicked в task-таблице, чтобы
+            // подсветка строки сработала и без перезагрузки таблицы
+            // (раньше только @getData → restoreTaskSelection это делал,
+            // но он не срабатывает, когда URL/query не меняются).
+            setTaskRowClicked(Number(val));
             highlightTableRow(Number(val));
         }
     });
+
+    // Вызывается из родительской страницы при повторном поиске по той же
+    // задаче: navigateTo тогда no-op, prop activeTaskId не меняется,
+    // watch выше не срабатывает, и пользователь видит «ничего не
+    // произошло». Здесь форсим null → nextTick → id, чтобы все watchers
+    // (карта/таблицы) гарантированно перезапустились даже при том же
+    // самом значении.
+    const focusTaskById = (taskId) => {
+        const id = Number(taskId);
+        if (!id) return;
+        logistic.value.activeTaskId = null;
+        nextTick(() => {
+            logistic.value.activeTaskId = id;
+            setTaskRowClicked(id);
+            highlightTableRow(id);
+        });
+    };
+
+    defineExpose({ focusTaskById });
 
     // ── Drag&drop задачи на строку маршрута в таблице Маршруты ──
     // vuedraggable не различает "дроп на конкретную строку", а также если разрешить

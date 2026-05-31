@@ -21,6 +21,7 @@
 			format="dd.MM.yyyy"
 			:placeholder="'__.__.____'"
 			:teleport="true"
+			:menu-class-name="props.options.multiple ? 'datepicker__menu datepicker__menu_range' : 'datepicker__menu'"
             @update:modelValue="emit('update:modelValue',  $event ? props.options.multiple ? [format($event[0], `yyyy-MM-dd'T'00:00:00.000000'Z'`), format($event[1], `yyyy-MM-dd'T'00:00:00.000000'Z'`)] : format($event, `yyyy-MM-dd'T'00:00:00.000000'Z'`) : null)"
             @open="datepickerField.open()"
             @range-start="onRangeStart"
