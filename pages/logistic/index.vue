@@ -198,28 +198,58 @@
 			taskSearchValue.value = { value: [null], localOptions: [null] }
 		})
 
-		let targetPath = ''
-		if (routeId) {
-			const date = deliveryDate ?? format(new Date(), 'yyyy-MM-dd')
-			targetPath = `/logistic?active-date=${date}&route_id=${routeId}&task_id=${taskId}`
-		} else if (deliveryDate) {
-			targetPath = `/logistic?active-date=${deliveryDate}&task_id=${taskId}`
-		} else {
+		if (!routeId && !deliveryDate) {
 			navigateTo(`/objects/logistic_tasks?filter[id]=${taskId}`)
 			return
 		}
 
-		// navigateTo: если URL отличается — обычная навигация, watch на
-		// route.fullPath сам запустит get() и propagation. Если URL тот же,
-		// navigateTo это no-op и watch не сработает.
-		// В обоих случаях ДОПОЛНИТЕЛЬНО зовём ref.focusTaskById — он внутри
-		// LogisticTemplate сам делает null → nextTick → id, что гарантированно
-		// дёргает все watcher'ы (карта, таблица, подсветка), даже если
-		// activeTaskId уже был этим же значением.
+		const date = routeId
+			? (deliveryDate ?? format(new Date(), 'yyyy-MM-dd'))
+			: deliveryDate
+		const targetPath = routeId
+			? `/logistic?active-date=${date}&route_id=${routeId}&task_id=${taskId}`
+			: `/logistic?active-date=${date}&task_id=${taskId}`
+
+		// Если мы УЖЕ на /logistic — НЕ дёргаем navigateTo, иначе watch
+		// route.fullPath дёрнет logisticPage.get(), который перепишет
+		// state из URL и устроит race с нашим reset/set'ом activeTaskId.
+		// Обновляем state напрямую (logisticPage.activeDate / activeRoute
+		// / activeTaskId), а URL обновляем silent'ом через
+		// history.replaceState — bookmarkability сохраняется, Vue Router
+		// не дёргается.
+		if (route.path === '/logistic') {
+			if (String(logisticPage.value.activeDate) !== String(date)) {
+				logisticPage.value.activeDate = date
+			}
+			const currentRouteId = logisticPage.value.activeRoute?.value?.[0] ?? null
+			const wantRouteId = routeId ? Number(routeId) : null
+			if (Number(currentRouteId) !== wantRouteId) {
+				logisticPage.value.activeRoute = wantRouteId
+					? { value: [wantRouteId], localOptions: [null] }
+					: null
+			}
+			// activeTaskId ВСЕГДА reset+set, чтобы prop watch в
+			// LogisticTemplate стрельнул даже если значение совпало.
+			// Сам watch внутри LogisticTemplate тянет setTaskRowClicked
+			// и обновляет logistic.activeTaskId → propagation в LogisticMap.
+			logisticPage.value.activeTaskId = null
+			nextTick(() => {
+				logisticPage.value.activeTaskId = Number(taskId)
+				// Дополнительно дёргаем focusTaskById через ref — на случай,
+				// если prop watch почему-то не среагирует (например, value
+				// батчится Vue в один tick между null и id).
+				logisticRef.value?.focusTaskById?.(Number(taskId))
+			})
+			if (typeof window !== 'undefined') {
+				window.history.replaceState({}, '', targetPath)
+			}
+			return
+		}
+
+		// Не на /logistic — обычная навигация. На /logistic state
+		// проинициализируется через get() в onMounted и фоновый
+		// fullPath watch.
 		navigateTo(targetPath)
-		nextTick(() => {
-			logisticRef.value?.focusTaskById?.(Number(taskId))
-		})
 	}
 
 	const activeStatsData = computed(() => {

@@ -197,156 +197,161 @@
     }
 }
 
-// VueDatePicker рендерит menu в body через :teleport — селекторы внутри
-// .form__item_date больше не достают до меню. Дублируем критичные стили
-// глобально, привязывая к классу .datepicker__menu (передаётся через
-// :menu-class-name на сам VueDatePicker). Для range-режима добавляется
-// дополнительный модификатор .datepicker__menu_range.
-.datepicker__menu {
+// VueDatePicker рендерит menu в <body> через :teleport — селекторы внутри
+// .form__item_date больше не достают до меню. Раньше попытался скоупить
+// через :menu-class-name="datepicker__menu", но проп либо не пробрасывается
+// в нужный DOM-элемент, либо не работает в этой версии — стили не
+// применялись. Поэтому пишем правила НА КОРНЕ: классы dp__* и
+// .datapicker__preset-* уникальны и принадлежат только этому датапикеру,
+// глобальное применение никого не зацепит.
+
+.dp__menu {
     * {
         font-family: PT Sans !important;
         transition: none !important;
     }
+    border-radius: 5px;
+}
 
-    .dp__action_row { display: none; }
+.dp__action_row { display: none; }
 
+.dp__menu_content_wrapper {
+    background: #fff;
+    border-radius: 5px;
+    box-shadow: 0 0 3px #000, inset 0 1px 2px #ffffff80;
+    overflow: hidden;
+}
+
+.dp__input_icon,
+.dp__arrow_top,
+.dp__arrow_bottom { display: none; }
+
+.dp__date_hover_end,
+.dp__date_hover_start,
+.dp__date_hover,
+.dp__month_year_select,
+.dp__overlay_cell,
+.dp__button,
+.dp__cell_inner,
+.dp__inner_nav {
+    &:hover { background: #eef3f8; }
+
+    &.dp__active_date,
+    &.dp__range_end,
+    &.dp__range_start {
+        &:hover {
+            background: var(--dp-primary-color);
+            filter: brightness(1.4);
+        }
+    }
+
+    &.dp__range_start.dp__range_end { border-radius: 5px; }
+}
+
+.dp__today {
+    border: none;
+    font-weight: 600;
+    color: variables.$color-red;
+
+    &.dp__active_date,
+    &.dp__range_end,
+    &.dp__range_start { color: variables.$color-white; }
+}
+
+.dp__calendar_row { margin: 0; }
+
+// Маленький breath между ячейками — без него календарь визуально слипся
+// (раньше отступ давала родительская комбинация в .form__item_date).
+.dp__calendar_item { margin: 1px; }
+
+.dp__month_year_select { padding: 5px 10px; }
+.dp__month_year_col_nav {
+    padding: 0 10px;
+    &:hover { filter: brightness(1); }
+}
+
+.dp__overlay_cell_active,
+.dp__active_date {
+    background: variables.$color-icon-active;
+}
+
+.dp__inner_nav {
+    width: 25px;
+    display: grid;
+    place-items: center;
+    svg { @include mixins.resolution(25px, 20px); }
+}
+
+// Сбрасываем padding, который натёк с глобального `button { padding: ... }`
+// — после teleport menu лежит вне .form__item_date и общий стиль button
+// перебивает встроенные dp__btn padding'и.
+.dp__btn,
+.dp__month_year_wrap button {
+    padding: 0;
+}
+
+.dp__sidebar_right {
+    padding: 0;
+    position: relative;
+    border-left: none;
+
+    &::before {
+        content: "";
+        position: absolute;
+        width: 1px;
+        background: variables.$color-border;
+        height: calc(100% + 70px);
+        left: 0;
+        z-index: 2;
+        top: 0;
+    }
+}
+
+.datapicker__preset-days {
+    .datapicker__preset-item {
+        padding: 8px 20px 8px 10px;
+
+        &:hover,
+        &.datapicker__preset-item_active {
+            background: #eef3f8;
+            cursor: pointer;
+        }
+    }
+}
+
+// Range-режим: layout grid для двух календарей + футера.
+// Применяется ко всем range-instance'ам VueDatePicker — кнопок-range у
+// нас немного, конфликтов не ожидается.
+.dp__main.dp--multi-calendars {
     .dp__menu_content_wrapper {
-        background: #fff;
-        border-radius: 5px;
-        box-shadow: 0 0 3px #000, inset 0 1px 2px #ffffff80;
-        overflow: hidden;
-    }
-
-    .dp__input_icon,
-    .dp__arrow_top,
-    .dp__arrow_bottom { display: none; }
-
-    .dp__menu { border-radius: 5px; }
-
-    .dp__date_hover_end,
-    .dp__date_hover_start,
-    .dp__date_hover,
-    .dp__month_year_select,
-    .dp__overlay_cell,
-    .dp__button,
-    .dp__cell_inner,
-    .dp__inner_nav {
-        &:hover { background: #eef3f8; }
-
-        &.dp__active_date,
-        &.dp__range_end,
-        &.dp__range_start {
-            &:hover {
-                background: var(--dp-primary-color);
-                filter: brightness(1.4);
-            }
-        }
-
-        &.dp__range_start.dp__range_end { border-radius: 5px; }
-    }
-
-    .dp__today {
-        border: none;
-        font-weight: 600;
-        color: variables.$color-red;
-
-        &.dp__active_date,
-        &.dp__range_end,
-        &.dp__range_start { color: variables.$color-white; }
-    }
-
-    .dp__calendar_row { margin: 0; }
-
-    // Маленький breath между ячейками — без него календарь визуально слипся
-    // (раньше отступ давала какая-то родительская комбинация в .form__item_date).
-    .dp__calendar_item { margin: 1px; }
-
-    .dp__month_year_select { padding: 5px 10px; }
-    .dp__month_year_col_nav {
-        padding: 0 10px;
-        &:hover { filter: brightness(1); }
-    }
-
-    .dp__overlay_cell_active,
-    .dp__active_date {
-        background: variables.$color-icon-active;
-    }
-
-    .dp__inner_nav {
-        width: 25px;
         display: grid;
-        place-items: center;
-        svg { @include mixins.resolution(25px, 20px); }
+        grid-template-columns: 1fr 150px;
+        grid-template-rows: 1fr auto;
+        height: 100%;
     }
 
-    // Сбрасываем padding, который натёк с глобального `button { padding: ... }`
-    // — после teleport menu лежит вне .form__item_date и общий стиль button
-    // перебивает встроенные dp__btn padding'и.
-    .dp__btn,
-    .dp__month_year_wrap button {
+    .dp__sidebar_left {
         padding: 0;
-    }
+        grid-row: 2/3;
+        grid-column: 1/3;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
 
-    .dp__sidebar_right {
-        padding: 0;
-        position: relative;
-        border-left: none;
-
-        &::before {
-            content: "";
-            position: absolute;
-            width: 1px;
-            background: variables.$color-border;
-            height: calc(100% + 70px);
-            left: 0;
-            z-index: 2;
-            top: 0;
-        }
-    }
-
-    .datapicker__preset-days {
-        .datapicker__preset-item {
-            padding: 8px 20px 8px 10px;
-
-            &:hover,
-            &.datapicker__preset-item_active {
-                background: #eef3f8;
-                cursor: pointer;
-            }
-        }
-    }
-
-    &.datepicker__menu_range {
-        .dp__menu_content_wrapper {
-            display: grid;
-            grid-template-columns: 1fr 150px;
-            grid-template-rows: 1fr auto;
-            height: 100%;
-        }
-
-        .dp__sidebar_left {
-            padding: 0;
-            grid-row: 2/3;
-            grid-column: 1/3;
+        .datapicker__footer {
+            gap: 10px;
+            width: 100%;
             display: flex;
-            align-items: center;
+            padding: 15px;
             justify-content: space-between;
 
-            .datapicker__footer {
-                gap: 10px;
-                width: 100%;
-                display: flex;
-                padding: 15px;
-                justify-content: space-between;
+            .button_fill { width: 115px; }
+        }
 
-                .button_fill { width: 115px; }
-            }
-
-            .datepicker__inputs {
-                display: flex;
-                gap: 20px;
-                align-items: center;
-            }
+        .datepicker__inputs {
+            display: flex;
+            gap: 20px;
+            align-items: center;
         }
     }
 }

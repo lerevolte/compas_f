@@ -23,6 +23,16 @@
             z-index: 2;
             background: variables.$color-background;
             animation: showModal 0.25s ease-out forwards;
+            // Flex-колонка: .modal__body занимает доступное место и
+            // скроллит, .modal__mass-action прижата снизу СВОЕЙ высотой
+            // и не оверлеит контент. Раньше MassAction была position:absolute
+            // bottom:0 и физически закрывала нижнюю часть таблицы — у
+            // последней добавленной строки кнопка меню действий
+            // оказывалась под панелью «Сохранить/Удалить» и не нажималась.
+            display: flex;
+            flex-direction: column;
+            max-height: 100vh;
+            max-height: 100dvh;
 
             & > .modal__close {
                 position: absolute;
@@ -66,38 +76,21 @@
             }
 
             .modal__body {
-                height: 100%;
                 padding: 0px;
                 overflow: auto;
-                max-height: 100vh;
-                max-height: 100dvh;
                 position: relative;
+                flex: 1 1 auto;
+                min-height: 0;
                 @include mixins.scrollBar();
-
-                // Запас под телепортированный MassAction
-                // (.modal__mass-action: position:absolute; bottom:0). Без
-                // этого запаса при редактировании таблицы (например, продукты
-                // в задаче) панель «Сохранить/Удалить» физически перекрывает
-                // последние строки, и у новой добавленной кнопка меню
-                // действий оказывалась НЕ кликабельной — пользователь
-                // тыкал в MassAction.
-                padding-bottom: 80px;
             }
 
             // Контейнер для MassAction, телепортируемого из VirtualTable
-            // внутри модалки. Лежит поверх контента, но внутри стэкинг-
-            // контекста модалки — поэтому не прячется самой модалкой.
+            // внутри модалки. Занимает СВОЮ высоту как flex-ребёнок —
+            // не оверлеит контент, последняя строка таблицы остаётся
+            // полностью кликабельной.
             .modal__mass-action {
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 0;
+                flex: 0 0 auto;
                 z-index: 10;
-                pointer-events: none;
-
-                & > * {
-                    pointer-events: auto;
-                }
 
                 &:empty {
                     display: none;
