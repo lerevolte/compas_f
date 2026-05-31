@@ -1346,16 +1346,17 @@
     };
 
     // ── Fit bounds ──
-    // При выборе маршрута карта фокусируется на его центре, СОХРАНЯЯ
-    // текущий пользовательский zoom. Раньше fitBounds сбрасывала zoom под
-    // bounding box маршрута, и пользователь жаловался на «вылетающий» zoom.
+    // При выборе маршрута: если все точки маршрута уже помещаются на
+    // текущем zoom — просто центрируем, СОХРАНЯЯ zoom (это удобно, когда
+    // пользователь уже зазумил поудобнее). Если не помещаются — fitBounds
+    // отзумит карту настолько, чтобы маршрут был полностью виден,
+    // иначе он мог уехать за пределы экрана и пользователь не видел
+    // часть точек.
     const fitBounds = () => {
         if (!mapInstance.value || !L) return;
         const pts = [];
         if (processedRoute?.tasks) processedRoute.tasks.forEach(t => { if (t.latLng) pts.push(t.latLng); });
         if (pts.length === 0) {
-            // Fallback: если в маршруте нет задач, центрируем по
-            // unassigned-точкам, иначе вообще ничего не двигаем.
             if (shouldShowUnassigned()) {
                 props.unassignedTasks.forEach(t => {
                     const a = parseAddress(t.address);
@@ -1364,11 +1365,23 @@
             }
             if (pts.length === 0) return;
         }
-        const center = (pts.length === 1)
-            ? pts[0]
-            : L.latLngBounds(pts).getCenter();
-        // Сохраняем текущий zoom.
-        safeSetView(center, mapInstance.value.getZoom());
+        if (pts.length === 1) {
+            safeSetView(pts[0], mapInstance.value.getZoom());
+            return;
+        }
+        const targetBounds = L.latLngBounds(pts);
+        const currentZoom = mapInstance.value.getZoom();
+        const padding = [40, 40];
+        // getBoundsZoom возвращает максимальный zoom, при котором bounds
+        // ещё влезают в viewport с учётом padding. Если он >= currentZoom,
+        // значит маршрут УЖЕ помещается на текущем zoom — достаточно
+        // центрировать. Если меньше — fitBounds отзумит до нужного.
+        const requiredZoom = mapInstance.value.getBoundsZoom(targetBounds, false, padding);
+        if (requiredZoom >= currentZoom) {
+            safeSetView(targetBounds.getCenter(), currentZoom);
+        } else {
+            safeFitBounds(targetBounds, { padding });
+        }
     };
 
     // ── Apply settings (called when user changes any setting) ──

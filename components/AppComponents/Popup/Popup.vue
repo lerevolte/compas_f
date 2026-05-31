@@ -91,18 +91,40 @@
 
         // Делегированный обработчик клика по контенту popup'а.
         // Закрывает popup, когда пользователь выбрал любой .popup__option,
-        // КРОМЕ чекбокса/disable/empty/checkbox-обёртки. Раньше каждый
-        // консьюмер сам пытался убрать класс popup_open через DOM —
-        // (1) после Teleport контент уехал в body, и closest('.popup') стал
-        // null; (2) markRaw на Popup-инстансе сделал popupRef ВНУТРИ объекта
-        // обычным Vue-ref'ом (не auto-unwrap), и `popup.popupRef.classList`
-        // снаружи стал undefined → TypeError. Делаем close централизованно.
+        // КРОМЕ чекбокса/disable/empty/checkbox-обёртки и КРОМЕ submenu-
+        // навигации внутри popup'а (Settings.vue/Save.vue имеют вложенное
+        // меню с шагами, которое должно держать popup открытым).
+        //
+        // Раньше каждый консьюмер сам пытался убрать класс popup_open
+        // через DOM, но (1) после Teleport контент уехал в body — и
+        // closest('.popup') стал null; (2) markRaw на Popup-инстансе сделал
+        // popupRef ВНУТРИ объекта обычным Vue-ref'ом, и `popup.popupRef
+        // .classList` снаружи стал undefined → TypeError. Поэтому close
+        // централизованный.
+        //
+        // Маркер «не закрывать»: класс из списка ниже ИЛИ data-popup-stay
+        // на самом .popup__option (для случаев, когда консьюмеру нужно
+        // явно сохранить popup открытым — например, чекбокс настроек,
+        // навигация в submenu).
         onContentClick(event) {
             const option = event?.target?.closest?.('.popup__option');
             if (!option) return;
-            if (option.classList.contains('popup__option_checkbox')) return;
-            if (option.classList.contains('popup__option_disable')) return;
-            if (option.classList.contains('popup__option_empty')) return;
+            if (option.dataset && option.dataset.popupStay != null) return;
+            const stayClasses = [
+                'popup__option_checkbox',
+                'popup__option_disable',
+                'popup__option_empty',
+                'popup__option_stay',
+                // Settings/Save: submenu-навигация внутри popup'а. Клик по
+                // «Отображение/Порядок/Фиксированные/Назад/Создать новую…»
+                // ведёт во вложенное состояние popup'а — закрывать его
+                // нельзя, иначе пользователь не видит подменю.
+                'settings__item_submenu',
+                'settings__item_back'
+            ];
+            for (const cls of stayClasses) {
+                if (option.classList.contains(cls)) return;
+            }
             // Закрытие через _close — оно само снимает класс, отписывает
             // обработчики, кикает MutationObserver. Делаем после клика по
             // опции, т.е. её собственный @click уже отработал (bubble).

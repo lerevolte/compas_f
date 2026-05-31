@@ -30,11 +30,11 @@
             @click="event => copyText(props.modelValue?.text, event.target)"
         />
 
-        <MapFrame 
+        <MapFrame
             :points="props.points ?? [props.modelValue?.coords]"
             :options="{
                 ...props.frameOptions,
-                defaultZoom: 17
+                defaultZoom: props.frameOptions?.defaultZoom ?? 10
             }"
             @getSelectedPoints="data => emit('getSelectedPoints', data)"
         />

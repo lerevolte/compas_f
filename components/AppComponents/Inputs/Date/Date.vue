@@ -3,7 +3,7 @@
         <label class="blank__title" :for="props.options.id" v-if="props.options.title && props.options.title != ''">
             {{ props.options.title }} 
         </label>
-        <VueDatePicker 
+        <VueDatePicker
             :class="{'dp__main_bottom': props.isPreventBottom}"
             :id="props.options.id"
             :model-value="modelValue"
@@ -20,6 +20,7 @@
 			hide-offset-dates
 			format="dd.MM.yyyy"
 			:placeholder="'__.__.____'"
+			:teleport="true"
             @update:modelValue="emit('update:modelValue',  $event ? props.options.multiple ? [format($event[0], `yyyy-MM-dd'T'00:00:00.000000'Z'`), format($event[1], `yyyy-MM-dd'T'00:00:00.000000'Z'`)] : format($event, `yyyy-MM-dd'T'00:00:00.000000'Z'`) : null)"
             @open="datepickerField.open()"
             @range-start="onRangeStart"

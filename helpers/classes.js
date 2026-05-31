@@ -1159,7 +1159,18 @@ export class Table {
             acc[item.key] = item.type == 'number' ? 0 : null
             return acc;
         }, {});
-        newObj.local_id = this.body.length + 1
+        // local_id раньше считался как body.length+1. Если пользователь
+        // удалял строки в середине, индекс мог совпасть с уже существующим
+        // local_id — тогда у row.key (getItemKey использует local_id)
+        // случались коллизии, и Vue/virtualizer считал «новую» строку той же,
+        // что и существующую. ShowMore popup у такой строки не открывался,
+        // потому что DOM-инстанс попапа уже был привязан к другой строке.
+        // Берём max существующих + 1 — это всегда уникально.
+        const maxLocalId = this.body.reduce((max, r) => {
+            const lid = Number(r?.local_id)
+            return Number.isFinite(lid) && lid > max ? lid : max
+        }, 0)
+        newObj.local_id = maxLocalId + 1
         this.body.push(newObj)
         nextTick(() => {
             this.initVirtualizer()

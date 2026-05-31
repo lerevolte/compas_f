@@ -207,20 +207,19 @@
 			return
 		}
 
-		// Если URL не меняется (пользователь повторно ищет ту же задачу с
-		// тем же маршрутом/датой) — navigateTo это no-op, watch на
-		// route.fullPath не сработает, activeTaskId не переустановится,
-		// и карта не пере-центрируется. Дёргаем get() явно с reset,
-		// чтобы watch на activeTaskId стрельнул заново.
-		const currentPath = `${route.path}${route.fullPath.includes('?') ? route.fullPath.slice(route.fullPath.indexOf('?')) : ''}`
-		if (targetPath === currentPath) {
-			logisticPage.value.activeTaskId = null
-			nextTick(() => {
-				logisticPage.value.activeTaskId = Number(taskId)
-			})
-		} else {
-			navigateTo(targetPath)
-		}
+		// Навигация: если URL совпадает с текущим, Vue Router сделает no-op
+		// и watch(route.fullPath) не отработает — activeTaskId останется
+		// прежним и карта не пере-центрируется. Поэтому ВСЕГДА явно
+		// сбрасываем и заново выставляем activeTaskId после nextTick —
+		// это гарантированно дёргает watch в LogisticTemplate/LogisticMap
+		// и заставляет focusTaskWithRetry заново найти marker и
+		// панорамировать карту. URL-сравнение делать не нужно.
+		navigateTo(targetPath)
+		const targetTaskId = Number(taskId)
+		logisticPage.value.activeTaskId = null
+		nextTick(() => {
+			logisticPage.value.activeTaskId = targetTaskId
+		})
 	}
 
 	const activeStatsData = computed(() => {
