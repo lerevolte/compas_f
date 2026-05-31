@@ -259,21 +259,32 @@
 		}
 
 		if (route.path === '/logistic') {
+			const wantRouteId = routeId ? Number(routeId) : null
+
+			// activeDate — обычное сравнение/set (если пользователь сменил
+			// дату вручную через AppDateFilter, v-model уже синхронизировал
+			// logisticPage.activeDate, так что сравнение даст правильный
+			// результат — не надо перезагружать дату без нужды).
 			if (String(logisticPage.value.activeDate) !== String(date)) {
 				logisticPage.value.activeDate = date
 			}
-			const currentRouteId = logisticPage.value.activeRoute?.value?.[0] ?? null
-			const wantRouteId = routeId ? Number(routeId) : null
-			if (Number(currentRouteId) !== wantRouteId) {
+
+			// activeRoute — ВСЕГДА reset → nextTick → set. Когда
+			// пользователь ВРУЧНУЮ кликает другой маршрут в таблице,
+			// меняется только logistic.machine_tasks.route_id внутри
+			// LogisticTemplate. logisticPage.activeRoute снаружи остаётся
+			// прежним, и сравнение «тот же route — ничего не делаем» не
+			// даёт prop watch'у стрельнуть. В результате поиск повторно
+			// той же задачи (которая в её исходном маршруте) не
+			// переключает карту обратно. Reset через null гарантирует
+			// transition null → значение независимо от того, что снаружи
+			// помнит logisticPage.
+			logisticPage.value.activeRoute = null
+			logisticPage.value.activeTaskId = null
+			nextTick(() => {
 				logisticPage.value.activeRoute = wantRouteId
 					? { value: [wantRouteId], localOptions: [null] }
 					: null
-			}
-			// activeTaskId ВСЕГДА reset+set — prop watch в LogisticTemplate
-			// тянет setTaskRowClicked, плюс мы дублируем focusTaskById через
-			// ref, плюс отдельно сразу dispatch window-event для карты.
-			logisticPage.value.activeTaskId = null
-			nextTick(() => {
 				logisticPage.value.activeTaskId = Number(taskId)
 				logisticRef.value?.focusTaskById?.(Number(taskId))
 				dispatchMapFocus()
