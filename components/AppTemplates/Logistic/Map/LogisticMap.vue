@@ -1562,31 +1562,33 @@
     // ── Public: focus on an unassigned task from table click ──
     // При фокусе на задаче СОХРАНЯЕМ текущий zoom — пользователь жаловался,
     // что любой клик по задаче «зумирует» карту. Просто панорамируем к точке.
-    const focusUnassignedTask = (taskId) => {
+    // forceOpenPopup=true (по умолчанию) — popup task'а ВСЕГДА открывается,
+    // даже если уже был открыт. handleMarkerClick без forceOpen toggle'ит
+    // active-класс — на повторном поиске той же задачи popup закрывался
+    // обратно, и пользователь не видел никакой реакции.
+    const focusUnassignedTask = (taskId, forceOpenPopup = true) => {
         if (!mapInstance.value) return;
         const id = Number(taskId);
-        // Check if marker is in a group
         if (focusGroupedMarker(id, 'unassigned')) return;
         const marker = unassignedMarkers.find(m => Number(m._taskId) === id);
         if (marker) {
             const latlng = marker.getLatLng();
             safeSetView(latlng, mapInstance.value.getZoom());
             const el = marker.getElement();
-            if (el) handleMarkerClick(el);
+            if (el) handleMarkerClick(el, forceOpenPopup);
         }
     };
 
-    const focusRouteTask = (taskId) => {
+    const focusRouteTask = (taskId, forceOpenPopup = true) => {
         if (!mapInstance.value) return;
         const id = Number(taskId);
-        // Check if marker is in a group
         if (focusGroupedMarker(id, 'route')) return;
         const marker = routeMarkers.find(m => Number(m._taskId) === id);
         if (marker) {
             const latlng = marker.getLatLng();
             safeSetView(latlng, mapInstance.value.getZoom());
             const el = marker.getElement();
-            if (el) handleMarkerClick(el);
+            if (el) handleMarkerClick(el, forceOpenPopup);
             // Show service radius
             if (serviceRadiusCircle) { mapInstance.value.removeLayer(serviceRadiusCircle); serviceRadiusCircle = null; }
             const radius = props.serviceRadius || 500;
