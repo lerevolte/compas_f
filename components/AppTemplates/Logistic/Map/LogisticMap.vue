@@ -1307,8 +1307,21 @@
         const ext = el.querySelector('.route-popup__extend');
         document.querySelectorAll('.route-popup__extend.active').forEach(e => { if (e !== ext) e.classList.remove('active'); });
         if (ext) {
-            if (forceOpen) ext.classList.add('active');
-            else ext.classList.toggle('active');
+            if (forceOpen) {
+                // Если popup уже открыт — даём короткий visual flash
+                // (off → on через 60ms), чтобы пользователь увидел,
+                // что действие отработало даже при повторном поиске
+                // той же задачи (state уже целевой → без flash'а
+                // визуально «ничего не происходит»).
+                if (ext.classList.contains('active')) {
+                    ext.classList.remove('active');
+                    setTimeout(() => ext.classList.add('active'), 60);
+                } else {
+                    ext.classList.add('active');
+                }
+            } else {
+                ext.classList.toggle('active');
+            }
         }
     };
 
