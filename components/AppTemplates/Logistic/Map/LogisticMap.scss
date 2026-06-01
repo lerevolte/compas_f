@@ -641,14 +641,16 @@
 }
 
 // Вложенное меню смешанного кластера (case 2): уровень маршрутов/необработанных.
+// По высоте/отступам совпадает с .cluster-point (единый line-height).
 .cluster-menu__item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 12px;
+    gap: 8px;
+    padding: 8px 12px;
     cursor: pointer;
     font-family: Helvetica, sans-serif;
-    font-size: 15px;
+    font-size: 14px;
+    line-height: 18px;
     color: #000;
     transition: background-color 0.12s;
 
@@ -698,10 +700,18 @@
 }
 
 .cluster-menu__back-arrow {
+    // Глиф «‹» по метрикам шрифта сидит не по центру строки — центрируем его
+    // внутри фиксированного flex-бокса, чтобы стрелка, квадрат цвета и название
+    // были на одной вертикальной оси.
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 18px;
+    flex-shrink: 0;
     color: #555;
     font-size: 18px;
-    // line-height фиксируем под строку, чтобы 18px-глиф не увеличивал высоту.
-    line-height: 18px;
+    line-height: 1;
 }
 
 // ── SVG icons in markers ──
