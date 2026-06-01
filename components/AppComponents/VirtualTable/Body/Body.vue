@@ -31,7 +31,7 @@
                 'table__body_dragging': table.isDragging
             }"
             :move="onMoveCheck"
-            @start="event => {draggableRow = event.item; table.dragStart(event)}"
+            @start="event => {draggableRow = event.item; table.dragStart(event); adjustDragGhostScroll()}"
             @end="event => dragEnd(event)"
             @change="event => table.changeDrag(event)"
         >
@@ -757,6 +757,37 @@
         // через changeDrag -> initVirtualizer() который уже вызывается при изменении порядка
         draggableRow.value = null
         table.value.dragEnd(event)
+    }
+
+    // Корректировка клона-призрака (forceFallback) при горизонтальной прокрутке.
+    // Клон копирует строку целиком от первой колонки, поэтому у прокрученной
+    // вправо таблицы призрак показывает НЕ те колонки, что видны, а
+    // зафиксированные колонки из-за утёкшего Safari-transform'а уезжают вправо.
+    // Сдвигаем нефиксированные ячейки влево на scrollLeft (под курсором — видимые
+    // колонки), а ушедший за левый край «хвост» прячем через visibility (без
+    // переверстки). Фикс-колонки оставляем слева (их transform сбрасывает CSS
+    // `.table__row.draggable-fallback .table__cell_fixed`).
+    // ВАЖНО: габариты/позицию самого клона НЕ трогаем — иначе ячейки
+    // переверстаются, клон становится выше и уезжает далеко вниз от курсора.
+    const adjustDragGhostScroll = () => {
+        requestAnimationFrame(() => {
+            const scrollEl = tableRef?.value
+            const fallback = typeof document !== 'undefined'
+                ? document.querySelector('.draggable-fallback')
+                : null
+            if (!scrollEl || !fallback) return
+
+            const scrollLeft = scrollEl.scrollLeft || 0
+            if (scrollLeft <= 0) return // не прокручено — клон и так корректен
+
+            fallback.querySelectorAll('.table__cell').forEach(cell => {
+                if (cell.classList.contains('table__cell_fixed')) return
+                cell.style.transform = `translateX(${-scrollLeft}px)`
+                if (cell.offsetLeft + cell.offsetWidth <= scrollLeft) {
+                    cell.style.visibility = 'hidden'
+                }
+            })
+        })
     }
 
     const getRow = (val, row) => {
