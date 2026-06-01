@@ -1,6 +1,6 @@
 <template>
     <div class="logistic-filter">
-        <AppPopup>
+        <AppPopup class="logistic-filter__popup" align="right">
             <template #header>
                 <IconSearch class="filter__mobile-search"/>
             </template>

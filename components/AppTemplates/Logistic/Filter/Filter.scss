@@ -3,19 +3,26 @@
 
 .logistic-filter {
     position: absolute;
-    top: 12px;
+    top: 16px;
     right: 85px;
 
-    .popup__content {
-        right: 0px;
-        left: auto;
-        padding: 15px;
-        width: 100%;
-        min-width: 500px;
-        max-width: 500px;
-        min-height: 85px;
+    .blank__title {
+        color: variables.$color-border;
     }
-    
+}
+
+// popup__content телепортируется в <body>, поэтому селектор
+// `.logistic-filter .popup__content` (как предок-потомок) до него больше не
+// достаёт. Модификатор-класс `logistic-filter__popup` прокидывается прямо на
+// сам popup__content (см. Popup.vue → contentClass), поэтому стилизуем
+// комбинированным селектором, не зависящим от контейнера. Позицию (top/left)
+// задаёт сам Popup через inline-стили — здесь её не трогаем.
+.popup__content.logistic-filter__popup {
+    padding: 15px;
+    width: 100%;
+    min-width: 500px;
+    max-width: 500px;
+    min-height: 85px;
 
     .blank__title {
         color: variables.$color-border;

@@ -703,7 +703,29 @@
                     }
                 } else {
                     // Если количество изменилось (межтабличное перетаскивание или добавление в пустую таблицу)
-                    table.value.body = reorderedBody
+                    let finalBody = reorderedBody
+                    // isAppendOnDrop — задача, перетянутая из другой таблицы,
+                    // ВСЕГДА добавляется в конец (напр. «Задачи в машине»:
+                    // новая точка маршрута = последняя). Sortable вставляет
+                    // строку по позиции курсора, поэтому переносим только что
+                    // добавленные (которых не было по id в старом body) в конец,
+                    // сохраняя порядок остальных.
+                    if (props.options?.isAppendOnDrop) {
+                        const oldIds = new Set(
+                            table.value.body
+                                .map(r => r?.id ?? r?.local_id)
+                                .filter(x => x != null)
+                        )
+                        const existing = []
+                        const added = []
+                        for (const r of reorderedBody) {
+                            const rid = r?.id ?? r?.local_id
+                            if (rid != null && oldIds.has(rid)) existing.push(r)
+                            else added.push(r)
+                        }
+                        finalBody = [...existing, ...added]
+                    }
+                    table.value.body = finalBody
                     // Обновляем виртуализатор после изменения body
                     nextTick(() => {
                         if (table.value.rowVirtualizer) {

@@ -138,6 +138,10 @@
                             isHaveQuery: true,
                             isCheckClicked: true,
                             isHaveOrder: true,
+                            // Задача, перетянутая из «Задачи логистики», всегда
+                            // добавляется в конец списка (последняя точка
+                            // маршрута), независимо от позиции курсора.
+                            isAppendOnDrop: true,
                             query: {
                                 route_id: String(logistic.machine_tasks.route_id)
                             },

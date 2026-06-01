@@ -885,7 +885,13 @@
                 </div>`;
 
             const marker = L.marker(task.latLng, {
-                icon: L.divIcon({ className: 'custom-div-icon', html, popupAnchor: [0, -40] }),
+                // iconAnchor = центр .route-popup__counter (24×24): счётчик —
+                // первый элемент внутри .route-popup__main с рамкой 1px, поэтому
+                // его центр ≈ (13, 13) от левого-верхнего угла иконки. Так
+                // географическая точка задачи (и центр круга зоны обслуживания,
+                // см. handleMarkerClick/focusRouteTask) совпадает с центром
+                // счётчика, без смещения.
+                icon: L.divIcon({ className: 'custom-div-icon', html, iconAnchor: [13, 13], popupAnchor: [0, -40] }),
                 zIndexOffset: 1000
             }).addTo(mapInstance.value);
 

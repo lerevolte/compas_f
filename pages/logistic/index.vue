@@ -376,24 +376,11 @@
     padding: 0;
     overflow: hidden;
 }
-.logistic-header__statistic {
-    .popup__content {
-        max-width: none;
-        min-width: auto;
-        width: auto;
-        overflow: visible;
-    }
-
-    .stat-layout {
-        width: 100%;
-        min-width: 500px;
-    }
-}
 
 .stat-layout {
     display: flex;
     width: 100%;
-    min-width: 480px;
+    min-width: 0;
 }
 
 .stat-body {
@@ -501,5 +488,22 @@
 	text-align: center;
 	color: #999;
 	font-size: 13px;
+}
+</style>
+
+<!--
+	Не scoped: popup__content телепортируется в <body> с классом
+	logistic-header__statistic прямо на самом элементе (см. Popup.vue →
+	contentClass). Scoped-селектор `.logistic-header__statistic .popup__content`
+	до него не достаёт (другой data-v), а базовый .popup__content ограничен
+	max-width: 200px — из-за этого аналитика не влезала по ширине. Фиксируем
+	ширину комбинированным селектором, не зависящим от контейнера.
+-->
+<style lang="scss">
+.popup__content.logistic-header__statistic {
+	width: 470px;
+	min-width: 470px;
+	max-width: 470px;
+	overflow: visible;
 }
 </style>
