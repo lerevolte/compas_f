@@ -42,17 +42,6 @@
     overflow: hidden;
   }
 
-  // «Задачи в машине» (isAppendOnDrop): задача из другой таблицы всегда
-  // добавляется в конец, поэтому и плейсхолдер при перетаскивании должен быть
-  // под всеми строками, а не сверху. Строки виртуализированы и спозиционированы
-  // absolute по --row-start; клон-плейсхолдер (.draggable-ghost) без --row-start
-  // садится наверх (top: 0). Прижимаем его к низу зоны drop.
-  &.table_append-on-drop {
-    .table__body .table__row.draggable-ghost {
-      top: auto !important;
-      bottom: 0 !important;
-    }
-  }
 
   &#table_transfer {
     width: 100%;
@@ -572,4 +561,35 @@
 }
 .page main {
   min-height: 100vh;
+}
+
+// ── Перетаскивание задач в таблицу «Задачи в машине» (isAppendOnDrop) ──
+// Задача из другой таблицы всегда добавляется в КОНЕЦ, поэтому и плейсхолдер
+// (.draggable-ghost) при перетаскивании должен стоять под всеми строками.
+// Проблема: строки виртуализированы и спозиционированы absolute по --row-start,
+// клон-плейсхолдер без --row-start садится наверх (top: 0), а bottom: 0 не
+// помогает, т.к. тело в режиме drop фактически схлопнуто.
+// Решение: пока идёт любое перетаскивание (body.body_unselected ставится в
+// dragStart), переводим тело этой таблицы в обычный поток (flex-колонка,
+// строки relative), а сам плейсхолдер через order уводим в самый конец.
+body.body_unselected .table_append-on-drop .table__body {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+body.body_unselected .table_append-on-drop .table__body .table__row {
+  position: relative !important;
+  top: auto !important;
+}
+
+body.body_unselected .table_append-on-drop .table__body .table__row.draggable-ghost {
+  order: 999 !important;
+}
+
+// Клон-призрак строки (forceFallback) уносит inline-transform Safari-sticky
+// с зафиксированных колонок (см. Header.checkStickyCells: translateX(scrollLeft)).
+// В клоне нет горизонтального скролла, поэтому из-за этого transform'а колонки
+// уезжают вправо. Сбрасываем — они встают слева, как в обычной строке.
+.table__row.draggable-fallback .table__cell_fixed {
+  transform: none !important;
 }

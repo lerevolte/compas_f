@@ -31,7 +31,7 @@
                 'table__body_dragging': table.isDragging
             }"
             :move="onMoveCheck"
-            @start="event => {draggableRow = event.item; table.dragStart(event); fixDragGhost()}"
+            @start="event => {draggableRow = event.item; table.dragStart(event)}"
             @end="event => dragEnd(event)"
             @change="event => table.changeDrag(event)"
         >
@@ -749,29 +749,6 @@
             const result = props.options.onMove(evt)
             if (result === false) return false
         }
-
-        // «Задачи в машине» (isAppendOnDrop): при перетаскивании задачи из ДРУГОЙ
-        // таблицы плейсхолдер (.draggable-ghost) должен стоять под всеми строками.
-        // Строки виртуализированы и спозиционированы absolute по --row-start, а
-        // тело таблицы в режиме drop фактически схлопнуто — поэтому CSS bottom:0
-        // садит призрак наверх. Позиционируем его вручную: top = низ последней
-        // реальной строки.
-        if (props.options?.isAppendOnDrop && evt?.to && evt?.dragged && evt.from !== evt.to) {
-            const ghost = evt.dragged
-            nextTick(() => {
-                const realRows = Array.from(
-                    evt.to.querySelectorAll('.table__row')
-                ).filter(r => r !== ghost && !r.classList.contains('draggable-ghost'))
-                const last = realRows[realRows.length - 1]
-                if (last) {
-                    const top = last.offsetTop + last.offsetHeight
-                    ghost.style.setProperty('top', `${top}px`, 'important')
-                    ghost.style.setProperty('bottom', 'auto', 'important')
-                    ghost.style.setProperty('position', 'absolute', 'important')
-                }
-            })
-        }
-
         return true;
     };
 
@@ -780,26 +757,6 @@
         // через changeDrag -> initVirtualizer() который уже вызывается при изменении порядка
         draggableRow.value = null
         table.value.dragEnd(event)
-    }
-
-    // Поправка клона-призрака (forceFallback). На Safari зафиксированные колонки
-    // эмулируют sticky через inline transform: translateX(scrollLeft) (см.
-    // Header.checkStickyCells). Этот transform «утекает» в клон, где нет
-    // горизонтального скролла, и колонки уезжают вправо. Сбрасываем его —
-    // колонки встают на свои места слева, как в обычной строке. Габариты/
-    // позицию клона НЕ трогаем (иначе ломается позиционирование Sortable'ом
-    // относительно курсора и возвращается авто-скролл в Safari).
-    const fixDragGhost = () => {
-        nextTick(() => {
-            const fallback = typeof document !== 'undefined'
-                ? document.querySelector('.draggable-fallback')
-                : null
-            if (!fallback) return
-
-            fallback.querySelectorAll('.table__cell_fixed').forEach(cell => {
-                if (cell.style.transform) cell.style.transform = 'none'
-            })
-        })
     }
 
     const getRow = (val, row) => {

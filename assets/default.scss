@@ -771,6 +771,51 @@ section {
     }
 }
 
+// ── Попап статистики логистики (logistic-header__statistic) ──
+// popup__content телепортируется в <body> с классом logistic-header__statistic
+// прямо на самом элементе (см. Popup.vue → contentClass). Кладём правила в
+// глобальный default.scss (а не в scoped/нескоуп-блок страницы), чтобы они
+// гарантированно грузились и не зависели от data-v и порядка инъекции стилей.
+// Базовый .popup__content ограничен max-width: 200px, поэтому фиксируем ширину
+// и раскладку. Ширину тянем по всей цепочке (popup__content → wrapper →
+// stat-layout), иначе flex-stretch обёртки не срабатывает и stat-body не
+// растягивается.
+.popup__content.logistic-header__statistic {
+    width: 470px !important;
+    min-width: 470px !important;
+    max-width: 470px !important;
+    overflow: visible;
+
+    .logistic-header__statistic-content {
+        width: 100%;
+    }
+
+    .stat-layout {
+        display: flex !important;
+        width: 100%;
+        align-items: stretch;
+    }
+
+    // Область данных занимает всё свободное место (flex-basis: 0 → растёт от нуля
+    // и забирает всю ширину, кроме сайдбара).
+    .stat-body {
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
+        width: auto !important;
+    }
+
+    // Сайдбар фиксированной ширины, прижат к правому краю.
+    .stat-sidebar {
+        flex: 0 0 150px !important;
+        width: 150px !important;
+        max-width: 150px !important;
+    }
+
+    .stat-grid {
+        width: 100% !important;
+    }
+}
+
 .page__header {
 }
 .analytic-header {
