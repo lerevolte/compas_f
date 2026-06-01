@@ -505,5 +505,30 @@
 	min-width: 470px;
 	max-width: 470px;
 	overflow: visible;
+
+	// Раскладку задаём здесь (не в scoped-блоке): popup__content вынесен
+	// Teleport-ом в <body>, и описание через предка `.popup__content.
+	// logistic-header__statistic` гарантированно цепляет слот-контент и
+	// перебивает базовые стили. Область данных тянется на всё свободное
+	// место, сайдбар — фиксированной ширины справа.
+	.stat-layout {
+		display: flex;
+		width: 100%;
+		align-items: stretch;
+	}
+
+	.stat-body {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+
+	.stat-sidebar {
+		flex: 0 0 150px;
+		width: 150px;
+	}
+
+	.stat-grid {
+		width: 100%;
+	}
 }
 </style>

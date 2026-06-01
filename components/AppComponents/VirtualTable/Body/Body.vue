@@ -31,7 +31,7 @@
                 'table__body_dragging': table.isDragging
             }"
             :move="onMoveCheck"
-            @start="event => {draggableRow = event.item; table.dragStart(event)}"
+            @start="event => {draggableRow = event.item; table.dragStart(event); fixDragGhost()}"
             @end="event => dragEnd(event)"
             @change="event => table.changeDrag(event)"
         >
@@ -757,6 +757,52 @@
         // через changeDrag -> initVirtualizer() который уже вызывается при изменении порядка
         draggableRow.value = null
         table.value.dragEnd(event)
+    }
+
+    // Поправка клона-призрака (forceFallback). Строка таблицы горизонтально
+    // скроллится, а fallback — это полный клон строки от первой колонки. Если
+    // таблица прокручена вправо, клон показывает не те колонки, что видны,
+    // данные смещены относительно курсора, а зафиксированные колонки (из-за
+    // оставшегося Safari-transform'а) уезжают вправо. Поэтому при ненулевом
+    // scrollLeft обрезаем клон по видимой ширине, сдвигаем его содержимое влево
+    // на scrollLeft (под курсором — те же колонки) и заново пиним фиксированные
+    // колонки к левому краю. При scrollLeft == 0 клон и так корректен — не трогаем.
+    const fixDragGhost = () => {
+        nextTick(() => {
+            const scrollEl = tableRef?.value
+            const fallback = typeof document !== 'undefined'
+                ? document.querySelector('.draggable-fallback')
+                : null
+            if (!scrollEl || !fallback) return
+
+            const scrollLeft = scrollEl.scrollLeft || 0
+            if (scrollLeft <= 0) return
+
+            fallback.style.width = `${scrollEl.clientWidth}px`
+            fallback.style.maxWidth = `${scrollEl.clientWidth}px`
+            fallback.style.overflow = 'hidden'
+
+            const cells = Array.from(fallback.children).filter(
+                el => el.classList?.contains('table__cell') && !el.classList.contains('table__cell_hide')
+            )
+            let shifted = false
+            for (const cell of cells) {
+                // Сдвигаем весь поток ячеек влево на scrollLeft (margin у первой
+                // видимой ячейки двигает и все последующие).
+                if (!shifted) {
+                    cell.style.marginLeft = `${-scrollLeft}px`
+                    shifted = true
+                }
+                // Фиксированные колонки возвращаем на левый край: компенсируем
+                // сдвиг потока через translateX(scrollLeft).
+                if (cell.classList.contains('table__cell_fixed')) {
+                    cell.style.position = 'relative'
+                    cell.style.left = '0px'
+                    cell.style.transform = `translateX(${scrollLeft}px)`
+                    cell.style.zIndex = '10'
+                }
+            }
+        })
     }
 
     const getRow = (val, row) => {

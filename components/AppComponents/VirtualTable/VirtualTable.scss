@@ -36,6 +36,18 @@
     }
   }
 
+  // «Задачи в машине» (isAppendOnDrop): задача из другой таблицы всегда
+  // добавляется в конец, поэтому и плейсхолдер при перетаскивании должен быть
+  // под всеми строками, а не сверху. Строки виртуализированы и спозиционированы
+  // absolute по --row-start; клон-плейсхолдер (.draggable-ghost) без --row-start
+  // садится наверх (top: 0). Прижимаем его к низу зоны drop.
+  &.table_append-on-drop {
+    .table__body .table__row.draggable-ghost {
+      top: auto !important;
+      bottom: 0 !important;
+    }
+  }
+
   &#table_transfer {
     width: 100%;
     position: absolute;
