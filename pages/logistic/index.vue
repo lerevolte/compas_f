@@ -491,44 +491,51 @@
 }
 </style>
 
-<!--
-	Не scoped: popup__content телепортируется в <body> с классом
-	logistic-header__statistic прямо на самом элементе (см. Popup.vue →
-	contentClass). Scoped-селектор `.logistic-header__statistic .popup__content`
-	до него не достаёт (другой data-v), а базовый .popup__content ограничен
-	max-width: 200px — из-за этого аналитика не влезала по ширине. Фиксируем
-	ширину комбинированным селектором, не зависящим от контейнера.
--->
 <style lang="scss">
+/*
+ * Не scoped: popup__content телепортируется в <body> с классом
+ * logistic-header__statistic прямо на самом элементе (см. Popup.vue →
+ * contentClass). Scoped-селектор `.logistic-header__statistic .popup__content`
+ * до него не достаёт (другой data-v). Базовый .popup__content ограничен
+ * max-width: 200px, поэтому фиксируем ширину и раскладку комбинированным
+ * селектором, не зависящим от контейнера.
+ *
+ * Важно: ширину тянем по всей цепочке (popup__content → wrapper → stat-layout),
+ * иначе flex-stretch обёртки не срабатывает и stat-body не растягивается.
+ */
 .popup__content.logistic-header__statistic {
-	width: 470px;
-	min-width: 470px;
-	max-width: 470px;
+	width: 470px !important;
+	min-width: 470px !important;
+	max-width: 470px !important;
 	overflow: visible;
 
-	// Раскладку задаём здесь (не в scoped-блоке): popup__content вынесен
-	// Teleport-ом в <body>, и описание через предка `.popup__content.
-	// logistic-header__statistic` гарантированно цепляет слот-контент и
-	// перебивает базовые стили. Область данных тянется на всё свободное
-	// место, сайдбар — фиксированной ширины справа.
+	.logistic-header__statistic-content {
+		width: 100%;
+	}
+
 	.stat-layout {
-		display: flex;
+		display: flex !important;
 		width: 100%;
 		align-items: stretch;
 	}
 
+	// Область данных занимает всё свободное место (flex-basis: 0 → растёт
+	// от нуля и забирает всю ширину, кроме сайдбара).
 	.stat-body {
-		flex: 1 1 auto;
-		min-width: 0;
+		flex: 1 1 0 !important;
+		min-width: 0 !important;
+		width: auto !important;
 	}
 
+	// Сайдбар фиксированной ширины, прижат к правому краю.
 	.stat-sidebar {
-		flex: 0 0 150px;
-		width: 150px;
+		flex: 0 0 150px !important;
+		width: 150px !important;
+		max-width: 150px !important;
 	}
 
 	.stat-grid {
-		width: 100%;
+		width: 100% !important;
 	}
 }
 </style>

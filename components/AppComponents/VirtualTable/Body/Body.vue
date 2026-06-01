@@ -749,6 +749,29 @@
             const result = props.options.onMove(evt)
             if (result === false) return false
         }
+
+        // «Задачи в машине» (isAppendOnDrop): при перетаскивании задачи из ДРУГОЙ
+        // таблицы плейсхолдер (.draggable-ghost) должен стоять под всеми строками.
+        // Строки виртуализированы и спозиционированы absolute по --row-start, а
+        // тело таблицы в режиме drop фактически схлопнуто — поэтому CSS bottom:0
+        // садит призрак наверх. Позиционируем его вручную: top = низ последней
+        // реальной строки.
+        if (props.options?.isAppendOnDrop && evt?.to && evt?.dragged && evt.from !== evt.to) {
+            const ghost = evt.dragged
+            nextTick(() => {
+                const realRows = Array.from(
+                    evt.to.querySelectorAll('.table__row')
+                ).filter(r => r !== ghost && !r.classList.contains('draggable-ghost'))
+                const last = realRows[realRows.length - 1]
+                if (last) {
+                    const top = last.offsetTop + last.offsetHeight
+                    ghost.style.setProperty('top', `${top}px`, 'important')
+                    ghost.style.setProperty('bottom', 'auto', 'important')
+                    ghost.style.setProperty('position', 'absolute', 'important')
+                }
+            })
+        }
+
         return true;
     };
 
@@ -759,49 +782,23 @@
         table.value.dragEnd(event)
     }
 
-    // Поправка клона-призрака (forceFallback). Строка таблицы горизонтально
-    // скроллится, а fallback — это полный клон строки от первой колонки. Если
-    // таблица прокручена вправо, клон показывает не те колонки, что видны,
-    // данные смещены относительно курсора, а зафиксированные колонки (из-за
-    // оставшегося Safari-transform'а) уезжают вправо. Поэтому при ненулевом
-    // scrollLeft обрезаем клон по видимой ширине, сдвигаем его содержимое влево
-    // на scrollLeft (под курсором — те же колонки) и заново пиним фиксированные
-    // колонки к левому краю. При scrollLeft == 0 клон и так корректен — не трогаем.
+    // Поправка клона-призрака (forceFallback). На Safari зафиксированные колонки
+    // эмулируют sticky через inline transform: translateX(scrollLeft) (см.
+    // Header.checkStickyCells). Этот transform «утекает» в клон, где нет
+    // горизонтального скролла, и колонки уезжают вправо. Сбрасываем его —
+    // колонки встают на свои места слева, как в обычной строке. Габариты/
+    // позицию клона НЕ трогаем (иначе ломается позиционирование Sortable'ом
+    // относительно курсора и возвращается авто-скролл в Safari).
     const fixDragGhost = () => {
         nextTick(() => {
-            const scrollEl = tableRef?.value
             const fallback = typeof document !== 'undefined'
                 ? document.querySelector('.draggable-fallback')
                 : null
-            if (!scrollEl || !fallback) return
+            if (!fallback) return
 
-            const scrollLeft = scrollEl.scrollLeft || 0
-            if (scrollLeft <= 0) return
-
-            fallback.style.width = `${scrollEl.clientWidth}px`
-            fallback.style.maxWidth = `${scrollEl.clientWidth}px`
-            fallback.style.overflow = 'hidden'
-
-            const cells = Array.from(fallback.children).filter(
-                el => el.classList?.contains('table__cell') && !el.classList.contains('table__cell_hide')
-            )
-            let shifted = false
-            for (const cell of cells) {
-                // Сдвигаем весь поток ячеек влево на scrollLeft (margin у первой
-                // видимой ячейки двигает и все последующие).
-                if (!shifted) {
-                    cell.style.marginLeft = `${-scrollLeft}px`
-                    shifted = true
-                }
-                // Фиксированные колонки возвращаем на левый край: компенсируем
-                // сдвиг потока через translateX(scrollLeft).
-                if (cell.classList.contains('table__cell_fixed')) {
-                    cell.style.position = 'relative'
-                    cell.style.left = '0px'
-                    cell.style.transform = `translateX(${scrollLeft}px)`
-                    cell.style.zIndex = '10'
-                }
-            }
+            fallback.querySelectorAll('.table__cell_fixed').forEach(cell => {
+                if (cell.style.transform) cell.style.transform = 'none'
+            })
         })
     }
 
