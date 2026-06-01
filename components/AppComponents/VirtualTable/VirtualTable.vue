@@ -289,9 +289,12 @@
       }).length
     }
     const body = table.value.body || []
-    if (!body.length) return 0
     const bodyIds = new Set(body.map(r => r?.id).filter(id => id != null))
-    return rows.filter(item => bodyIds.has(item?.row?.id)).length
+    // Новые объекты (ObjectCreated → state 'create', например после
+    // «Скопировать» и сохранения) показываем всегда: их ещё нет в body, но
+    // пользователь должен увидеть плашку и подгрузить их. Остальные
+    // (update/delete) — только если строка реально есть в текущей таблице.
+    return rows.filter(item => item?.state === 'create' || bodyIds.has(item?.row?.id)).length
   })
 
   // Перезагрузка таблицы при клике «Загрузить» в socket-плашке. Прежняя

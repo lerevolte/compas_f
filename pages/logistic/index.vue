@@ -11,7 +11,7 @@
 				/>
 			</div>
 			<div class="logistic-header__group">
-				<AppPopup class="logistic-header__statistic">
+				<AppPopup class="logistic-header__statistic" align="right">
 					<template #header>
 						<IconChart />
 					</template>

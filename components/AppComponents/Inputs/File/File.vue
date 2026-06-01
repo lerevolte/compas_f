@@ -465,8 +465,9 @@
         check(file) {
             const index = this.previewUrl.findIndex(img => img.file === file.file);
             if (index !== -1 && fansyBoxRef.value) {
-                const galleryId = `fansy-box__file_${props.options.id}`;
-                const links = fansyBoxRef.value.fansyBoxRef.querySelectorAll(`[data-fancybox="${galleryId}"]`);
+                // Берём все ссылки по порядку: у документов (pdf/excel) нет data-fancybox,
+                // поэтому селектор по классу сохраняет соответствие индексов с previewUrl.
+                const links = fansyBoxRef.value.fansyBoxRef.querySelectorAll('.fancybox-item__link');
                 if (links[index]) {
                     links[index].click();
                 }

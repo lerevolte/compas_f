@@ -361,11 +361,11 @@
         try { await loadMarkerCluster(); } catch (e) {}
         try { await loadPolylineDecorator(); } catch (e) {}
 
-        mapInstance.value.on('click', () => {
-            document.querySelectorAll('.actual-path-marker.active, .route-popup__extend.active').forEach(el => el.classList.remove('active'));
-            if (activeMarkerElement) { activeMarkerElement.style.zIndex = ''; activeMarkerElement = null; }
-            if (serviceRadiusCircle) { mapInstance.value.removeLayer(serviceRadiusCircle); serviceRadiusCircle = null; }
-        });
+        // Клик по пустой карте НЕ деактивирует выбранный маркер: снятие
+        // выделения должно происходить только при выборе другого маркера или
+        // другой задачи через таблицу (см. handleMarkerClick — оно само
+        // снимает .active с остальных route-popup__extend). Поэтому здесь
+        // намеренно ничего не сбрасываем.
 
         mapReady.value = true;
         console.log('🟢 Map initialized');
@@ -1359,12 +1359,12 @@
     };
 
     // ── Fit bounds ──
-    // При выборе маршрута: если все точки маршрута уже помещаются на
-    // текущем zoom — просто центрируем, СОХРАНЯЯ zoom (это удобно, когда
-    // пользователь уже зазумил поудобнее). Если не помещаются — fitBounds
-    // отзумит карту настолько, чтобы маршрут был полностью виден,
-    // иначе он мог уехать за пределы экрана и пользователь не видел
-    // часть точек.
+    // При выборе маршрута всегда подгоняем zoom под сам маршрут: длинный —
+    // отдаляем, чтобы он влез целиком; короткий — приближаем, чтобы он был
+    // хорошо виден (раньше zoom сохранялся от предыдущего маршрута, и после
+    // длинного маршрута короткий оставался слишком далёким). maxZoom не даёт
+    // приблизиться вплотную к совсем компактным маршрутам.
+    const FIT_MAX_ZOOM = 16;
     const fitBounds = () => {
         if (!mapInstance.value || !L) return;
         const pts = [];
@@ -1379,22 +1379,13 @@
             if (pts.length === 0) return;
         }
         if (pts.length === 1) {
-            safeSetView(pts[0], mapInstance.value.getZoom());
+            // Одиночная точка: приближаем до удобного zoom, а не оставляем
+            // далёкий zoom от предыдущего длинного маршрута.
+            safeSetView(pts[0], FIT_MAX_ZOOM);
             return;
         }
         const targetBounds = L.latLngBounds(pts);
-        const currentZoom = mapInstance.value.getZoom();
-        const padding = [40, 40];
-        // getBoundsZoom возвращает максимальный zoom, при котором bounds
-        // ещё влезают в viewport с учётом padding. Если он >= currentZoom,
-        // значит маршрут УЖЕ помещается на текущем zoom — достаточно
-        // центрировать. Если меньше — fitBounds отзумит до нужного.
-        const requiredZoom = mapInstance.value.getBoundsZoom(targetBounds, false, padding);
-        if (requiredZoom >= currentZoom) {
-            safeSetView(targetBounds.getCenter(), currentZoom);
-        } else {
-            safeFitBounds(targetBounds, { padding });
-        }
+        safeFitBounds(targetBounds, { padding: [40, 40], maxZoom: FIT_MAX_ZOOM });
     };
 
     // ── Apply settings (called when user changes any setting) ──

@@ -3260,6 +3260,9 @@ class socketObject {
         this.pendingOwn = []
         for (const item of batch) {
             if (item.kind === 'update') this._applyUpdate(item.data)
+            else if (item.kind === 'create') {
+                this.table.push({ row: item.data.viewList, state: 'create' })
+            }
             else if (item.kind === 'delete') {
                 let findedRow = this.table.find(row => row.id == item.data.id)
                 if (findedRow) findedRow.state = 'delete'
@@ -3268,10 +3271,19 @@ class socketObject {
         }
     }
 
-    ObjectCreated({data}) {
+    ObjectCreated({data, isModal, userId}) {
+        // Своё создание В модалке (например, «Скопировать» → сохранение нового
+        // объекта) — откладываем до закрытия модалки, чтобы плашка не
+        // появлялась прямо за модалкой. После закрытия flushPendingOwn
+        // перенесёт правку в table и родительская таблица покажет «Загрузить».
+        if (userId == data.changed_by && isModal) {
+            this._enqueueOwn('create', data)
+            return
+        }
+
         this.table.push({
             row: data.viewList,
-            state: 'update'
+            state: 'create'
         })
     }
 

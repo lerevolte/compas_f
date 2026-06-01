@@ -87,16 +87,25 @@ L.Yandex = L.Layer.extend({
 	},
 
 	_setEvents: function (map) {
+		// ВАЖНО (плавность перетаскивания): раньше мы дёргали _update на
+		// каждый тик `move`, а внутри — тяжёлый асинхронный
+		// `_yandex.setCenter(...)`. При быстром перетаскивании Яндекс не
+		// успевал перерисоваться, и карта дёргалась/глючила.
+		//
+		// Теперь во время перетаскивания контейнер Яндекса просто «едет»
+		// вместе с mapPane Leaflet (как нативные тайлы Leaflet — контейнер
+		// вложен в mapPane, и мы НЕ контр-смещаем его на каждый тик). Реальный
+		// setCenter + выравнивание контейнера делаем один раз по окончании
+		// движения/зума (moveend/zoomend) — это убирает рывки.
 		var events = {
-			move: this._update,
-			moved: this._update,
+			moveend: this._update,
+			zoomend: this._onZoomEnd,
 			resize: function () {
 				this._yandex.container.fitToViewport();
 			}
 		};
 		if (this._zoomAnimated) {
 			events.zoomanim = this._animateZoom;
-			events.zoomend = this._animateZoomEnd;
 		}
 		map.on(events, this);
 		this.once('remove', function () {
@@ -105,22 +114,20 @@ L.Yandex = L.Layer.extend({
 		}, this);
 	},
 
-	_update: function () {
-		var self = this;
-		var currentTime = Date.now();
-		
-		// Троттлинг: обновляем только если прошло достаточно времени с последнего обновления
-		if (currentTime - this._lastUpdateTime > this._throttleDelay) {
-			this._doUpdate();
-			this._lastUpdateTime = currentTime;
-		} else {
-			// Если обновление было недавно, откладываем следующее обновление
-			clearTimeout(this._throttleTimeout);
-			this._throttleTimeout = setTimeout(function() {
-				self._doUpdate();
-				self._lastUpdateTime = Date.now();
-			}, this._throttleDelay - (currentTime - this._lastUpdateTime));
+	_onZoomEnd: function () {
+		// Сбрасываем transform'ы анимации зума (если были) и пере-центрируем
+		// Яндекс под новый zoom/центр.
+		if (this._animatedElements && this._animatedElements.length) {
+			this._animateZoomEnd();
 		}
+		this._update();
+	},
+
+	_update: function () {
+		// Троттлинг больше не нужен: _update вызывается только по окончании
+		// движения/зума, а не на каждый тик. Обновляем сразу.
+		this._doUpdate();
+		this._lastUpdateTime = Date.now();
 	},
 
 	_doUpdate: function () {

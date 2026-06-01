@@ -229,14 +229,24 @@
             contentEl.style.top = `${Math.round(top)}px`;
             contentEl.style.bottom = 'auto';
 
-            // Горизонтальное позиционирование: по дефолту left анкера.
-            // Если уезжает вправо за viewport — выравниваем по правому краю
-            // анкера (right-edge alignment). Если и так не помещается —
-            // прижимаем к правому краю viewport с отступом.
-            let left = anchorRect.left;
-            if (left + contentRect.width > window.innerWidth - MARGIN) {
+            // Горизонтальное позиционирование.
+            // align="right" — открываем влево от анкера (правый край контента
+            //   совпадает с правым краем анкера). Нужно для триггеров у правого
+            //   края экрана, иначе контент уезжает вправо и обрезается.
+            // По умолчанию (align="left") — left анкера, а если уезжает вправо
+            //   за viewport, выравниваем по правому краю анкера.
+            let left;
+            if (props.align === 'right') {
                 left = anchorRect.right - contentRect.width;
+                // Если уехали за левый край — открываем вправо от анкера.
+                if (left < MARGIN) left = anchorRect.left;
+            } else {
+                left = anchorRect.left;
+                if (left + contentRect.width > window.innerWidth - MARGIN) {
+                    left = anchorRect.right - contentRect.width;
+                }
             }
+            // Финальный клэмп в пределах viewport.
             if (left + contentRect.width > window.innerWidth - MARGIN) {
                 left = window.innerWidth - MARGIN - contentRect.width;
             }
@@ -282,6 +292,13 @@
         isPreventBottom: {
             default: false,
             type: Boolean
+        },
+        // Сторона выравнивания контента относительно анкера: 'left' (по
+        // умолчанию) открывает вправо, 'right' — влево (для триггеров у
+        // правого края экрана).
+        align: {
+            default: 'left',
+            type: String
         },
         forceFloating: {
             default: false,
