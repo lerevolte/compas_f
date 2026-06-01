@@ -432,16 +432,11 @@
     // ── Group markers at same coordinates into combined (cluster) markers ──
     let groupedMarkers = [];
 
-    // Иконки кластера (загрузить SVG в public/img/ под этими именами):
-    //   cluster-unassigned.svg — кластер только из необработанных задач
-    //   cluster-route.svg      — кластер точек одного маршрута
-    //   cluster-mixed.svg      — смешанный кластер (несколько маршрутов и/или
-    //                            необработанные) — тёмная иконка с вложенным меню
-    const CLUSTER_ICONS = {
-        unassigned: '/img/cluster-unassigned.svg',
-        route: '/img/cluster-route.svg',
-        mixed: '/img/cluster-mixed.svg'
-    };
+    // Иконки кластера (SVG лежат в public/img/, подключены через CSS по классу
+    // .cluster-popup_<type> .cluster-marker__icon):
+    //   cluster-unassigned.svg — кластер только из необработанных задач (серый фон)
+    //   cluster-route.svg      — кластер точек одного маршрута (фон = цвет маршрута)
+    //   cluster-mixed.svg      — смешанный кластер (градиент) — вложенное меню
 
     const extractTaskName = (name, fallback = '') => {
         if (!name) return fallback;
@@ -631,9 +626,15 @@
                 extendHtml = `<div class="cluster-menu" data-level="root">${rootItems}</div>${subMenus}`;
             }
 
+            // Для кластера маршрута фон иконки = цвет маршрута (задаём inline);
+            // серый (unassigned) и градиент (mixed) — в CSS по классу типа.
+            const iconColorStyle = iconType === 'route'
+                ? ` style="background-color:${byGroup[groupOrder[0]].color}"`
+                : '';
+
             const html = `<div class="route-popup cluster-popup cluster-popup_${iconType}">
                 <div class="route-popup__main cluster-marker">
-                    <span class="cluster-marker__icon" style="background-image:url(${CLUSTER_ICONS[iconType]})"></span>
+                    <span class="cluster-marker__icon"${iconColorStyle}></span>
                     <span class="cluster-marker__count">${count}</span>
                 </div>
                 <div class="route-popup__extend cluster-extend">${extendHtml}</div>

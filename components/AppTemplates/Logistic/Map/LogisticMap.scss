@@ -522,6 +522,13 @@
 }
 
 // ── Task cluster (несколько точек в одной координате) ──
+// .route-popup жёстко задаёт height: 24px, а маркер кластера выше (28px) —
+// из-за этого extend (top: calc(100% + 5px)) считал отступ от 24px и налезал
+// на маркер. Даём обёртке обернуть маркер, чтобы отступ extend был ровно 5px.
+.route-popup.cluster-popup {
+    height: auto;
+}
+
 // Маркер кластера: иконка (тип зависит от состава) + количество точек.
 .cluster-marker {
     display: inline-flex;
@@ -539,10 +546,30 @@
     flex-shrink: 0;
     margin-right: 8px;
     border-radius: 7px;
-    background-color: #8601ff; // подложка, пока SVG не загружен / для прозрачных
+    background-color: #A6B7D4; // фолбэк/серый (для unassigned); route — inline, mixed — градиент
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+}
+
+// Иконка-глиф (SVG с прозрачным фоном) по типу кластера; цвет фона:
+//  - unassigned: серый (#A6B7D4)
+//  - route: цвет маршрута (задаётся inline)
+//  - mixed: градиент
+.cluster-popup_unassigned .cluster-marker__icon {
+    background-image: url('/img/cluster-unassigned.svg');
+    background-color: #A6B7D4;
+}
+
+.cluster-popup_route .cluster-marker__icon {
+    background-image: url('/img/cluster-route.svg');
+}
+
+.cluster-popup_mixed .cluster-marker__icon {
+    background-image: url('/img/cluster-mixed.svg'), linear-gradient(211deg, #CA0000 0%, #0070AA 100%);
+    background-size: cover, cover;
+    background-position: center, center;
+    background-repeat: no-repeat, no-repeat;
 }
 
 .cluster-marker__count {
@@ -611,8 +638,7 @@
 }
 
 // Вложенное меню смешанного кластера (case 2): уровень маршрутов/необработанных.
-.cluster-menu__item,
-.cluster-submenu__back {
+.cluster-menu__item {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -628,9 +654,23 @@
     }
 }
 
+// Кнопка «назад» по высоте и отступам совпадает с .cluster-point.
 .cluster-submenu__back {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-family: Helvetica, sans-serif;
+    font-size: 14px;
+    color: #000;
     font-weight: 500;
     border-bottom: 1px solid #eee;
+    transition: background-color 0.12s;
+
+    &:hover {
+        background-color: #f0f4f8;
+    }
 }
 
 .cluster-menu__color {

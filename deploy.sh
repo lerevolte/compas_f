@@ -21,6 +21,13 @@ rsync -avz --progress \
     --exclude='.DS_Store' \
     .output/public/_nuxt/ $SERVER:$SERVER_PATH/_nuxt/
 echo ""
+echo "=== 3b. Deploying static assets (img, icons) ==="
+# public/img и public/icons Nuxt копирует в .output/public при generate, но
+# раньше они не деплоились — из-за этого, например, /img/cluster-*.svg отдавал 404.
+# Без --delete, чтобы не затронуть серверные файлы, которых нет в репо.
+rsync -avz --progress --exclude='.DS_Store' .output/public/img/ $SERVER:$SERVER_PATH/img/
+rsync -avz --progress --exclude='.DS_Store' .output/public/icons/ $SERVER:$SERVER_PATH/icons/
+echo ""
 echo "=== 4. Deploying SPA entry ==="
 scp .output/public/index.html $SERVER:$SERVER_PATH/index2.html
 echo ""
