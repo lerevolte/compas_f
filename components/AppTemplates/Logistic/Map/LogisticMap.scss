@@ -547,7 +547,8 @@
     margin-right: 8px;
     border-radius: 7px;
     background-color: #A6B7D4; // фолбэк/серый (для unassigned); route — inline, mixed — градиент
-    background-size: cover;
+    // Глиф-иконка — 67% от контейнера, фон (цвет/градиент) — на всю площадь.
+    background-size: 67%;
     background-position: center;
     background-repeat: no-repeat;
 }
@@ -566,8 +567,9 @@
 }
 
 .cluster-popup_mixed .cluster-marker__icon {
+    // Глиф 67%, градиент-фон — на всю площадь (cover).
     background-image: url('/img/cluster-mixed.svg'), linear-gradient(211deg, #CA0000 0%, #0070AA 100%);
-    background-size: cover, cover;
+    background-size: 67%, cover;
     background-position: center, center;
     background-repeat: no-repeat, no-repeat;
 }
@@ -599,6 +601,7 @@
     cursor: pointer;
     font-family: Helvetica, sans-serif;
     font-size: 14px;
+    line-height: 18px;
     color: #000;
     transition: background-color 0.12s;
 
@@ -654,7 +657,8 @@
     }
 }
 
-// Кнопка «назад» по высоте и отступам совпадает с .cluster-point.
+// Кнопка «назад» по высоте и отступам совпадает с .cluster-point. Единый
+// line-height не даёт стрелке (font-size 18px) растягивать строку выше точки.
 .cluster-submenu__back {
     display: flex;
     align-items: center;
@@ -663,6 +667,7 @@
     cursor: pointer;
     font-family: Helvetica, sans-serif;
     font-size: 14px;
+    line-height: 18px;
     color: #000;
     font-weight: 500;
     border-bottom: 1px solid #eee;
@@ -695,6 +700,8 @@
 .cluster-menu__back-arrow {
     color: #555;
     font-size: 18px;
+    // line-height фиксируем под строку, чтобы 18px-глиф не увеличивал высоту.
+    line-height: 18px;
 }
 
 // ── SVG icons in markers ──
