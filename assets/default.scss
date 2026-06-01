@@ -787,6 +787,14 @@ section {
     overflow: visible;
 
     .logistic-header__statistic-content {
+        // Базовое правило .logistic-header__statistic-content делает обёртку
+        // grid'ом с колонками `1fr 150px` (наследие старого чарт-лейаута). Из-за
+        // этого единственный потомок (.stat-layout) садится в 1fr-колонку, а
+        // вторая 150px-колонка остаётся пустой и съедает ширину справа. Отменяем
+        // grid — обёртка обычный блок на всю ширину, а раскладку дальше делает
+        // flex внутри .stat-layout.
+        display: block !important;
+        grid-template-columns: none !important;
         width: 100%;
     }
 
