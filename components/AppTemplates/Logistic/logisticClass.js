@@ -194,9 +194,14 @@ export class LogisticWithMap extends Logistic {
             // (compose возвращает fields с опциями статуса и их цветами). Нужна,
             // чтобы на карте у маркера нераспределённой задачи показать квадратик
             // статуса точки нужного цвета.
-            const fieldsDef = response.data?.fields || [];
-            const statusField = fieldsDef.find(f => f.field === 'point_status')
-                || fieldsDef.find(f => f.type === 'status');
+            // ВАЖНО: Field::list() отдаёт объект, ключ — имя поля (НЕ массив),
+            // поэтому берём по ключу point_status, а фолбэк — по типу через
+            // Object.values. (Раньше тут был .find по объекту → исключение →
+            // catch обнулял unassignedTasks, и маркеры пропадали с карты.)
+            const fieldsDef = response.data?.fields || {};
+            const fieldsArr = Array.isArray(fieldsDef) ? fieldsDef : Object.values(fieldsDef);
+            const statusField = fieldsDef.point_status
+                || fieldsArr.find(f => f && f.type === 'status');
             const statusColorByValue = {};
             if (statusField && Array.isArray(statusField.options)) {
                 statusField.options.forEach(o => {
