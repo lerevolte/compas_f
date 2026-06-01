@@ -185,10 +185,27 @@ export class LogisticWithMap extends Logistic {
 
             const url = `/objects/logistic_tasks/compose?${filterParams}`;
             const response = await api.callMethod('GET', url);
-            
+
             if (requestId !== this._unassignedRequestId) return;
-            
+
             let rows = response.data?.list?.data || [];
+
+            // Карта «значение статуса → цвет» из определения поля point_status
+            // (compose возвращает fields с опциями статуса и их цветами). Нужна,
+            // чтобы на карте у маркера нераспределённой задачи показать квадратик
+            // статуса точки нужного цвета.
+            const fieldsDef = response.data?.fields || [];
+            const statusField = fieldsDef.find(f => f.field === 'point_status')
+                || fieldsDef.find(f => f.type === 'status');
+            const statusColorByValue = {};
+            if (statusField && Array.isArray(statusField.options)) {
+                statusField.options.forEach(o => {
+                    if (o && o.value != null) {
+                        statusColorByValue[o.value] = o.label?.color || o.color || null;
+                    }
+                });
+            }
+            this._unassignedStatusColors = statusColorByValue;
             
             // Frontend filtering for weight/volume
             if (this.filterFields?.length) {
@@ -225,7 +242,12 @@ export class LogisticWithMap extends Logistic {
                 }
             }
             
-            this.unassignedTasks = Array.isArray(rows) ? rows : [];
+            const statusColors = this._unassignedStatusColors || {};
+            this.unassignedTasks = (Array.isArray(rows) ? rows : []).map(row => ({
+                ...row,
+                statusColor: statusColors[row.point_status] || '#ccc',
+                planTime: row.plan_time || row.planTime || ''
+            }));
             console.log('🟢 Final unassigned tasks after filtering:', this.unassignedTasks.length, 'IDs:', this.unassignedTasks.map(t => t.id));
         } catch (error) {
             if (requestId === this._unassignedRequestId) {

@@ -101,6 +101,23 @@
     color: #fff;
 }
 
+// Квадратик статуса точки: в маркере маршрута перед временем и в раскрытой
+// информации (Статус точки). Цвет приходит из поля статуса задачи.
+.route-popup__status {
+    display: inline-block;
+    flex-shrink: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 5px;
+    margin-right: 6px;
+    background-color: #ccc;
+    vertical-align: middle;
+}
+
+.route-popup__status_inline {
+    margin-right: 0;
+}
+
 .point-attrs {
     padding: 5px 0;
 }
@@ -161,9 +178,18 @@
     border: none !important;
 }
 
-// Gray square marker for unassigned tasks
-.unassigned-popup .route-popup__counter {
-    background-color: #999 !important;
+// Маркер нераспределённой задачи: пустой квадрат (без фона) с рамкой 2px
+// цвета A6B7D4, после него — название. Пилюля (main) с той же рамкой.
+.unassigned-popup {
+    .route-popup__main {
+        border-color: #A6B7D4;
+    }
+
+    .route-popup__counter {
+        background-color: transparent !important;
+        border: 2px solid #A6B7D4;
+        box-sizing: border-box;
+    }
 }
 
 .status-indicator {

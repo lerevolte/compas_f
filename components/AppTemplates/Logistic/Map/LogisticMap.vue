@@ -869,16 +869,19 @@
 
             const factTimeStr = task.factTime || '';
             const factDisplay = factTimeStr ? ` → <span class="fact-time">${factTimeStr}</span>` : '';
+            const statusColor = task.statusColor || '#ccc';
 
             const html = `
                 <div class="route-popup">
                     <div class="route-popup__main" style="border-color: ${task.routeColor}">
                         <span class="route-popup__counter" style="background: ${task.routeColor}">${task.order || ''}</span>
+                        <span class="route-popup__status" style="background: ${statusColor}"></span>
                         <span class="route-popup__time">${planTime}${factDisplay}</span>
                     </div>
                     <div class="route-popup__extend">
                         <div class="point-attrs">
                             <span class="point-attrs__item"><span class="point-attrs__label">Название:</span><span class="point-attrs__val">${taskName}</span></span>
+                            <span class="point-attrs__item"><span class="point-attrs__label">Статус точки:</span><span class="point-attrs__val"><span class="route-popup__status route-popup__status_inline" style="background: ${statusColor}"></span></span></span>
                             <span class="point-attrs__item"><span class="point-attrs__label">План. время:</span><span class="point-attrs__val">${planTime}</span></span>
                         </div>
                     </div>
@@ -1265,15 +1268,18 @@
                 }
             }
             if (!taskName && task.id) taskName = `#${task.id}`;
+            const statusColor = task.statusColor || '#ccc';
+            const planTime = task.planTime || task.plan_time || '';
             const html = `<div class="route-popup unassigned-popup">
-                <div class="route-popup__main" style="border-color: #999">
-                    <span class="route-popup__counter" style="background: #999"></span>
+                <div class="route-popup__main">
+                    <span class="route-popup__counter"></span>
                     <span class="route-popup__time">${taskName}</span>
                 </div>
                 <div class="route-popup__extend">
                     <div class="point-attrs">
                         <span class="point-attrs__item"><span class="point-attrs__label">Название:</span><span class="point-attrs__val">${taskName}</span></span>
-                        <span class="point-attrs__item"><span class="point-attrs__label">ID:</span><span class="point-attrs__val">${task.id}</span></span>
+                        <span class="point-attrs__item"><span class="point-attrs__label">Статус точки:</span><span class="point-attrs__val"><span class="route-popup__status route-popup__status_inline" style="background: ${statusColor}"></span></span></span>
+                        <span class="point-attrs__item"><span class="point-attrs__label">План. время:</span><span class="point-attrs__val">${planTime}</span></span>
                     </div>
                 </div>
             </div>`;
