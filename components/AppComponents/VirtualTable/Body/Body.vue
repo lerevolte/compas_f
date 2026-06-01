@@ -760,15 +760,18 @@
     }
 
     // Корректировка клона-призрака (forceFallback) при горизонтальной прокрутке.
-    // Клон копирует строку целиком от первой колонки, поэтому у прокрученной
-    // вправо таблицы призрак показывает НЕ те колонки, что видны, а
-    // зафиксированные колонки из-за утёкшего Safari-transform'а уезжают вправо.
-    // Сдвигаем нефиксированные ячейки влево на scrollLeft (под курсором — видимые
-    // колонки), а ушедший за левый край «хвост» прячем через visibility (без
-    // переверстки). Фикс-колонки оставляем слева (их transform сбрасывает CSS
-    // `.table__row.draggable-fallback .table__cell_fixed`).
-    // ВАЖНО: габариты/позицию самого клона НЕ трогаем — иначе ячейки
-    // переверстаются, клон становится выше и уезжает далеко вниз от курсора.
+    // Sortable клонирует строку ЦЕЛИКОМ (width = вся ширина строки) и ставит её
+    // по rect.left строки (= левый край видимой области минус scrollLeft). Из-за
+    // этого видна не та часть строки, а зафиксированные колонки уезжают вправо.
+    //
+    // Решение: превращаем клон в горизонтальное «окно» шириной с видимую область
+    // таблицы и прокручиваем его на ту же позицию (scrollLeft). Тогда клон
+    // показывает РОВНО видимую часть строки, а фикс-колонки залипают как в
+    // таблице (sticky в обычных браузерах; transform-компенсация в Safari —
+    // её НЕ сбрасываем, она нужна именно при прокрутке клона). Левый край
+    // компенсируем на scrollLeft, чтобы окно совпало с курсором.
+    // Высоту клона Sortable фиксирует inline (rect.height), ширина на неё не
+    // влияет — поэтому вертикального смещения призрака не возникает.
     const adjustDragGhostScroll = () => {
         requestAnimationFrame(() => {
             const scrollEl = tableRef?.value
@@ -780,13 +783,12 @@
             const scrollLeft = scrollEl.scrollLeft || 0
             if (scrollLeft <= 0) return // не прокручено — клон и так корректен
 
-            fallback.querySelectorAll('.table__cell').forEach(cell => {
-                if (cell.classList.contains('table__cell_fixed')) return
-                cell.style.transform = `translateX(${-scrollLeft}px)`
-                if (cell.offsetLeft + cell.offsetWidth <= scrollLeft) {
-                    cell.style.visibility = 'hidden'
-                }
-            })
+            const curLeft = parseFloat(fallback.style.left) || 0
+            fallback.style.width = `${scrollEl.clientWidth}px`
+            fallback.style.maxWidth = `${scrollEl.clientWidth}px`
+            fallback.style.overflow = 'hidden'
+            fallback.style.left = `${curLeft + scrollLeft}px`
+            fallback.scrollLeft = scrollLeft
         })
     }
 
