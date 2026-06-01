@@ -429,8 +429,126 @@
         }
     };
 
-    // ── Group markers at same coordinates into combined markers ──
+    // ── Group markers at same coordinates into combined (cluster) markers ──
     let groupedMarkers = [];
+
+    // Иконки кластера (загрузить SVG в public/img/ под этими именами):
+    //   cluster-unassigned.svg — кластер только из необработанных задач
+    //   cluster-route.svg      — кластер точек одного маршрута
+    //   cluster-mixed.svg      — смешанный кластер (несколько маршрутов и/или
+    //                            необработанные) — тёмная иконка с вложенным меню
+    const CLUSTER_ICONS = {
+        unassigned: '/img/cluster-unassigned.svg',
+        route: '/img/cluster-route.svg',
+        mixed: '/img/cluster-mixed.svg'
+    };
+
+    const extractTaskName = (name, fallback = '') => {
+        if (!name) return fallback;
+        if (typeof name === 'string') return name;
+        if (typeof name === 'object') return name.value || name.name || name.title || fallback;
+        return fallback;
+    };
+
+    // Унифицированная информация о точке кластера. groupKey/groupName/groupColor
+    // определяют «принадлежность» (маршрут или необработанные) — это сразу
+    // обобщает кластеры на N маршрутов, когда на карту начнут выводить все
+    // маршруты (сейчас route-точки всегда из выбранного маршрута).
+    const getClusterItemInfo = (item) => {
+        if (item.type === 'route') {
+            const task = processedRoute?.tasks?.find(t => t.id === item.id);
+            const planTime = task?.departureTime?.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) || task?.planTime || '';
+            return {
+                id: item.id,
+                type: 'route',
+                groupKey: `route:${task?.routeId ?? processedRoute?.id ?? 'route'}`,
+                groupName: task?.routeName || processedRoute?.name || 'Маршрут',
+                groupColor: task?.routeColor || '#b6b6b6',
+                statusColor: task?.statusColor || '#ccc',
+                order: task?.order || '',
+                planTime,
+                factTime: task?.factTime || '',
+                name: extractTaskName(task?.name, `#${item.id}`)
+            };
+        }
+        const ut = props.unassignedTasks.find(t => Number(t.id) === Number(item.id));
+        return {
+            id: item.id,
+            type: 'unassigned',
+            groupKey: 'unassigned',
+            groupName: 'Необработанные',
+            groupColor: '#A6B7D4',
+            statusColor: ut?.statusColor || '#ccc',
+            order: '',
+            planTime: ut?.planTime || ut?.plan_time || '',
+            factTime: '',
+            name: extractTaskName(ut?.name, `#${item.id}`)
+        };
+    };
+
+    // Строка точки маршрута: статус / порядок / план · факт (pr3).
+    const renderClusterPoint = (info) => {
+        const fact = info.factTime
+            ? ` <span class="cluster-point__sep">·</span> <span class="cluster-point__fact">${info.factTime}</span>`
+            : '';
+        return `<div class="cluster-point" data-task-id="${info.id}" data-type="${info.type}">
+            <span class="route-popup__status route-popup__status_inline" style="background:${info.statusColor}"></span>
+            <span class="cluster-point__order">${info.order}.</span>
+            <span class="cluster-point__time">${info.planTime}</span>${fact}
+        </div>`;
+    };
+
+    // Строка необработанной задачи: только название (как сейчас).
+    const renderClusterName = (info) => {
+        return `<div class="cluster-point cluster-point_name" data-task-id="${info.id}" data-type="${info.type}">
+            <span class="cluster-point__name">${info.name}</span>
+        </div>`;
+    };
+
+    // Навигация по содержимому кластера: вложенное меню (case 2) + клики по
+    // точкам. Вынесено в функцию, чтобы переиспользовать при открытии кластера
+    // как кликом по карте, так и из таблицы (focusGroupedMarker).
+    const bindClusterEvents = (el) => {
+        if (!el) return;
+        // Вход во вложенное меню (по маршруту / необработанным).
+        el.querySelectorAll('.cluster-menu__item').forEach(menuItem => {
+            menuItem.onclick = (ev) => {
+                ev.stopPropagation();
+                const key = menuItem.dataset.groupKey;
+                const root = el.querySelector('.cluster-menu[data-level="root"]');
+                if (root) root.style.display = 'none';
+                el.querySelectorAll('.cluster-submenu').forEach(s => {
+                    s.style.display = s.dataset.groupKey === key ? 'block' : 'none';
+                });
+            };
+        });
+        // Возврат на верхний уровень меню.
+        el.querySelectorAll('.cluster-submenu__back').forEach(back => {
+            back.onclick = (ev) => {
+                ev.stopPropagation();
+                const root = el.querySelector('.cluster-menu[data-level="root"]');
+                if (root) root.style.display = 'block';
+                el.querySelectorAll('.cluster-submenu').forEach(s => { s.style.display = 'none'; });
+            };
+        });
+        // Клик по точке — выделение и эмит выбора в таблицу/карту.
+        el.querySelectorAll('.cluster-point').forEach(ci => {
+            ci.onclick = (ev) => {
+                ev.stopPropagation();
+                const tid = Number(ci.dataset.taskId);
+                const ttype = ci.dataset.type;
+                el.querySelectorAll('.cluster-point.active').forEach(i => i.classList.remove('active'));
+                ci.classList.add('active');
+                if (ttype === 'route') {
+                    const task = processedRoute?.tasks?.find(t => t.id === tid);
+                    if (task) { clickedFromMap = true; emit('routeTaskClick', task); setTimeout(() => { clickedFromMap = false; }, 100); }
+                } else {
+                    const rawTask = props.unassignedTasks.find(t => Number(t.id) === tid);
+                    if (rawTask) { clickedFromMap = true; emit('unassignedTaskClick', rawTask); setTimeout(() => { clickedFromMap = false; }, 100); }
+                }
+            };
+        });
+    };
 
     const groupOverlappingMarkers = () => {
         // Clean up old grouped markers
@@ -455,90 +573,81 @@
         Object.values(groups).forEach(group => {
             if (group.length <= 1) return;
 
-            // Hide original markers
-            group.forEach(item => {
-                mapInstance.value.removeLayer(item.marker);
+            group.forEach(item => mapInstance.value.removeLayer(item.marker));
+
+            const infos = group.map(getClusterItemInfo);
+
+            // Группируем точки по принадлежности (маршрут / необработанные).
+            const byGroup = {};
+            const groupOrder = [];
+            infos.forEach(info => {
+                if (!byGroup[info.groupKey]) {
+                    byGroup[info.groupKey] = { key: info.groupKey, type: info.type, name: info.groupName, color: info.groupColor, items: [] };
+                    groupOrder.push(info.groupKey);
+                }
+                byGroup[info.groupKey].items.push(info);
             });
 
-            // Build combined marker with task list
-            const listHtml = group.map(item => {
-                const m = item.marker;
-                const routeTask = item.type === 'route' ? processedRoute?.tasks?.find(t => t.id === item.id) : null;
-                const color = routeTask ? (routeTask.routeColor || '#b6b6b6') : '#999';
-                const order = routeTask ? (routeTask.order || '') : '';
-                const planTime = routeTask?.departureTime?.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) || routeTask?.planTime || '';
-                let name = '';
-                if (routeTask) {
-                    name = typeof routeTask.name === 'object' ? (routeTask.name?.value || routeTask.name?.name || '') : (routeTask.name || '');
+            const count = group.length;
+            let iconType;
+            let extendHtml;
+
+            if (groupOrder.length === 1) {
+                const only = byGroup[groupOrder[0]];
+                if (only.type === 'unassigned') {
+                    // Case 1a — только необработанные: список названий.
+                    iconType = 'unassigned';
+                    extendHtml = `<div class="cluster-list">${only.items.map(renderClusterName).join('')}</div>`;
                 } else {
-                    // Find unassigned task name from props
-                    const ut = props.unassignedTasks.find(t => Number(t.id) === Number(item.id));
-                    if (ut) {
-                        name = typeof ut.name === 'object' ? (ut.name?.value || ut.name?.name || '') : (ut.name || '');
-                    }
-                    if (!name) name = `#${item.id}`;
+                    // Case 1b — один маршрут: статус / порядок / время.
+                    iconType = 'route';
+                    extendHtml = `<div class="cluster-list">${only.items.map(renderClusterPoint).join('')}</div>`;
                 }
-                const timeHtml = planTime ? `<span class="cluster-task-time">${planTime}</span>` : '';
-                return `<div class="cluster-task-item" data-task-id="${item.id}" data-type="${item.type}"><span class="cluster-task-counter" style="background:${color}">${order}</span><span class="cluster-task-name">${name}</span>${timeHtml}</div>`;
-            }).join('');
+            } else {
+                // Case 2 — смешанный кластер: вложенное меню.
+                iconType = 'mixed';
+                const rootItems = groupOrder.map(k => {
+                    const g = byGroup[k];
+                    return `<div class="cluster-menu__item" data-group-key="${g.key}">
+                        <span class="cluster-menu__color" style="background:${g.color}"></span>
+                        <span class="cluster-menu__name">${g.name}</span>
+                        <span class="cluster-menu__arrow">›</span>
+                    </div>`;
+                }).join('');
+                const subMenus = groupOrder.map(k => {
+                    const g = byGroup[k];
+                    const rows = g.type === 'unassigned'
+                        ? g.items.map(renderClusterName).join('')
+                        : g.items.map(renderClusterPoint).join('');
+                    return `<div class="cluster-submenu" data-group-key="${g.key}" style="display:none">
+                        <div class="cluster-submenu__back" data-group-key="${g.key}">
+                            <span class="cluster-menu__back-arrow">‹</span>
+                            <span class="cluster-menu__color" style="background:${g.color}"></span>
+                            <span class="cluster-menu__name">${g.name}</span>
+                        </div>
+                        <div class="cluster-list">${rows}</div>
+                    </div>`;
+                }).join('');
+                extendHtml = `<div class="cluster-menu" data-level="root">${rootItems}</div>${subMenus}`;
+            }
 
-            const firstRoute = group.find(g => g.type === 'route');
-            const counterColor = firstRoute ? (processedRoute?.tasks?.find(t => t.id === firstRoute.id)?.routeColor || '#b6b6b6') : '#999';
-
-            // Collect order numbers for display
-            const orders = group.map(item => {
-                if (item.type === 'route') {
-                    const task = processedRoute?.tasks?.find(t => t.id === item.id);
-                    return task?.order || '';
-                }
-                return '';
-            }).filter(Boolean);
-
-            // Build stacked counters showing actual order numbers
-            const countersHtml = group.map(item => {
-                const routeTask = item.type === 'route' ? processedRoute?.tasks?.find(t => t.id === item.id) : null;
-                const color = routeTask ? (routeTask.routeColor || '#b6b6b6') : '#999';
-                const order = routeTask ? (routeTask.order || '') : '';
-                return `<span class="task-cluster-counter-item" style="background:${color}">${order}</span>`;
-            }).join('');
-
-            const html = `<div class="route-popup task-cluster-popup">
-                <div class="route-popup__main task-cluster-main" style="border-color:${counterColor}">
-                    <span class="task-cluster-counters">${countersHtml}</span>
+            const html = `<div class="route-popup cluster-popup cluster-popup_${iconType}">
+                <div class="route-popup__main cluster-marker">
+                    <span class="cluster-marker__icon" style="background-image:url(${CLUSTER_ICONS[iconType]})"></span>
+                    <span class="cluster-marker__count">${count}</span>
                 </div>
-                <div class="route-popup__extend">
-                    <div class="cluster-task-list">${listHtml}</div>
-                </div>
+                <div class="route-popup__extend cluster-extend">${extendHtml}</div>
             </div>`;
 
             const combined = L.marker([group[0].lat, group[0].lng], {
-                icon: L.divIcon({ className: 'custom-div-icon', html, iconAnchor: [15, 15] }),
+                icon: L.divIcon({ className: 'custom-div-icon', html, iconAnchor: [14, 14] }),
                 zIndexOffset: 1100
             }).addTo(mapInstance.value);
 
             combined.on('click', () => {
                 const el = combined.getElement();
                 if (el) handleMarkerClick(el);
-
-                // Bind item clicks after DOM update
-                setTimeout(() => {
-                    el?.querySelectorAll('.cluster-task-item').forEach(itemEl => {
-                        itemEl.onclick = (ev) => {
-                            ev.stopPropagation();
-                            const taskId = Number(itemEl.dataset.taskId);
-                            const type = itemEl.dataset.type;
-                            el.querySelectorAll('.cluster-task-item.active').forEach(i => i.classList.remove('active'));
-                            itemEl.classList.add('active');
-                            if (type === 'route') {
-                                const task = processedRoute?.tasks?.find(t => t.id === taskId);
-                                if (task) { clickedFromMap = true; emit('routeTaskClick', task); setTimeout(() => { clickedFromMap = false; }, 100); }
-                            } else {
-                                const rawTask = props.unassignedTasks.find(t => Number(t.id) === taskId);
-                                if (rawTask) emit('unassignedTaskClick', rawTask);
-                            }
-                        };
-                    });
-                }, 50);
+                setTimeout(() => bindClusterEvents(el), 50);
             });
 
             groupedMarkers.push(combined);
@@ -1621,39 +1730,32 @@
         }
     };
 
-    // Focus on a task inside a grouped marker
+    // Focus on a task inside a grouped (cluster) marker
     const focusGroupedMarker = (taskId, type) => {
         for (const gm of groupedMarkers) {
             const el = gm.getElement();
             if (!el) continue;
-            const item = el.querySelector(`.cluster-task-item[data-task-id="${taskId}"]`);
-            if (item) {
+            const point = el.querySelector(`.cluster-point[data-task-id="${taskId}"]`);
+            if (point) {
                 const latlng = gm.getLatLng();
                 safeSetView(latlng, mapInstance.value.getZoom());
                 // Always open (not toggle)
                 handleMarkerClick(el, true);
-                // Highlight the specific item and bind clicks
                 setTimeout(() => {
-                    el.querySelectorAll('.cluster-task-item.active').forEach(i => i.classList.remove('active'));
-                    const itemEl = el.querySelector(`.cluster-task-item[data-task-id="${taskId}"]`);
-                    if (itemEl) itemEl.classList.add('active');
-                    // Bind item clicks for table interaction
-                    el.querySelectorAll('.cluster-task-item').forEach(ci => {
-                        ci.onclick = (ev) => {
-                            ev.stopPropagation();
-                            const tid = Number(ci.dataset.taskId);
-                            const ttype = ci.dataset.type;
-                            el.querySelectorAll('.cluster-task-item.active').forEach(i => i.classList.remove('active'));
-                            ci.classList.add('active');
-                            if (ttype === 'route') {
-                                const task = processedRoute?.tasks?.find(t => t.id === tid);
-                                if (task) { clickedFromMap = true; emit('routeTaskClick', task); setTimeout(() => { clickedFromMap = false; }, 100); }
-                            } else {
-                                const rawTask = props.unassignedTasks.find(t => Number(t.id) === tid);
-                                if (rawTask) emit('unassignedTaskClick', rawTask);
-                            }
-                        };
-                    });
+                    bindClusterEvents(el);
+                    const pointEl = el.querySelector(`.cluster-point[data-task-id="${taskId}"]`);
+                    // Если точка во вложенном меню (смешанный кластер) — открываем
+                    // нужную подменю, чтобы её было видно.
+                    const submenu = pointEl?.closest('.cluster-submenu');
+                    if (submenu) {
+                        const root = el.querySelector('.cluster-menu[data-level="root"]');
+                        if (root) root.style.display = 'none';
+                        el.querySelectorAll('.cluster-submenu').forEach(s => {
+                            s.style.display = s === submenu ? 'block' : 'none';
+                        });
+                    }
+                    el.querySelectorAll('.cluster-point.active').forEach(i => i.classList.remove('active'));
+                    if (pointEl) pointEl.classList.add('active');
                 }, 100);
                 return true;
             }
