@@ -350,8 +350,12 @@
 
   &.table__body_dragging {
     @include mixins.userSelect(none);
-    
-    .table__row {
+
+    // Клон-призрак (.draggable-fallback) позиционирует сам Sortable (inline
+    // top/left по rect строки). Если он попадает под это правило, !important
+    // top:0 перебивает inline-позицию, и призрак «прыгает» к верху таблицы
+    // (обрезается при прокрутке). Поэтому клон исключаем.
+    .table__row:not(.draggable-fallback) {
       position: relative !important;
       top: 0 !important;
     }

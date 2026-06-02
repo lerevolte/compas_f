@@ -31,7 +31,7 @@
                 'table__body_dragging': table.isDragging
             }"
             :move="onMoveCheck"
-            @start="event => {draggableRow = event.item; table.dragStart(event); lockTableScroll(); adjustDragGhostScroll()}"
+            @start="handleDragStart"
             @end="event => dragEnd(event)"
             @change="event => table.changeDrag(event)"
         >
@@ -749,6 +749,20 @@
         draggedFromHandle = !!ev.target?.closest?.('.table__icon-drag')
     }
 
+    // Снимок исходного порядка строк и признак «обычного» драга — чтобы при
+    // возврате строки в исходную таблицу (отмена) восстановить её на своё место.
+    let dragOriginBody = null
+    let dragWasGeneral = false
+
+    const handleDragStart = (event) => {
+        draggableRow.value = event.item
+        dragOriginBody = Array.isArray(table.value.body) ? [...table.value.body] : null
+        dragWasGeneral = !draggedFromHandle
+        table.value.dragStart(event)
+        lockTableScroll()
+        adjustDragGhostScroll()
+    }
+
     // Слушатель вешаем нативно на сам скролл-контейнер таблицы: vuedraggable
     // объявляет inheritAttrs:false, поэтому @pointerdown на компоненте не
     // долетает до DOM. Capture-фаза — чтобы сработать до старта Sortable.
@@ -829,6 +843,27 @@
         // через changeDrag -> initVirtualizer() который уже вызывается при изменении порядка
         clearCrossDrop()
         unlockTableScroll()
+
+        // Отмена через возврат: если тащили ОБЫЧНЫМ драгом (не за ручку) и в
+        // итоге набор строк в исходной таблице не изменился (строка вернулась) —
+        // восстанавливаем исходный порядок, чтобы строка встала на своё место,
+        // а не туда, куда её занесли при возврате.
+        if (dragWasGeneral && dragOriginBody && Array.isArray(table.value.body)) {
+            const curIds = table.value.body.map(r => r?.id ?? r?.local_id)
+            const origIds = dragOriginBody.map(r => r?.id ?? r?.local_id)
+            const sameSet = curIds.length === origIds.length
+                && [...curIds].sort().join('|') === [...origIds].sort().join('|')
+            if (sameSet) {
+                const changedOrder = curIds.some((id, i) => id !== origIds[i])
+                if (changedOrder) {
+                    table.value.body = [...dragOriginBody]
+                    nextTick(() => { if (table.value.rowVirtualizer) table.value.initVirtualizer() })
+                }
+            }
+        }
+        dragOriginBody = null
+        dragWasGeneral = false
+
         draggedFromHandle = false
         draggableRow.value = null
         table.value.dragEnd(event)

@@ -189,6 +189,12 @@
   
   // функция для обновления состояния кнопок после рендера
   const updateButtonsState = async () => {
+    // Во время перетаскивания строки тело таблицы переразмечается (cross-drop:
+    // flex/relative/order у виртуализированных строк), из-за чего ResizeObserver
+    // срабатывает без конца, а кнопки мерцают (scroll-button_disabled тогглится).
+    // На время drag (body.body_unselected ставится в dragStart) пропускаем
+    // пересчёт — состояние кнопок не критично, пока тащим строку.
+    if (typeof document !== 'undefined' && document.body.classList.contains('body_unselected')) return
     await nextTick()
     // Даем время на полный рендер таблицы
     await new Promise(resolve => setTimeout(resolve, 50))
