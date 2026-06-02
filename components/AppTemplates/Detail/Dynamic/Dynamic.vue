@@ -94,7 +94,7 @@
                 isCheckClicked: false,
                 isLocalTable: false,
                 isShort: false,
-                isDisableSockets: true,
+                isDisableSockets: !isTasksTab,
                 isDisableSort: true,
                 isDisablePull: true,
                 isPermanentEdit: false,
@@ -154,6 +154,12 @@
         }
         return base
     })
+
+    // Вкладка «Задачи» (logistic_tasks) внутри деталки маршрута: включаем сокеты,
+    // чтобы после редактирования задачи (в т.ч. во вложенной модалке) таблица
+    // показывала плашку обновления, как и обычные таблицы. У остальных вкладок
+    // сокеты остаются выключенными.
+    const isTasksTab = computed(() => props.tabs?.active?.slug === 'logistic_tasks')
 
     const emit = defineEmits([
         'action',

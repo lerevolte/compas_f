@@ -31,7 +31,6 @@
                 'table__body_dragging': table.isDragging
             }"
             :move="onMoveCheck"
-            @pointerdown="onTablePointerDown"
             @start="event => {draggableRow = event.item; table.dragStart(event); adjustDragGhostScroll()}"
             @end="event => dragEnd(event)"
             @change="event => table.changeDrag(event)"
@@ -755,6 +754,18 @@
         draggedFromHandle = !!ev.target?.closest?.('.table__icon-drag')
         hasLeftSource = false
     }
+
+    // Слушатель вешаем нативно на сам скролл-контейнер таблицы: vuedraggable
+    // объявляет inheritAttrs:false, поэтому @pointerdown на компоненте не
+    // долетает до DOM. Capture-фаза — чтобы сработать до старта Sortable.
+    watch(() => tableRef?.value, (el, prev) => {
+        if (prev) prev.removeEventListener('pointerdown', onTablePointerDown, true)
+        if (el) el.addEventListener('pointerdown', onTablePointerDown, true)
+    }, { immediate: true })
+
+    onBeforeUnmount(() => {
+        if (tableRef?.value) tableRef.value.removeEventListener('pointerdown', onTablePointerDown, true)
+    })
 
     // Помечаем таблицу-приёмник при межтабличном перетаскивании — её плейсхолдер
     // уходит в конец (см. CSS .table__body_cross-drop). Только для таблиц
