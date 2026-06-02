@@ -809,6 +809,29 @@
                 }
             }
 
+            // Проверка «полноты» по ВСЕМ waypoint'ам (а не только концам).
+            // Если хоть одна точка далеко от всей геометрии — значит маршрут
+            // оборван в середине (частая причина — данные OSRM не покрывают
+            // регион целиком, и геометрия обрывается на границе покрытия).
+            // В этом случае строим непрерывную прямую через все точки, чтобы
+            // линия доходила до каждого маркера, а не обрывалась посередине.
+            if (routeCoordinates.length && waypoints.length > 1) {
+                let maxGap = 0;
+                for (const wp of waypoints) {
+                    let minDist = Infinity;
+                    for (const c of routeCoordinates) {
+                        const d = L.latLng(c[0], c[1]).distanceTo(wp);
+                        if (d < minDist) minDist = d;
+                        if (minDist < 2000) break; // достаточно близко — дальше не ищем
+                    }
+                    if (minDist > maxGap) maxGap = minDist;
+                }
+                if (maxGap > 5000) {
+                    console.warn('🟠 OSRM route does not cover all waypoints (max gap', Math.round(maxGap), 'm) — using straight-line path');
+                    routeCoordinates = waypoints.map(wp => [wp.lat, wp.lng]);
+                }
+            }
+
             // Build tasks with proper travel times
             const [startHours, startMinutes] = (routeData.loading_time || '07:00').split(':').map(Number);
             const startTime = new Date();
@@ -1442,7 +1465,10 @@
                     ext.classList.add('active');
                 }
             } else {
-                ext.classList.toggle('active');
+                // Клик по маркеру ВСЕГДА открывает его (не сворачивает повторным
+                // кликом). Свернётся только при выборе другого маркера/задачи —
+                // тогда .active снимается строкой выше с остальных extend'ов.
+                ext.classList.add('active');
             }
         }
     };

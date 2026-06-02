@@ -31,6 +31,7 @@
                 'table__body_dragging': table.isDragging
             }"
             :move="onMoveCheck"
+            @pointerdown="onTablePointerDown"
             @start="event => {draggableRow = event.item; table.dragStart(event); adjustDragGhostScroll()}"
             @end="event => dragEnd(event)"
             @change="event => table.changeDrag(event)"
@@ -742,12 +743,44 @@
         rows.value = table.value.body.filter(p => p.local_id != row.local_id);
     }
 
+    // Перетаскивание начато хватом за ручку (.table__icon-drag)? Запоминаем на
+    // pointerdown — только хват за ручку разрешает РЕОРДЕР строк внутри таблицы.
+    let draggedFromHandle = false
+    const onTablePointerDown = (ev) => {
+        draggedFromHandle = !!ev.target?.closest?.('.table__icon-drag')
+    }
+
+    // Помечаем таблицу-приёмник при межтабличном перетаскивании — её плейсхолдер
+    // уходит в конец (см. CSS .table__body_cross-drop). Только для таблиц
+    // append-on-drop (куда строка падает в конец).
+    const clearCrossDrop = () => {
+        if (typeof document === 'undefined') return
+        document.querySelectorAll('.table__body_cross-drop').forEach(b => b.classList.remove('table__body_cross-drop'))
+    }
+    const markCrossDrop = (toEl) => {
+        clearCrossDrop()
+        if (toEl && toEl.closest && toEl.closest('.table_append-on-drop')) {
+            toEl.classList.add('table__body_cross-drop')
+        }
+    }
+
     const onMoveCheck = (evt) => {
-        // Разрешаем перемещение - виртуализатор сам управляет позициями
-        // Не нужно вручную менять позиции, это вызывает конфликт с виртуализатором
         if (typeof props.options?.onMove === 'function') {
             const result = props.options.onMove(evt)
             if (result === false) return false
+        }
+
+        const isWithinSameTable = evt.from === evt.to
+        if (isWithinSameTable) {
+            // Внутри таблицы порядок меняется ТОЛЬКО при хвате за ручку
+            // .table__icon-drag. Обычное перетаскивание строки не реордерит
+            // (и не показывает плейсхолдер места вставки).
+            clearCrossDrop()
+            if (!draggedFromHandle) return false
+        } else {
+            // Перетаскивание в ДРУГУЮ таблицу → строка падает в конец, плейсхолдер
+            // показывается под всеми строками (cross-drop).
+            markCrossDrop(evt.to)
         }
         return true;
     };
@@ -755,6 +788,8 @@
     const dragEnd = (event) => {
         // Не нужно вручную пересчитывать позиции - виртуализатор сделает это автоматически
         // через changeDrag -> initVirtualizer() который уже вызывается при изменении порядка
+        clearCrossDrop()
+        draggedFromHandle = false
         draggableRow.value = null
         table.value.dragEnd(event)
     }

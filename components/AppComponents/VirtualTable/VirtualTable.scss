@@ -563,26 +563,25 @@
   min-height: 100vh;
 }
 
-// ── Перетаскивание задач в таблицу «Задачи в машине» (isAppendOnDrop) ──
-// Задача из другой таблицы всегда добавляется в КОНЕЦ, поэтому и плейсхолдер
-// (.draggable-ghost) при перетаскивании должен стоять под всеми строками.
-// Проблема: строки виртуализированы и спозиционированы absolute по --row-start,
-// клон-плейсхолдер без --row-start садится наверх (top: 0), а bottom: 0 не
-// помогает, т.к. тело в режиме drop фактически схлопнуто.
-// Решение: пока идёт любое перетаскивание (body.body_unselected ставится в
-// dragStart), переводим тело этой таблицы в обычный поток (flex-колонка,
-// строки relative), а сам плейсхолдер через order уводим в самый конец.
-body.body_unselected .table_append-on-drop .table__body {
+// ── Межтабличное перетаскивание: строка падает в КОНЕЦ таблицы-приёмника ──
+// Класс .table__body_cross-drop ставится на тело таблицы-приёмника только при
+// перетаскивании ИЗ другой таблицы (см. Body.vue onMoveCheck). Тогда плейсхолдер
+// (.draggable-ghost) уходит под все строки. Строки виртуализированы и
+// спозиционированы absolute по --row-start, поэтому переводим тело в обычный
+// поток (flex-колонка, строки relative), а плейсхолдер через order — в конец.
+// ВАЖНО: при перетаскивании ВНУТРИ таблицы (за ручку) этот класс не ставится —
+// там плейсхолдер показывает реальное место вставки, а не конец.
+.table__body_cross-drop {
   display: flex !important;
   flex-direction: column !important;
 }
 
-body.body_unselected .table_append-on-drop .table__body .table__row {
+.table__body_cross-drop .table__row {
   position: relative !important;
   top: auto !important;
 }
 
-body.body_unselected .table_append-on-drop .table__body .table__row.draggable-ghost {
+.table__body_cross-drop .table__row.draggable-ghost {
   order: 999 !important;
 }
 
