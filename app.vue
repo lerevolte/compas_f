@@ -212,26 +212,32 @@
     syncSocketModal()
   }
 
+  // Предыдущая глубина стека модалок — чтобы отличать закрытие (уменьшение)
+  // от открытия (увеличение) даже при вложенных модалках.
+  let prevModalLen = 0
+
   const syncSocketModal = () => {
-    const wasModal = socket.value.isModal === true
-    const isModalNow = entity.value.modal.length > 0
-    socket.value.isModal = isModalNow
-    // Модалка закрылась — переносим отложенные собственные правки в
-    // socket.table, чтобы родительская таблица показала плашку
-    // «N изменений [Загрузить]». Делается тут, а не в watch, чтобы не
-    // зависеть от тонкостей Vue-реактивности на .length массива.
-    if (wasModal && !isModalNow) {
+    const newLen = entity.value.modal.length
+    socket.value.isModal = newLen > 0
+    // ЛЮБОЕ уменьшение стека модалок (закрылась модалка, в т.ч. вложенная —
+    // вернулись к РОДИТЕЛЬСКОЙ модалке с таблицей) → переносим отложенные
+    // собственные правки в socket.table, чтобы видимая таблица показала плашку
+    // «N изменений [Загрузить]». Раньше флашили только при полном закрытии
+    // стека (длина → 0): из-за этого внутри модалки маршрута таблица «Задачи»
+    // не обновлялась после редактирования задачи во вложенной модалке.
+    if (newLen < prevModalLen) {
       socket.value.flushPendingOwn?.()
     }
+    prevModalLen = newLen
   }
 
   watch(() => entity.value.modal.length, (newLen, oldLen) => {
-      const wasModal = (oldLen || 0) > 0
       const isModalNow = (newLen || 0) > 0
       if (socket.value.isModal !== isModalNow) {
         socket.value.isModal = isModalNow
       }
-      if (wasModal && !isModalNow) {
+      // Подстраховка к syncSocketModal: флашим при любом уменьшении стека.
+      if ((newLen || 0) < (oldLen || 0)) {
         socket.value.flushPendingOwn?.()
       }
     })

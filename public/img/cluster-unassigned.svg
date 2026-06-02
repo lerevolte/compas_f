@@ -1,11 +1,11 @@
-<svg width="5px" height="19px" viewBox="0 0 5 19" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg width="5px" height="19px" viewBox="0 0 5 19" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="background: transparent;">
     <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="персональные-настройки-блоков-copy-2" transform="translate(-752, -253.5)" fill="#FFFFFF">
+        <g id="персональные-настройки-блоков-copy-2" transform="translate(-752, -253.5)">
             <g id="Group-9" transform="translate(739, 248)">
                 <g id="Group-10" transform="translate(13, 5.5)">
-                    <rect id="Rectangle-Copy-4" x="0" y="0" width="5" height="5" rx="1"></rect>
-                    <rect id="Rectangle-Copy-5" x="0" y="7" width="5" height="5" rx="1"></rect>
-                    <rect id="Rectangle-Copy-6" x="0" y="14" width="5" height="5" rx="1"></rect>
+                    <rect id="Rectangle-Copy-4" x="0" y="0" width="5" height="5" rx="1" fill="#FFFFFF"></rect>
+                    <rect id="Rectangle-Copy-5" x="0" y="7" width="5" height="5" rx="1" fill="#FFFFFF"></rect>
+                    <rect id="Rectangle-Copy-6" x="0" y="14" width="5" height="5" rx="1" fill="#FFFFFF"></rect>
                 </g>
             </g>
         </g>

@@ -746,8 +746,14 @@
     // Перетаскивание начато хватом за ручку (.table__icon-drag)? Запоминаем на
     // pointerdown — только хват за ручку разрешает РЕОРДЕР строк внутри таблицы.
     let draggedFromHandle = false
+    // Строка побывала в ДРУГОЙ таблице за это перетаскивание. Нужно, чтобы
+    // разрешить вернуть её обратно в исходную таблицу (пользователь передумал):
+    // evt.from в Sortable — всегда ИСХОДНАЯ таблица, поэтому возврат выглядит как
+    // «внутри таблицы» и без этого флага блокировался бы.
+    let hasLeftSource = false
     const onTablePointerDown = (ev) => {
         draggedFromHandle = !!ev.target?.closest?.('.table__icon-drag')
+        hasLeftSource = false
     }
 
     // Помечаем таблицу-приёмник при межтабличном перетаскивании — её плейсхолдер
@@ -772,14 +778,16 @@
 
         const isWithinSameTable = evt.from === evt.to
         if (isWithinSameTable) {
+            clearCrossDrop()
             // Внутри таблицы порядок меняется ТОЛЬКО при хвате за ручку
             // .table__icon-drag. Обычное перетаскивание строки не реордерит
-            // (и не показывает плейсхолдер места вставки).
-            clearCrossDrop()
-            if (!draggedFromHandle) return false
+            // (и не показывает плейсхолдер места вставки). НО если строка уже
+            // побывала в другой таблице — разрешаем вернуть её назад (отмена).
+            if (!draggedFromHandle && !hasLeftSource) return false
         } else {
             // Перетаскивание в ДРУГУЮ таблицу → строка падает в конец, плейсхолдер
             // показывается под всеми строками (cross-drop).
+            hasLeftSource = true
             markCrossDrop(evt.to)
         }
         return true;
@@ -790,6 +798,7 @@
         // через changeDrag -> initVirtualizer() который уже вызывается при изменении порядка
         clearCrossDrop()
         draggedFromHandle = false
+        hasLeftSource = false
         draggableRow.value = null
         table.value.dragEnd(event)
     }
