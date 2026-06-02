@@ -31,7 +31,7 @@
                 'table__body_dragging': table.isDragging
             }"
             :move="onMoveCheck"
-            @start="event => {draggableRow = event.item; table.dragStart(event); adjustDragGhostScroll()}"
+            @start="event => {draggableRow = event.item; table.dragStart(event); lockTableScroll(); adjustDragGhostScroll()}"
             @end="event => dragEnd(event)"
             @change="event => table.changeDrag(event)"
         >
@@ -745,14 +745,8 @@
     // Перетаскивание начато хватом за ручку (.table__icon-drag)? Запоминаем на
     // pointerdown — только хват за ручку разрешает РЕОРДЕР строк внутри таблицы.
     let draggedFromHandle = false
-    // Строка побывала в ДРУГОЙ таблице за это перетаскивание. Нужно, чтобы
-    // разрешить вернуть её обратно в исходную таблицу (пользователь передумал):
-    // evt.from в Sortable — всегда ИСХОДНАЯ таблица, поэтому возврат выглядит как
-    // «внутри таблицы» и без этого флага блокировался бы.
-    let hasLeftSource = false
     const onTablePointerDown = (ev) => {
         draggedFromHandle = !!ev.target?.closest?.('.table__icon-drag')
-        hasLeftSource = false
     }
 
     // Слушатель вешаем нативно на сам скролл-контейнер таблицы: vuedraggable
@@ -765,7 +759,30 @@
 
     onBeforeUnmount(() => {
         if (tableRef?.value) tableRef.value.removeEventListener('pointerdown', onTablePointerDown, true)
+        unlockTableScroll()
     })
+
+    // Блокировка скролла таблицы на время перетаскивания БЕЗ сброса позиции:
+    // запоминаем текущие scrollTop/scrollLeft и возвращаем их на каждый scroll
+    // (Safari иначе «уезжает»). overflow:hidden для этого не годится — он сбрасывает
+    // позицию в 0 и призрак строки рисуется «от верха таблицы».
+    let scrollLockHandler = null
+    let lockedScroll = { top: 0, left: 0 }
+    const lockTableScroll = () => {
+        const el = tableRef?.value
+        if (!el || scrollLockHandler) return
+        lockedScroll = { top: el.scrollTop, left: el.scrollLeft }
+        scrollLockHandler = () => {
+            if (el.scrollTop !== lockedScroll.top) el.scrollTop = lockedScroll.top
+            if (el.scrollLeft !== lockedScroll.left) el.scrollLeft = lockedScroll.left
+        }
+        el.addEventListener('scroll', scrollLockHandler, { passive: true })
+    }
+    const unlockTableScroll = () => {
+        const el = tableRef?.value
+        if (el && scrollLockHandler) el.removeEventListener('scroll', scrollLockHandler)
+        scrollLockHandler = null
+    }
 
     // Помечаем таблицу-приёмник при межтабличном перетаскивании — её плейсхолдер
     // уходит в конец (см. CSS .table__body_cross-drop). Только для таблиц
@@ -791,14 +808,17 @@
         if (isWithinSameTable) {
             clearCrossDrop()
             // Внутри таблицы порядок меняется ТОЛЬКО при хвате за ручку
-            // .table__icon-drag. Обычное перетаскивание строки не реордерит
-            // (и не показывает плейсхолдер места вставки). НО если строка уже
-            // побывала в другой таблице — разрешаем вернуть её назад (отмена).
-            if (!draggedFromHandle && !hasLeftSource) return false
+            // .table__icon-drag. Различаем два случая «within»:
+            //  - элемент УЖЕ в этой таблице (dragged.parentNode === to) → это
+            //    реордер → обычным драгом запрещаем;
+            //  - элемент сейчас в ДРУГОЙ таблице и заходит сюда (вернулся, т.к.
+            //    передумал) → это возврат → разрешаем (один заход, дальше он
+            //    окажется «в этой таблице» и переставлять им уже нельзя).
+            const alreadyInThisTable = evt.dragged && evt.dragged.parentNode === evt.to
+            if (!draggedFromHandle && alreadyInThisTable) return false
         } else {
             // Перетаскивание в ДРУГУЮ таблицу → строка падает в конец, плейсхолдер
             // показывается под всеми строками (cross-drop).
-            hasLeftSource = true
             markCrossDrop(evt.to)
         }
         return true;
@@ -808,8 +828,8 @@
         // Не нужно вручную пересчитывать позиции - виртуализатор сделает это автоматически
         // через changeDrag -> initVirtualizer() который уже вызывается при изменении порядка
         clearCrossDrop()
+        unlockTableScroll()
         draggedFromHandle = false
-        hasLeftSource = false
         draggableRow.value = null
         table.value.dragEnd(event)
     }

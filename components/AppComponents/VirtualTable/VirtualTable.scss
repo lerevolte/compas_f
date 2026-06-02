@@ -25,21 +25,22 @@
     will-change: scroll-position;
   }
 
+  // overflow: hidden НЕЛЬЗЯ использовать для блокировки скролла при drag — он
+  // сбрасывает scrollTop/scrollLeft в 0 (Safari), и таблица «прыгает» к началу,
+  // из-за чего призрак строки оказывается обрезанным «от верха таблицы». Скролл
+  // при перетаскивании блокируем JS-ом, сохраняя текущую позицию (см. Body.vue
+  // lockTableScroll). Здесь оставляем только resize.
+  &.table_resize {
+    overflow-y: hidden;
+  }
+
   &.table_resize,
   &.table_dragging {
-    overflow-y: hidden;
-
     .table__cell {
       &.table__cell_fixed:not(.table__cell_stuck) {
         left: auto;
       }
     }
-  }
-
-  // Во время перетаскивания строки блокируем скролл таблицы по ОБЕИМ осям —
-  // иначе в Safari таблица «уезжает» под курсором (горизонтальный авто-скролл).
-  &.table_dragging {
-    overflow: hidden;
   }
 
 
