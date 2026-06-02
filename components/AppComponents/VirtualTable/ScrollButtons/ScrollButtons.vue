@@ -144,6 +144,10 @@
   
     /** Обработчик события scroll контейнера */
     onScroll (e) {
+      // Во время перетаскивания строки (body.body_unselected) тело таблицы
+      // переразмечается и scroll «дёргается» — не обновляем scrollLeft, иначе
+      // isAtStart/isAtEnd бесконечно тогглятся и кнопки мерцают.
+      if (typeof document !== 'undefined' && document.body.classList.contains('body_unselected')) return
       if (e.target && typeof e.target.scrollLeft === 'number') {
         this.scrollLeftRef.value = Math.round(e.target.scrollLeft * 100) / 100
       }

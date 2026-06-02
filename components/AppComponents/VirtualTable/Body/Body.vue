@@ -870,18 +870,17 @@
     }
 
     // Корректировка клона-призрака (forceFallback) при горизонтальной прокрутке.
-    // Sortable клонирует строку ЦЕЛИКОМ (width = вся ширина строки) и ставит её
-    // по rect.left строки (= левый край видимой области минус scrollLeft). Из-за
-    // этого видна не та часть строки, а зафиксированные колонки уезжают вправо.
+    // Sortable клонирует строку ЦЕЛИКОМ и ставит её по rect.left (= левый край
+    // таблицы − scrollLeft). При движении курсора виден не нужный кусок строки:
+    // призрак показывает колонки ОТ НАЧАЛА таблицы (column 0), а не видимую часть.
     //
-    // Решение: превращаем клон в горизонтальное «окно» шириной с видимую область
-    // таблицы и прокручиваем его на ту же позицию (scrollLeft). Тогда клон
-    // показывает РОВНО видимую часть строки, а фикс-колонки залипают как в
-    // таблице (sticky в обычных браузерах; transform-компенсация в Safari —
-    // её НЕ сбрасываем, она нужна именно при прокрутке клона). Левый край
-    // компенсируем на scrollLeft, чтобы окно совпало с курсором.
-    // Высоту клона Sortable фиксирует inline (rect.height), ширина на неё не
-    // влияет — поэтому вертикального смещения призрака не возникает.
+    // Делаем клон горизонтальным «окном» шириной с видимую область и совмещаем
+    // левый край с таблицей. Сдвиг содержимого на scrollLeft делаем НЕ через
+    // fallback.scrollLeft (в Safari он у клона не применяется — это и был баг),
+    // а через margin/translate: первой ячейке margin-left:-scrollLeft двигает
+    // весь поток влево (видны прокрученные колонки), а зафиксированным колонкам
+    // возвращаем их место слева через translateX(scrollLeft).
+    // Высоту клона Sortable фиксирует inline (rect.height) — вертикаль не трогаем.
     const adjustDragGhostScroll = () => {
         requestAnimationFrame(() => {
             const scrollEl = tableRef?.value
@@ -894,11 +893,23 @@
             if (scrollLeft <= 0) return // не прокручено — клон и так корректен
 
             const curLeft = parseFloat(fallback.style.left) || 0
+            fallback.style.left = `${curLeft + scrollLeft}px`
             fallback.style.width = `${scrollEl.clientWidth}px`
             fallback.style.maxWidth = `${scrollEl.clientWidth}px`
             fallback.style.overflow = 'hidden'
-            fallback.style.left = `${curLeft + scrollLeft}px`
-            fallback.scrollLeft = scrollLeft
+
+            const cells = Array.from(fallback.children).filter(
+                el => el.classList?.contains('table__cell') && !el.classList.contains('table__cell_hide')
+            )
+            if (cells.length) cells[0].style.marginLeft = `${-scrollLeft}px`
+            cells.forEach(cell => {
+                if (cell.classList.contains('table__cell_fixed')) {
+                    cell.style.position = 'relative'
+                    cell.style.left = '0px'
+                    cell.style.transform = `translateX(${scrollLeft}px)`
+                    cell.style.zIndex = '5'
+                }
+            })
         })
     }
 
