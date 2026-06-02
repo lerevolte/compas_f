@@ -819,6 +819,15 @@
         }
 
         const isWithinSameTable = evt.from === evt.to
+        // [DIAG] временная диагностика drag — снять после починки
+        try {
+            console.log('🐞MOVE', {
+                within: isWithinSameTable,
+                fromSame: evt.from === evt.to,
+                draggedParentIsTo: evt.dragged ? evt.dragged.parentNode === evt.to : 'no-dragged',
+                draggedFromHandle,
+            })
+        } catch (e) {}
         if (isWithinSameTable) {
             clearCrossDrop()
             // Внутри таблицы порядок меняется ТОЛЬКО при хвате за ручку
@@ -853,13 +862,17 @@
             const origIds = dragOriginBody.map(r => r?.id ?? r?.local_id)
             const sameSet = curIds.length === origIds.length
                 && [...curIds].sort().join('|') === [...origIds].sort().join('|')
+            const changedOrder = sameSet && curIds.some((id, i) => id !== origIds[i])
+            // [DIAG] временная диагностика возврата — снять после починки
+            try { console.log('🐞END', { dragWasGeneral, sameSet, changedOrder, curLen: curIds.length, origLen: origIds.length }) } catch (e) {}
             if (sameSet) {
-                const changedOrder = curIds.some((id, i) => id !== origIds[i])
                 if (changedOrder) {
                     table.value.body = [...dragOriginBody]
                     nextTick(() => { if (table.value.rowVirtualizer) table.value.initVirtualizer() })
                 }
             }
+        } else {
+            try { console.log('🐞END skip', { dragWasGeneral, hasOrigin: !!dragOriginBody }) } catch (e) {}
         }
         dragOriginBody = null
         dragWasGeneral = false
@@ -887,6 +900,23 @@
             const fallback = typeof document !== 'undefined'
                 ? document.querySelector('.draggable-fallback')
                 : null
+
+            // [DIAG] временная диагностика призрака — снять после починки.
+            // Покажет: нашёлся ли клон по классу .draggable-fallback, какие классы
+            // у клонов-строк на <body>, и текущий scrollLeft источника.
+            try {
+                const bodyRowClones = Array.from(document.querySelectorAll('body > div')).filter(
+                    e => e.className && (e.className.includes('table__row') || e.className.includes('fallback'))
+                ).map(e => e.className)
+                const allFallbacks = Array.from(document.querySelectorAll('[class*="fallback"]')).map(e => e.className)
+                console.log('🐞GHOST', {
+                    foundDraggableFallback: !!document.querySelector('.draggable-fallback'),
+                    scrollLeft: scrollEl ? scrollEl.scrollLeft : 'no-scrollEl',
+                    bodyRowClones,
+                    allFallbacks,
+                })
+            } catch (e) { console.log('🐞GHOST err', String(e)) }
+
             if (!scrollEl || !fallback) return
 
             const scrollLeft = scrollEl.scrollLeft || 0
