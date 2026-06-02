@@ -704,6 +704,25 @@
                 } else {
                     // Если количество изменилось (межтабличное перетаскивание или добавление в пустую таблицу)
                     let finalBody = reorderedBody
+
+                    // ОТМЕНА (возврат строки в исходную таблицу обычным драгом):
+                    // dragOriginBody выставлен только у таблицы-ИСТОЧНИКА (где начался
+                    // драг). Если строка вернулась — набор строк совпал с исходным —
+                    // возвращаем ИСХОДНЫЙ порядок прямо здесь, ДО emit('addRow')
+                    // в changeDrag, чтобы родитель сохранил исходный порядок, а не тот,
+                    // куда строку занесли при возврате.
+                    if (dragWasGeneral && dragOriginBody) {
+                        const curIds = reorderedBody.map(r => r?.id ?? r?.local_id)
+                        const origIds = dragOriginBody.map(r => r?.id ?? r?.local_id)
+                        const sameSet = curIds.length === origIds.length
+                            && [...curIds].sort().join('|') === [...origIds].sort().join('|')
+                        if (sameSet) {
+                            table.value.body = [...dragOriginBody]
+                            nextTick(() => { if (table.value.rowVirtualizer) table.value.initVirtualizer() })
+                            return
+                        }
+                    }
+
                     // isAppendOnDrop — задача, перетянутая из другой таблицы,
                     // ВСЕГДА добавляется в конец (напр. «Задачи в машине»:
                     // новая точка маршрута = последняя). Sortable вставляет
@@ -819,15 +838,6 @@
         }
 
         const isWithinSameTable = evt.from === evt.to
-        // [DIAG] временная диагностика drag — снять после починки
-        try {
-            console.log('🐞MOVE', {
-                within: isWithinSameTable,
-                fromSame: evt.from === evt.to,
-                draggedParentIsTo: evt.dragged ? evt.dragged.parentNode === evt.to : 'no-dragged',
-                draggedFromHandle,
-            })
-        } catch (e) {}
         if (isWithinSameTable) {
             clearCrossDrop()
             // Внутри таблицы порядок меняется ТОЛЬКО при хвате за ручку
@@ -863,16 +873,10 @@
             const sameSet = curIds.length === origIds.length
                 && [...curIds].sort().join('|') === [...origIds].sort().join('|')
             const changedOrder = sameSet && curIds.some((id, i) => id !== origIds[i])
-            // [DIAG] временная диагностика возврата — снять после починки
-            try { console.log('🐞END', { dragWasGeneral, sameSet, changedOrder, curLen: curIds.length, origLen: origIds.length }) } catch (e) {}
-            if (sameSet) {
-                if (changedOrder) {
-                    table.value.body = [...dragOriginBody]
-                    nextTick(() => { if (table.value.rowVirtualizer) table.value.initVirtualizer() })
-                }
+            if (sameSet && changedOrder) {
+                table.value.body = [...dragOriginBody]
+                nextTick(() => { if (table.value.rowVirtualizer) table.value.initVirtualizer() })
             }
-        } else {
-            try { console.log('🐞END skip', { dragWasGeneral, hasOrigin: !!dragOriginBody }) } catch (e) {}
         }
         dragOriginBody = null
         dragWasGeneral = false
@@ -900,46 +904,24 @@
             const fallback = typeof document !== 'undefined'
                 ? document.querySelector('.draggable-fallback')
                 : null
-
-            // [DIAG] временная диагностика призрака — снять после починки.
-            // Покажет: нашёлся ли клон по классу .draggable-fallback, какие классы
-            // у клонов-строк на <body>, и текущий scrollLeft источника.
-            try {
-                const bodyRowClones = Array.from(document.querySelectorAll('body > div')).filter(
-                    e => e.className && (e.className.includes('table__row') || e.className.includes('fallback'))
-                ).map(e => e.className)
-                const allFallbacks = Array.from(document.querySelectorAll('[class*="fallback"]')).map(e => e.className)
-                console.log('🐞GHOST', {
-                    foundDraggableFallback: !!document.querySelector('.draggable-fallback'),
-                    scrollLeft: scrollEl ? scrollEl.scrollLeft : 'no-scrollEl',
-                    bodyRowClones,
-                    allFallbacks,
-                })
-            } catch (e) { console.log('🐞GHOST err', String(e)) }
-
             if (!scrollEl || !fallback) return
 
             const scrollLeft = scrollEl.scrollLeft || 0
             if (scrollLeft <= 0) return // не прокручено — клон и так корректен
 
-            const curLeft = parseFloat(fallback.style.left) || 0
-            fallback.style.left = `${curLeft + scrollLeft}px`
-            fallback.style.width = `${scrollEl.clientWidth}px`
-            fallback.style.maxWidth = `${scrollEl.clientWidth}px`
-            fallback.style.overflow = 'hidden'
-
-            const cells = Array.from(fallback.children).filter(
-                el => el.classList?.contains('table__cell') && !el.classList.contains('table__cell_hide')
-            )
-            if (cells.length) cells[0].style.marginLeft = `${-scrollLeft}px`
-            cells.forEach(cell => {
-                if (cell.classList.contains('table__cell_fixed')) {
-                    cell.style.position = 'relative'
-                    cell.style.left = '0px'
-                    cell.style.transform = `translateX(${scrollLeft}px)`
-                    cell.style.zIndex = '5'
-                }
-            })
+            // Клон — это ВСЯ строка (ширина W), Sortable ставит её левым краем по
+            // rect.left (= левый край таблицы − scrollLeft), поэтому колонка 0
+            // клона оказывается там же, где колонка 0 строки. Видимая часть строки
+            // в координатах клона — это [scrollLeft, scrollLeft + clientWidth].
+            // Обрезаем клон по этому окну через clip-path: позицию и transform
+            // (которым Sortable водит клон за курсором) НЕ трогаем, фикс-колонки
+            // со своим sticky-transform'ом сами попадают в начало окна.
+            const fullWidth = Math.max(fallback.scrollWidth, fallback.offsetWidth)
+            const visible = scrollEl.clientWidth
+            const rightInset = Math.max(0, fullWidth - scrollLeft - visible)
+            const clip = `inset(0px ${rightInset}px 0px ${scrollLeft}px)`
+            fallback.style.webkitClipPath = clip
+            fallback.style.clipPath = clip
         })
     }
 
