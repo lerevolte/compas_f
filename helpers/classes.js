@@ -472,6 +472,13 @@ export class Table {
             
             this.getHeader(response.data.table)
             await this.initVirtualizer()
+            // initVirtualizer() пересоздаёт виртуализатор после set(); без повторного
+            // measure() для таблицы из одной строки notify не приходит (размер тела не
+            // меняется = ResizeObserver молчит) и единственная строка не отрисовывается.
+            if (this.rowVirtualizer) {
+                this.rowVirtualizer.scrollToIndex(0)
+                this.rowVirtualizer.measure()
+            }
             this.emit('getData', response.data.list.data)
         } catch (error) {
             console.log('get_table', error);
@@ -494,6 +501,10 @@ export class Table {
             this.set(response, true)
             this.getHeader(response.table)
             await this.initVirtualizer()
+            if (this.rowVirtualizer) {
+                this.rowVirtualizer.scrollToIndex(0)
+                this.rowVirtualizer.measure()
+            }
             this.emit('getData', response.list.data)
         } catch (error) {
             console.log(error);
@@ -511,6 +522,10 @@ export class Table {
             this.filter.set(response.fields)
             this.getHeader(response.table)
             await this.initVirtualizer()
+            if (this.rowVirtualizer) {
+                this.rowVirtualizer.scrollToIndex(0)
+                this.rowVirtualizer.measure()
+            }
             this.emit('getData', response.list.data)
         } catch (error) {
             console.log('get_table', error);
