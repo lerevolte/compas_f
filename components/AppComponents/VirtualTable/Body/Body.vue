@@ -752,6 +752,20 @@
                         }
                     })
                 }
+            } else if (
+                table.value.isDragging &&
+                Array.isArray(newValue) && newValue.length === 0 &&
+                Array.isArray(table.value.body) && table.value.body.length > 0
+            ) {
+                // Перетащили ПОСЛЕДНЮЮ строку в другую таблицу — таблица должна
+                // стать пустой. Без этого guard `reorderedBody.length > 0` не
+                // давал очистить body, и последняя задача «не убиралась».
+                table.value.body = []
+                nextTick(() => {
+                    if (table.value.rowVirtualizer) {
+                        table.value.initVirtualizer()
+                    }
+                })
             }
         }
     })

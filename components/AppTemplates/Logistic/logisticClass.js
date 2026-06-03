@@ -169,10 +169,15 @@ export class LogisticWithMap extends Logistic {
             // Build filter query
             let filterParams = `filter[route_id]=null&filter[delivery_date]=${this.activeDate}&per_page=100&sort_field=id&sort_order=asc`;
             
-            // Add requirements filters if set
+            // Add requirements / search filters if set
             if (this.filterFields?.length) {
                 this.filterFields.forEach(f => {
-                    if (f.key && f.value && Array.isArray(f.value) && (f.key === 'car_requirements' || f.key === 'employee_requirements')) {
+                    if (f.key === 'search' && f.value != null && f.value !== '') {
+                        // Поиск уходит параметром q= (как в обычных таблицах,
+                        // см. Filter.get()), а НЕ filter[search]. Без этого
+                        // запрос возвращал все задачи (поиск не применялся).
+                        filterParams += `&q=${encodeURIComponent(f.value)}`;
+                    } else if (f.key && f.value && Array.isArray(f.value) && (f.key === 'car_requirements' || f.key === 'employee_requirements')) {
                         const filtered = f.value.filter(v => v !== null && v !== undefined && v !== '');
                         if (filtered.length > 0) {
                             filtered.forEach(v => {
