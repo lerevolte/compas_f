@@ -619,13 +619,9 @@
     const filteredFields = computed(() => {
         let request = {};
         if (logistic.value.filterFields.length === 0) return request;
-        logistic.value.filterFields.map(tab => {
-            // Поле поиска приходит с key='search', но бэкенд ищет по параметру q=
-            // (EntityObject: if($request->q) ...). Без этой замены search= игнорируется
-            // и таблица отдаёт все задачи подряд, не фильтруя.
-            const key = tab.key === 'search' ? 'q' : tab.key;
-            request[key] = tab.value;
-        });
+        // Ключ 'search' специально обрабатывается сериализатором запроса
+        // (helpers/classes.js: key=='search' -> q=...), поэтому НЕ переименовываем его.
+        logistic.value.filterFields.map(tab => { request[tab.key] = tab.value; });
         return request;
     });
 

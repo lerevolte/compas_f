@@ -624,8 +624,26 @@
             }
             
             if (!table.value.rowVirtualizer) return []
-            
-            return table.value.rowVirtualizer.getVirtualItems().map(virtualItem => {
+
+            const virtualItems = table.value.rowVirtualizer.getVirtualItems()
+            // Фолбэк для таблицы из одной строки: её высота (50px) равна min-height тела,
+            // поэтому ResizeObserver не срабатывает и виртуализатор не получает notify —
+            // getVirtualItems() остаётся пустым, а строка не отрисовывается (хотя задача
+            // привязана к маршруту и видна на карте/в деталке). Если виртуализатор пуст,
+            // но в body есть строки — рендерим их напрямую (срабатывает только до первого
+            // notify, на больших списках не включается).
+            if (virtualItems.length === 0 && Array.isArray(table.value.body) && table.value.body.length > 0) {
+                const estimatedHeight = 50
+                return table.value.body.map((item, index) => ({
+                    key: `row-${index}`,
+                    index: index,
+                    start: index * estimatedHeight,
+                    size: estimatedHeight,
+                    original: item
+                }))
+            }
+
+            return virtualItems.map(virtualItem => {
                 return {
                     ...virtualItem,
                     original: table.value.body[virtualItem.index]

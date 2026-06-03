@@ -1276,17 +1276,20 @@ export class Filter {
                     } else if (key == 'trash_tab') {
                         continue
                     } else if (key == 'search') {
-                        response.push(`q=${this.setter.dependences.query[key]}`)
+                        // encodeURIComponent обязателен: без него '#' в запросе (напр. "#112")
+                        // трактуется как начало URL-фрагмента, q приходит пустым и таблица
+                        // отдаёт все строки без фильтрации.
+                        response.push(`q=${encodeURIComponent(this.setter.dependences.query[key])}`)
                     } else if (Array.isArray(this.setter.dependences.query[key])) {
                         for (let value of this.setter.dependences.query[key]) {
-                            response.push(`filter[${key}][]=${value}`)
+                            response.push(`filter[${key}][]=${encodeURIComponent(value)}`)
                         }
                     } else if (key == 'per_page') {
                         response.push(`per_page=${this.setter.dependences.query[key]}`)
                     } else if (key == 'is_slug') {
                         response.push(`is_slug=${this.setter.dependences.query[key]}`)
                     } else if (this.setter.dependences.query[key]) {
-                        response.push(`filter[${key}]=${this.setter.dependences.query[key]}`)
+                        response.push(`filter[${key}]=${encodeURIComponent(this.setter.dependences.query[key])}`)
                     }
                 }
             }
