@@ -935,6 +935,10 @@
         draggedFromHandle = false
         draggableRow.value = null
         table.value.dragEnd(event)
+        // После драга SortableJS мог оставить строку скрытой (display:none) —
+        // раскрываем её обратно, иначе единственная задача маршрута пропадает.
+        nextTick(unhideStuckRows)
+        setTimeout(unhideStuckRows, 60)
     }
 
     // Корректировка клона-призрака (forceFallback) при горизонтальной прокрутке.
@@ -1019,5 +1023,44 @@
     // Очищаем кэш при изменении данных таблицы
     watch(() => table.value.body, () => {
         cell.clearCache()
+        nextTick(unhideStuckRows)
     }, { deep: true })
+
+    // SortableJS во время перетаскивания прячет строки через inline display:none.
+    // Если наша перезагрузка таблицы (updatingCount после привязки задачи к
+    // маршруту) пересекается с завершением драга, строка может остаться со
+    // style="display:none" и визуально пропасть (а measureElement замеряет её в
+    // 0 → data-height="0"). Клон Sortable при этом удаляется (removeCloneOnHide),
+    // значит застрявший display:none висит на НАСТОЯЩЕЙ строке. Vue сам inline
+    // display не выставляет — поэтому любая .table__row с display:none вне драга
+    // считается застрявшей и раскрывается обратно.
+    const unhideStuckRows = () => {
+        if (typeof document === 'undefined' || !tableRef?.value) return
+        if (table.value?.isDragging) return
+        tableRef.value.querySelectorAll('.table__row').forEach(el => {
+            if (el.style && el.style.display === 'none') el.style.display = ''
+        })
+    }
+
+    // MutationObserver надёжнее точечных вызовов: SortableJS может выставить
+    // display:none асинхронно (после нашего nextTick). Наблюдаем за атрибутом
+    // style у строк и снимаем скрытие, как только оно появилось вне драга.
+    // Снятие display не зацикливает наблюдатель — повторно реагируем только на
+    // значение 'none'.
+    let stuckRowObserver = null
+    onMounted(() => {
+        if (typeof MutationObserver === 'undefined' || !tableRef?.value) return
+        stuckRowObserver = new MutationObserver(() => {
+            if (table.value?.isDragging) return
+            unhideStuckRows()
+        })
+        stuckRowObserver.observe(tableRef.value, {
+            attributes: true,
+            attributeFilter: ['style'],
+            subtree: true
+        })
+    })
+    onBeforeUnmount(() => {
+        if (stuckRowObserver) { stuckRowObserver.disconnect(); stuckRowObserver = null }
+    })
 </script>
