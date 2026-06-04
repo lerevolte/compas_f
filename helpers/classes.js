@@ -553,29 +553,10 @@ export class Table {
         const scope = effectScope()
         this._virtScope = scope
         scope.run(() => {
-            const count = this.body.length
-            const estimatedHeight = 50
-            // calculateRange в @tanstack/virtual-core требует outerSize > 0
-            // (строка: measurements.length > 0 && outerSize > 0 ? calculateRange : null).
-            // .table__body имеет только min-height: 50px, строки абсолютные →
-            // clientHeight = 0 → range = null → getVirtualItems() = [].
-            // Обёртка возвращает clientHeight не меньше суммарной высоты всех строк,
-            // что гарантирует ненулевой outerSize для любого числа строк.
-            const tableRef = this.tableRef
-            const scrollElementProxy = tableRef ? new Proxy(tableRef, {
-                get(target, prop) {
-                    if (prop === 'clientHeight') {
-                        const real = target.clientHeight
-                        return real > 0 ? real : count * estimatedHeight
-                    }
-                    const val = target[prop]
-                    return typeof val === 'function' ? val.bind(target) : val
-                }
-            }) : tableRef
             this.rowVirtualizer = useVirtualizer({
-                count: count,
-                estimateSize: () => estimatedHeight,
-                getScrollElement: () => scrollElementProxy,
+                count: this.body.length,
+                estimateSize: () => 50,
+                getScrollElement: () => this.tableRef,
                 overscan: this.options?.overscan ?? 8,
             })
         })

@@ -39,7 +39,7 @@
                 <div
                     :key="row.key"
                     class="table__row"
-                    :ref="el => el && !table.isDragging && table.rowVirtualizer.measureElement(el)"
+                    :ref="el => el && !table.isDragging && !props.options?.isShort && table.rowVirtualizer && table.rowVirtualizer.measureElement(el)"
                     :data-index="row.index"
                     :data-id="row.original?.id"
                     :data-height="row.size"
@@ -622,7 +622,26 @@
                     }
                 })
             }
-            
+
+            // isShort-таблицы (логистика: «Маршруты», «Задачи логистики», «Задачи
+            // в машине» — максимум ~12 строк) НЕ виртуализируем. В их раскладке
+            // высота скролл-контейнера .table бывает 0 → у виртуализатора
+            // outerSize=0 → getVirtualItems()=[] (calculateRange требует
+            // outerSize>0). Из-за этого единственная строка либо не появляется,
+            // либо измеряется в 0 и пропадает. Рендерим body напрямую — позиции
+            // те же (start=index*50), а видимость больше не зависит от
+            // outerSize/measureElement. Для ≤12 строк виртуализация не нужна.
+            if (props.options?.isShort && Array.isArray(table.value.body)) {
+                const estimatedHeight = 50
+                return table.value.body.map((item, index) => ({
+                    key: `row-${index}`,
+                    index: index,
+                    start: index * estimatedHeight,
+                    size: estimatedHeight,
+                    original: item
+                }))
+            }
+
             if (!table.value.rowVirtualizer) return []
 
             const virtualItems = table.value.rowVirtualizer.getVirtualItems()
