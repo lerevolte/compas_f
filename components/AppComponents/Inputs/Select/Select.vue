@@ -160,7 +160,7 @@
                         this.state.list = response.data.map(p => ({ label: p, value: p }))
                         this.state.visibleList = response.data.map(p => ({ label: p, value: p }))
                     } else {
-                        response = await api.callMethod("GET", `/objects/search?per_page=12&field_id=${props.options.relation}&q=${value}`)
+                        response = await api.callMethod("GET", `/objects/search?per_page=12&field_id=${props.options.relation}&q=${encodeURIComponent(value)}`)
                         this.state.list = response.data.map(p => ({ label: p.label, value: p.value }))
                         this.state.visibleList = response.data.map(p => ({ label: p.label, value: p.value }))
                     }
