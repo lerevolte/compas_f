@@ -1,0 +1,175 @@
+@use '@/assets/variables.scss' as variables;
+@use '@/assets/mixins.scss' as mixins;
+
+.redactor {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.redactor__items {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.redactor__item {
+    border: 1px solid variables.$color-border-light;
+    border-radius: 10px;
+    background: variables.$color-white;
+    overflow: hidden;
+
+    &.draggable-ghost {
+        opacity: 0.5;
+    }
+}
+
+.redactor__item-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: variables.$color-background;
+    border-bottom: 1px solid variables.$color-border-light;
+}
+
+.redactor__item-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: variables.$color-focus;
+    flex: 1;
+}
+
+.redactor__drag {
+    cursor: grab;
+    flex-shrink: 0;
+
+    &:active {
+        cursor: grabbing;
+    }
+}
+
+.redactor__remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: 0.1s background;
+
+    &:hover {
+        background: variables.$color-border-light;
+    }
+
+    svg {
+        width: 12px;
+        height: 12px;
+    }
+}
+
+.redactor__item-body {
+    padding: 10px;
+}
+
+.redactor__widget {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px;
+    border: 1px dashed variables.$color-border;
+    border-radius: 8px;
+    color: variables.$color-icon;
+    background: variables.$color-background;
+}
+
+.redactor__widget-icon {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+}
+
+.redactor__widget-text {
+    font-size: 13px;
+}
+
+.redactor__add {
+    align-self: flex-start;
+    border: none;
+    background: transparent;
+    color: variables.$color-link;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: 0.1s color;
+
+    &:hover {
+        color: variables.$color-hover;
+    }
+}
+
+/* Rich text */
+.redactor-text {
+    border: 1px solid variables.$color-border-light;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.redactor-text__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px;
+    padding: 6px;
+    background: variables.$color-background;
+    border-bottom: 1px solid variables.$color-border-light;
+}
+
+.redactor-text__btn {
+    min-width: 28px;
+    height: 28px;
+    padding: 0 6px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: variables.$color-focus;
+    transition: 0.1s background;
+
+    &:hover {
+        background: variables.$color-border-light;
+    }
+}
+
+.redactor-text__sep {
+    width: 1px;
+    height: 18px;
+    margin: 0 4px;
+    background: variables.$color-border-light;
+}
+
+.redactor-text__editor {
+    min-height: 90px;
+    padding: 10px 12px;
+    font-size: 14px;
+    line-height: 1.5;
+    outline: none;
+    color: variables.$color-black;
+
+    &:empty::before {
+        content: 'Введите текст…';
+        color: variables.$color-border;
+    }
+
+    h2 { font-size: 20px; font-weight: 700; margin: 8px 0; }
+    h3 { font-size: 17px; font-weight: 700; margin: 6px 0; }
+    p { margin: 6px 0; }
+    ul, ol { margin: 6px 0; padding-left: 22px; }
+    a { color: variables.$color-link; text-decoration: underline; }
+}

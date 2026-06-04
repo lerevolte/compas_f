@@ -547,8 +547,8 @@
     margin-right: 8px;
     border-radius: 7px;
     background-color: #A6B7D4; // фолбэк/серый (для unassigned); route — inline, mixed — градиент
-    // Глиф-иконка — 67% от контейнера, фон (цвет/градиент) — на всю площадь.
-    background-size: 67%;
+    // unassigned/route — без background-size (иконка в натуральную величину);
+    // mixed задаёт свой размер ниже.
     background-position: center;
     background-repeat: no-repeat;
 }

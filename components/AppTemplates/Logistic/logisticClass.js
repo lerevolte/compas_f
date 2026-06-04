@@ -316,8 +316,10 @@ export class LogisticWithMap extends Logistic {
 
         const ids = list.map(row => row.id);
 
-        if (!ids.length) return;
-
+        // НЕ выходим при пустом списке: пустой ids = из маршрута вытащили
+        // последнюю задачу. Бэкенду всё равно нужно её отвязать (route_id = null),
+        // иначе после перезагрузки задача останется привязанной к маршруту и не
+        // появится в «Задачах логистики» (там фильтр route_id = null).
         try {
             const response = await api.callMethod('PUT', `/routes/${routeId}/tasks`, { ids });
             
@@ -368,6 +370,20 @@ export class LogisticWithMap extends Logistic {
                     color: routeColor,
                     tasks: tasks,
                     actual_path: actualPath,
+                    service_stops: [],
+                    parking_stops: [],
+                    signal_loss_events: []
+                };
+            } else {
+                // Маршрут опустел (вытащили последнюю задачу) — чистим данные
+                // выбранного маршрута, чтобы на карте не висели старые точки.
+                this.selectedRouteData = {
+                    id: routeId,
+                    name: `Маршрут ${routeId}`,
+                    loading_time: '07:00',
+                    color: '#b6b6b6',
+                    tasks: [],
+                    actual_path: [],
                     service_stops: [],
                     parking_stops: [],
                     signal_loss_events: []

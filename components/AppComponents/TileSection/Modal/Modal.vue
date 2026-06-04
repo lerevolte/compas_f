@@ -378,7 +378,8 @@
                     button_name: null,
                     show_file_name: false,
 
-                }
+                },
+                redactor: {}
             }
             // Типы полей для создания и редактирования
             this.types = {
@@ -390,6 +391,7 @@
                 relation: 'Программное',
                 date: 'Дата',
                 text_group: 'Группа полей',
+                redactor: 'Редактор',
             }
 
             this.field = {}

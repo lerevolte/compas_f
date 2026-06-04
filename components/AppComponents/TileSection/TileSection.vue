@@ -176,7 +176,7 @@
                         })"
                     />
 
-                    <AppMap 
+                    <AppMap
                         v-else-if="field.type == 'address'"
                         :options="{
                             ...field,
@@ -184,6 +184,17 @@
                         }"
                         :error="field.error"
                         v-model="field.value"
+                    />
+
+                    <AppRedactor
+                        v-else-if="field.type == 'redactor'"
+                        :options="{
+                            id: field.id,
+                            title: field.title,
+                            name: field.key
+                        }"
+                        v-model="field.value"
+                        @update:model-value="!field.edit && fieldObject.initChangeField(field, null, 'option')"
                     />
 
                     <TileSectionComponent 
@@ -462,6 +473,7 @@
     import AppSelect from '@AppComponents/Inputs/Select/Select.vue';
     import AppRelation from '@AppComponents/Inputs/Relation/Relation.vue'
     import AppMap from '@AppComponents/Inputs/Map/Map.vue'
+    import AppRedactor from '@AppComponents/Inputs/Redactor/Redactor.vue'
 
 
     const emit = defineEmits([

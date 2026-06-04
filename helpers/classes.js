@@ -2485,6 +2485,15 @@ export class Field {
         // долетает и без этого флага мы переходили бы в edit-режим.
         if (this._isDraggingField && type == 'target') return
 
+        // Выделение текста (название/значение поля) не должно переводить поле в
+        // редактирование: при drag-select в конце прилетает click по .field, и
+        // без этой проверки поле открывалось на редактирование вместо копирования
+        // выделенного текста.
+        if (type == 'target' && typeof window !== 'undefined' && window.getSelection) {
+            const sel = window.getSelection()
+            if (sel && !sel.isCollapsed && sel.toString().trim().length > 0) return
+        }
+
         if (type == 'target') {
             if (target.closest('.icon_drag') || target.closest('.field__settings') || target.closest('.blank__title')) return
     
@@ -2500,6 +2509,11 @@ export class Field {
                 if (field.edit || (target.classList.contains('value__text_link') || target.classList.contains('select__value-img'))) return
             } else if (field.type == 'status') {
                 if (field.edit) return
+            } else if (field.type == 'redactor') {
+                // Редактор всегда активен и сам отмечает поле как изменённое через
+                // обработчик update:model-value, поэтому клик по нему не должен
+                // переводить поле в edit и плодить резервные копии в буфере.
+                return
             } else if (field.type == 'file') {
                 if (field.edit || (!target.classList.contains('file') && !target.classList.contains('file__values'))) return
             } else if (field.type == 'address') {
