@@ -265,32 +265,24 @@
         inset 0 -2px 0 0 #a6b7d4 !important;
 }
 
-// Вкладки над таблицей задач (Задачи логистики / Справочник адресов) —
-// в стиле верхних под-ссылок меню (.menu__sublink).
-.logistic-tabs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px 25px;
-    padding: 8px 12px 4px;
+// Вкладки вместо заголовка таблицы (Задачи логистики / Справочник адресов).
+// Рендерятся внутри .section-table__top-title (слот #topTitle) — то есть в той
+// же строке, что и иконки-шестерёнки справа. Стиль — как у под-ссылок меню.
+.section-table__top-title .logistic-tabs {
+    display: inline-flex;
+    align-items: center;
+    gap: 20px;
 }
 .logistic-tabs__tab {
     color: #1253a2;
     cursor: pointer;
     font-weight: 600;
-    font-size: 14px;
     user-select: none;
 }
 .logistic-tabs__tab_active {
     color: #000;
     cursor: text;
     pointer-events: none;
-}
-
-// Когда показаны вкладки — прячем дублирующий заголовок таблицы внутри секции.
-// Текст оставляем в DOM (display:none): он нужен глобальному drag-хендлеру для
-// определения таблицы-источника по `.section-table__top-title`.
-.logistic__section_tabbed .section-table__top-title {
-    display: none;
 }
 
 // В логистике таблицы Маршруты / Задачи логистики / Задачи в машине часто

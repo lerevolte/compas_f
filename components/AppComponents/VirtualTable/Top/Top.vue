@@ -1,7 +1,7 @@
 <template>
     <div class="section-table__top">
         <div class="section-table__top-group section-table__top-title">
-            {{ props.title }}
+            <slot name="title">{{ props.title }}</slot>
         </div>
         <div class="section-table__top-group">
             <AppSave

@@ -4,7 +4,9 @@
   />
 
   <section class="section-table" ref="sectionRef">
-    <TableTop v-if="props.options?.isHaveTopHeader" :options="props.options" :showMore="props.showMore" :title="props.options?.title ?? null"/>
+    <TableTop v-if="props.options?.isHaveTopHeader" :options="props.options" :showMore="props.showMore" :title="props.options?.title ?? null">
+      <template v-if="$slots.topTitle" #title><slot name="topTitle" /></template>
+    </TableTop>
     <div ref="tableRef" class="table" :class="{'table_permanent-edit': props.options.isPermanentEdit, 'table_short': props.options?.isShort, 'table_dragging': table.isDragging, 'table_append-on-drop': props.options?.isAppendOnDrop}">
       <TableHeader>
 

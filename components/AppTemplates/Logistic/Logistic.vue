@@ -78,25 +78,8 @@
 
                     <div
                         class="logistic__section"
-                        :class="{ 'logistic__section_tabbed': hasAddressesEntity }"
                         v-else-if="section.key == 'tasks'"
                     >
-                        <!-- Если есть сущность «Справочник адресов» — вместо
-                             заголовка таблицы показываем вкладки для переключения
-                             между «Задачи логистики» и «Справочник адресов». -->
-                        <div class="logistic-tabs" v-if="hasAddressesEntity">
-                            <span
-                                class="logistic-tabs__tab"
-                                :class="{ 'logistic-tabs__tab_active': taskTableTab === 'tasks' }"
-                                @click="taskTableTab = 'tasks'"
-                            >Задачи логистики</span>
-                            <span
-                                class="logistic-tabs__tab"
-                                :class="{ 'logistic-tabs__tab_active': taskTableTab === 'addresses' }"
-                                @click="taskTableTab = 'addresses'"
-                            >Справочник адресов</span>
-                        </div>
-
                         <LogisticFilter
                             v-if="taskTableTab === 'tasks'"
                             v-model="logistic.filterFields"
@@ -147,7 +130,25 @@
                             @choseRow="row => onUnassignedTaskClickInTable(row)"
                             @addRow="row => logistic.onTaskDroppedToUnassigned(row)"
                             @removeRow="row => logistic.onTaskDroppedToUnassigned(row)"
-                        />
+                        >
+                            <!-- Если есть сущность addresses — вместо заголовка
+                                 показываем вкладки (в той же строке, что и шестерёнка). -->
+                            <template #topTitle>
+                                <span v-if="!hasAddressesEntity">Задачи логистики</span>
+                                <span v-else class="logistic-tabs">
+                                    <span
+                                        class="logistic-tabs__tab"
+                                        :class="{ 'logistic-tabs__tab_active': taskTableTab === 'tasks' }"
+                                        @click="taskTableTab = 'tasks'"
+                                    >Задачи логистики</span>
+                                    <span
+                                        class="logistic-tabs__tab"
+                                        :class="{ 'logistic-tabs__tab_active': taskTableTab === 'addresses' }"
+                                        @click="taskTableTab = 'addresses'"
+                                    >Справочник адресов</span>
+                                </span>
+                            </template>
+                        </AppVirtualTable>
 
                         <!-- Таблица «Справочник адресов». Строки можно перетащить
                              на маршрут / в «Задачи в машине» — создаётся задача
@@ -178,7 +179,22 @@
                                 isHaveFooter: false
                             }"
                             @openModal="item => emit('openModal', { ...item, slug: 'addresses' })"
-                        />
+                        >
+                            <template #topTitle>
+                                <span class="logistic-tabs">
+                                    <span
+                                        class="logistic-tabs__tab"
+                                        :class="{ 'logistic-tabs__tab_active': taskTableTab === 'tasks' }"
+                                        @click="taskTableTab = 'tasks'"
+                                    >Задачи логистики</span>
+                                    <span
+                                        class="logistic-tabs__tab"
+                                        :class="{ 'logistic-tabs__tab_active': taskTableTab === 'addresses' }"
+                                        @click="taskTableTab = 'addresses'"
+                                    >Справочник адресов</span>
+                                </span>
+                            </template>
+                        </AppVirtualTable>
                     </div>
 
 
@@ -370,13 +386,17 @@
     };
 
     const findTaskSourceSection = (el) => {
+        // Секция «Задачи логистики / Справочник адресов» — наш wrapper
+        // .logistic__section. Заголовок теперь это вкладки, поэтому источник
+        // определяем по активной вкладке, а не по тексту заголовка.
+        if (el?.closest?.('.logistic__section')) {
+            return taskTableTab.value === 'addresses' ? 'addresses' : 'unassigned';
+        }
         const sec = el?.closest?.('.logistic .section-table');
         if (!sec) return null;
         const title = sec.querySelector('.section-table__top-title');
         const text = title?.textContent?.trim() || '';
-        if (text.startsWith('Задачи логистики')) return 'unassigned';
         if (text.startsWith('Задачи в машине')) return 'route';
-        if (text.startsWith('Справочник адресов')) return 'addresses';
         return null;
     };
 
