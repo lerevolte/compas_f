@@ -76,12 +76,34 @@
                         @initCreateRoute="logistic.initCreateRoute()"
                     />
 
-                    <div class="logistic__section" v-else-if="section.key == 'tasks'">
+                    <div
+                        class="logistic__section"
+                        :class="{ 'logistic__section_tabbed': hasAddressesEntity }"
+                        v-else-if="section.key == 'tasks'"
+                    >
+                        <!-- Если есть сущность «Справочник адресов» — вместо
+                             заголовка таблицы показываем вкладки для переключения
+                             между «Задачи логистики» и «Справочник адресов». -->
+                        <div class="logistic-tabs" v-if="hasAddressesEntity">
+                            <span
+                                class="logistic-tabs__tab"
+                                :class="{ 'logistic-tabs__tab_active': taskTableTab === 'tasks' }"
+                                @click="taskTableTab = 'tasks'"
+                            >Задачи логистики</span>
+                            <span
+                                class="logistic-tabs__tab"
+                                :class="{ 'logistic-tabs__tab_active': taskTableTab === 'addresses' }"
+                                @click="taskTableTab = 'addresses'"
+                            >Справочник адресов</span>
+                        </div>
+
                         <LogisticFilter
+                            v-if="taskTableTab === 'tasks'"
                             v-model="logistic.filterFields"
                             @update:modelValue="data => logistic.changeFilter(data)"
                         />
                         <AppVirtualTable
+                            v-if="taskTableTab === 'tasks'"
                             :ref="el => setTaskTableRef('unassigned', el)"
                             :slug="'logistic_tasks'"
                             :key="'logistic_tasks'"
@@ -125,6 +147,37 @@
                             @choseRow="row => onUnassignedTaskClickInTable(row)"
                             @addRow="row => logistic.onTaskDroppedToUnassigned(row)"
                             @removeRow="row => logistic.onTaskDroppedToUnassigned(row)"
+                        />
+
+                        <!-- Таблица «Справочник адресов». Строки можно перетащить
+                             на маршрут / в «Задачи в машине» — создаётся задача
+                             логистики, адрес-источник остаётся (Part 3). Группа
+                             drag&drop уникальная (никем не принимается), поэтому
+                             vuedraggable не уносит строку из таблицы; создание
+                             делает глобальный mouseup-хендлер. -->
+                        <AppVirtualTable
+                            v-if="taskTableTab === 'addresses'"
+                            :slug="'addresses'"
+                            :key="'addresses'"
+                            :options="{
+                                title: 'Справочник адресов',
+                                isShort: true,
+                                overscan: 5,
+                                isDraggable: true,
+                                draggableTarget: '.table__row',
+                                group: 'addresses_dnd',
+                                isDisablePut: true,
+                                isDisablePull: true,
+                                isDisableSort: true,
+                                isCheckClicked: true,
+                                isDisableSockets: false,
+                                isHaveFilter: false,
+                                isPermanentEdit: false,
+                                isTrash: false,
+                                isHaveTopHeader: true,
+                                isHaveFooter: false
+                            }"
+                            @openModal="item => emit('openModal', { ...item, slug: 'addresses' })"
                         />
                     </div>
 
@@ -201,8 +254,27 @@
     import LogisticFilter from './Filter/Filter.vue';
     import LogisticMap from './Map/LogisticMap.vue';
     import { LogisticWithMap } from './logisticClass.js';
+    import { useMenuStore } from '@/stores/menuStore.js';
 
     const emit = defineEmits(['openModal', 'routeChanged']);
+
+    // Вкладки над таблицей задач: 'tasks' (Задачи логистики, по умолчанию) или
+    // 'addresses' (Справочник адресов). Вкладки показываем только если у портала
+    // есть сущность addresses (см. hasAddressesEntity).
+    const taskTableTab = ref('tasks');
+
+    const menuStore = useMenuStore();
+    // Рекурсивно ищем пункт addresses в меню/сайдбаре — признак того, что
+    // сущность «Справочник адресов» установлена в данном портале.
+    const hasAddressesEntity = computed(() => {
+        const scan = (items) => Array.isArray(items) && items.some(it => {
+            if (!it) return false;
+            if (it.slug === 'addresses') return true;
+            if (typeof it.link === 'string' && it.link.includes('/objects/addresses')) return true;
+            return scan(it.children) || scan(it.childs) || scan(it.items);
+        });
+        return scan(menuStore.list);
+    });
 
     const props = defineProps({
         activeDate: { default: null, type: [String, Date] },
@@ -268,14 +340,29 @@
     // дроп отслеживаем глобально по mousemove / mouseup, используя
     // elementFromPoint и data-id, который Body.vue ставит на строки.
     const dropTargetRouteId = ref(null);
+    // Признак, что во время перетаскивания адреса курсор над таблицей
+    // «Задачи в машине» — туда тоже можно «бросить» адрес (создаст задачу на
+    // активном маршруте machine_tasks.route_id).
+    const dropTargetMachine = ref(false);
     let draggedTaskId = null;
-    let dragSourceTable = null; // 'unassigned' | 'route'
+    let dragSourceTable = null; // 'unassigned' | 'route' | 'addresses'
 
     const findRoutesSection = () => {
         const sections = document.querySelectorAll('.logistic .section-table');
         for (const sec of sections) {
             const title = sec.querySelector('.section-table__top-title');
             if (title && title.textContent && title.textContent.trim().startsWith('Маршруты')) {
+                return sec;
+            }
+        }
+        return null;
+    };
+
+    const findMachineTasksSection = () => {
+        const sections = document.querySelectorAll('.logistic .section-table');
+        for (const sec of sections) {
+            const title = sec.querySelector('.section-table__top-title');
+            if (title && title.textContent && title.textContent.trim().startsWith('Задачи в машине')) {
                 return sec;
             }
         }
@@ -289,6 +376,7 @@
         const text = title?.textContent?.trim() || '';
         if (text.startsWith('Задачи логистики')) return 'unassigned';
         if (text.startsWith('Задачи в машине')) return 'route';
+        if (text.startsWith('Справочник адресов')) return 'addresses';
         return null;
     };
 
@@ -315,63 +403,104 @@
         if (!document.body.classList.contains('body_unselected')) return;
         if (!draggedTaskId) return;
 
-        const routesSection = findRoutesSection();
-        if (!routesSection) return;
-
         // elementsFromPoint, потому что fallback-клон vuedraggable, ползущий за
         // курсором, может «прикрыть» строку маршрута и сбить elementFromPoint.
         const stack = (typeof document.elementsFromPoint === 'function')
             ? document.elementsFromPoint(e.clientX, e.clientY)
             : [document.elementFromPoint(e.clientX, e.clientY)];
+
+        // — Строка маршрута под курсором (таблица «Маршруты») —
+        const routesSection = findRoutesSection();
         let row = null;
-        for (const el of stack) {
-            if (!el) continue;
-            if (el.classList?.contains('draggable-fallback')) continue;
-            if (el.closest?.('.draggable-fallback')) continue;
-            const candidate = el.closest?.('.table__row');
-            if (candidate && routesSection.contains(candidate) && !candidate.closest('.table__header')) {
-                row = candidate;
-                break;
+        if (routesSection) {
+            for (const el of stack) {
+                if (!el) continue;
+                if (el.classList?.contains('draggable-fallback')) continue;
+                if (el.closest?.('.draggable-fallback')) continue;
+                const candidate = el.closest?.('.table__row');
+                if (candidate && routesSection.contains(candidate) && !candidate.closest('.table__header')) {
+                    row = candidate;
+                    break;
+                }
             }
         }
 
-        if (!row) {
-            if (dropTargetRouteId.value !== null) {
-                dropTargetRouteId.value = null;
+        // — Для адреса: курсор над таблицей «Задачи в машине» (бросок туда
+        //   создаёт задачу на активном маршруте) —
+        let overMachine = false;
+        if (dragSourceTable === 'addresses') {
+            const machineSection = findMachineTasksSection();
+            if (machineSection) {
+                for (const el of stack) {
+                    if (!el) continue;
+                    if (el.closest?.('.draggable-fallback')) continue;
+                    if (machineSection.contains(el)) { overMachine = true; break; }
+                }
+            }
+        }
+
+        // Строка маршрута приоритетнее секции «Задачи в машине».
+        if (row) {
+            let routeId = row.getAttribute('data-id');
+            if (!routeId) {
+                const idCell = row.querySelector('.table__cell[data-column-key="id"] .table__text');
+                if (idCell) routeId = idCell.textContent.trim();
+            }
+            routeId = routeId ? Number(routeId) : null;
+            if (dropTargetMachine.value) dropTargetMachine.value = false;
+            if (routeId && dropTargetRouteId.value !== routeId) {
+                dropTargetRouteId.value = routeId;
                 clearDropTargetHighlight();
+                row.classList.add('logistic__drop-target');
             }
             return;
         }
 
-        let routeId = row.getAttribute('data-id');
-        if (!routeId) {
-            const idCell = row.querySelector('.table__cell[data-column-key="id"] .table__text');
-            if (idCell) routeId = idCell.textContent.trim();
-        }
-        routeId = routeId ? Number(routeId) : null;
-        if (!routeId) return;
-
-        if (dropTargetRouteId.value !== routeId) {
-            dropTargetRouteId.value = routeId;
+        // Маршрут под курсором не найден — снимаем его подсветку.
+        if (dropTargetRouteId.value !== null) {
+            dropTargetRouteId.value = null;
             clearDropTargetHighlight();
-            row.classList.add('logistic__drop-target');
+        }
+
+        // Подсветка секции «Задачи в машине» для адреса.
+        if (dragSourceTable === 'addresses' && overMachine !== dropTargetMachine.value) {
+            dropTargetMachine.value = overMachine;
+            clearDropTargetHighlight();
+            if (overMachine) {
+                findMachineTasksSection()?.classList.add('logistic__drop-target');
+            }
         }
     };
 
     const onGlobalMouseUp = () => {
-        const taskId = draggedTaskId;
+        const id = draggedTaskId;
         const routeId = dropTargetRouteId.value;
+        const overMachine = dropTargetMachine.value;
         const source = dragSourceTable;
         draggedTaskId = null;
         dragSourceTable = null;
         dropTargetRouteId.value = null;
+        dropTargetMachine.value = false;
         clearDropTargetHighlight();
-        if (!taskId || !routeId) return;
+        if (!id) return;
+
+        // Перетаскивание адреса из «Справочника адресов» → создаём задачу
+        // логистики из адреса (адрес остаётся в источнике). Цель: строка
+        // маршрута в «Маршрутах» ИЛИ таблица «Задачи в машине» (активный маршрут).
+        if (source === 'addresses') {
+            let targetRouteId = routeId;
+            if (!targetRouteId && overMachine) targetRouteId = logistic.value.machine_tasks.route_id;
+            if (!targetRouteId) return;
+            logistic.value.createTaskFromAddress(id, targetRouteId);
+            return;
+        }
+
+        if (!routeId) return;
         // Если задача уже в маршруте, в который её перетащили — assignTaskToRoute сам
         // обработает no-op. Для маршрута-источника совпадение маршрутов невозможно,
         // потому что в Задачах в машине route_id == текущий машинный маршрут, а
         // assignTaskToRoute сам обновит обе таблицы.
-        logistic.value.assignTaskToRoute(taskId, routeId);
+        logistic.value.assignTaskToRoute(id, routeId);
     };
 
     onMounted(() => {

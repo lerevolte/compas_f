@@ -451,4 +451,31 @@ export class LogisticWithMap extends Logistic {
             if (this.onRouteChanged) this.onRouteChanged();
         }
     }
+
+    // Создание задачи логистики из адреса «Справочника адресов» (drag&drop
+    // адреса на маршрут / в «Задачи в машине»). Адрес-источник НЕ меняется и НЕ
+    // удаляется — бэкенд (POST /routes/task-from-address) создаёт новую задачу,
+    // копируя поля адреса, и прикрепляет её к маршруту.
+    async createTaskFromAddress(addressId, routeId) {
+        if (!addressId || !routeId) return;
+        try {
+            await api.callMethod('POST', '/routes/task-from-address', {
+                address_id: addressId,
+                route_id: routeId
+            });
+        } catch (error) {
+            console.error('🔴 Error creating task from address:', error);
+        } finally {
+            // Перерисовать маршруты и нераспределённые задачи.
+            this.routes.updatingCount++;
+            this.loadUnassignedTasks();
+            this.logistic_tasks.updatingCount++;
+            // Перерисовать активный маршрут (Задачи в машине) и карту.
+            if (this.machine_tasks.route_id) {
+                this.machine_tasks.updatingCount++;
+                this.loadRouteForMap(this.machine_tasks.route_id);
+            }
+            if (this.onRouteChanged) this.onRouteChanged();
+        }
+    }
 }

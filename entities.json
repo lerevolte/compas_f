@@ -69,7 +69,7 @@
     "addresses": {
         "slug": "addresses",
         "title_singular": "Адрес",
-        "title_plural": "Адреса",
+        "title_plural": "Справочник адресов",
         "color": "#989BFF"
     },
     "products": {
