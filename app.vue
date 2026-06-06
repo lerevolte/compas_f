@@ -97,6 +97,10 @@
       // «Логистика»).
       this.basePageTitle = null
       this.basePageLink = null
+      // Момент последнего открытия модалки. Нужен, чтобы быстрый «прокликивающий»
+      // повторный клик (попадающий уже по фону только что открывшейся деталки)
+      // не закрывал её сразу — см. popModal().
+      this.lastOpenAt = 0
     }
 
     _resolvePageTitle() {
@@ -109,6 +113,7 @@
     openModal(item) {
       item.slug = item.slug ?? router.params.slug
       item.tab_slug = item.tab_slug ?? null
+      this.lastOpenAt = Date.now()
 
       // Захватываем заголовок/URL «нижней» страницы один раз при открытии
       // первой модалки. Дальше при закрытии стека модалок гарантированно
@@ -203,6 +208,11 @@
   // entity.modal.pop(). watch на длину остаётся как fallback на случай,
   // если кто-то ещё мутирует modal иначе (e.g. push снаружи).
   const popModal = () => {
+    // Защита от закрытия быстрым прокликиванием: если деталка только что
+    // открылась, следующий быстрый клик попадает по её фону (.modal__background)
+    // и шлёт close. Игнорируем такие закрытия в первые 500мс после открытия —
+    // «если деталка начала открываться, прокликивание её уже не закрывает».
+    if (Date.now() - entity.value.lastOpenAt < 500) return
     entity.value.modal.pop()
     syncSocketModal()
   }
