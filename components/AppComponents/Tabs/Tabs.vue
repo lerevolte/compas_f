@@ -1,9 +1,10 @@
 <template>
-    <nav class="tabs" :class="{'tabs_disabled': props.disableAll || props.options.isExternal}">
+    <nav class="tabs" :class="{'tabs_disabled': props.disableAll}">
         <ul class="tabs__list">
             <template  v-for="(tab, index) in tabs.list" :key="tab.id">
-                <li 
-                    class="tabs__item" 
+                <li
+                    v-if="!hideInExternal(tab)"
+                    class="tabs__item"
                     :class="{'tabs__item_hidden': !tab.enabled, 'tabs__item_active': tab.tab == props.activeTab || (tab.tab == 'modules' && props.isModule)}"
                 >
                     <AppPopup class="tabs__module" v-if="tab.childs && tab.childs.length > 0" ref="popupRef" :isPreventBottom="true">
@@ -169,6 +170,16 @@
     const emit = defineEmits([
         'action'
     ])
+
+    // Во внешней ссылке скрываем «Модули» (выпадающий список с childs) и
+    // «История изменений». Остальные вкладки (привязанные сущности, «Маршрут
+    // списком» и т.п.) остаются доступными.
+    const hideInExternal = (tab) => {
+        if (!props.options.isExternal) return false
+        if (tab.tab === 'history' || tab.tab === 'modules') return true
+        if (tab.childs && tab.childs.length > 0) return true
+        return false
+    }
 
     class Tabs {
         constructor() {

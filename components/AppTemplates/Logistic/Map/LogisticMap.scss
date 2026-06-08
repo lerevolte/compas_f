@@ -303,6 +303,39 @@
     gap: 8px;
 }
 
+// Кнопка «Открыть маршрут» — белая, в общей стилистике сервиса.
+.logistic-map__open-route {
+    height: 28px;
+    padding: 0 12px;
+    background-color: #fff;
+    border: 1px solid variables.$color-border-light;
+    border-radius: 7px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    font-size: 13px;
+    font-weight: 500;
+    color: variables.$color-focus;
+    cursor: pointer;
+    transition: background-color 0.15s, box-shadow 0.15s, border-color 0.15s;
+
+    &:hover {
+        background-color: variables.$color-background;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    }
+}
+
+// Скрываем нативные контролы Яндекса (версия класса 2-1-79 может меняться,
+// поэтому матчим по части имени класса):
+//   gototech   — «Создать свою карту»
+//   copyright  — копирайт
+//   gotoymaps  — «Открыть в Яндекс Картах» (заменена своей кнопкой выше)
+.logistic-map {
+    [class*='-gototech'],
+    [class*='-copyright'],
+    [class*='-gotoymaps'] {
+        display: none !important;
+    }
+}
+
 // ── Settings panel ──
 .logistic-map__settings {
     position: relative;

@@ -1,6 +1,6 @@
 <template>
     <div class="route-tasks-view">
-        <div class="route-tasks-view__col route-tasks-view__col_fields">
+        <div v-if="!props.isExternal" class="route-tasks-view__col route-tasks-view__col_fields">
             <div class="route-tasks-view__col-title">Поля задачи</div>
             <draggable
                 tag="div"
@@ -92,6 +92,7 @@
 
     import draggable from 'vuedraggable'
     import api from '@/helpers/api.js'
+    import routes from '@/helpers/routes.js'
     import AppCheckbox from '@AppComponents/Inputs/Checkbox/Checkbox.vue'
     import AppButton from '@AppComponents/Button/Button.vue'
     import AppPopup from '@AppComponents/Popup/Popup.vue'
@@ -100,7 +101,10 @@
     import { format } from 'date-fns'
 
     const props = defineProps({
-        routeId: { default: null, type: [Number, String] }
+        routeId: { default: null, type: [Number, String] },
+        // Во внешней ссылке routeId = токен, а данные грузятся через
+        // неавторизованный token-эндпоинт.
+        isExternal: { default: false, type: Boolean }
     })
 
     const allFields = ref([])    // [{key, title, type, options, enabled, sort}]
@@ -157,39 +161,43 @@
         'created_at', 'updated_at', 'deleted_at'
     ])
 
+    // Конфиг колонок logistic_tasks -> список доступных для отображения полей.
+    const buildFieldsFromTable = (table) => {
+        const fields = (table ?? [])
+            .filter(col => col && col.key && !TECHNICAL_KEYS.has(col.key))
+            .map((col, i) => ({
+                key: col.key,
+                title: col.title || col.key,
+                type: col.type,
+                options: col.options || [],
+                is_plural: col.is_plural || false,
+                related_table: col.related_table || null,
+                sort: i,
+                // По умолчанию включаем «Название» и «Адрес», если они есть.
+                enabled: ['name', 'address'].includes(col.key)
+            }))
+
+        // Применяем сохранённые пользовательские настройки.
+        const saved = restore()
+        if (saved && Array.isArray(saved)) {
+            fields.forEach(f => {
+                const found = saved.find(s => s.key === f.key)
+                if (found) {
+                    f.enabled = !!found.enabled
+                    f.sort = found.sort ?? f.sort
+                }
+            })
+        }
+
+        allFields.value = fields
+    }
+
     const loadFields = async () => {
         // Берём конфиг таблицы logistic_tasks — там есть весь набор колонок,
-        // включая отключённые. Из них и строим список доступных полей.
+        // включая отключённые.
         try {
             const response = await api.callMethod('GET', '/objects/logistic_tasks/compose?per_page=1')
-            const table = response.data?.table ?? []
-            const fields = table
-                .filter(col => col && col.key && !TECHNICAL_KEYS.has(col.key))
-                .map((col, i) => ({
-                    key: col.key,
-                    title: col.title || col.key,
-                    type: col.type,
-                    options: col.options || [],
-                    is_plural: col.is_plural || false,
-                    related_table: col.related_table || null,
-                    sort: i,
-                    // По умолчанию включаем «Название» и «Адрес», если они есть.
-                    enabled: ['name', 'address'].includes(col.key)
-                }))
-
-            // Применяем сохранённые пользовательские настройки.
-            const saved = restore()
-            if (saved && Array.isArray(saved)) {
-                fields.forEach(f => {
-                    const found = saved.find(s => s.key === f.key)
-                    if (found) {
-                        f.enabled = !!found.enabled
-                        f.sort = found.sort ?? f.sort
-                    }
-                })
-            }
-
-            allFields.value = fields
+            buildFieldsFromTable(response.data?.table)
         } catch (e) {
             console.error('Не удалось получить поля logistic_tasks:', e)
         }
@@ -208,6 +216,28 @@
             loading.value = false
         }
     }
+
+    // Внешняя ссылка: один token-вызов отдаёт и колонки (table), и задачи
+    // маршрута (list.data, scoping по route_id на сервере). routeId = токен.
+    const loadExternal = async () => {
+        if (!props.routeId) return
+        loading.value = true
+        try {
+            const route = routes.external_link.table
+                .replace('${token}', props.routeId)
+                .replace('${slug}', 'logistic_tasks')
+            const response = await api.callMethod('GET', route)
+            buildFieldsFromTable(response.data?.table)
+            tasks.value = response.data?.list?.data || []
+        } catch (e) {
+            console.error('Не удалось загрузить задачи маршрута (внешняя ссылка):', e)
+            tasks.value = []
+        } finally {
+            loading.value = false
+        }
+    }
+
+    const reload = () => props.isExternal ? loadExternal() : loadTasks()
 
     const formatValue = (task, field) => {
         const raw = task[field.key]
@@ -311,10 +341,14 @@
         return String(raw)
     }
 
-    watch(() => props.routeId, () => loadTasks(), { immediate: false })
+    watch(() => props.routeId, () => reload(), { immediate: false })
 
     onMounted(async () => {
-        await loadFields()
-        await loadTasks()
+        if (props.isExternal) {
+            await loadExternal()
+        } else {
+            await loadFields()
+            await loadTasks()
+        }
     })
 </script>

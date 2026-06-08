@@ -131,6 +131,7 @@ export default {
     },
     external_link: {
         create: '/external-links',
-        delete: '/external-links/${token}'
+        delete: '/external-links/${token}',
+        table: '/external/${token}/table/${slug}'
     }
 }

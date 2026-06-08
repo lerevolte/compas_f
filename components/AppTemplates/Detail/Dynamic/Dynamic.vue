@@ -80,6 +80,7 @@
         <RouteTasksView
             v-else-if="isRouteTasksTab"
             :routeId="props.id"
+            :isExternal="props.options.isExternal"
         />
 
         <AppVirtualTable
@@ -102,6 +103,7 @@
                 isHaveTopHeader: false,
                 isHaveFooter: false,
                 isHaveLocalFilter: false,
+                isExternal: props.options.isExternal,
                 localFilter: []
             }"
             :slug="props.tabs.active?.slug"

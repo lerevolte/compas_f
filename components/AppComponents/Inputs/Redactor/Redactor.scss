@@ -145,6 +145,25 @@
     &:hover {
         background: variables.$color-border-light;
     }
+
+    &:disabled {
+        opacity: 0.35;
+        cursor: default;
+
+        &:hover {
+            background: transparent;
+        }
+    }
+
+    &_code {
+        margin-left: auto;
+        font-family: monospace;
+    }
+
+    &_active {
+        background: variables.$color-border-light;
+        color: variables.$color-link;
+    }
 }
 
 .redactor-text__sep {
@@ -172,4 +191,19 @@
     p { margin: 6px 0; }
     ul, ol { margin: 6px 0; padding-left: 22px; }
     a { color: variables.$color-link; text-decoration: underline; }
+    img { max-width: 100%; height: auto; border-radius: 6px; }
+}
+
+.redactor-text__editor_html {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    border: none;
+    resize: vertical;
+    font-family: monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    white-space: pre;
+    color: variables.$color-black;
+    background: variables.$color-background;
 }

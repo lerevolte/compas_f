@@ -343,6 +343,8 @@
     const doubleClick = common.useDoubleClick((elem, event) => {
         let cell = event.target.closest('.table__cell')
 
+        // Во внешней ссылке деталку по двойному клику не открываем.
+        if (table.value.options?.isExternal) return
         if (table.value.state == 'edit' || table.value.options?.isPermanentEdit || (cell && ['isChoose'].includes(cell.getAttribute('data-column-key')))) return
         if (event.target.closest('.show-more')) return
         // Support both Element and Event inputs

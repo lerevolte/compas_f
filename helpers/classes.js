@@ -457,7 +457,9 @@ export class Table {
             this.loading = true
             let response = null
 
-            if (this.slug) {
+            if (this.options?.isExternal && this.slug) {
+                response = await api.callMethod('GET', routes.external_link.table.replace('${token}', this.pageId).replace('${slug}', this.slug))
+            } else if (this.slug) {
                 response = await api.callMethod('GET', routes.table.get.replace('${slug}', this.slug))
             } else {
                 response = await api.callMethod('GET', routes.table.get_path.replace('${path}', this.path))
@@ -584,6 +586,10 @@ export class Table {
 
     // Получнеие шапки
     getHeader(data) {
+        // Во внешней ссылке скрываем колонку действий (open/edit/delete и т.п.).
+        if (this.options?.isExternal) {
+            data = data.filter(p => p.key !== 'actions')
+        }
         if (this.options?.disabledKeys && this.options?.disabledKeys.length > 0) {
             data = data.map(p => this.options?.disabledKeys.find(k => k == p.key) ? { ...p, read_only: true } : p)
         }
@@ -1312,7 +1318,13 @@ export class Filter {
             this.setter.loading = true
             this.query = setFilter(fields, saved_query)
             
-            let response = await api.callMethod("GET", routes.table.get.replace('${slug}', this.setter.slug) + `${this.query ? '?' + this.query : ''}`)
+            // Во внешней ссылке таблица привязанной сущности грузится через
+            // token-эндпоинт без авторизации; scoping (только связанные строки)
+            // обеспечивает сервер.
+            const tableRoute = this.setter.options?.isExternal
+                ? routes.external_link.table.replace('${token}', this.setter.pageId).replace('${slug}', this.setter.slug)
+                : routes.table.get.replace('${slug}', this.setter.slug)
+            let response = await api.callMethod("GET", tableRoute + `${this.query ? '?' + this.query : ''}`)
             this.setter.set(response.data)
             
             if (!this.setter.dependences.state) {

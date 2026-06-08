@@ -9,6 +9,12 @@
                     :class="{ 'map__frame-selection_active': selectionActive }"
                     @click="toggleSelectionMode"
                 />
+                <!-- Открыть выбранный маршрут в Яндекс.Картах -->
+                <button
+                    v-if="hasRoutePoints"
+                    class="logistic-map__open-route"
+                    @click.stop="openRouteInYandex"
+                >Открыть маршрут</button>
                 <!-- Settings -->
                 <div class="logistic-map__settings" @click.stop>
                     <button class="logistic-map__settings-button" @click.stop="toggleSettings">
@@ -98,7 +104,6 @@
                     <div class="menu-item" data-sub="orders">Заказы <figure class="icon__arrow"><svg width="6" height="9" viewBox="0 0 6 9" xmlns="http://www.w3.org/2000/svg"><path d="M.915 8.943 5.25 4.675a.344.344 0 0 0 .068-.222.344.344 0 0 0-.068-.222L.915.066a.587.587 0 0 0-.683.102C.027.35-.03.578.06.851l3.688 3.585L.06 8.056c-.114.25-.068.489.137.716.204.228.443.285.717.171z" fill="#000" fill-rule="evenodd"></path></svg></figure></div>
                     <div class="menu-item" data-sub="route_display">Отображение маршрута<figure class="icon__arrow"><svg width="6" height="9" viewBox="0 0 6 9" xmlns="http://www.w3.org/2000/svg"><path d="M.915 8.943 5.25 4.675a.344.344 0 0 0 .068-.222.344.344 0 0 0-.068-.222L.915.066a.587.587 0 0 0-.683.102C.027.35-.03.578.06.851l3.688 3.585L.06 8.056c-.114.25-.068.489.137.716.204.228.443.285.717.171z" fill="#000" fill-rule="evenodd"></path></svg></figure></div>
                     <div class="menu-item" data-sub="maps">Карты <figure class="icon__arrow"><svg width="6" height="9" viewBox="0 0 6 9" xmlns="http://www.w3.org/2000/svg"><path d="M.915 8.943 5.25 4.675a.344.344 0 0 0 .068-.222.344.344 0 0 0-.068-.222L.915.066a.587.587 0 0 0-.683.102C.027.35-.03.578.06.851l3.688 3.585L.06 8.056c-.114.25-.068.489.137.716.204.228.443.285.717.171z" fill="#000" fill-rule="evenodd"></path></svg></figure></div>
-                    <div class="menu-item" data-sub="analytics">Аналитика <figure class="icon__arrow"><svg width="6" height="9" viewBox="0 0 6 9" xmlns="http://www.w3.org/2000/svg"><path d="M.915 8.943 5.25 4.675a.344.344 0 0 0 .068-.222.344.344 0 0 0-.068-.222L.915.066a.587.587 0 0 0-.683.102C.027.35-.03.578.06.851l3.688 3.585L.06 8.056c-.114.25-.068.489.137.716.204.228.443.285.717.171z" fill="#000" fill-rule="evenodd"></path></svg></figure></div>
                 </div>`;
         } else if (sub === 'orders') {
             html = `
@@ -151,7 +156,13 @@
             radio.addEventListener('change', (e) => {
                 const name = e.target.name;
                 const val = e.target.value;
-                if (name === 's_orders') settings.orders = val;
+                if (name === 's_orders') {
+                    // Смена набора заказов меняет видимость и маршрута, и
+                    // необработанных задач — полностью перерисовываем карту.
+                    settings.orders = val;
+                    renderAll();
+                    return;
+                }
                 else if (name === 's_route_display') settings.route_display = val;
                 else if (name === 's_map_type') settings.map_type = val;
                 applySettings();
@@ -410,7 +421,7 @@
         try {
             clearAllLayers();
 
-            if (props.routeData?.tasks?.length > 0) {
+            if (shouldShowRoute() && props.routeData?.tasks?.length > 0) {
                 await renderRoute(props.routeData);
             }
 
@@ -660,6 +671,35 @@
         // "В машине" = only show route tasks, hide unassigned
         if (settings.orders === 'in_car') return false;
         return true;
+    };
+
+    // "Показать необработанные" = только необработанные задачи, маршрут скрываем.
+    // "Все" и "В машине" — маршрут показываем.
+    const shouldShowRoute = () => {
+        if (settings.orders === 'unprocessed') return false;
+        return true;
+    };
+
+    // ── Открыть выбранный маршрут в Яндекс.Картах ──
+    const routePointCoords = () => {
+        const tasks = [...(props.routeData?.tasks || [])].sort((a, b) => (a.order || 0) - (b.order || 0));
+        const coords = [];
+        tasks.forEach(t => {
+            const a = parseAddress(t.address);
+            if (a && a.coords.length === 2) coords.push(`${a.coords[0]},${a.coords[1]}`);
+        });
+        return coords;
+    };
+
+    const hasRoutePoints = computed(() => (props.routeData?.tasks?.length || 0) > 0);
+
+    const openRouteInYandex = () => {
+        if (typeof window === 'undefined') return;
+        const coords = routePointCoords();
+        if (coords.length < 2) return;
+        const rtext = coords.join('~');
+        const url = `https://yandex.ru/maps/?from=api-maps&mode=routes&rtext=${rtext}`;
+        window.open(url, '_blank', 'noopener');
     };
 
     // ── Render route ──
