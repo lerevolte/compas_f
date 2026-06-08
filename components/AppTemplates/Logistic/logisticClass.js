@@ -478,4 +478,28 @@ export class LogisticWithMap extends Logistic {
             if (this.onRouteChanged) this.onRouteChanged();
         }
     }
+
+    // Снимает задачу с активного маршрута (machine_tasks.route_id) без drag&drop —
+    // используется когда задачу тащили при скрытой вкладке «Задачи логистики»
+    // и vuedraggable не нашёл контейнер-цель.
+    async unassignTaskFromRoute(taskId) {
+        const routeId = this.machine_tasks.route_id;
+        if (!routeId || !taskId) return;
+        try {
+            const response = await api.callMethod('GET', `/routes/${routeId}/tasks`);
+            const currentIds = (response.data?.data || []).map(t => t.id);
+            const newIds = currentIds.filter(id => String(id) !== String(taskId));
+            if (newIds.length === currentIds.length) return;
+            await api.callMethod('PUT', `/routes/${routeId}/tasks`, { ids: newIds });
+        } catch (error) {
+            console.error('🔴 Error unassigning task from route:', error);
+        } finally {
+            this.routes.updatingCount++;
+            this.machine_tasks.updatingCount++;
+            this.loadUnassignedTasks();
+            this.logistic_tasks.updatingCount++;
+            this.loadRouteForMap(routeId);
+            if (this.onRouteChanged) this.onRouteChanged();
+        }
+    }
 }

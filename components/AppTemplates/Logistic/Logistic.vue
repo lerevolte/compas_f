@@ -237,8 +237,8 @@
                         @openModal="item => emit('openModal', { ...item, slug: item.slug || 'logistic_tasks', route_id: logistic.machine_tasks.route_id })"
                         @getData="data => { logistic.getRoutes(data); restoreTaskSelection(data); }"
                         @addRow="row => logistic.changeRouteTasks(row.list)"
-                        @removeRow="row => { logistic.changeRouteTasks(row.list); if (taskTableTab === 'addresses') taskTableTab = 'tasks'; }"
-                        @changePositionRow="row => logistic.changeRouteTasks(row.list)"
+                        @removeRow="row => { logistic.changeRouteTasks(row.list); markMachineHandled(); }"
+                        @changePositionRow="row => { logistic.changeRouteTasks(row.list); markMachineHandled(); }"
                         @choseRow="row => onRouteTaskClickInTable(row)"
                     />
                     <section v-else-if="section.key == 'route_tasks'" class="section-table">
@@ -362,7 +362,9 @@
     const dropTargetMachine = ref(false);
     let draggedTaskId = null;
     let dragSourceTable = null; // 'unassigned' | 'route' | 'addresses'
-    let tabSwitchedForDrag = false; // была ли автоматически переключена вкладка во время drag
+    let addressesTabAtDragStart = false;
+    let machineTasksVdHandled = false;
+    const markMachineHandled = () => { machineTasksVdHandled = true; };
 
     const findRoutesSection = () => {
         const sections = document.querySelectorAll('.logistic .section-table');
@@ -417,21 +419,13 @@
         if (!id) return;
         draggedTaskId = Number(id);
         dragSourceTable = source;
-        tabSwitchedForDrag = false;
+        addressesTabAtDragStart = taskTableTab.value === 'addresses';
     };
 
     const onGlobalMouseMove = (e) => {
         // Активны только когда vuedraggable пометил body как «идёт перетаскивание».
         if (!document.body.classList.contains('body_unselected')) return;
         if (!draggedTaskId) return;
-
-        // Если тащим задачу из «Задачи в машине» при активной вкладке «Справочник
-        // адресов» — переключаемся на «Задачи логистики», чтобы vuedraggable мог
-        // найти контейнер-цель (он не работает с v-if-скрытыми элементами).
-        if (dragSourceTable === 'route' && taskTableTab.value === 'addresses' && !tabSwitchedForDrag) {
-            tabSwitchedForDrag = true;
-            taskTableTab.value = 'tasks';
-        }
 
         // elementsFromPoint, потому что fallback-клон vuedraggable, ползущий за
         // курсором, может «прикрыть» строку маршрута и сбить elementFromPoint.
@@ -507,9 +501,11 @@
         const routeId = dropTargetRouteId.value;
         const overMachine = dropTargetMachine.value;
         const source = dragSourceTable;
+        const addressTab = addressesTabAtDragStart;
         draggedTaskId = null;
         dragSourceTable = null;
-        tabSwitchedForDrag = false;
+        addressesTabAtDragStart = false;
+        machineTasksVdHandled = false;
         dropTargetRouteId.value = null;
         dropTargetMachine.value = false;
         clearDropTargetHighlight();
@@ -526,7 +522,25 @@
             return;
         }
 
-        if (!routeId) return;
+        if (!routeId) {
+            // Задача из «Задачи в машине» брошена в пустоту при активной вкладке
+            // «Справочник адресов»: таблица «Задачи логистики» скрыта (v-if), поэтому
+            // vuedraggable не нашёл цель и вернул задачу на место. Откладываем на 50ms,
+            // чтобы Sortable.js успел выстрелить @changePositionRow/@removeRow, если
+            // перетаскивание всё же завершилось внутри таблицы (reorder/переход в другой маршрут).
+            // Если этого не произошло — снимаем задачу с маршрута вручную.
+            if (source === 'route' && addressTab && id) {
+                setTimeout(() => {
+                    if (!machineTasksVdHandled) {
+                        logistic.value.unassignTaskFromRoute(id);
+                        taskTableTab.value = 'tasks';
+                    }
+                    machineTasksVdHandled = false;
+                }, 50);
+            }
+            return;
+        }
+
         // Если задача уже в маршруте, в который её перетащили — assignTaskToRoute сам
         // обработает no-op. Для маршрута-источника совпадение маршрутов невозможно,
         // потому что в Задачах в машине route_id == текущий машинный маршрут, а
