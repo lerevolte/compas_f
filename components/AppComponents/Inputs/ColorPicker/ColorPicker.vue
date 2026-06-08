@@ -13,7 +13,7 @@
                 </div>
             </template>
             <template #content>
-                <div class="colorpicker__preview">
+                <div class="colorpicker__preview" :style="`--colorValue: ${internalColor}`">
                     <slot name="preview"></slot>
                 </div>
                 <ColorPicker
