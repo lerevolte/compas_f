@@ -1145,6 +1145,10 @@ export class Table {
             sort_order: this.sortItem.sort_order,
             fields: this.header
         })
+
+        const perPageMethod = routes.table.set_per_page.replace('${slug}', this.slug)
+        await api.callMethod('POST', perPageMethod, { per_page: this.pages.limit })
+
         this.isChanged = false
     }
 

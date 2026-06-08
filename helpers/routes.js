@@ -37,6 +37,7 @@ export default {
         get_path: '${path}',
         reset: '/tables/${slug}/reset',
         save_settings: '/tables/${slug}',
+        set_per_page: '/tables/${slug}/per_page',
         save: '/objects/${slug}/batch',
         save_path: '${path}',
         download: '/objects/${slug}/export',

@@ -6,7 +6,7 @@
             </span>
         </label>
 
-        <AppPopup class="colorpicker" :style="`--colorValue: ${props.modelValue}`" :isPreventBottom="true" :ignoreSelectors="['colorpicker']">
+        <AppPopup class="colorpicker" :style="`--colorValue: ${internalColor}`" :isPreventBottom="true" :ignoreSelectors="['colorpicker']">
             <template #header>
                 <div class="colorpicker__summary">
                     <slot name="icon"></slot>
@@ -17,10 +17,10 @@
                     <slot name="preview"></slot>
                 </div>
                 <ColorPicker
-                    :color="props.modelValue || '#b6b6b6'"
+                    :color="internalColor"
                     default-format="hex"
                     :visible-formats="['hex']"
-                    @color-change="(eventData) => emit('update:modelValue', eventData.cssColor)"
+                    @color-change="onColorChange"
                 />
                 <AppButton class="button_fill" v-if="props.options.isCanCreate">
                     Применить
@@ -32,7 +32,8 @@
 
 <script setup>
     import './ColorPicker.scss';
-    
+
+    import { ref, watch } from 'vue'
     import AppPopup from '@AppComponents/Popup/Popup.vue'
     import { ColorPicker } from 'vue-accessible-color-picker'
     import 'vue-accessible-color-picker/styles'
@@ -54,4 +55,17 @@
     const emit = defineEmits([
         'update:modelValue'
     ])
+
+    const internalColor = ref(props.modelValue || '#b6b6b6')
+
+    watch(() => props.modelValue, (newVal) => {
+        if (newVal && newVal !== internalColor.value) {
+            internalColor.value = newVal
+        }
+    })
+
+    const onColorChange = (eventData) => {
+        internalColor.value = eventData.cssColor
+        emit('update:modelValue', eventData.cssColor)
+    }
 </script>

@@ -542,4 +542,8 @@
             }
         }
     })
+
+    watch(() => settings.value.nest.active, () => {
+        nextTick(() => popupRef.value?.popup?.applyPosition())
+    })
 </script>
