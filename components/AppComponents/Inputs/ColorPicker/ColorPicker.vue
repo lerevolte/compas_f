@@ -18,7 +18,7 @@
                 </div>
                 <ColorPicker
                     :key="props.modelValue || 'cp'"
-                    :color="props.modelValue"
+                    :color="props.modelValue || '#b6b6b6'"
                     default-format="hex"
                     :visible-formats="['hex']"
                     @color-change="(eventData) => emit('update:modelValue', eventData.cssColor)"

@@ -1943,13 +1943,36 @@ export class Section {
                     return arr
                 }, [])
                 this.validator.check(fields)
-                isError = isError ? isError : Object.keys(this.validator.errors).length > 0
+                const editErrors = { ...this.validator.errors }
+                isError = isError ? isError : Object.keys(editErrors).length > 0
                 this.buffer.edits = [...this.buffer.edits, ...fields]
-                
                 for (let field of fields) {
                     field.error = {
-                        state: this.validator.errors[field.key] ?? false,
-                        text: this.validator.errors[field.key] ?? null
+                        state: editErrors[field.key] ?? false,
+                        text: editErrors[field.key] ?? null
+                    }
+                }
+
+                // Обязательные поля НЕ в режиме редактирования тоже проверяем —
+                // иначе пустое required-поле проходило без ошибки, если его не трогали.
+                const requiredReadOnly = section.fields.reduce((arr, f) => {
+                    if (f.type === 'text_group') {
+                        f.fields.forEach(sf => { if (!sf.edit && sf.required) arr.push(sf) })
+                    } else if (!f.edit && f.required) {
+                        arr.push(f)
+                    }
+                    return arr
+                }, [])
+                if (requiredReadOnly.length > 0) {
+                    this.validator.check(requiredReadOnly)
+                    if (Object.keys(this.validator.errors).length > 0) {
+                        isError = true
+                        for (let f of requiredReadOnly) {
+                            if (this.validator.errors[f.key]) {
+                                f.error = { state: true, text: this.validator.errors[f.key] }
+                                this.buffer.edits.push(f)
+                            }
+                        }
                     }
                 }
             }
@@ -2508,7 +2531,12 @@ export class Field {
 
         if (type == 'target') {
             if (target.closest('.icon_drag') || target.closest('.field__settings') || target.closest('.blank__title')) return
-    
+
+            // Кнопки с data-action (например «посмотреть все» в relation-поле) не
+            // должны переводить поле в режим редактирования — они выполняют свои
+            // действия и не означают намерение редактировать само поле.
+            if (target.closest('[data-action]')) return
+
             if (['text', 'number', 'date', 'select_dropdown'].includes(field.type)) {
                 if (field.edit || 
                     target.classList.contains('blank__link') || 

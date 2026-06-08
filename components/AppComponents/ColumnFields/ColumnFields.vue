@@ -307,9 +307,17 @@
     const columns = ref(new Columns())
     const section = ref(new Section(props.slug))
     const field = ref(new Field())
-    
+
     onMounted(() => {
         columns.value.get()
+    })
+
+    onBeforeUnmount(() => {
+        // При скрытии вкладки (v-if) ColumnFields уничтожается и section.buffer
+        // пропадает. Без этого поля остаются с edit=true, но панель сохранения
+        // исчезает (новый section после ремаунта не знает о старых правках).
+        // Отменяем редактирование, чтобы после возврата на вкладку всё было чисто.
+        section.value.cancel(null, columns.value.list, props.pageId, props.slug, emit, props.options)
     })
 
     watch(() => props.columns, () => {
