@@ -237,7 +237,7 @@
                         @openModal="item => emit('openModal', { ...item, slug: item.slug || 'logistic_tasks', route_id: logistic.machine_tasks.route_id })"
                         @getData="data => { logistic.getRoutes(data); restoreTaskSelection(data); }"
                         @addRow="row => logistic.changeRouteTasks(row.list)"
-                        @removeRow="row => logistic.changeRouteTasks(row.list)"
+                        @removeRow="row => { logistic.changeRouteTasks(row.list); if (taskTableTab === 'addresses') taskTableTab = 'tasks'; }"
                         @changePositionRow="row => logistic.changeRouteTasks(row.list)"
                         @choseRow="row => onRouteTaskClickInTable(row)"
                     />

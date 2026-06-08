@@ -588,7 +588,7 @@ export class Table {
     getHeader(data) {
         // Во внешней ссылке скрываем колонку действий (open/edit/delete и т.п.).
         if (this.options?.isExternal) {
-            data = data.filter(p => p.key !== 'actions')
+            data = data.filter(p => p.key !== 'actions' && p.key !== 'isChoose')
         }
         if (this.options?.disabledKeys && this.options?.disabledKeys.length > 0) {
             data = data.map(p => this.options?.disabledKeys.find(k => k == p.key) ? { ...p, read_only: true } : p)

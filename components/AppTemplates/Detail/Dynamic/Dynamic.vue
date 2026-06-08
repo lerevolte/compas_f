@@ -128,7 +128,8 @@
     import RouteTasksView from '@AppTemplates/Detail/RouteTasksView/RouteTasksView.vue';
 
     const isRouteTasksTab = computed(() => {
-        if (props.slug !== 'routes') return false
+        // В external-режиме slug не передаётся (null) — разрешаем проверку по title.
+        if (props.slug !== 'routes' && !(props.options?.isExternal && props.slug == null)) return false
         const active = props.tabs?.active
         if (!active) return false
         if (['order', 'history', 'products'].includes(active.tab)) return false

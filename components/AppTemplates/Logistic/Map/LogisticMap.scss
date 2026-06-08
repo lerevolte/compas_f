@@ -597,12 +597,13 @@
 
 .cluster-popup_route .cluster-marker__icon {
     background-image: url('/img/cluster-route.svg');
+    background-size: 4px;
 }
 
 .cluster-popup_mixed .cluster-marker__icon {
-    // Глиф 67%, градиент-фон — на всю площадь (cover).
+    // Глиф, градиент-фон — на всю площадь (cover).
     background-image: url('/img/cluster-mixed.svg'), linear-gradient(211deg, #CA0000 0%, #0070AA 100%);
-    background-size: 67%, cover;
+    background-size: 14px, cover;
     background-position: center, center;
     background-repeat: no-repeat, no-repeat;
 }

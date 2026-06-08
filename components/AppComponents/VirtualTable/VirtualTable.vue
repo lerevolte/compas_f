@@ -35,7 +35,7 @@
     <TableFooter v-if="props.options?.isHaveFooter" />
   </section>
 
-  <teleport :to="massActionTarget" v-if="isClient && !props.options?.isDisableMassAction">
+  <teleport :to="massActionTarget" v-if="isClient && !props.options?.isDisableMassAction && !props.options?.isExternal">
     <MassAction
       :isChoosed="isChoosed"
       :checkedCount="checkedCount"
@@ -242,6 +242,9 @@
 
   watch(() => props.options.updatingCount, () => {
     if (props.options.updatingCount) {
+      // Сбрасываем socket-очередь перед ручной перезагрузкой — иначе баннер
+      // «N изменений» остаётся видимым даже после того, как таблица уже обновлена.
+      if (table.value.socket?.table) table.value.socket.table = []
       initTable()
     }
   })

@@ -159,8 +159,9 @@
                 if (name === 's_orders') {
                     // Смена набора заказов меняет видимость и маршрута, и
                     // необработанных задач — полностью перерисовываем карту.
+                    // skipFitBounds: только фильтруем точки, зум не меняем.
                     settings.orders = val;
-                    renderAll();
+                    renderAll({ skipFitBounds: true });
                     return;
                 }
                 else if (name === 's_route_display') settings.route_display = val;
@@ -413,7 +414,7 @@
     // ── Render all ──
     let isRendering = false;
 
-    const renderAll = async () => {
+    const renderAll = async (opts = {}) => {
         if (!mapInstance.value || !L) return;
         if (isRendering) { console.log('🟠 renderAll skipped — already rendering'); return; }
         isRendering = true;
@@ -432,7 +433,7 @@
             // Group overlapping markers at same coordinates
             groupOverlappingMarkers();
 
-            if (props.routeData?.tasks?.length > 0) {
+            if (!opts.skipFitBounds && props.routeData?.tasks?.length > 0) {
                 fitBounds();
             }
         } finally {
