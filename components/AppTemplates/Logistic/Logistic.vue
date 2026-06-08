@@ -362,6 +362,7 @@
     const dropTargetMachine = ref(false);
     let draggedTaskId = null;
     let dragSourceTable = null; // 'unassigned' | 'route' | 'addresses'
+    let tabSwitchedForDrag = false; // была ли автоматически переключена вкладка во время drag
 
     const findRoutesSection = () => {
         const sections = document.querySelectorAll('.logistic .section-table');
@@ -416,12 +417,21 @@
         if (!id) return;
         draggedTaskId = Number(id);
         dragSourceTable = source;
+        tabSwitchedForDrag = false;
     };
 
     const onGlobalMouseMove = (e) => {
         // Активны только когда vuedraggable пометил body как «идёт перетаскивание».
         if (!document.body.classList.contains('body_unselected')) return;
         if (!draggedTaskId) return;
+
+        // Если тащим задачу из «Задачи в машине» при активной вкладке «Справочник
+        // адресов» — переключаемся на «Задачи логистики», чтобы vuedraggable мог
+        // найти контейнер-цель (он не работает с v-if-скрытыми элементами).
+        if (dragSourceTable === 'route' && taskTableTab.value === 'addresses' && !tabSwitchedForDrag) {
+            tabSwitchedForDrag = true;
+            taskTableTab.value = 'tasks';
+        }
 
         // elementsFromPoint, потому что fallback-клон vuedraggable, ползущий за
         // курсором, может «прикрыть» строку маршрута и сбить elementFromPoint.
@@ -499,6 +509,7 @@
         const source = dragSourceTable;
         draggedTaskId = null;
         dragSourceTable = null;
+        tabSwitchedForDrag = false;
         dropTargetRouteId.value = null;
         dropTargetMachine.value = false;
         clearDropTargetHighlight();

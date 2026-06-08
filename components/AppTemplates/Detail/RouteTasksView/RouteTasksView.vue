@@ -1,5 +1,5 @@
 <template>
-    <div class="route-tasks-view">
+    <div class="route-tasks-view" :class="{ 'route-tasks-view_solo': props.isExternal }">
         <div v-if="!props.isExternal" class="route-tasks-view__col route-tasks-view__col_fields">
             <div class="route-tasks-view__col-title">Поля задачи</div>
             <draggable
