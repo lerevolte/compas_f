@@ -352,11 +352,15 @@
                             <IconSettings />
                         </template>
                         <template #content>
-                            <div 
-                                class="popup__option" 
-                                v-show="field.can_edit && !field.edit" 
+                            <div
+                                class="popup__option"
+                                v-show="field.can_edit && !field.edit"
                                 @click="(e) => {
-                                    fieldObject.initChangeField(field, null, 'option');
+                                    if (field.type === 'text_group') {
+                                        props.sectionClass.editAll(field);
+                                    } else {
+                                        fieldObject.initChangeField(field, null, 'option');
+                                    }
                                     e.target?.closest('.popup')?.classList.remove('popup_open');
                                 }"
                             >

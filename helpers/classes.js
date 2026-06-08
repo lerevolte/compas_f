@@ -2250,7 +2250,10 @@ export class Field {
                 }
             } else {
                 group_field = this.common.findColumnSectionByField(columns, field.id)
-                if (group_field) {
+                // Удаляем поле из группы только если оно явно выводится ИЗ группы
+                // (field.group_id изменился или обнулён). При простом редактировании
+                // настроек поля внутри группы group_id совпадает — не трогаем subfields.
+                if (group_field && String(field.group_id || '') !== String(group_field.id)) {
                     await api.callMethod('PUT', routes.detail.update_field.replace('${id}', group_field.id), {
                         ...group_field,
                         subfields: group_field.subfields.filter(p => p != field.id)
@@ -2310,7 +2313,17 @@ export class Field {
             await api.callMethod('DELETE', routes.detail.delete_field.replace('${id}', this.modal.content.id))
             const findedSection = this.common.findColumnSection(columns, this.modal.content.section_id)
             const index = findedSection.fields.findIndex(p => p.id == this.modal.content.id)
-            if (index !== -1) findedSection.fields.splice(index, 1)
+            if (index !== -1) {
+                findedSection.fields.splice(index, 1)
+            } else {
+                // Поле может быть вложено в text_group — ищем там
+                for (const gf of findedSection.fields) {
+                    if (gf.type === 'text_group') {
+                        const gi = gf.fields.findIndex(p => p.id == this.modal.content.id)
+                        if (gi !== -1) { gf.fields.splice(gi, 1); break }
+                    }
+                }
+            }
 
             if (this.modal.content.type == 'text_group') {
                 emit('action', {
