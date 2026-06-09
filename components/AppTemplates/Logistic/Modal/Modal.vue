@@ -23,74 +23,76 @@
 			</template>
 		</AppCategories>
 
-        <div class="logistic-modal__steps">
-            <div 
-                class="logistic-modal__step modal-step" 
-                v-for="step in route.steps.list" 
-                :class="{'logistic-modal__step_active': step.slug == route.steps.active?.slug}"
-                @click="route.switchTab(step)"
-            >
-                <div class="modal-step__value">
-                    <ModalItemValue 
-                        v-if="step.value"
-                        :item="step.value"
-                        
-                    />
-                    <div class="modal-step__title" v-else>
-                        {{step.title}}
-                    </div>
-                    <IconClose v-if="step.value" @click="route.deleteOption({slug: step.slug})"/>
-                </div>
-            </div>
-        </div>
-
-        <AppSelect
-            class="logistic-modal__filter"
-            :style="`--selectPadding: ${selectPadding}px`"
-            :options="{
-                title: null,
-                list: [],
-                isHaveQuery: true,
-                isSaveActiveOptions: true,
-                savedActiveOptions: route.computedSavedOptions,
-                query: {
-                    entity: null,
-                    'filter[company_id]': null
-                },
-                name: null,
-                edit: true,
-                isFullOption: true,
-                relation: route.steps.active?.field_id,
-                searchable: true,
-                required: false,
-                isHaveNull: false,
-                multiple: false,
-            }"
-            v-model="route.computedFilter"
-            @searchEnter="text => route.applySearch(text)"
-        >
-            <div class="select__values" ref="selectValuesRef" v-if="route.computedSavedOptions">
-                <div class="select__value" v-for="option in route.computedSavedOptions" @click="route.deleteOption(option)">
-                    {{ option?.label }}: {{ option?.value }}
-                    <IconClose />
-                </div>
-            </div>
-        </AppSelect>
-
-        <div class="logistic-modal__section">
-            <div class="logistic-modal__section-header">
-                {{ route.steps.active?.sectionTitle }}
-            </div>
-            <div class="logistic-modal__section-body">
+        <div class="logistic-modal__right">
+            <div class="logistic-modal__steps">
                 <div
-                    class="logistic-modal__section-item"
-                    v-for="item in route.entities[route.steps?.active?.slug]?.list"
-                    :class="{'logistic-modal__section-item_active': item.value == route.filter[route.steps.active.slug]}"
-                    @click="route.setFilterValue(route.steps.active.slug, {label: item.label.text, value: item.value, origin: item})"
+                    class="logistic-modal__step modal-step"
+                    v-for="step in route.steps.list"
+                    :class="{'logistic-modal__step_active': step.slug == route.steps.active?.slug}"
+                    @click="route.switchTab(step)"
                 >
-                    <ModalItemValue
-                        :item="item"
-                    />
+                    <div class="modal-step__value">
+                        <ModalItemValue
+                            v-if="step.value"
+                            :item="step.value"
+
+                        />
+                        <div class="modal-step__title" v-else>
+                            {{step.title}}
+                        </div>
+                        <IconClose v-if="step.value" @click="route.deleteOption({slug: step.slug})"/>
+                    </div>
+                </div>
+            </div>
+
+            <AppSelect
+                class="logistic-modal__filter"
+                :style="`--selectPadding: ${selectPadding}px`"
+                :options="{
+                    title: null,
+                    list: [],
+                    isHaveQuery: true,
+                    isSaveActiveOptions: true,
+                    savedActiveOptions: route.computedSavedOptions,
+                    query: {
+                        entity: null,
+                        'filter[company_id]': null
+                    },
+                    name: null,
+                    edit: true,
+                    isFullOption: true,
+                    relation: route.steps.active?.field_id,
+                    searchable: true,
+                    required: false,
+                    isHaveNull: false,
+                    multiple: false,
+                }"
+                v-model="route.computedFilter"
+                @searchEnter="text => route.applySearch(text)"
+            >
+                <div class="select__values" ref="selectValuesRef" v-if="route.computedSavedOptions">
+                    <div class="select__value" v-for="option in route.computedSavedOptions" @click="route.deleteOption(option)">
+                        {{ option?.label }}: {{ option?.value }}
+                        <IconClose />
+                    </div>
+                </div>
+            </AppSelect>
+
+            <div class="logistic-modal__section">
+                <div class="logistic-modal__section-header">
+                    {{ route.steps.active?.sectionTitle }}
+                </div>
+                <div class="logistic-modal__section-body">
+                    <div
+                        class="logistic-modal__section-item"
+                        v-for="item in route.entities[route.steps?.active?.slug]?.list"
+                        :class="{'logistic-modal__section-item_active': item.value == route.filter[route.steps.active.slug]}"
+                        @click="route.setFilterValue(route.steps.active.slug, {label: item.label.text, value: item.value, origin: item})"
+                    >
+                        <ModalItemValue
+                            :item="item"
+                        />
+                    </div>
                 </div>
             </div>
         </div>

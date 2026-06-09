@@ -1,21 +1,20 @@
 @use '@/assets/variables.scss' as variables;
 @use '@/assets/mixins.scss' as mixins;
 
-// scroll-buttons «парят» по середине высоты таблицы (visible viewport
-// внутри .table) поверх строк. Sticky активируется, как только пользователь
-// прокручивает вниз — стрелки прилипают к top: calc(50% - 40px) от
-// scroll-контейнера (.table). height:0 + margin-bottom:0 чтобы не занимать
-// вертикальное место (тогда строки таблицы начинаются сразу под header'ом,
-// а стрелки рендерятся ПОВЕРХ).
+// scroll-buttons позиционируются absolute относительно .section-table (position:relative).
+// Это выносит их за пределы .table (overflow:auto), поэтому горизонтальный скролл
+// таблицы (в т.ч. в Safari) не сдвигает кнопки — они всегда прижаты к видимым краям.
+// pointer-events: none на контейнере, pointer-events: auto на самих кнопках.
 .scroll-buttons {
-    position: sticky;
-    top: calc(50% - 40px);
-    height: 0;
-    width: 100%;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 0;
+    right: 0;
+    height: 80px;
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    left: 0;
+    align-items: center;
     z-index: 101;
     pointer-events: none;
     overflow: visible;
@@ -23,7 +22,7 @@
 
 .scroll-button {
     pointer-events: auto;
-    
+
     &.scroll-button_disabled {
         opacity: 0;
         pointer-events: none;

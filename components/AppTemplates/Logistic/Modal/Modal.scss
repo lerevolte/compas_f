@@ -8,12 +8,10 @@
                 display: grid;
                 grid-gap: 15px;
                 grid-template-columns: 300px 1fr;
-                grid-template-rows: repeat(3, auto);
+                grid-template-rows: auto 1fr auto;
                 max-width: 70vw;
-
                 max-height: 70vh;
-                overflow: auto;
-                @include mixins.scrollBar();
+                // Скролл убран с контейнера — каждая колонка скроллится независимо.
 
                 h2 {
                     text-align: center;
@@ -22,6 +20,9 @@
 
                 @media (max-width: 1250px) {
                     grid-template-columns: 1fr;
+                    // На мобильном — единый скролл, без сложной сетки
+                    overflow: auto;
+                    @include mixins.scrollBar();
 
                     h2,
                     .modal__buttons {
@@ -35,7 +36,7 @@
                 display: flex;
                 justify-content: center;
                 align-self: end;
-                
+
                 button {
                     width: max-content;
 
@@ -49,14 +50,30 @@
 }
 
 .logistic-modal__categories {
-    grid-row: 2/5;
-    position: sticky;
-    top: 0px;
+    // Левая колонка: собственный скролл, не растягивается под высоту правой колонки.
+    overflow-y: auto;
+    max-height: calc(70vh - 110px);
     align-self: start;
+    @include mixins.scrollBar();
 
     @media (max-width: 1250px) {
-        grid-row: 2;
-        position: static;
+        max-height: none;
+        overflow-y: visible;
+    }
+}
+
+.logistic-modal__right {
+    // Правая колонка: собственный скролл, независимый от левой.
+    overflow-y: auto;
+    max-height: calc(70vh - 110px);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    @include mixins.scrollBar();
+
+    @media (max-width: 1250px) {
+        max-height: none;
+        overflow-y: visible;
     }
 }
 

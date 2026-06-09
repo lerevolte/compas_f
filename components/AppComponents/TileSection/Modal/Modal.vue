@@ -545,9 +545,15 @@
         } else if (props.modal.action == 'updateField') {
             if (props.modal.content.type == 'text_group') {
                 modal.value.field = {
-                ...props.modal.content,
-                options: [...props.modal.content.options, ...modal.value.getTextGroupOptions()],
-            }
+                    ...props.modal.content,
+                    // Пересчитываем subfields из live-массива fields (учитывает
+                    // последние drag-операции без перезагрузки страницы).
+                    subfields: Array.isArray(props.modal.content.fields)
+                        ? props.modal.content.fields.map(f => f.id)
+                        : (props.modal.content.subfields || []),
+                    // Только свежий список из live-колонок — без дублей от stale-снимка.
+                    options: modal.value.getTextGroupOptions(),
+                }
             } else if (props.modal.content.type == 'status') {
                 modal.value.field = {
                     ...props.modal.content,

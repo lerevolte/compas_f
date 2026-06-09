@@ -1140,11 +1140,15 @@ export class Table {
     async saveSettings(role) {
         let method = this.slug == 'products' ? routes.table.update_products : routes.table.save_settings.replace('${slug}', this.slug)
 
-        await api.callMethod('POST', role ? `${method}/${role}` : method, {
-            sort_field: this.sortItem.sort_field,
-            sort_order: this.sortItem.sort_order,
-            fields: this.header
-        })
+        try {
+            await api.callMethod('POST', role ? `${method}/${role}` : method, {
+                sort_field: this.sortItem.sort_field,
+                sort_order: this.sortItem.sort_order,
+                fields: this.header
+            })
+        } catch (error) {
+            console.log('saveSettings columns error', error)
+        }
 
         const perPageMethod = routes.table.set_per_page.replace('${slug}', this.slug)
         await api.callMethod('POST', perPageMethod, { per_page: this.pages.limit })
@@ -2223,18 +2227,22 @@ export class Field {
     }
 
     // Инициализация обновления
-    initUpdate({field, hidden,section}) {
-        console.log(hidden);
-        
+    initUpdate({field, hidden, section}) {
+        const content = JSON.parse(JSON.stringify({
+            ...field,
+            section_id: section.id
+        }))
+        // Для text_group переписываем subfields из live-массива field.fields,
+        // чтобы только что добавленные/удалённые поля сразу отражались в настройках.
+        if (field.type === 'text_group' && Array.isArray(field.fields)) {
+            content.subfields = field.fields.map(f => f.id)
+        }
         this.modal = {
             state: true,
             title: 'Настройки поля',
             actionTitle: 'Сохранить',
             action: 'updateField',
-            content: JSON.parse(JSON.stringify({
-                ...field,
-                section_id: section.id
-            })),
+            content,
             text: null
         }
     }
@@ -2254,13 +2262,14 @@ export class Field {
                 }
             } else {
                 group_field = this.common.findColumnSectionByField(columns, field.id)
-                // Удаляем поле из группы только если оно явно выводится ИЗ группы
-                // (field.group_id изменился или обнулён). При простом редактировании
-                // настроек поля внутри группы group_id совпадает — не трогаем subfields.
-                if (group_field && String(field.group_id || '') !== String(group_field.id)) {
+                // group_id в снимке поля обычно null/undefined (фронтенд его не проставляет).
+                // Удаляем из группы только если group_id явно задан и указывает на ДРУГУЮ группу.
+                // Управление членством в группе — через drag, не через форму настроек.
+                if (group_field && field.group_id != null &&
+                    String(field.group_id) !== String(group_field.id)) {
                     await api.callMethod('PUT', routes.detail.update_field.replace('${id}', group_field.id), {
-                        ...group_field,
-                        subfields: group_field.subfields.filter(p => p != field.id)
+                        id: group_field.id,
+                        subfields: group_field.fields.map(p => p.id).filter(id => Number(id) !== Number(field.id))
                     })
                 }
             }
@@ -2278,7 +2287,9 @@ export class Field {
                 }
             }
 
-            const { fields, ...request } = field;
+            // group_id исключаем: членство в группе управляется drag-системой,
+            // отправка group_id: null из формы настроек сбрасывает привязку на бэкенде.
+            const { fields, group_id, ...request } = field;
             await api.callMethod('PUT', routes.detail.update_field.replace('${id}', field.id), request)
             if (field.type == 'text_group' || group_field) {
                 emit('action', {
