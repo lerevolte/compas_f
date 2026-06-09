@@ -144,9 +144,21 @@
         }
     }
 
-    .table {
+    // max-width ограничение перенесено на section-table в VirtualTable.scss.
+    // Здесь переопределяем section-table для логистики (двух-колоночная сетка).
+    .section-table {
         max-width: calc((100vw - 282px - 25px) / 2);
 
+        @media (max-width: 1300px) {
+            max-width: calc(100vw - 282px);
+        }
+
+        @media (max-width: 990px) {
+            max-width: 100%;
+        }
+    }
+
+    .table {
         .table__row {
             &.table__row_clicked {
                 background: #d9e4f0;
@@ -155,17 +167,6 @@
                     background: #d9e4f0;
                 }
             }
-        }
-
-        @media (max-width: 1300px) {
-            max-width: calc(100vw - 282px);
-        }
-
-        @media (max-width: 1300px) {
-        }
-
-        @media (max-width: 990px) {
-            max-width: 100%;
         }
     }
 

@@ -14,6 +14,12 @@
       <div class="socket-row" v-if="!props.options?.isDisableSockets && socketRelevantCount > 0" >
           {{ socketRelevantCount }} изменения в таблице <span class="socket-row__button" @click="reloadFromSocket()"> Загрузить </span>
         </div>
+      <!--
+        ScrollButtons размещены ПЕРЕД телом таблицы с height:0, чтобы не
+        занимать вертикальное место. Sticky-позиционирование прилипает к
+        top: calc(50% - 40px) при вертикальном скролле контейнера (.table).
+      -->
+      <ScrollButtons />
       <TableBody
         :options="props.options"
         @choseRow="row => emit('choseRow', row)"
@@ -24,13 +30,6 @@
         <IconLoader />
       </div>
     </div>
-    <!--
-      ScrollButtons вынесены ЗА пределы .table (overflow:auto), чтобы
-      в Safari горизонтальный скролл таблицы не смещал стрелки.
-      section-table имеет position:relative — стрелки позиционируются
-      absolute относительно него и всегда прижаты к видимым краям.
-    -->
-    <ScrollButtons />
     <TableFooter v-if="props.options?.isHaveFooter" />
   </section>
 

@@ -1085,6 +1085,11 @@ export class Table {
     // Конец перетаскивания
     async dragEnd(event) {
         document.body.classList.remove('body_unselected')
+        // Сохраняем скролл ДО сброса isDragging: смена режима позиционирования
+        // строк (relative → absolute) может сбросить scrollTop в 0 в Safari.
+        const scrollEl = this.tableRef
+        const savedTop = scrollEl?.scrollTop ?? 0
+        const savedLeft = scrollEl?.scrollLeft ?? 0
         this.isDragging = false
         if (this.slug == 'products') {
             this.state = 'edit'
@@ -1100,6 +1105,12 @@ export class Table {
         // Обновляем виртуализатор после завершения перетаскивания
         await nextTick()
         this.initVirtualizer()
+        // setTimeout (макрозадача) запускается после всех nextTick виртуализатора —
+        // к этому моменту virtualizer уже пересоздан и scrollTop мог обнулиться.
+        setTimeout(() => {
+            if (scrollEl && scrollEl.scrollTop === 0 && savedTop > 0) scrollEl.scrollTop = savedTop
+            if (scrollEl && scrollEl.scrollLeft === 0 && savedLeft > 0) scrollEl.scrollLeft = savedLeft
+        }, 0)
 
         this.emit('getData', this.body)
     }

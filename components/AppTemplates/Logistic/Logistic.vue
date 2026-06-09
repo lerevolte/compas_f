@@ -496,7 +496,7 @@
         }
     };
 
-    const onGlobalMouseUp = () => {
+    const onGlobalMouseUp = (e) => {
         const id = draggedTaskId;
         const routeId = dropTargetRouteId.value;
         const overMachine = dropTargetMachine.value;
@@ -530,6 +530,23 @@
             // перетаскивание всё же завершилось внутри таблицы (reorder/переход в другой маршрут).
             // Если этого не произошло — снимаем задачу с маршрута вручную.
             if (source === 'route' && addressTab && id) {
+                // Если мышь отпущена внутри самой таблицы «Задачи в машине», это
+                // обычная отмена drag внутри той же таблицы — задачу трогать не нужно.
+                // elementsFromPoint используем, т.к. ghost-клон (draggable-fallback)
+                // может «прикрывать» элементы под курсором.
+                const machineSection = findMachineTasksSection();
+                if (machineSection && e?.clientX !== undefined) {
+                    const stack = typeof document.elementsFromPoint === 'function'
+                        ? document.elementsFromPoint(e.clientX, e.clientY)
+                        : [document.elementFromPoint(e.clientX, e.clientY)];
+                    const inMachine = stack.some(el =>
+                        el &&
+                        !el.classList?.contains('draggable-fallback') &&
+                        !el.closest?.('.draggable-fallback') &&
+                        machineSection.contains(el)
+                    );
+                    if (inMachine) return;
+                }
                 setTimeout(() => {
                     if (!machineTasksVdHandled) {
                         logistic.value.unassignTaskFromRoute(id);

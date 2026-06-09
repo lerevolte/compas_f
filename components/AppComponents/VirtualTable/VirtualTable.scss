@@ -8,6 +8,9 @@
   overflow: hidden;
   margin-bottom: 40px;
   position: relative;
+  // max-width перенесён сюда из .table, чтобы .table (и scroll-кнопки в нём)
+  // занимали полную ширину section-table, а не останавливались раньше.
+  max-width: calc(100vw - 282px);
 }
 
 .table {
@@ -17,7 +20,6 @@
   display: flex;
   flex-direction: column;
   max-height: 100%;
-  max-width: calc(100vw - 282px);
   // Safari: contain + will-change ломают position: sticky на ячейках.
   // contain: layout|paint создаёт containing block для position:fixed —
   // в результате action-попап в строке клипается границами таблицы.
@@ -589,5 +591,13 @@
 
 .table__body_cross-drop .table__row.draggable-ghost {
   order: 999 !important;
+}
+
+// Safari: forceFallback клонирует строку в document.body, где CSS-переменная
+// --color-row может не разрешиться (нет родительского контекста таблицы).
+// Явный белый фон гарантирует видимость ghost'а на всю его длину.
+.table__row.draggable-fallback {
+  background: white;
+  .table__cell { background: var(--color-row, white); }
 }
 

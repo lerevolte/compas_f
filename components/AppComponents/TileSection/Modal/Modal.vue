@@ -544,6 +544,12 @@
             }
         } else if (props.modal.action == 'updateField') {
             if (props.modal.content.type == 'text_group') {
+                // Поля внутри группы (field.fields) больше не видны в getTextGroupOptions()
+                // — они убраны из внешних секций после drag. Добавляем их вручную в options,
+                // иначе у чипов выбранных полей не будет label (показывается пустой крестик).
+                const groupFieldOptions = Array.isArray(props.modal.content.fields)
+                    ? props.modal.content.fields.map(f => ({ label: f.title, value: f.id }))
+                    : []
                 modal.value.field = {
                     ...props.modal.content,
                     // Пересчитываем subfields из live-массива fields (учитывает
@@ -551,8 +557,8 @@
                     subfields: Array.isArray(props.modal.content.fields)
                         ? props.modal.content.fields.map(f => f.id)
                         : (props.modal.content.subfields || []),
-                    // Только свежий список из live-колонок — без дублей от stale-снимка.
-                    options: modal.value.getTextGroupOptions(),
+                    // Поля группы + доступные поля из внешних секций (без дублей).
+                    options: [...groupFieldOptions, ...modal.value.getTextGroupOptions()],
                 }
             } else if (props.modal.content.type == 'status') {
                 modal.value.field = {

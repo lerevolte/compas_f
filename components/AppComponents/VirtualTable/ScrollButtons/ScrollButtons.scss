@@ -1,20 +1,20 @@
 @use '@/assets/variables.scss' as variables;
 @use '@/assets/mixins.scss' as mixins;
 
-// scroll-buttons позиционируются absolute относительно .section-table (position:relative).
-// Это выносит их за пределы .table (overflow:auto), поэтому горизонтальный скролл
-// таблицы (в т.ч. в Safari) не сдвигает кнопки — они всегда прижаты к видимым краям.
-// pointer-events: none на контейнере, pointer-events: auto на самих кнопках.
+// scroll-buttons «парят» по середине высоты таблицы поверх строк.
+// Sticky прилипает к top: calc(50% - 40px) от scroll-контейнера (.table)
+// при вертикальном скролле. height:0 — не занимаем место в потоке.
+// width: 100% — растягивается на всю ширину .table (= .section-table,
+// т.к. max-width перенесён на section-table в VirtualTable.scss).
 .scroll-buttons {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    left: 0;
-    right: 0;
-    height: 80px;
+    position: sticky;
+    top: calc(50% - 40px);
+    height: 0;
+    width: 100%;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
+    left: 0;
     z-index: 101;
     pointer-events: none;
     overflow: visible;
