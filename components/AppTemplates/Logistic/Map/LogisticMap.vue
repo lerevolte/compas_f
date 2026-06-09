@@ -1867,7 +1867,7 @@
     onMounted(async () => {
         await applyModuleSettings();
         await initMap();
-        /* document.addEventListener('click', closeSettingsOnClick); — temporarily disabled, test modal */
+        document.addEventListener('click', closeSettingsOnClick);
     });
     onBeforeUnmount(() => {
         document.removeEventListener('click', closeSettingsOnClick);

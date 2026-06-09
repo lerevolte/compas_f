@@ -18,6 +18,7 @@
     z-index: 101;
     pointer-events: none;
     overflow: visible;
+    transform: translateZ(0); // Safari: force compositing layer above will-change:transform table cells
 }
 
 .scroll-button {

@@ -179,6 +179,10 @@
             contentEl.style.position = 'fixed';
 
             const anchorRect = headerEl.getBoundingClientRect();
+            if (!anchorRect.width && !anchorRect.height) {
+                this._close();
+                return;
+            }
             const contentRect = contentEl.getBoundingClientRect();
             if (!contentRect.width || !contentRect.height) {
                 if (retry < 10) requestAnimationFrame(() => this.applyPosition(retry + 1));

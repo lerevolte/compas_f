@@ -207,6 +207,9 @@
       initTable()
       if (!props.options?.isDisableSockets) {
         socket.value.set({slug: props.slug})
+        if (socket.value.entities[props.slug]?.table) {
+          socket.value.entities[props.slug].table = []
+        }
       }
     })
   })
