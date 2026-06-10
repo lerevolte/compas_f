@@ -845,10 +845,6 @@
     // возврате строки в исходную таблицу (отмена) восстановить её на своё место.
     let dragOriginBody = null
     let dragWasGeneral = false
-    // Контейнер, откуда началось перетаскивание: нужен, чтобы при возврате
-    // строки в источник показать плейсхолдер на её исходном месте.
-    let dragOriginContainer = null
-
     // Плейсхолдер (строка-ghost) растягивается на ширину КОНТЕНТА таблицы и в
     // горизонтально проскроленной таблице уходил влево за видимую область
     // (Safari). Прижимаем его к видимому окну текущего скролл-контейнера.
@@ -872,7 +868,6 @@
         draggableRow.value = event.item
         dragOriginBody = Array.isArray(table.value.body) ? [...table.value.body] : null
         dragWasGeneral = !draggedFromHandle
-        dragOriginContainer = event.from ?? null
         table.value.dragStart(event)
         lockTableScroll()
         positionGhostInView(event.item, event.from)
@@ -971,14 +966,18 @@
     // а не туда, куда её занесли при возврате. Включаем flex-режим и задаём
     // каждой строке order = её data-index: ghost (он же исходная строка со
     // своим data-index) автоматически встаёт в свой слот.
-    const markReturnDrop = (toEl) => {
+    const markReturnDrop = (toEl, draggedEl) => {
         clearCrossDrop()
         if (!toEl) return
         toEl.classList.add('table__body_return-drop')
-        toEl.querySelectorAll('.table__row').forEach(rowEl => {
+        const setOrder = (rowEl) => {
             const idx = Number(rowEl.getAttribute('data-index'))
             if (!Number.isNaN(idx)) rowEl.style.order = idx
-        })
+        }
+        toEl.querySelectorAll('.table__row').forEach(setOrder)
+        // Ghost в момент onMove ещё в другой таблице (querySelectorAll его не
+        // увидит) — order задаём явно, иначе он останется 0 и встанет в начало.
+        if (draggedEl) setOrder(draggedEl)
     }
     const clearReturnDrop = () => {
         if (typeof document === 'undefined') return
@@ -998,11 +997,9 @@
         // (источник или приёмник могут быть горизонтально проскролены).
         if (evt.dragged) positionGhostInView(evt.dragged, evt.to)
 
-        const isReturnToOrigin = !draggedFromHandle
-            && dragOriginContainer
-            && evt.to === dragOriginContainer
-            && evt.dragged && evt.dragged.parentNode !== evt.to
-
+        // ВАЖНО: evt.from у Sortable — всегда таблица, где драг НАЧАЛСЯ
+        // (rootEl), даже когда строка сейчас в другой таблице. Поэтому
+        // «возврат в источник» — это within-ветка с alreadyInThisTable=false.
         const isWithinSameTable = evt.from === evt.to
         if (isWithinSameTable) {
             clearCrossDrop()
@@ -1014,11 +1011,12 @@
             //    передумал) → это возврат → разрешаем (один заход, дальше он
             //    окажется «в этой таблице» и переставлять им уже нельзя).
             const alreadyInThisTable = evt.dragged && evt.dragged.parentNode === evt.to
-            if (!draggedFromHandle && alreadyInThisTable) return false
-        } else if (isReturnToOrigin) {
-            // Возврат в таблицу-источник: плейсхолдер встаёт на исходное место
-            // строки, а не в конец и не под курсор.
-            markReturnDrop(evt.to)
+            if (!draggedFromHandle) {
+                if (alreadyInThisTable) return false
+                // Возврат в таблицу-источник: плейсхолдер встаёт на исходное
+                // место строки (order по data-index), а не туда, где курсор.
+                markReturnDrop(evt.to, evt.dragged)
+            }
         } else {
             // Перетаскивание в ДРУГУЮ таблицу → строка падает в конец, плейсхолдер
             // показывается под всеми строками (cross-drop).
@@ -1034,7 +1032,6 @@
         clearCrossDrop()
         clearReturnDrop()
         clearGhostInView(event.item)
-        dragOriginContainer = null
         unlockTableScroll()
 
         // Отмена через возврат: если тащили ОБЫЧНЫМ драгом (не за ручку) и в
@@ -1085,11 +1082,37 @@
             if (!scrollEl || !fallback) return
 
             const scrollLeft = scrollEl.scrollLeft || 0
+            const visible = scrollEl.clientWidth
 
-            // Клон — это ВСЯ строка (ширина W), Sortable ставит её левым краем по
-            // rect.left (= левый край таблицы − scrollLeft), поэтому колонка 0
-            // клона оказывается там же, где колонка 0 строки. Видимая часть строки
-            // в координатах клона — это [scrollLeft, scrollLeft + clientWidth].
+            // Safari: clip-path на клоне не отрисовывается (контент клона был
+            // полностью невидим). Делаем клон «окном» шириной с видимую область:
+            // width + overflow:hidden, контент сдвигаем margin'ом первой ячейки
+            // на -scrollLeft. Фикс-колонки в Safari несут inline
+            // translate3d(scrollLeft) (см. Header.checkStickyCells) — после
+            // сдвига потока они сами встают в начало окна, как в живой таблице.
+            // Сам клон сдвигаем margin-left на +scrollLeft: Sortable ставит его
+            // по rect.left строки (левый край КОНТЕНТА), а окно должно совпадать
+            // с видимым краем таблицы.
+            const isSafari = typeof navigator !== 'undefined'
+                && /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
+
+            if (isSafari) {
+                fallback.style.width = `${visible}px`
+                fallback.style.minWidth = `${visible}px`
+                fallback.style.maxWidth = `${visible}px`
+                fallback.style.overflow = 'hidden'
+                if (scrollLeft > 0) {
+                    fallback.style.marginLeft = `${scrollLeft}px`
+                    const firstCell = fallback.querySelector('.table__cell:not(.table__cell_hide)')
+                    if (firstCell) firstCell.style.marginLeft = `-${scrollLeft}px`
+                }
+                return
+            }
+
+            // Chrome и остальные: клон — ВСЯ строка (ширина W), Sortable ставит её
+            // левым краем по rect.left (= левый край таблицы − scrollLeft), поэтому
+            // колонка 0 клона оказывается там же, где колонка 0 строки. Видимая
+            // часть строки в координатах клона — [scrollLeft, scrollLeft + clientWidth].
             // Обрезаем клон по этому окну через clip-path: позицию и transform
             // (которым Sortable водит клон за курсором) НЕ трогаем, фикс-колонки
             // со своим sticky-transform'ом сами попадают в начало окна.
@@ -1098,7 +1121,6 @@
             // таблицы-источника. Ghost должен быть на ширину видимой части
             // таблицы и показывать только видимые столбцы.
             const fullWidth = Math.max(fallback.scrollWidth, fallback.offsetWidth)
-            const visible = scrollEl.clientWidth
             const rightInset = Math.max(0, fullWidth - scrollLeft - visible)
             if (scrollLeft <= 0 && rightInset <= 0) return // строка уже не шире видимой области
             const clip = `inset(0px ${rightInset}px 0px ${scrollLeft}px)`
