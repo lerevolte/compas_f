@@ -611,19 +611,17 @@
   order: 999 !important;
 }
 
-// ── Возврат строки в таблицу-ИСТОЧНИК ──
-// Плейсхолдер встаёт на исходное место строки (откуда её взяли), а не туда,
-// куда строку занесли при возврате. Порядок задаётся inline order=data-index
-// на каждой строке (см. Body.vue markReturnDrop); ghost — это исходная строка
-// со своим data-index, поэтому автоматически попадает в свой слот.
-.table__body_return-drop {
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-.table__body_return-drop .table__row {
-  position: relative !important;
-  top: auto !important;
+// ── Плейсхолдер при горизонтальном скролле ──
+// Прижимаем строку-ghost к видимому окну таблицы: ширина = видимая область,
+// сдвиг = scrollLeft. Значения задаёт JS на контейнере (.table__body, см.
+// Body.vue positionGhostInView) — на самой строке их выставлять нельзя:
+// строковый :style-биндинг строк затирает inline-стили при любом ре-рендере.
+.table__body[data-ghost-fit] .table__row.draggable-ghost {
+  width: var(--ghost-width, 100%) !important;
+  min-width: var(--ghost-width, 100%) !important;
+  max-width: var(--ghost-width, 100%) !important;
+  margin-left: var(--ghost-left, 0px) !important;
+  overflow: hidden;
 }
 
 // Safari: forceFallback клонирует строку в document.body, где CSS-переменная

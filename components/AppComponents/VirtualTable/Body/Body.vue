@@ -846,31 +846,43 @@
     let dragOriginBody = null
     let dragWasGeneral = false
     // Плейсхолдер (строка-ghost) растягивается на ширину КОНТЕНТА таблицы и в
-    // горизонтально проскроленной таблице уходил влево за видимую область
-    // (Safari). Прижимаем его к видимому окну текущего скролл-контейнера.
-    const positionGhostInView = (ghostEl, containerEl) => {
+    // горизонтально проскроленной таблице уходил влево за видимую область.
+    // Геометрию задаём CSS-переменными на КОНТЕЙНЕРЕ (.table__body), а не
+    // inline-стилями на самой строке: у строк строковый :style-биндинг, и
+    // любой ре-рендер Vue (например, переключение в режим драга на старте)
+    // перезаписывает весь style-атрибут, стирая наши значения. Контейнер
+    // :style-биндинга не имеет — переменные переживают любые перерисовки.
+    // Правило в VirtualTable.scss применяет их к .draggable-ghost внутри.
+    const positionGhostInView = (containerEl) => {
         const scrollEl = containerEl?.closest?.('.table')
-        if (!ghostEl || !scrollEl) return
-        ghostEl.style.width = `${scrollEl.clientWidth}px`
-        ghostEl.style.minWidth = `${scrollEl.clientWidth}px`
-        ghostEl.style.maxWidth = `${scrollEl.clientWidth}px`
-        ghostEl.style.marginLeft = `${scrollEl.scrollLeft}px`
-        ghostEl.style.overflow = 'hidden'
+        if (!containerEl || !scrollEl) return
+        containerEl.setAttribute('data-ghost-fit', '')
+        containerEl.style.setProperty('--ghost-width', `${scrollEl.clientWidth}px`)
+        containerEl.style.setProperty('--ghost-left', `${scrollEl.scrollLeft}px`)
     }
-    const clearGhostInView = (ghostEl) => {
-        if (!ghostEl) return
-        for (const prop of ['width', 'min-width', 'max-width', 'margin-left', 'overflow', 'order']) {
-            ghostEl.style.removeProperty(prop)
-        }
+    const clearGhostFit = () => {
+        if (typeof document === 'undefined') return
+        document.querySelectorAll('[data-ghost-fit]').forEach(el => {
+            el.removeAttribute('data-ghost-fit')
+            el.style.removeProperty('--ghost-width')
+            el.style.removeProperty('--ghost-left')
+        })
     }
+
+    // Исходный DOM-слот перетаскиваемой строки: при возврате в таблицу-источник
+    // плейсхолдер возвращается на это место (откуда строку взяли).
+    let dragOriginParent = null
+    let dragOriginNextEl = null
 
     const handleDragStart = (event) => {
         draggableRow.value = event.item
         dragOriginBody = Array.isArray(table.value.body) ? [...table.value.body] : null
         dragWasGeneral = !draggedFromHandle
+        dragOriginParent = event.from ?? null
+        dragOriginNextEl = event.item?.nextElementSibling ?? null
         table.value.dragStart(event)
         lockTableScroll()
-        positionGhostInView(event.item, event.from)
+        positionGhostInView(event.from)
         adjustDragGhostScroll()
     }
 
@@ -962,28 +974,22 @@
     }
 
     // ── Возврат строки в таблицу-источник ──
-    // Плейсхолдер должен вставать на ИСХОДНОЕ место строки (откуда её взяли),
-    // а не туда, куда её занесли при возврате. Включаем flex-режим и задаём
-    // каждой строке order = её data-index: ghost (он же исходная строка со
-    // своим data-index) автоматически встаёт в свой слот.
-    const markReturnDrop = (toEl, draggedEl) => {
-        clearCrossDrop()
-        if (!toEl) return
-        toEl.classList.add('table__body_return-drop')
-        const setOrder = (rowEl) => {
-            const idx = Number(rowEl.getAttribute('data-index'))
-            if (!Number.isNaN(idx)) rowEl.style.order = idx
-        }
-        toEl.querySelectorAll('.table__row').forEach(setOrder)
-        // Ghost в момент onMove ещё в другой таблице (querySelectorAll его не
-        // увидит) — order задаём явно, иначе он останется 0 и встанет в начало.
-        if (draggedEl) setOrder(draggedEl)
-    }
-    const clearReturnDrop = () => {
-        if (typeof document === 'undefined') return
-        document.querySelectorAll('.table__body_return-drop').forEach(b => {
-            b.classList.remove('table__body_return-drop')
-            b.querySelectorAll('.table__row').forEach(r => r.style.removeProperty('order'))
+    // Sortable вставляет вернувшуюся строку под курсор; следующим кадром
+    // физически возвращаем плейсхолдер на исходный DOM-слот (откуда строку
+    // взяли). Sortable отслеживает dragEl по ссылке, а не по позиции, поэтому
+    // ручное перемещение безопасно — финальный порядок при дропе и так
+    // восстанавливает rows-setter/dragEnd по снимку dragOriginBody.
+    const restoreGhostToOrigin = (draggedEl) => {
+        requestAnimationFrame(() => {
+            if (!dragOriginParent || !draggedEl) return
+            if (draggedEl.parentNode !== dragOriginParent) return
+            if (dragOriginNextEl && dragOriginNextEl.parentNode === dragOriginParent) {
+                if (draggedEl.nextElementSibling !== dragOriginNextEl) {
+                    dragOriginParent.insertBefore(draggedEl, dragOriginNextEl)
+                }
+            } else if (dragOriginParent.lastElementChild !== draggedEl) {
+                dragOriginParent.appendChild(draggedEl)
+            }
         })
     }
 
@@ -995,7 +1001,7 @@
 
         // Прижимаем плейсхолдер к видимой области таблицы, над которой курсор
         // (источник или приёмник могут быть горизонтально проскролены).
-        if (evt.dragged) positionGhostInView(evt.dragged, evt.to)
+        positionGhostInView(evt.to)
 
         // ВАЖНО: evt.from у Sortable — всегда таблица, где драг НАЧАЛСЯ
         // (rootEl), даже когда строка сейчас в другой таблице. Поэтому
@@ -1013,14 +1019,13 @@
             const alreadyInThisTable = evt.dragged && evt.dragged.parentNode === evt.to
             if (!draggedFromHandle) {
                 if (alreadyInThisTable) return false
-                // Возврат в таблицу-источник: плейсхолдер встаёт на исходное
-                // место строки (order по data-index), а не туда, где курсор.
-                markReturnDrop(evt.to, evt.dragged)
+                // Возврат в таблицу-источник: после вставки Sortable'ом
+                // возвращаем плейсхолдер на исходное место строки.
+                restoreGhostToOrigin(evt.dragged)
             }
         } else {
             // Перетаскивание в ДРУГУЮ таблицу → строка падает в конец, плейсхолдер
             // показывается под всеми строками (cross-drop).
-            clearReturnDrop()
             markCrossDrop(evt.to)
         }
         return true;
@@ -1030,8 +1035,9 @@
         // Не нужно вручную пересчитывать позиции - виртуализатор сделает это автоматически
         // через changeDrag -> initVirtualizer() который уже вызывается при изменении порядка
         clearCrossDrop()
-        clearReturnDrop()
-        clearGhostInView(event.item)
+        clearGhostFit()
+        dragOriginParent = null
+        dragOriginNextEl = null
         unlockTableScroll()
 
         // Отмена через возврат: если тащили ОБЫЧНЫМ драгом (не за ручку) и в
