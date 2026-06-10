@@ -176,7 +176,12 @@
             const tableEl = tableRef?.value
             if (!tableEl || !Array.isArray(table?.value?.header)) return
 
-            const containerWidth = tableEl.clientWidth - 15 || 0
+            // clientWidth уже не включает скроллбар (он теперь стилизованный,
+            // 4px и виден постоянно). Старый запас -15px под нативный скроллбар
+            // оставлял видимую полосу: колонки не растягивались до края таблицы.
+            // -2px — только страховка от округлений, чтобы не появлялся
+            // горизонтальный скролл на ровном месте.
+            const containerWidth = tableEl.clientWidth - 2 || 0
             if (containerWidth <= 0) return
 
             const currentWidthsPx = this.visibleHeader.map(col => {
