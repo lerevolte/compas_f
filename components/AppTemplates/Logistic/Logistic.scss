@@ -147,7 +147,7 @@
     // max-width ограничение перенесено на section-table в VirtualTable.scss.
     // Здесь переопределяем section-table для логистики (двух-колоночная сетка).
     .section-table {
-        max-width: calc(50vw);
+        max-width: calc(50vw - 141px);
 
         @media (max-width: 1300px) {
             max-width: calc(100vw - 282px);
@@ -295,6 +295,10 @@
     .table {
         flex: 1 1 auto;
         min-height: 0;
+        // Драг строки начинается с любой точки (dragFilter в Logistic.vue не
+        // исключает текстовые ячейки), поэтому выделение текста отключено.
+        // Скопировать значение: клик по ячейке + Ctrl+C (isCellCopy).
+        @include mixins.userSelect(none);
     }
     .table__body {
         flex: 1 1 auto;

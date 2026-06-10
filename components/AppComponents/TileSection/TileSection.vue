@@ -379,10 +379,14 @@
                                 Настроить
                             </div>
                             <div class="popup__option popup__option_checkbox" v-if="field.type != 'text_group'">
-                                <AppCheckbox 
+                                <AppCheckbox
                                     v-model="field.visible_always"
                                     :options="{
                                         title: 'Показывать всегда'
+                                    }"
+                                    @update:model-value="value => {
+                                        field.visible_always = value;
+                                        fieldObject.changeVisibleAlways({field});
                                     }"
                                 />
                             </div>

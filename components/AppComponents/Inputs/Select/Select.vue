@@ -28,7 +28,7 @@
                     }"
                     :model-value="select.state.search"
                     @update:modelValue="(value) => { select.state.search = value; select.filterOptions(value); }"
-                    @keyup.enter="() => { const v = select.state.search; emit('searchEnter', v); select.state.search = ''; select.filterOptions(''); }"
+                    @keyup.enter="() => { const v = select.state.search; emit('searchEnter', v); select.state.search = ''; select.filterOptions(''); select.state.isOpen = false; }"
                 />
     
                 <div class="select__values" ref="selectValuesRef" v-if="props.options.multiple">

@@ -82,6 +82,21 @@
           </p>
       </AppModalWarning>
   </teleport>
+  <teleport to="#menu__overlay" v-if="table.validateBuffer?.state">
+      <AppModalWarning
+          :options="{
+              title: 'Необходимо заполнить обязательные поля',
+              action: 'close',
+              actionTitle: 'Понятно',
+              template: 'slot'
+          }"
+          @close="table.validateBuffer.state = false"
+      >
+          <p class="warning__text" v-for="error in table.validateBuffer.errors" :key="error.id">
+              Объект ID {{ error.id }} — заполните: {{ error.fields.join(', ') }}
+          </p>
+      </AppModalWarning>
+  </teleport>
   <teleport to="#menu__overlay" v-if="table.downloadExcelBuffer.state">
       <AppModalWarning 
           :options="{

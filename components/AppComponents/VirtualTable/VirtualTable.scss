@@ -20,6 +20,13 @@
   display: flex;
   flex-direction: column;
   max-height: 100%;
+  // Собственный stacking context: без него sticky-ячейки и строки со своими
+  // z-index (10–100) рисуются ПОВЕРХ полос прокрутки контейнера, и скроллбары
+  // «прячутся за контентом». Со stacking context скроллбары рисуются последними,
+  // поверх всех детей.
+  isolation: isolate;
+  // Постоянно видимый скроллбар (overlay-скроллбар macOS автоскрывается).
+  @include mixins.scrollBar();
   // Safari: contain + will-change ломают position: sticky на ячейках.
   // contain: layout|paint создаёт containing block для position:fixed —
   // в результате action-попап в строке клипается границами таблицы.
@@ -177,6 +184,17 @@
 
   &.table__cell_active {
     z-index: 30;
+  }
+
+  // Выделение ячейки кликом для копирования (таблицы с isCellCopy):
+  // рамка — «ячейка выбрана», заливка — «значение скопировано» (Ctrl+C).
+  &.table__cell_copy-select {
+    outline: 1px solid #1253a2;
+    outline-offset: -1px;
+  }
+
+  &.table__cell_copied {
+    background: #d9e4f0 !important;
   }
 
   &.table__cell_loading {

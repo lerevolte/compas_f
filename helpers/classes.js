@@ -440,6 +440,10 @@ export class Table {
             state: false,
             list: []
         }
+        this.validateBuffer = {
+            state: false,
+            errors: []
+        }
         this.downloadExcelBuffer = {
             state: false,
             loading: false,
@@ -681,8 +685,54 @@ export class Table {
         }
     }
 
+    // Пустое ли значение ячейки (формы значений — как в useCellModel)
+    isEmptyCell(cell, column) {
+        if (cell == null) return true
+        if (column.type == 'address') return !(cell.text ?? cell.value ?? null)
+        if (Array.isArray(cell)) return cell.filter(v => v != null && v !== '').length == 0
+        if (typeof cell == 'object') {
+            const value = cell.value
+            if (value == null) return true
+            if (Array.isArray(value)) return value.filter(v => v != null && v !== '').length == 0
+            return String(value).trim() === ''
+        }
+        return String(cell).trim() === ''
+    }
+
+    // Проверка обязательных полей у редактируемых строк перед массовым
+    // сохранением — как в деталке (Section.save → validator.check)
+    validateRequired(rows) {
+        const serviceKeys = ['isChoose', 'actions', 'clicked', 'iconDrag', 'iconDelete']
+        const requiredColumns = this.header.filter(column => column.required && !serviceKeys.includes(column.key))
+        if (requiredColumns.length == 0) return []
+
+        const errors = []
+        for (let row of rows) {
+            const emptyFields = requiredColumns.filter(column => this.isEmptyCell(row[column.key], column))
+            if (emptyFields.length > 0) {
+                errors.push({
+                    id: row.id,
+                    fields: emptyFields.map(column => column.title)
+                })
+            }
+        }
+        return errors
+    }
+
     // Сохранение
     async save() {
+        // На каждый объект с пустыми обязательными полями — предупреждение,
+        // сохранение блокируем, режим редактирования не сбрасываем.
+        if (this.slug != 'products') {
+            const errors = this.validateRequired(this.body.filter(row => row.edit))
+            if (errors.length > 0) {
+                this.validateBuffer = {
+                    state: true,
+                    errors
+                }
+                return
+            }
+        }
         try {
             this.saving = true
             let rawRequest = this.body.filter(row => row.edit)

@@ -67,6 +67,7 @@
                             isDisablePull: true,
                             isDisablePut: true,
                             isDisableSort: true,
+                            isCellCopy: true,
                             updatingCount: logistic.routes.updatingCount
                         }"
                         @saveTable="data => logistic.updateRoute(data)"
@@ -118,6 +119,12 @@
                                 isDisablePull: false,
                                 isDisablePut: false,
                                 draggableTarget: '.table__row',
+                                // Драг с любой точки строки: дефолтный dragFilter
+                                // исключает .table__cell-content (текст ячеек),
+                                // из-за чего тянуть можно было только за «пустые»
+                                // места строки. Оставляем фильтр только на инпуты.
+                                dragFilter: 'input, textarea, select, [contenteditable]',
+                                isCellCopy: true,
                                 group: 'logistic_tasks',
                                 isHaveFilter: false,
                                 isPermanentEdit: false,
@@ -166,6 +173,8 @@
                                 overscan: 5,
                                 isDraggable: true,
                                 draggableTarget: '.table__row',
+                                dragFilter: 'input, textarea, select, [contenteditable]',
+                                isCellCopy: true,
                                 group: 'addresses_dnd',
                                 isDisablePut: true,
                                 isDisablePull: true,
@@ -207,6 +216,8 @@
                             title: 'Задачи в машине',
                             isDraggable: true,
                             draggableTarget: '.table__row',
+                            dragFilter: 'input, textarea, select, [contenteditable]',
+                            isCellCopy: true,
                             group: 'logistic_tasks',
                             isHaveQuery: true,
                             isCheckClicked: true,

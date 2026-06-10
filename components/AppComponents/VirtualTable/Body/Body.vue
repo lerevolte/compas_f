@@ -565,8 +565,12 @@
         setActiveCell(event, rowIndex) {
             if (!table.value.body[rowIndex]) return
 
-            if (!table.value.body[rowIndex].edit && !event.target.closest('.show-more')) return
-            
+            // isCellCopy: вне режима редактирования клик выделяет ячейку,
+            // её значение можно скопировать по Ctrl+C (см. onCopyKeydown).
+            const isCopySelect = table.value.options?.isCellCopy && !table.value.body[rowIndex].edit
+
+            if (!table.value.body[rowIndex].edit && !event.target.closest('.show-more') && !isCopySelect) return
+
             // Снимаем класс у предыдущей
             if (this.activeCell) {
                 if (this.activeCell.closest('.table__row')) {
@@ -575,11 +579,27 @@
                 this.activeCell.classList.remove('table__cell_active')
             }
 
+            // copy-select глобально один на страницу: несколько таблиц логистики
+            // имеют собственные инстансы Cell, чистим выделение через DOM.
+            if (typeof document !== 'undefined') {
+                document.querySelectorAll('.table__cell_copy-select').forEach(el => el.classList.remove('table__cell_copy-select'))
+            }
+
             // Добавляем на новую
             const cellEl = event.currentTarget
             cellEl.classList.add('table__cell_active')
+            if (isCopySelect && this.isCopyableColumn(cellEl)) {
+                cellEl.classList.add('table__cell_copy-select')
+            }
             cellEl.closest('.table__row').classList.add('table__row_active')
             this.activeCell = cellEl
+        }
+
+        // Колонки, значение которых логично копировать (не чекбоксы/действия)
+        isCopyableColumn(cellEl) {
+            const key = cellEl?.getAttribute?.('data-column-key')
+            const column = table.value.header.find(c => c.key == key)
+            return !!column && ['text', 'number', 'date', 'address', 'select_dropdown', 'status', 'json', 'relation'].includes(column.type)
         }
 
         checkEditting(row, prevValue) {
@@ -846,6 +866,44 @@
     onBeforeUnmount(() => {
         if (tableRef?.value) tableRef.value.removeEventListener('pointerdown', onTablePointerDown, true)
         unlockTableScroll()
+    })
+
+    // Ctrl+C / Cmd+C копирует значение выделенной кликом ячейки (isCellCopy).
+    // Выделение текста в этих таблицах отключено ради drag&drop со всей строки,
+    // поэтому копирование работает через выделение ячейки.
+    const onCopyKeydown = (event) => {
+        if (!table.value.options?.isCellCopy) return
+        if (!(event.ctrlKey || event.metaKey)) return
+        // 'с'/'С' — той же клавишей в русской раскладке
+        if (!['c', 'C', 'с', 'С'].includes(event.key)) return
+
+        const selected = typeof document !== 'undefined' ? document.querySelector('.table__cell_copy-select') : null
+        // Обрабатывает только таблица-владелец выделенной ячейки
+        if (!selected || !tableRef?.value || !tableRef.value.contains(selected)) return
+
+        const target = event.target
+        if (target && (target.tagName == 'INPUT' || target.tagName == 'TEXTAREA' || target.isContentEditable)) return
+        // Если пользователь выделил текст где-то ещё — не перехватываем
+        if (window.getSelection && window.getSelection().toString()) return
+
+        const content = selected.querySelector('.table__cell-content') ?? selected
+        const text = (content.innerText ?? '').trim()
+        if (!text) return
+
+        common.copyText(text)
+        selected.classList.add('table__cell_copied')
+        setTimeout(() => selected.classList.remove('table__cell_copied'), 600)
+    }
+
+    onMounted(() => {
+        if (typeof document !== 'undefined' && table.value.options?.isCellCopy) {
+            document.addEventListener('keydown', onCopyKeydown)
+        }
+    })
+    onBeforeUnmount(() => {
+        if (typeof document !== 'undefined') {
+            document.removeEventListener('keydown', onCopyKeydown)
+        }
     })
 
     // Блокировка скролла таблицы на время перетаскивания БЕЗ сброса позиции:
