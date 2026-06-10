@@ -85,16 +85,16 @@
   <teleport to="#menu__overlay" v-if="table.validateBuffer?.state">
       <AppModalWarning
           :options="{
-              title: 'Необходимо заполнить обязательные поля',
-              action: 'close',
-              actionTitle: 'Понятно',
+              title: 'Обязательные поля',
+              action: 'saveValidate',
+              actionTitle: 'Сохранить',
               template: 'slot'
           }"
+          :loading="table.saving"
+          @saveValidate="() => { table.validateBuffer.state = false; table.save(); }"
           @close="table.validateBuffer.state = false"
       >
-          <p class="warning__text" v-for="error in table.validateBuffer.errors" :key="error.id">
-              Объект ID {{ error.id }} — заполните: {{ error.fields.join(', ') }}
-          </p>
+          <TableValidate />
       </AppModalWarning>
   </teleport>
   <teleport to="#menu__overlay" v-if="table.downloadExcelBuffer.state">
@@ -134,6 +134,7 @@
   import TableFooter from '@AppComponents/VirtualTable/Footer/Footer.vue'
   import MassAction from '@AppComponents/MassAction/MassAction.vue'
   import TableCalc from './Calc/Calc.vue'
+  import TableValidate from './Validate/Validate.vue'
   import ScrollButtons from '@AppComponents/VirtualTable/ScrollButtons/ScrollButtons.vue'
   
   const props = defineProps({

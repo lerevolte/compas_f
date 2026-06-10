@@ -325,6 +325,9 @@
     padding: 0 15px;
     min-height: 40px;
     position: relative;
+    // flex-child секции: не давать контенту распирать колонку по ширине
+    min-width: 0;
+    max-width: 100%;
 
     &.field_hidden {
         display: none;
@@ -378,7 +381,10 @@
 
     .blank {
         .blank__text {
-            max-width: max-content;
+            // max-content, но не шире поля: длинная строка без пробелов
+            // переносится, а не растягивает секцию и страницу
+            max-width: 100%;
+            overflow-wrap: anywhere;
         }
     }
 

@@ -30,7 +30,8 @@ export default {
         delete_group: '/sidebar/set/all'
     },
     settings: {
-        get_account: '/settings/account'
+        get_account: '/settings/account',
+        user: '/settings/user'
     },
     table: {
         get: '/objects/${slug}/compose',

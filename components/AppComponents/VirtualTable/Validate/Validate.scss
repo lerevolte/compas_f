@@ -1,0 +1,23 @@
+.table-validate {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-height: 60vh;
+    overflow: auto;
+}
+
+.table-validate__row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-bottom: 15px;
+
+    &:not(:last-child) {
+        border-bottom: 1px solid #eeeff1;
+    }
+}
+
+.table-validate__id {
+    font-size: 13px;
+    color: #8f8f8f;
+}

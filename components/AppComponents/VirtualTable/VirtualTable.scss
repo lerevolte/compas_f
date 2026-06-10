@@ -10,7 +10,7 @@
   position: relative;
   // max-width перенесён сюда из .table, чтобы .table (и scroll-кнопки в нём)
   // занимали полную ширину section-table, а не останавливались раньше.
-  max-width: calc(100vw - 282px);
+  max-width: calc(100vw - 264px);
 }
 
 .table {
@@ -609,6 +609,21 @@
 
 .table__body_cross-drop .table__row.draggable-ghost {
   order: 999 !important;
+}
+
+// ── Возврат строки в таблицу-ИСТОЧНИК ──
+// Плейсхолдер встаёт на исходное место строки (откуда её взяли), а не туда,
+// куда строку занесли при возврате. Порядок задаётся inline order=data-index
+// на каждой строке (см. Body.vue markReturnDrop); ghost — это исходная строка
+// со своим data-index, поэтому автоматически попадает в свой слот.
+.table__body_return-drop {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.table__body_return-drop .table__row {
+  position: relative !important;
+  top: auto !important;
 }
 
 // Safari: forceFallback клонирует строку в document.body, где CSS-переменная

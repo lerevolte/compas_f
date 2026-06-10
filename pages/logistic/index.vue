@@ -158,15 +158,43 @@
 			this.activeTaskId = null
 			this.activeChart = null
 			this.charts = []
+			// Последняя выбранная пользователем дата: восстанавливается, когда
+			// в URL нет active-date (другие действия на странице перезаписывают
+			// query без этого параметра, и при F5 дата раньше слетала).
+			this.savedDate = null
 		}
 		async getStatistics() {
 			const response = await api.callMethod('GET', routes.logistic.getStatistics)
 			this.charts = response.data
 			this.activeChart = this.charts[0]
 		}
+		// Восстановление сохранённой даты: localStorage мгновенно, затем
+		// авторитетное значение из БД пользователя (settings/user).
+		async loadSavedDate() {
+			try {
+				const local = localStorage.getItem('logistic-active-date')
+				if (local) this.savedDate = local
+			} catch (e) {}
+
+			try {
+				const response = await api.callMethod('GET', routes.settings.user)
+				if (response.data?.logistic_active_date) {
+					this.savedDate = response.data.logistic_active_date
+				}
+			} catch (e) {}
+
+			// Применяем только если дату не задал URL (прямая ссылка важнее)
+			const query = common.getQueryUrl()
+			if (!(query && query['active-date']) && this.savedDate) {
+				this.activeDate = this.savedDate
+				this.set()
+			}
+		}
 		get() {
 			const query = common.getQueryUrl()
-			this.activeDate = query && query['active-date'] ? format(new Date(query['active-date']), 'yyyy-MM-dd') : new Date()
+			this.activeDate = query && query['active-date']
+				? format(new Date(query['active-date']), 'yyyy-MM-dd')
+				: (this.savedDate ?? new Date())
 			// route_id и task_id приходят из поиска по задачам (см. onTaskSearchSelected)
 			// либо при прямой ссылке. Маршрут оборачиваем в формат, который понимает
 			// LogisticTemplate.updateActiveRoute (использует activeRoute.value[0]).
@@ -176,7 +204,17 @@
 			this.activeTaskId = query && query['task_id'] ? Number(query['task_id']) : null
 		}
 		set() {
-			common.setQueryUrl(`?active-date=${format(this.activeDate, 'yyyy-MM-dd')}`)
+			// activeDate бывает и строкой 'yyyy-MM-dd' (из query/savedDate), и Date
+			const date = typeof this.activeDate === 'string'
+				? this.activeDate
+				: format(this.activeDate, 'yyyy-MM-dd')
+			common.setQueryUrl(`?active-date=${date}`)
+			this.savedDate = date
+			try { localStorage.setItem('logistic-active-date', date) } catch (e) {}
+			// Запоминаем за пользователем в БД (fire-and-forget)
+			api.callMethod('PUT', routes.settings.user, {
+				settings: { logistic_active_date: date }
+			}).catch(() => {})
 		}
 	}
 
@@ -351,6 +389,7 @@
 
 	onMounted(() => {
 		logisticPage.value.get()
+		logisticPage.value.loadSavedDate()
         useHead({
 			title: `Логистика | Compas.pro`
 		})

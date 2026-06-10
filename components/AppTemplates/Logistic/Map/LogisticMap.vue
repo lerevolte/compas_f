@@ -754,6 +754,50 @@
             }).filter(t => t.latLng && t.arrivalTime);
         };
 
+        // Запрос к OSRM: сначала относительный URL, при неудаче — продакшен напрямую
+        const fetchOsrm = async (path) => {
+            try {
+                const res = await fetch(path);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return await res.json();
+            } catch (e) {
+                const res = await fetch(`https://opt6.compas.pro${path}`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return await res.json();
+            }
+        };
+
+        // Посегментное построение маршрута. Если OSRM не может построить весь
+        // маршрут целиком (точка вне загруженного региона), строим попарно:
+        // доступные сегменты выводятся ДОРОГОЙ, и только сегменты, которые
+        // OSRM построить не может, рисуются прямой линией.
+        const routeBySegments = async (wps) => {
+            const segments = await Promise.all(wps.slice(0, -1).map(async (wp, i) => {
+                const next = wps[i + 1];
+                try {
+                    const url = `/route/v1/driving/${wp.lng},${wp.lat};${next.lng},${next.lat}?overview=full&alternatives=false&steps=false&geometries=geojson`;
+                    const resp = await fetchOsrm(url);
+                    const geom = resp?.routes?.[0]?.geometry;
+                    if (resp.code === 'Ok' && geom && Array.isArray(geom.coordinates) && geom.coordinates.length > 1) {
+                        const seg = geom.coordinates.map(c => [c[1], c[0]]);
+                        // Сегмент должен реально доходить до своих концов,
+                        // иначе считаем его непостроенным
+                        const startDist = L.latLng(seg[0][0], seg[0][1]).distanceTo(wp);
+                        const endDist = L.latLng(seg[seg.length - 1][0], seg[seg.length - 1][1]).distanceTo(next);
+                        if (startDist < 5000 && endDist < 5000) {
+                            // Доводим концы сегмента точно до маркеров
+                            if (startDist > 50) seg.unshift([wp.lat, wp.lng]);
+                            if (endDist > 50) seg.push([next.lat, next.lng]);
+                            return seg;
+                        }
+                    }
+                } catch (e) {}
+                console.warn('🟠 OSRM segment', i, 'unavailable — straight line for this segment only');
+                return [[wp.lat, wp.lng], [next.lat, next.lng]];
+            }));
+            return segments.flat();
+        };
+
         // Try to fetch route from OSRM
 
         try {
@@ -854,8 +898,9 @@
             // Если хоть одна точка далеко от всей геометрии — значит маршрут
             // оборван в середине (частая причина — данные OSRM не покрывают
             // регион целиком, и геометрия обрывается на границе покрытия).
-            // В этом случае строим непрерывную прямую через все точки, чтобы
-            // линия доходила до каждого маркера, а не обрывалась посередине.
+            // Раньше весь маршрут заменялся прямыми линиями; теперь перестраиваем
+            // посегментно — доступные участки остаются дорогой, прямая только
+            // там, где OSRM реально не может построить.
             if (routeCoordinates.length && waypoints.length > 1) {
                 let maxGap = 0;
                 for (const wp of waypoints) {
@@ -868,8 +913,8 @@
                     if (minDist > maxGap) maxGap = minDist;
                 }
                 if (maxGap > 5000) {
-                    console.warn('🟠 OSRM route does not cover all waypoints (max gap', Math.round(maxGap), 'm) — using straight-line path');
-                    routeCoordinates = waypoints.map(wp => [wp.lat, wp.lng]);
+                    console.warn('🟠 OSRM route does not cover all waypoints (max gap', Math.round(maxGap), 'm) — rebuilding segment-by-segment');
+                    routeCoordinates = await routeBySegments(waypoints);
                 }
             }
 
@@ -924,19 +969,30 @@
             drawPlannedRoute();
             createTaskMarkers(tasksWithTime);
         } catch (e) {
-            // ★ Fallback: no routing available, draw straight lines
-            console.log('🟠 Routing failed, using straight-line fallback:', e.message);
+            // ★ Fallback: маршрут целиком не построился (например, точка вне
+            // загруженного региона OSRM). Строим посегментно — доступные
+            // участки выводятся дорогой, прямые линии только на участках,
+            // которые роутинг построить не может.
+            console.log('🟠 Full routing failed, building segment-by-segment:', e.message);
 
             const validTasks = buildTasksWithTime(null);
             adjustPlannedTimes(validTasks, routeData.service_stops || []);
 
-            // ★ Build coordinates as straight lines between waypoints
-            const straightCoords = waypoints.map(wp => L.latLng(wp.lat, wp.lng));
+            let fallbackCoords = null;
+            try {
+                fallbackCoords = await routeBySegments(waypoints);
+            } catch (segErr) {
+                console.log('🟠 Segment routing failed too:', segErr.message);
+            }
+
+            const coords = fallbackCoords && fallbackCoords.length > 1
+                ? fallbackCoords.map(c => L.latLng(c[0], c[1]))
+                : waypoints.map(wp => L.latLng(wp.lat, wp.lng));
 
             processedRoute = {
                 ...routeData,
                 tasks: validTasks,
-                coordinates: straightCoords,
+                coordinates: coords,
                 waypointCoords: waypoints
             };
 

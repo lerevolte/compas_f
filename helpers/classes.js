@@ -712,6 +712,9 @@ export class Table {
             if (emptyFields.length > 0) {
                 errors.push({
                     id: row.id,
+                    // колонки целиком — модалка валидации рендерит по ним
+                    // редактируемые поля (как в деталке)
+                    columns: emptyFields,
                     fields: emptyFields.map(column => column.title)
                 })
             }

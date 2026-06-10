@@ -5,10 +5,15 @@
     gap: 5px;
     display: flex;
     flex-direction: column;
-    
+    // flex-child: без min-width контент (длинная строка) распирает родителя
+    min-width: 0;
+
     &.blank_pre {
         .blank__text {
-            white-space: pre;
+            // pre-wrap сохраняет переносы/пробелы, но переносит длинные строки —
+            // длинный текст в одну строку больше не растягивает секцию/страницу
+            white-space: pre-wrap;
+            word-break: break-word;
             @include mixins.textVerticalHidden(20);
         }
     }
