@@ -102,9 +102,16 @@
                 setTimeout(() => {
                     this._snapToBottomMargin()
                     this._compactSpacerToFinal()
+                    // Эмитим высоту ТОЛЬКО после финальной корректировки.
+                    // Раньше emit уходил сразу на mouseup: родитель записывал
+                    // ещё не урезанную snap'ом высоту в section.height, Vue
+                    // перерендеривал секцию с этим значением поверх
+                    // скорректированного — секция прижималась к нижнему краю
+                    // экрана и оставалась без отступа BOTTOM_MARGIN.
+                    if (sectionRef.value) {
+                        emit('endResize', sectionRef.value.offsetHeight)
+                    }
                 }, 80)
-
-                emit('endResize', sectionRef.value.offsetHeight)
             }
         }
 

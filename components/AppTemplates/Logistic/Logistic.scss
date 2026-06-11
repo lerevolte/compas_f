@@ -66,6 +66,12 @@
 
         .section-table__top {
             border: none;
+            // Свёрнутая до 45px секция: шапка занимает ровно её высоту,
+            // вертикальные паддинги убираем — контент (заголовок) центрируется
+            // по вертикали флексом самой шапки (align-items: center в Top.scss).
+            height: 45px;
+            padding-top: 0;
+            padding-bottom: 0;
 
             .section-table__top-group:not(.section-table__top-title) {
                 display: none;
@@ -219,18 +225,25 @@
         left: auto !important;
         opacity: 1 !important;
         margin-left: 5px;
+        // Сбрасываем 48px-зону центрирования из статичного состояния:
+        // в 45px-полоске клона иконку центрирует флекс самого .resize.
+        height: auto !important;
     }
 
     .section-table {
         margin-bottom: 0 !important;
         height: 45px !important;
         display: flex;
-        align-items: center;
+        // .section-table — flex-КОЛОНКА (VirtualTable.scss), поэтому
+        // align-items: center центрировал шапку по ГОРИЗОНТАЛИ. Вертикальное
+        // центрирование контента даёт сама шапка высотой 45px ниже.
+        align-items: stretch;
     }
 
     .section-table__top {
         border: none !important;
         padding: 0 10px !important;
+        height: 45px;
     }
 
     .logistic-map {
