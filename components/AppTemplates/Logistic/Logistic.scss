@@ -29,6 +29,22 @@
             overflow: hidden;
             height: 45px;
 
+            // Тот же единый вид, что у клона (.resize.draggable-fallback ниже):
+            // в свёрнутой до 45px секции видны только иконка драга и название.
+            // Остальное прячем скопом — состав шапок у секций разный.
+            * {
+                visibility: hidden;
+            }
+
+            .resize__icon-drag,
+            .resize__icon-drag *,
+            .section-table__top-title,
+            .section-table__top-title *,
+            .logistic-map__title,
+            .logistic-map__title * {
+                visibility: visible;
+            }
+
             > .section-table {
                 height: 45px;
                 overflow: hidden;
@@ -218,6 +234,25 @@
     overflow: hidden !important;
     display: flex !important;
     align-items: center;
+    background: #fff;
+
+    // ЕДИНЫЙ вид клона для всех секций: видны только иконка драга и название
+    // секции. Прячем содержимое скопом через visibility (а не точечными
+    // display:none): состав шапки у секций разный (настройки, «Сохранить»,
+    // вкладки, фильтр, кнопки карты), и поэлементное скрытие давало разнобой —
+    // где-то пропадал заголовок, где-то всплывали лишние обрамлённые элементы.
+    * {
+        visibility: hidden;
+    }
+
+    .resize__icon-drag,
+    .resize__icon-drag *,
+    .section-table__top-title,
+    .section-table__top-title *,
+    .logistic-map__title,
+    .logistic-map__title * {
+        visibility: visible;
+    }
 
     .resize__icon-drag {
         position: relative !important;
@@ -271,7 +306,10 @@
         display: none !important;
     }
 
-    .section-table__top-group:last-child {
+    // Скрываем именно НЕ-заголовочные группы шапки. Раньше тут был
+    // :last-child — у секции «Задачи в машине» без выбранного маршрута
+    // в шапке только одна группа (заголовок), и :last-child прятал её саму.
+    .section-table__top-group:not(.section-table__top-title) {
         display: none !important;
     }
     .filter__mobile-search {
