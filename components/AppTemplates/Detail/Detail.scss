@@ -139,3 +139,22 @@
 .field__settings.popup_open {
     z-index: 50;
 }
+
+// Внешняя публичная ссылка: сайдбара нет, поэтому таблицы связанных сущностей
+// не должны резервировать под него место (дефолтный max-width .section-table
+// в VirtualTable.scss — calc(100vw - 264px), где 230px — ширина меню).
+.external-page {
+    .section-table {
+        max-width: calc(100vw - 34px);
+    }
+
+    @media (max-width: 990px) {
+        .section-table {
+            max-width: calc(100vw - 30px);
+        }
+
+        .table {
+            max-width: 100%;
+        }
+    }
+}

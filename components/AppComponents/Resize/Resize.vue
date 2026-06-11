@@ -21,7 +21,11 @@
     import IconResize from '@AppIcons/Actions/Resize.vue';
 
     const sectionRef = ref(null)
-    
+
+    // Фиксированный отступ между нижним краем секции и подвалом (низом
+    // страницы/viewport) при вертикальном ресайзе.
+    const BOTTOM_MARGIN = 65
+
     const props = defineProps({
         options: {
             default: {
@@ -80,10 +84,10 @@
                 }
 
                 // Финальная корректировка: даже если в процессе быстрого
-                // drag'а нижний край секции «проскочил» в нижние 40px
+                // drag'а нижний край секции «проскочил» в нижние BOTTOM_MARGIN px
                 // viewport (mousemove'ов было мало и scroll не успел
                 // отыграть полностью) — здесь точно ставим section.bottom =
-                // viewport - 40, добавляя спейсер/скролл или урезая высоту.
+                // viewport - BOTTOM_MARGIN, добавляя спейсер/скролл или урезая высоту.
                 this._snapToBottomMargin()
                 requestAnimationFrame(() => {
                     this._snapToBottomMargin()
@@ -110,7 +114,6 @@
         // подрезаем высоту секции.
         _snapToBottomMargin() {
             if (typeof window === 'undefined' || !sectionRef.value) return
-            const BOTTOM_MARGIN = 40
             // Force reflow перед чтением rect, чтобы получить актуальные
             // координаты после применения CSS-переменной и scrollTop.
             // eslint-disable-next-line no-unused-expressions
@@ -144,7 +147,7 @@
 
             // ФИНАЛЬНАЯ ПРОВЕРКА: после всех скроллов перечитываем rect.
             // Если по-прежнему overflow — урезаем высоту до предела, чтобы
-            // нижний край секции точно встал в 40px от низа viewport.
+            // нижний край секции точно встал в BOTTOM_MARGIN px от низа viewport.
             // eslint-disable-next-line no-unused-expressions
             sectionRef.value.offsetHeight
             const finalRect = sectionRef.value.getBoundingClientRect()
@@ -196,17 +199,15 @@
 
         // Изменение высоты секции.
         // 1) Растим секцию (newHeight = deltaHeight + pageY).
-        // 2) Если нижний край секции вышел за (viewport - 40px) — сначала
+        // 2) Если нижний край секции вышел за (viewport - BOTTOM_MARGIN) — сначала
         //    форсируем scroll-контейнеру возможность скроллиться, добавив
         //    спейсер высотой overflow в его конец. Без спейсера .page
         //    с grid+max-height иногда не наращивает scrollHeight автоматом
         //    под рост вложенного flex-контента, и scrollTop отказывается
         //    двигаться. Затем по очереди скроллим всех scroll-предков.
         // 3) Что не «отъехало» — урезаем из высоты секции, чтобы нижний край
-        //    всегда оставался в 40px от низа viewport.
+        //    всегда оставался в BOTTOM_MARGIN px от низа viewport.
         resizeBlock(obj_event) {
-            const BOTTOM_MARGIN = 40
-
             let point = this.getXY(obj_event);
             let newHeight = this.deltaHeight + point[1]
             if (newHeight < 160) return
@@ -293,7 +294,7 @@
         // На релизе нормализуем размер спейсера так, чтобы maxScroll у
         // scroll-контейнера был ровно равен текущему scrollTop. То есть
         // страница «как бы» прокручена до самого низа, и при дальнейшем
-        // отпускании мыши секция не теряет 40px gap и не появляется
+        // отпускании мыши секция не теряет BOTTOM_MARGIN gap и не появляется
         // «лишнего» серого свободного места под секцией.
         _compactSpacerToFinal() {
             if (!this._spacerEl || typeof window === 'undefined') return

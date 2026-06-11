@@ -65,6 +65,63 @@ export class LogisticWithMap extends Logistic {
         }
     }
 
+    // Ключ координат адреса для сравнения «изменился ли адрес задачи».
+    // address бывает строкой (в т.ч. JSON-строкой из loadRouteForMap) или
+    // объектом {coords, ...} (строки таблиц) — приводим к одному виду.
+    _addressCoordsKey(address) {
+        let value = address;
+        if (typeof value === 'string') {
+            try { value = JSON.parse(value); } catch (e) { return value; }
+        }
+        if (value && typeof value === 'object') {
+            return JSON.stringify(value.coords ?? value);
+        }
+        return JSON.stringify(value ?? '');
+    }
+
+    // Колбэк @getData таблицы «Задачи в машине». Если после перезагрузки
+    // таблицы (например, по кнопке «Загрузить» socket-плашки после правки
+    // адреса задачи) состав задач или их координаты отличаются от того, что
+    // сейчас на карте, — перезапрашиваем данные маршрута, чтобы линия
+    // перестроилась по новым адресам. Раньше обновлялась только таблица.
+    onMachineTasksTableLoaded(rows) {
+        const routeId = this.machine_tasks.route_id;
+        if (!routeId || !Array.isArray(rows)) return;
+        // Маршрут уже грузится (смена маршрута и т.п.) — карта обновится сама.
+        if (this.loadingRouteMapData) return;
+        const current = this.selectedRouteData;
+        if (!current || Number(current.id) !== Number(routeId)) return;
+
+        const knownById = new Map(
+            (current.tasks || []).map(t => [Number(t.id), this._addressCoordsKey(t.address)])
+        );
+        const sameIds = rows.length === knownById.size
+            && rows.every(r => knownById.has(Number(r?.id)));
+        const sameCoords = sameIds && rows.every(r =>
+            knownById.get(Number(r.id)) === this._addressCoordsKey(r.address)
+        );
+        if (!sameIds || !sameCoords) {
+            this.loadRouteForMap(routeId);
+        }
+    }
+
+    // Аналог для таблицы «Задачи логистики»: если у нераспределённой задачи
+    // после перезагрузки таблицы изменились координаты — обновляем маркеры
+    // нераспределённых задач на карте.
+    onUnassignedTasksTableLoaded(rows) {
+        if (!Array.isArray(rows) || rows.length === 0) return;
+        const knownById = new Map(
+            (this.unassignedTasks || []).map(t => [Number(t.id), this._addressCoordsKey(t.address)])
+        );
+        const changed = rows.some(r => {
+            const known = knownById.get(Number(r?.id));
+            return known !== undefined && known !== this._addressCoordsKey(r.address);
+        });
+        if (changed) {
+            this.loadUnassignedTasks();
+        }
+    }
+
     async loadRouteForMap(routeId) {
         console.log('🟢 loadRouteForMap called, routeId:', routeId);
         

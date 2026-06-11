@@ -402,6 +402,41 @@
         routeDecoratorsLayer?.clearLayers();
         if (serviceRadiusCircle) { mapInstance.value.removeLayer(serviceRadiusCircle); serviceRadiusCircle = null; }
         processedRoute = null;
+        // DOM активного маркера только что удалён вместе со слоями —
+        // ссылка стала «висячей», забываем её.
+        activeMarkerElement = null;
+    };
+
+    // Восстановление активного (раскрытого) маркера выбранной задачи после
+    // пересоздания маркеров. clearAllLayers() удаляет DOM маркеров, поэтому
+    // раскрытый popup терялся при: смене маршрута туда-обратно, перетаскивании
+    // выбранной задачи в «Задачи в машине», перезагрузке данных маршрута.
+    // Выделение строки в таблице при этом сохраняется (restoreTaskSelection
+    // в Logistic.vue) — маркер должен сохраняться синхронно с ним.
+    const restoreActiveMarker = () => {
+        const id = Number(props.activeTaskId);
+        if (!id) return;
+
+        const marker = routeMarkers.find(m => Number(m._taskId) === id)
+            || unassignedMarkers.find(m => Number(m._taskId) === id);
+        // У маркера, поглощённого кластером, элемента на карте нет —
+        // тогда ищем задачу среди сгруппированных маркеров ниже.
+        const el = marker?.getElement();
+        if (el) {
+            // Без forceOpen: handleMarkerClick и так всегда раскрывает popup,
+            // а forceOpen на уже раскрытом даёт визуальный «flash».
+            handleMarkerClick(el);
+            return;
+        }
+
+        // Задача могла попасть в сгруппированный (кластерный) маркер.
+        for (const gm of groupedMarkers) {
+            const el = gm.getElement();
+            if (el?.querySelector(`.cluster-point[data-task-id="${id}"]`)) {
+                handleMarkerClick(el);
+                return;
+            }
+        }
     };
 
     const clearUnassignedMarkers = () => {
@@ -432,6 +467,9 @@
 
             // Group overlapping markers at same coordinates
             groupOverlappingMarkers();
+
+            // Маркеры пересозданы — возвращаем раскрытый popup выбранной задаче.
+            restoreActiveMarker();
 
             if (!opts.skipFitBounds && props.routeData?.tasks?.length > 0) {
                 fitBounds();
@@ -1952,6 +1990,9 @@
             });
             renderUnassignedTasks(newVal);
             groupOverlappingMarkers();
+            // Маркеры нераспределённых задач пересозданы — возвращаем
+            // раскрытый popup выбранной задаче.
+            restoreActiveMarker();
         } else {
             // No unassigned tasks — clear all unassigned markers
             clearUnassignedMarkers();

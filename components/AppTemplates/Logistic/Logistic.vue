@@ -91,7 +91,7 @@
                             :ref="el => setTaskTableRef('unassigned', el)"
                             :slug="'logistic_tasks'"
                             :key="'logistic_tasks'"
-                            @getData="restoreTaskSelection"
+                            @getData="data => { logistic.onUnassignedTasksTableLoaded(data); restoreTaskSelection(data); }"
                             :options="{
                                 title: 'Задачи логистики',
                                 isHaveQuery: true,
@@ -246,7 +246,7 @@
                             updatingCount: logistic.machine_tasks.updatingCount
                         }"
                         @openModal="item => emit('openModal', { ...item, slug: item.slug || 'logistic_tasks', route_id: logistic.machine_tasks.route_id })"
-                        @getData="data => { logistic.getRoutes(data); restoreTaskSelection(data); }"
+                        @getData="data => { logistic.getRoutes(data); logistic.onMachineTasksTableLoaded(data); restoreTaskSelection(data); }"
                         @addRow="row => logistic.changeRouteTasks(row.list)"
                         @removeRow="row => { logistic.changeRouteTasks(row.list); markMachineHandled(); }"
                         @changePositionRow="row => { logistic.changeRouteTasks(row.list); markMachineHandled(); }"

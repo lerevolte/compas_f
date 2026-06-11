@@ -629,6 +629,19 @@
 // Явный белый фон гарантирует видимость ghost'а на всю его длину.
 .table__row.draggable-fallback {
   background: white;
-  .table__cell { background: var(--color-row, white); }
+
+  .table__cell {
+    background: var(--color-row, white);
+    // Клон живёт вне .table__body и не получает его правило
+    // `align-items: start` — без этого содержимое ячеек в ghost'е
+    // центрируется по вертикали и «съезжает» относительно исходной строки.
+    align-items: start;
+  }
+
+  // Ячейка с ручкой драга в реальной таблице центрируется — сохраняем
+  // то же выравнивание в клоне.
+  .table__cell[data-column-key="iconDrag"] {
+    align-items: center;
+  }
 }
 

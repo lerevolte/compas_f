@@ -19,7 +19,9 @@
 .logistic {
     grid-gap: 15px;
     display: grid;
-    margin-bottom: 40px;
+    // Фиксированный отступ до подвала страницы — согласован с BOTTOM_MARGIN
+    // в Resize.vue (65px при вертикальном ресайзе секций).
+    margin-bottom: 65px;
     grid-template-columns: repeat(2, 1fr);
 
     &.logistic_dragging {
@@ -113,13 +115,25 @@
         .resize__icon-drag {
             position: absolute;
             z-index: 2;
-            top: 12px;
+            top: 0;
             left: 5px;
+            // Зона иконки растянута на высоту шапки секции (10+28+10),
+            // сама иконка центрируется в ней по вертикали.
+            height: 48px;
+            display: inline-flex;
+            align-items: center;
             opacity: 0;
 
 
             &:hover {
                 opacity: 1;
+            }
+        }
+
+        // Шапка карты чуть ниже (9+28+9) — корректируем зону центрирования.
+        &:has(.logistic-map__header) {
+            .resize__icon-drag {
+                height: 46px;
             }
         }
 

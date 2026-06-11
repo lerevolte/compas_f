@@ -166,6 +166,16 @@ html {
     }
 }
 
+// Внешняя публичная ссылка (/external/{token}): меню-сайдбар не рендерится,
+// поэтому колонку под него (230px) не резервируем — контент на всю ширину.
+.page:has(> main.external-page) {
+    grid-template-columns: 1fr;
+
+    main.external-page {
+        grid-column: 1;
+    }
+}
+
 #menu-group {
     display: none;
     padding: 25px 15px 0;
