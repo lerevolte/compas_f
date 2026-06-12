@@ -1349,7 +1349,7 @@ export class Filter {
             if (this.setter.dependences.state) {
                 const otherKeys = Object.keys(this.setter.dependences.query)
                 for (let key of otherKeys) {
-                    if (['trashed'].includes(key)) {
+                    if (['trashed', 'with_trashed'].includes(key)) {
                         response.push(`${key}=${this.setter.dependences.query[key] ? 1 : 0}`)
                     } else if (key == 'trash_tab') {
                         continue

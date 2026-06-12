@@ -335,6 +335,17 @@
 
             // Закрытие опций
             this.closeContent = (event, state = false) => {
+                if (!state && event && event.target) {
+                    // Контент вложенных AppPopup/AppShowMore/дейтпикера
+                    // телепортирован в body (см. Popup.vue) — клик по нему
+                    // НЕ «снаружи фильтра», попап фильтра закрывать нельзя.
+                    if (typeof event.target.closest === 'function'
+                        && event.target.closest('.popup__content, .dp__menu')) return;
+                    // Элемент мог быть выкинут из DOM до того, как событие
+                    // дошло до document (чекбокс «Выбрать поле» перерисовал
+                    // список) — contains() даст false-срабатывание «вне».
+                    if (event.target.isConnected === false) return;
+                }
                 if (state || (this.filterRef.value && !this.filterRef.value.contains(event.target))) {
                     this.state.isOpen = false;
                     document.removeEventListener('click', this.closeContent);

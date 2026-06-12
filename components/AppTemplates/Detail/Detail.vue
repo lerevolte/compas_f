@@ -184,6 +184,11 @@
                     is_slug: true,
                     id: request
                 }
+                // Деталка удалённого объекта: во вкладках связанных сущностей
+                // показываем и удалённые записи (detail вернул их ID в value).
+                if (detail.value.isTrash) {
+                    this.queryTab.with_trashed = 1
+                }
                 this.active = tab
             }
             this.is_module = is_module

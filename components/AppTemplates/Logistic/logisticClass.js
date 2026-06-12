@@ -11,6 +11,22 @@ export class LogisticWithMap extends Logistic {
         this.loadingRouteMapData = false;
         this.activeTaskId = null;
         this.onRouteChanged = null; // callback set by parent
+        // Защита от гонок при обновлении карты:
+        // - _routeDataSeq — номер последнего запроса данных маршрута; ответ
+        //   более раннего запроса не должен затирать selectedRouteData,
+        //   записанный более поздним (из-за этого «вытащил все точки, а на
+        //   карте одна осталась в маршруте»).
+        // - _mutationChain — очередь мутаций состава маршрутов: пары
+        //   «GET текущих ids → PUT полного списка» не должны перемежаться,
+        //   иначе второй drag перетирает результат первого.
+        this._routeDataSeq = 0;
+        this._mutationChain = Promise.resolve();
+    }
+
+    // Последовательное выполнение мутаций состава маршрута (drag&drop).
+    _enqueueRouteMutation(fn) {
+        this._mutationChain = this._mutationChain.then(fn, fn);
+        return this._mutationChain;
     }
 
     choseRoute(row) {
@@ -87,8 +103,11 @@ export class LogisticWithMap extends Logistic {
     onMachineTasksTableLoaded(rows) {
         const routeId = this.machine_tasks.route_id;
         if (!routeId || !Array.isArray(rows)) return;
-        // Маршрут уже грузится (смена маршрута и т.п.) — карта обновится сама.
-        if (this.loadingRouteMapData) return;
+        // Раньше при this.loadingRouteMapData коррекция молча пропускалась
+        // (и не повторялась) — если параллельная загрузка привозила устаревший
+        // состав, карта оставалась рассинхронизированной до перезагрузки.
+        // Теперь гонки разруливает _routeDataSeq, поэтому при расхождении
+        // таблицы и карты всегда перезапрашиваем данные маршрута.
         const current = this.selectedRouteData;
         if (!current || Number(current.id) !== Number(routeId)) return;
 
@@ -124,7 +143,9 @@ export class LogisticWithMap extends Logistic {
 
     async loadRouteForMap(routeId) {
         console.log('🟢 loadRouteForMap called, routeId:', routeId);
-        
+
+        const seq = ++this._routeDataSeq;
+
         if (!routeId) {
             this.selectedRouteData = null;
             return;
@@ -134,6 +155,9 @@ export class LogisticWithMap extends Logistic {
             this.loadingRouteMapData = true;
 
             const response = await api.callMethod('GET', `/routes/${routeId}/tasks`);
+            // Пока ждали ответ, стартовал более новый запрос данных маршрута —
+            // его результат актуальнее, наш ответ молча выбрасываем.
+            if (seq !== this._routeDataSeq) return;
 
             let rows = response.data?.data || [];
 
@@ -197,6 +221,8 @@ export class LogisticWithMap extends Logistic {
                 console.log('🟠 map_data endpoint not available, using defaults');
             }
 
+            if (seq !== this._routeDataSeq) return;
+
             this.selectedRouteData = {
                 id: routeId,
                 name: routeName,
@@ -213,9 +239,9 @@ export class LogisticWithMap extends Logistic {
 
         } catch (error) {
             console.error('🔴 Error loading route for map:', error);
-            this.selectedRouteData = null;
+            if (seq === this._routeDataSeq) this.selectedRouteData = null;
         } finally {
-            this.loadingRouteMapData = false;
+            if (seq === this._routeDataSeq) this.loadingRouteMapData = false;
         }
     }
 
@@ -377,8 +403,15 @@ export class LogisticWithMap extends Logistic {
         // последнюю задачу. Бэкенду всё равно нужно её отвязать (route_id = null),
         // иначе после перезагрузки задача останется привязанной к маршруту и не
         // появится в «Задачах логистики» (там фильтр route_id = null).
+        return this._enqueueRouteMutation(() => this._changeRouteTasks(routeId, ids));
+    }
+
+    async _changeRouteTasks(routeId, ids) {
         try {
             const response = await api.callMethod('PUT', `/routes/${routeId}/tasks`, { ids });
+            // Данные этого ответа — самые свежие на момент PUT; всё, что
+            // запрашивалось раньше, не должно их перезатереть.
+            const seq = ++this._routeDataSeq;
             
             // Use response data directly — it's already in correct order
             const responseData = response.data || response;
@@ -420,18 +453,20 @@ export class LogisticWithMap extends Logistic {
                     }
                 } catch (e) {}
 
-                this.selectedRouteData = {
-                    id: routeId,
-                    name: routeName,
-                    loading_time: loadingTime,
-                    color: routeColor,
-                    tasks: tasks,
-                    actual_path: actualPath,
-                    service_stops: [],
-                    parking_stops: [],
-                    signal_loss_events: []
-                };
-            } else {
+                if (seq === this._routeDataSeq) {
+                    this.selectedRouteData = {
+                        id: routeId,
+                        name: routeName,
+                        loading_time: loadingTime,
+                        color: routeColor,
+                        tasks: tasks,
+                        actual_path: actualPath,
+                        service_stops: [],
+                        parking_stops: [],
+                        signal_loss_events: []
+                    };
+                }
+            } else if (seq === this._routeDataSeq) {
                 // Маршрут опустел (вытащили последнюю задачу) — чистим данные
                 // выбранного маршрута, чтобы на карте не висели старые точки.
                 this.selectedRouteData = {
@@ -481,6 +516,10 @@ export class LogisticWithMap extends Logistic {
     // между маршрутами.
     async assignTaskToRoute(taskId, routeId) {
         if (!taskId || !routeId) return;
+        return this._enqueueRouteMutation(() => this._assignTaskToRoute(taskId, routeId));
+    }
+
+    async _assignTaskToRoute(taskId, routeId) {
         try {
             const response = await api.callMethod('GET', `/routes/${routeId}/tasks`);
             const currentIds = (response.data?.data || []).map(t => t.id);
@@ -515,6 +554,10 @@ export class LogisticWithMap extends Logistic {
     // копируя поля адреса, и прикрепляет её к маршруту.
     async createTaskFromAddress(addressId, routeId) {
         if (!addressId || !routeId) return;
+        return this._enqueueRouteMutation(() => this._createTaskFromAddress(addressId, routeId));
+    }
+
+    async _createTaskFromAddress(addressId, routeId) {
         try {
             await api.callMethod('POST', '/routes/task-from-address', {
                 address_id: addressId,
@@ -542,6 +585,10 @@ export class LogisticWithMap extends Logistic {
     async unassignTaskFromRoute(taskId) {
         const routeId = this.machine_tasks.route_id;
         if (!routeId || !taskId) return;
+        return this._enqueueRouteMutation(() => this._unassignTaskFromRoute(taskId, routeId));
+    }
+
+    async _unassignTaskFromRoute(taskId, routeId) {
         try {
             const response = await api.callMethod('GET', `/routes/${routeId}/tasks`);
             const currentIds = (response.data?.data || []).map(t => t.id);

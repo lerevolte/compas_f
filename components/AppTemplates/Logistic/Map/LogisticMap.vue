@@ -67,6 +67,12 @@
         analytics: { stops: true, signal_loss: true, actual_path: true }
     });
 
+    // Следит за фактическим размером контейнера карты: при ресайзе блока
+    // (Resize.vue меняет CSS-переменную высоты) Leaflet сам не узнаёт о
+    // новом размере и оставляет «серую» область до перезагрузки — поэтому
+    // дёргаем invalidateSize() на каждое изменение размеров.
+    let containerResizeObserver = null;
+
     // ── Layer refs ──
     let baseLayers = {};
     let routeMarkers = [];
@@ -1962,9 +1968,17 @@
         await applyModuleSettings();
         await initMap();
         document.addEventListener('click', closeSettingsOnClick);
+        if (typeof ResizeObserver !== 'undefined' && mapContainerRef.value) {
+            containerResizeObserver = new ResizeObserver(() => {
+                if (!mapInstance.value) return;
+                requestAnimationFrame(() => mapInstance.value?.invalidateSize());
+            });
+            containerResizeObserver.observe(mapContainerRef.value);
+        }
     });
     onBeforeUnmount(() => {
         document.removeEventListener('click', closeSettingsOnClick);
+        if (containerResizeObserver) { containerResizeObserver.disconnect(); containerResizeObserver = null; }
         stopSelectionMode(false); clearAllLayers();
         if (mapInstance.value) { mapInstance.value.remove(); mapInstance.value = null; }
     });
