@@ -1971,7 +1971,9 @@
         if (typeof ResizeObserver !== 'undefined' && mapContainerRef.value) {
             containerResizeObserver = new ResizeObserver(() => {
                 if (!mapInstance.value) return;
-                requestAnimationFrame(() => mapInstance.value?.invalidateSize());
+                // pan: false — иначе Leaflet при каждом изменении размера
+                // сдвигает карту, сохраняя центр, и маршрут «едет» за ресайзом.
+                requestAnimationFrame(() => mapInstance.value?.invalidateSize({ pan: false, animate: false }));
             });
             containerResizeObserver.observe(mapContainerRef.value);
         }

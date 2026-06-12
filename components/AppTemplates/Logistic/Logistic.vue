@@ -75,6 +75,7 @@
                         @openModal="item => emit('openModal', item)"
                         @choseRow="data => onRouteRowChosen(data)"
                         @initCreateRoute="logistic.initCreateRoute()"
+                        @deletedRows="ids => logistic.onRoutesDeleted(ids)"
                     />
 
                     <div

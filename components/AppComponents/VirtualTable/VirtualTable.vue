@@ -57,7 +57,7 @@
               template: 'slot'
           }"
           :loading="table.deleteBuffer.loading"
-          @delete="table.delete()"
+          @delete="confirmDelete()"
           @close="table.deleteBuffer.state = false"
       >
           <p class="warning__text">
@@ -195,7 +195,18 @@
       'removeRow',
       'changeActive',
       'changePositionRow',
+      'deletedRows',
   ])
+
+  // Подтверждение удаления строк: ids снимаем ДО table.delete() —
+  // он чистит deleteBuffer в finally. Родителю (например, странице
+  // логистики) нужен список удалённых id, чтобы среагировать
+  // (сбросить активный маршрут, перезагрузить связанные таблицы).
+  const confirmDelete = async () => {
+      const ids = (table.value.deleteBuffer.list || []).map(p => p.id)
+      await table.value.delete()
+      emit('deletedRows', ids)
+  }
 
   const isClient = ref(false)
   const tableRef = ref(null)

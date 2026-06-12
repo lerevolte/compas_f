@@ -325,21 +325,22 @@
     }
 }
 
-// Range-режим: layout grid для двух календарей + футера.
+// Range-режим: layout grid для двух календарей + футера (инпуты и кнопка
+// «Применить» — ВНИЗУ, под календарями и быстрыми кнопками).
 // ВАЖНО: menu телепортирован в body и НЕ лежит внутри .dp__main, поэтому
-// селектор `.dp__main.dp--multi-calendars` до него не достаёт (из-за этого
-// инпуты и кнопка вставали в одну строку с календарём). Цепляемся за
-// menu-class-name (см. Date.vue): range-меню получает datepicker__menu_range.
-.dp__menu.datepicker__menu_range,
-.dp__main.dp--multi-calendars {
-    .dp__menu_content_wrapper {
-        display: grid;
-        grid-template-columns: 1fr 150px;
-        grid-template-rows: 1fr auto;
-        height: 100%;
-    }
+// старый селектор `.dp__main.dp--multi-calendars` до него не доставал.
+// В установленной v11 проп menu-class-name не существует, а класса
+// dp--multi-calendars на меню нет вовсе — поэтому диапазонное меню
+// определяем структурно: левый сайдбар (#left-sidebar, см. Date.vue)
+// рендерится только в range-режиме. :has() в проекте уже используется
+// (Filter.scss), поддержкой браузеров не рискуем.
+.dp__menu_content_wrapper:has(> .dp__sidebar_left) {
+    display: grid;
+    grid-template-columns: 1fr 150px;
+    grid-template-rows: 1fr auto;
+    height: 100%;
 
-    .dp__sidebar_left {
+    > .dp__sidebar_left {
         padding: 0;
         grid-row: 2/3;
         grid-column: 1/3;

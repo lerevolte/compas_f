@@ -54,6 +54,29 @@ export class LogisticWithMap extends Logistic {
         this.machine_tasks.updatingCount++;
     }
 
+    // Маршруты удалены из таблицы «Маршруты»: их задачи возвращаются в
+    // «Задачи логистики» (бэкенд отдаёт задачи удалённых маршрутов по
+    // фильтру route_id=null), а если среди удалённых был активный маршрут —
+    // сбрасываем «Задачи в машине» и карту.
+    onRoutesDeleted(ids = []) {
+        const deleted = (ids || []).map(Number);
+        const activeId = Number(this.machine_tasks.route_id ?? this.selectedRouteData?.id ?? 0);
+
+        if (activeId && deleted.includes(activeId)) {
+            this.machine_tasks.route_id = null;
+            this.routes.id = null;
+            this._lastKnownActiveColorId = null;
+            this.activeTaskId = null;
+            this.selectedRouteData = null;
+            this.machine_tasks.updatingCount++;
+        }
+
+        // Таблица маршрутов перезагружает себя сама после delete().
+        this.loadUnassignedTasks();
+        this.logistic_tasks.updatingCount++;
+        if (this.onRouteChanged) this.onRouteChanged();
+    }
+
     // Колбэк @getData таблицы маршрутов: вызывается каждый раз, когда
     // таблица отрисовалась со свежими данными. Если активный маршрут
     // присутствует и его цвет отличается от того, что сейчас на карте,
