@@ -5,6 +5,8 @@
     position: absolute;
     top: 16px;
     right: 85px;
+    // Над шапкой/телом таблицы, иначе лупу перекрывает sticky-заголовок.
+    z-index: 5;
 
     .blank__title {
         color: variables.$color-border;

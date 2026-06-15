@@ -420,6 +420,39 @@
             .forEach(el => el.classList.remove('logistic__drop-target'));
     };
 
+    // Плейсхолдер для перетаскивания адреса в «Задачи в машине». Группа drag&drop
+    // у «Справочника адресов» уникальная (machine-таблица её не принимает),
+    // поэтому нативного ghost-плейсхолдера vuedraggable там нет — рисуем свой
+    // строкой в КОНЦЕ тела таблицы (адрес всегда добавляется последней точкой
+    // маршрута, isAppendOnDrop). Раньше вместо строки подсвечивалась вся таблица.
+    const setMachinePlaceholder = (show) => {
+        const machineSection = findMachineTasksSection();
+        const body = machineSection?.querySelector('.table__body');
+        if (!body) return;
+        if (show) {
+            const rows = Array.from(body.querySelectorAll('.table__row')).filter(r =>
+                !r.classList.contains('draggable-fallback') && !r.classList.contains('draggable-ghost'));
+            let top = 0;
+            if (rows.length) {
+                const last = rows[rows.length - 1];
+                top = last.offsetTop + last.offsetHeight;
+            }
+            body.style.setProperty('--address-placeholder-top', `${top}px`);
+            body.classList.add('logistic__address-drop');
+        } else {
+            body.classList.remove('logistic__address-drop');
+            body.style.removeProperty('--address-placeholder-top');
+        }
+    };
+
+    const clearMachinePlaceholder = () => {
+        document.querySelectorAll('.logistic__address-drop')
+            .forEach(el => {
+                el.classList.remove('logistic__address-drop');
+                el.style.removeProperty('--address-placeholder-top');
+            });
+    };
+
     const onGlobalMouseDown = (e) => {
         // Запоминаем задачу, по которой нажали — если начнётся drag, она тянется.
         const row = e.target?.closest?.('.table__row');
@@ -498,12 +531,13 @@
             clearDropTargetHighlight();
         }
 
-        // Подсветка секции «Задачи в машине» для адреса.
+        // Плейсхолдер-строка в «Задачи в машине» для адреса (как у задач).
         if (dragSourceTable === 'addresses' && overMachine !== dropTargetMachine.value) {
             dropTargetMachine.value = overMachine;
             clearDropTargetHighlight();
+            clearMachinePlaceholder();
             if (overMachine) {
-                findMachineTasksSection()?.classList.add('logistic__drop-target');
+                setMachinePlaceholder(true);
             }
         }
     };
@@ -521,6 +555,7 @@
         dropTargetRouteId.value = null;
         dropTargetMachine.value = false;
         clearDropTargetHighlight();
+        clearMachinePlaceholder();
         if (!id) return;
 
         // Перетаскивание адреса из «Справочника адресов» → создаём задачу
@@ -577,17 +612,42 @@
         logistic.value.assignTaskToRoute(id, routeId);
     };
 
+    // Touch-обёртки: на планшете drag&drop идёт через touch-события, а наши
+    // глобальные хендлеры слушали только мышь — поэтому дроп адреса (и подсветка
+    // цели) на планшете не срабатывали. Нормализуем touch к {clientX,clientY,target}.
+    const onGlobalTouchStart = (e) => {
+        onGlobalMouseDown({ target: e.target });
+    };
+    const onGlobalTouchMove = (e) => {
+        const t = e.touches && e.touches[0];
+        if (!t) return;
+        // target под пальцем (e.target — элемент, где начался touch).
+        const el = document.elementFromPoint(t.clientX, t.clientY) || e.target;
+        onGlobalMouseMove({ clientX: t.clientX, clientY: t.clientY, target: el });
+    };
+    const onGlobalTouchEnd = (e) => {
+        const t = e.changedTouches && e.changedTouches[0];
+        onGlobalMouseUp(t ? { clientX: t.clientX, clientY: t.clientY, target: e.target } : {});
+    };
+
     onMounted(() => {
         document.addEventListener('mousedown', onGlobalMouseDown, true);
         document.addEventListener('mousemove', onGlobalMouseMove);
         document.addEventListener('mouseup', onGlobalMouseUp);
+        document.addEventListener('touchstart', onGlobalTouchStart, true);
+        document.addEventListener('touchmove', onGlobalTouchMove, { passive: true });
+        document.addEventListener('touchend', onGlobalTouchEnd);
     });
 
     onBeforeUnmount(() => {
         document.removeEventListener('mousedown', onGlobalMouseDown, true);
         document.removeEventListener('mousemove', onGlobalMouseMove);
         document.removeEventListener('mouseup', onGlobalMouseUp);
+        document.removeEventListener('touchstart', onGlobalTouchStart, true);
+        document.removeEventListener('touchmove', onGlobalTouchMove);
+        document.removeEventListener('touchend', onGlobalTouchEnd);
         clearDropTargetHighlight();
+        clearMachinePlaceholder();
     });
 
     // ── Map ↔ Table interaction ──

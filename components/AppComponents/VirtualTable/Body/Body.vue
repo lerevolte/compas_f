@@ -246,7 +246,7 @@
                         </template>
 
                         <div class="table__cell-content" v-else-if="table.body[row.index] && (!table.body[row.index].edit || column.read_only)">
-                            <span class="table__text text" v-if="['text', 'number'].includes(column.type) && (!column.is_external_link || !table.body[row.index][column.key]?.external_link)">
+                            <span class="table__text text" :style="column.set_color && column.color ? { color: column.color } : null" v-if="['text', 'number'].includes(column.type) && (!column.is_external_link || !table.body[row.index][column.key]?.external_link)">
                                 {{ cell.useCellModel(row.index, column).value }}<span class="table__unit" v-if="column.unit && cell.useCellModel(row.index, column).value"> {{ column.unit }}</span>
                             </span>
 
@@ -839,6 +839,20 @@
     let draggedFromHandle = false
     const onTablePointerDown = (ev) => {
         draggedFromHandle = !!ev.target?.closest?.('.table__icon-drag')
+
+        // Выделение ячейки для копирования (Ctrl+C, isCellCopy) ставим на
+        // pointerdown, а не на @click. На логистике вся строка — источник
+        // drag&drop (forceFallback), и SortableJS гасит последующий синтетический
+        // click — из-за этого ячейка не получала .table__cell_copy-select и
+        // копирование «ломалось». pointerdown (capture) приходит всегда.
+        if (!table.value.options?.isCellCopy) return
+        if (ev.target?.closest?.('.table__icon-drag, .show-more, input, textarea, select, [contenteditable], button, a')) return
+        const cellEl = ev.target?.closest?.('.table__cell')
+        const rowEl = cellEl?.closest?.('.table__row')
+        if (!cellEl || !rowEl) return
+        const rowIndex = Number(rowEl.getAttribute('data-index'))
+        if (Number.isNaN(rowIndex) || !table.value.body[rowIndex] || table.value.body[rowIndex].edit) return
+        cell.setActiveCell({ currentTarget: cellEl, target: ev.target }, rowIndex)
     }
 
     // Снимок исходного порядка строк и признак «обычного» драга — чтобы при

@@ -590,6 +590,14 @@ export class Table {
 
     // Получнеие шапки
     getHeader(data) {
+        // Служебные колонки `clicked` и `iconDrag` добавляются ниже на основе
+        // опций таблицы (isCheckClicked / isHaveOrder), а НЕ приходят с бэка.
+        // Но saveSettings раньше сохранял this.header целиком (вместе с ними),
+        // поэтому при перезагрузке они приходили в data и задваивались, а так
+        // же «протекали» на обычные страницы с тем же slug (например objects
+        // для logistic_tasks). Поэтому всегда вычищаем их из входных данных —
+        // источником истины для них являются опции таблицы.
+        data = (data ?? []).filter(p => p.key !== 'clicked' && p.key !== 'iconDrag')
         // Во внешней ссылке скрываем колонку действий (open/edit/delete и т.п.).
         if (this.options?.isExternal) {
             data = data.filter(p => p.key !== 'actions' && p.key !== 'isChoose')
@@ -1208,7 +1216,11 @@ export class Table {
             await api.callMethod('POST', role ? `${method}/${role}` : method, {
                 sort_field: this.sortItem.sort_field,
                 sort_order: this.sortItem.sort_order,
-                fields: this.header
+                // Не сохраняем служебные колонки, добавляемые на фронте по опциям
+                // таблицы (clicked/iconDrag). Иначе они попадают в настройки slug,
+                // задваиваются при перезагрузке и протекают на другие страницы
+                // с тем же slug (например objects для logistic_tasks).
+                fields: this.header.filter(p => p.key !== 'clicked' && p.key !== 'iconDrag')
             })
         } catch (error) {
             console.log('saveSettings columns error', error)
@@ -1333,8 +1345,16 @@ export class Filter {
             if (saved_query) {
                 response.push(`per_page=${saved_query.per_page ?? this.setter.pages.limit}`)
                 response.push(`page=${saved_query.page ?? this.setter.pages.current}`)
-                response.push(`sort_field=${saved_query.sort_field ?? this.setter.sortItem.sort_field}`)
-                response.push(`sort_order=${saved_query.sort_order ?? this.setter.sortItem.sort_order}`)
+                // sort_field/sort_order пушим только если реально заданы. Иначе в
+                // запрос уходила строка "sort_field=null" (sortItem пуст при первой
+                // загрузке) — бэк трактовал "null" как имя колонки и игнорировал
+                // СОХРАНЁННУЮ сортировку настроек таблицы. Из-за этого на логистике
+                // (таблицы грузятся через getWithQuery, URL не персистится) после
+                // сохранения настроек сортировка слетала при перезагрузке.
+                const sortField = saved_query.sort_field ?? this.setter.sortItem.sort_field
+                const sortOrder = saved_query.sort_order ?? this.setter.sortItem.sort_order
+                if (sortField != null && sortField !== 'null') response.push(`sort_field=${sortField}`)
+                if (sortOrder != null && sortOrder !== 'null') response.push(`sort_order=${sortOrder}`)
                 // Пропускаем filter[...] из URL прямо в запрос. Без этого
                 // прямые ссылки вида /objects/<slug>?filter[id]=N не применяли
                 // фильтр — saved_query содержал ключ «filter[id]» как

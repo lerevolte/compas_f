@@ -8,9 +8,10 @@
         `">
             <IconDragDotted class="resize__icon-drag" />
             <slot></slot>
-            <IconResize 
+            <IconResize
                 ref="resizeRef"
                 @mousedown="(event) => resize.startResize(event)"
+                @touchstart="(event) => resize.startResize(event)"
             />
     </section>
 </template>
@@ -62,6 +63,12 @@
 
                 document.addEventListener("mousemove", this.mouseMoveHandler);
                 document.addEventListener("mouseup", this.mouseUpHandler);
+                // Планшет: ресайз идёт через touch. touchmove — non-passive,
+                // чтобы в resizeBlock можно было preventDefault (иначе страница
+                // скроллится вместо изменения высоты секции).
+                document.addEventListener("touchmove", this.mouseMoveHandler, { passive: false });
+                document.addEventListener("touchend", this.mouseUpHandler);
+                document.addEventListener("touchcancel", this.mouseUpHandler);
 
                 return false;
             }
@@ -78,9 +85,12 @@
                 // Удаляем обработчики событий
                 if (this.mouseMoveHandler) {
                     document.removeEventListener("mousemove", this.mouseMoveHandler);
+                    document.removeEventListener("touchmove", this.mouseMoveHandler);
                 }
                 if (this.mouseUpHandler) {
                     document.removeEventListener("mouseup", this.mouseUpHandler);
+                    document.removeEventListener("touchend", this.mouseUpHandler);
+                    document.removeEventListener("touchcancel", this.mouseUpHandler);
                 }
 
                 // Финальная корректировка: даже если в процессе быстрого
@@ -169,14 +179,16 @@
             }
         }
 
-        // Функция для получения текущих координат курсора мыши
+        // Функция для получения текущих координат курсора/пальца
         getXY(obj_event) {
             let x = 0
             let y = 0
 
-            if (obj_event) {
-                x = obj_event.pageX;
-                y = obj_event.pageY;
+            // На touch-событиях координаты лежат в touches/changedTouches.
+            const src = obj_event?.touches?.[0] ?? obj_event?.changedTouches?.[0] ?? obj_event;
+            if (src) {
+                x = src.pageX;
+                y = src.pageY;
             }
             return new Array(x, y);
         }
@@ -215,6 +227,11 @@
         // 3) Что не «отъехало» — урезаем из высоты секции, чтобы нижний край
         //    всегда оставался в BOTTOM_MARGIN px от низа viewport.
         resizeBlock(obj_event) {
+            // На планшете гасим скролл страницы во время ресайза (listener
+            // зарегистрирован non-passive, поэтому preventDefault разрешён).
+            if (obj_event?.type === 'touchmove' && obj_event.cancelable) {
+                obj_event.preventDefault();
+            }
             let point = this.getXY(obj_event);
             let newHeight = this.deltaHeight + point[1]
             if (newHeight < 160) return

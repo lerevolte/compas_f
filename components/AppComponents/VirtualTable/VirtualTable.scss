@@ -499,6 +499,10 @@
       .select__actions {
         overflow: hidden;
         max-width: max-content;
+
+        .button_text {
+          white-space: nowrap;
+        }
       }
     }
 
