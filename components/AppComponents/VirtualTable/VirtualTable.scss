@@ -488,6 +488,11 @@
     }
 
     .form__item_select {
+      // Ячейка таблицы — flex с align-items:start, поэтому содержимое
+      // select-поля (в т.ч. кнопка «Всего N, посмотреть все») прижималось
+      // к верху. Центрируем по вертикали внутри ячейки.
+      align-self: center;
+
       .select {
         &.select_icon {
           .select__value {
@@ -497,6 +502,7 @@
       }
 
       .select__actions {
+        margin-top: 0;
         overflow: hidden;
         max-width: max-content;
 
