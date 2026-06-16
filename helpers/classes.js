@@ -1335,10 +1335,16 @@ export class Filter {
         this.fields = []
         this.saves = []
         this.query = null
+        this.appliedFields = []
     }
 
     // Фильтрация
-    async get(fields = [], saved_query = {}) {
+    async get(fields = null, saved_query = {}) {
+        if (fields === null) {
+            fields = this.appliedFields ?? []
+        } else {
+            this.appliedFields = fields
+        }
         // Установка фильтра
         const setFilter = (fields, saved_query) => {
             let response = []

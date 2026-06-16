@@ -2003,44 +2003,11 @@
     });
 
     // ── Watchers ──
-    watch(() => props.routeData, (newVal, oldVal) => {
-        // Only re-render if route data reference actually changed
-        if (newVal === oldVal && newVal !== null) return;
-        console.log('🟢 WATCH routeData');
+    watch(() => props.routeData, () => {
         renderAll();
-    });
-    watch(() => props.unassignedTasks, (newVal) => {
-        if (isRendering) { renderQueued = true; return; }
-        if (shouldShowUnassigned() && newVal?.length) {
-            clearUnassignedMarkers();
-            // Also clear grouped markers that were unassigned-only
-            groupedMarkers.forEach(gm => {
-                const el = gm.getElement();
-                if (!el) return;
-                if (!el.querySelector('.cluster-task-item[data-type="route"]')) {
-                    mapInstance.value.removeLayer(gm);
-                }
-            });
-            renderUnassignedTasks(newVal);
-            groupOverlappingMarkers();
-            // Маркеры нераспределённых задач пересозданы — возвращаем
-            // раскрытый popup выбранной задаче.
-            restoreActiveMarker();
-        } else {
-            // No unassigned tasks — clear all unassigned markers
-            clearUnassignedMarkers();
-            groupedMarkers.forEach(gm => {
-                const el = gm.getElement();
-                if (!el) return;
-                if (!el.querySelector('.cluster-task-item[data-type="route"]')) {
-                    mapInstance.value.removeLayer(gm);
-                }
-            });
-            groupedMarkers = groupedMarkers.filter(gm => {
-                const el = gm.getElement();
-                return el && el.querySelector('.cluster-task-item[data-type="route"]');
-            });
-        }
+    }, { deep: true });
+    watch(() => props.unassignedTasks, () => {
+        renderAll({ skipFitBounds: true });
     }, { deep: true });
     watch(() => props.showUnassigned, () => applySettings());
     // Когда activeTaskId приходит из поиска по задачам (URL ?task_id=…),

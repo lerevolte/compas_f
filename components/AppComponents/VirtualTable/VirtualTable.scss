@@ -339,7 +339,8 @@
   }
 
   &:has(.select_open),
-  &:has(.popup_open) {
+  &:has(.popup_open),
+  &:has(.table__cell_copy-select) {
     z-index: 100;
   }
 

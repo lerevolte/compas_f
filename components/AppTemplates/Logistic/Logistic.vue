@@ -100,7 +100,7 @@
                                     ...filteredFields,
                                     route_id: 'null',
                                     delivery_date: logistic.activeDate,
-                                    per_page: 12
+                                    per_page: 500
                                 },
                                 isShort: true,
                                 overscan: 5,
@@ -892,8 +892,6 @@
         logistic.value.logistic_tasks.updatingCount++;
         // Reload unassigned tasks for map with new filters
         await logistic.value.loadUnassignedTasks();
-        // Sync table visibility with map
-        applyFilterToUnassignedTable();
     });
 
     // Hide unassigned table rows that don't match filtered unassignedTasks

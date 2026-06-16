@@ -273,7 +273,7 @@ export class LogisticWithMap extends Logistic {
         const requestId = this._unassignedRequestId;
         try {
             // Build filter query
-            let filterParams = `filter[route_id]=null&filter[delivery_date]=${this.activeDate}&per_page=100&sort_field=id&sort_order=asc`;
+            let filterParams = `filter[route_id]=null&filter[delivery_date]=${this.activeDate}&per_page=500&sort_field=id&sort_order=asc`;
             
             // Add requirements / search filters if set
             if (this.filterFields?.length) {
@@ -322,42 +322,7 @@ export class LogisticWithMap extends Logistic {
                 });
             }
             this._unassignedStatusColors = statusColorByValue;
-            
-            // Frontend filtering for weight/volume
-            if (this.filterFields?.length) {
-                const weightFilter = this.filterFields.find(f => f.key === 'weight');
-                const volumeFilter = this.filterFields.find(f => f.key === 'volume');
-                
-                console.log('🟢 Filter fields:', this.filterFields.map(f => ({ key: f.key, value: f.value })));
-                
-                if (weightFilter?.value) {
-                    const wMin = weightFilter.value[0] !== null && weightFilter.value[0] !== undefined ? Number(weightFilter.value[0]) : null;
-                    const wMax = weightFilter.value[1] !== null && weightFilter.value[1] !== undefined ? Number(weightFilter.value[1]) : null;
-                    if (wMin !== null || wMax !== null) {
-                        rows = rows.filter(row => {
-                            const weight = this._calcProductsTotal(row.products, 'weight');
-                            console.log('🟢 Task', row.id, 'weight:', weight, 'wMin:', wMin, 'wMax:', wMax);
-                            if (wMin !== null && weight < wMin) return false;
-                            if (wMax !== null && weight > wMax) return false;
-                            return true;
-                        });
-                    }
-                }
-                
-                if (volumeFilter?.value) {
-                    const vMin = volumeFilter.value[0] !== null && volumeFilter.value[0] !== undefined ? Number(volumeFilter.value[0]) : null;
-                    const vMax = volumeFilter.value[1] !== null && volumeFilter.value[1] !== undefined ? Number(volumeFilter.value[1]) : null;
-                    if (vMin !== null || vMax !== null) {
-                        rows = rows.filter(row => {
-                            const volume = this._calcProductsTotal(row.products, 'volume');
-                            if (vMin !== null && volume < vMin) return false;
-                            if (vMax !== null && volume > vMax) return false;
-                            return true;
-                        });
-                    }
-                }
-            }
-            
+
             const statusColors = this._unassignedStatusColors || {};
             this.unassignedTasks = (Array.isArray(rows) ? rows : []).map(row => ({
                 ...row,
