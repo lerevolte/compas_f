@@ -227,6 +227,7 @@
                 />
                 <AppInput
                     v-if="!['relation','file','text_group','status','select_dropdown','redactor'].includes(modal.field.type)"
+                    style="display: none"
                     v-model="modal.field.default_value"
                     :options="{
                         id: 0,
