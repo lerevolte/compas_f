@@ -589,7 +589,8 @@ export class Table {
     }
 
     // Получнеие шапки
-    getHeader(data) {
+    getHeader(data, force = false) {
+        if (!force && this.isChanged && Array.isArray(this.header) && this.header.length) return
         // Служебные колонки `clicked` и `iconDrag` добавляются ниже на основе
         // опций таблицы (isCheckClicked / isHaveOrder), а НЕ приходят с бэка.
         // Но saveSettings раньше сохранял this.header целиком (вместе с ними),
@@ -684,7 +685,7 @@ export class Table {
                     sort_field: response.data.sort_field,
                     sort_order: response.data.sort_order
                 })
-                this.getHeader(response.data.fields)
+                this.getHeader(response.data.fields, true)
             }
         } catch (error) {
             console.log('get_table', error);
@@ -2098,7 +2099,8 @@ export class Section {
             }
 
             const request = {
-                id: options?.isGlobalEdit ? 0 : pageId,
+                id: options?.isCopy ? pageId : (options?.isGlobalEdit ? 0 : pageId),
+                ...(options?.isCopy ? { copy: 1 } : {}),
                 ...this.buffer.edits.reduce((obj, field) => {
                     if (field.type == 'relation') {
                         obj[field.key] = field.value?.value.filter(p => p)

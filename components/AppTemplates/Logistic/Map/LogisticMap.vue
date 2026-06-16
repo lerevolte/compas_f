@@ -454,10 +454,12 @@
 
     // ── Render all ──
     let isRendering = false;
+    let renderQueued = false;
+    let queuedRenderOpts = {};
 
     const renderAll = async (opts = {}) => {
         if (!mapInstance.value || !L) return;
-        if (isRendering) { console.log('🟠 renderAll skipped — already rendering'); return; }
+        if (isRendering) { renderQueued = true; queuedRenderOpts = opts; return; }
         isRendering = true;
 
         try {
@@ -482,6 +484,12 @@
             }
         } finally {
             isRendering = false;
+            if (renderQueued) {
+                renderQueued = false;
+                const nextOpts = queuedRenderOpts;
+                queuedRenderOpts = {};
+                renderAll(nextOpts);
+            }
         }
     };
 
@@ -1072,13 +1080,22 @@
     };
 
     // ── Draw planned route ──
+    const toStrokeColor = (color) => {
+        if (!color || typeof color !== 'string') return '#b6b6b6';
+        const c = color.trim();
+        if (/^(#|rgb\(|rgba\(|hsl\(|hsla\()/i.test(c)) return c;
+        if (/^[a-z]+$/i.test(c)) return c;
+        const m = c.match(/#[0-9a-f]{3,8}|rgba?\([^)]*\)|hsla?\([^)]*\)/i);
+        return m ? m[0] : '#b6b6b6';
+    };
+
     const drawPlannedRoute = () => {
         if (!processedRoute) { console.log('🟠 drawPlannedRoute: no processedRoute'); return; }
-        
+
         routeDecoratorsLayer.clearLayers();
-        
+
         const coords = processedRoute.coordinates;
-        const color = processedRoute.color || '#b6b6b6';
+        const color = toStrokeColor(processedRoute.color);
         const wpCoords = processedRoute.waypointCoords;
 
         console.log('🟢 drawPlannedRoute, style:', settings.route_display, 'coords:', coords?.length, 'waypoints:', wpCoords?.length);
@@ -1993,7 +2010,7 @@
         renderAll();
     });
     watch(() => props.unassignedTasks, (newVal) => {
-        if (isRendering) return;
+        if (isRendering) { renderQueued = true; return; }
         if (shouldShowUnassigned() && newVal?.length) {
             clearUnassignedMarkers();
             // Also clear grouped markers that were unassigned-only

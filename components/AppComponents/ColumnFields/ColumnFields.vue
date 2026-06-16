@@ -100,7 +100,7 @@
                     template: 'slot'
                 }"
                 :loading="section.modal.loading"
-                @save="section.save(null, columns.list, props.pageId, props.slug, emit, [])"
+                @save="section.save(null, columns.list, props.pageId, props.slug, emit, props.options)"
                 @close="section.modal.state = false"
             >
                 <ModalValidate 

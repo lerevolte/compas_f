@@ -110,6 +110,7 @@
             const option = event?.target?.closest?.('.popup__option');
             if (!option) return;
             if (option.dataset && option.dataset.popupStay != null) return;
+            if (option.dataset && option.dataset.popupClose != null) { this._close(); return; }
             const stayClasses = [
                 'popup__option_checkbox',
                 'popup__option_disable',

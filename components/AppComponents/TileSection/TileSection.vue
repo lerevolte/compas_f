@@ -378,7 +378,7 @@
                             >
                                 Настроить
                             </div>
-                            <div class="popup__option popup__option_checkbox" v-if="field.type != 'text_group'">
+                            <div class="popup__option popup__option_checkbox" data-popup-close v-if="field.type != 'text_group'">
                                 <AppCheckbox
                                     v-model="field.visible_always"
                                     :options="{

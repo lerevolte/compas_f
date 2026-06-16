@@ -509,6 +509,7 @@ export class LogisticWithMap extends Logistic {
             this.loadUnassignedTasks();
             // Refresh unassigned tasks table only (route tasks table already updated by drag)
             this.logistic_tasks.updatingCount++;
+            this.routes.updatingCount++;
             // Notify parent to refresh analytics
             if (this.onRouteChanged) this.onRouteChanged();
         } catch (error) {

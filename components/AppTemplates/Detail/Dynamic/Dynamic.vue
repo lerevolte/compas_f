@@ -13,6 +13,7 @@
                 isDisableFooter: props.options.isGlobalEdit || props.options.isExternal,
                 isHaveHistory: true,
                 isGlobalEdit: props.options.isGlobalEdit,
+                isCopy: props.options.isCopy,
             }"
             :history="{
                 fields: detail.history.events,

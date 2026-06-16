@@ -219,13 +219,23 @@
                         title: 'Обязательное поле',
                     }"
                 />
-                <AppCheckbox 
+                <AppCheckbox
                     v-model="modal.field.visible_always"
                     :options="{
                         title: 'Показывать всегда',
                     }"
                 />
-                <AppCheckbox 
+                <AppInput
+                    v-if="!['relation','file','text_group','status','select_dropdown','redactor'].includes(modal.field.type)"
+                    v-model="modal.field.default_value"
+                    :options="{
+                        id: 0,
+                        title: 'Значение по умолчанию',
+                        type: modal.field.type == 'number' ? 'number' : 'text',
+                        name: 'default_value'
+                    }"
+                />
+                <AppCheckbox
                     v-model="modal.field.has_roles_read"
                     :options="{
                         title: 'Ограничить видимость поля',
@@ -346,6 +356,7 @@
                     title: '',
                     required: 0,
                     visible_always: 1,
+                    default_value: null,
                     has_roles_read: 0,
                     roles_read: [],
                     has_roles_write: 0,

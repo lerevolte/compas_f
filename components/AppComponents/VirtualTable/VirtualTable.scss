@@ -487,6 +487,17 @@
       width: 100%;
     }
 
+    input,
+    textarea {
+      min-height: 30px;
+    }
+
+    input {
+      height: 30px;
+      padding-top: 4px;
+      padding-bottom: 4px;
+    }
+
     .form__item_select {
       // Ячейка таблицы — flex с align-items:start, поэтому содержимое
       // select-поля (в т.ч. кнопка «Всего N, посмотреть все») прижималось
