@@ -290,6 +290,15 @@ export class LogisticWithMap extends Logistic {
                                 filterParams += `&filter[${f.key}][]=${v}`;
                             });
                         }
+                    } else if ((f.key === 'weight' || f.key === 'volume') && Array.isArray(f.value)) {
+                        const min = f.value[0];
+                        const max = f.value[1];
+                        if (min !== null && min !== undefined && min !== '') {
+                            filterParams += `&filter[${f.key}][0]=${encodeURIComponent(min)}`;
+                        }
+                        if (max !== null && max !== undefined && max !== '') {
+                            filterParams += `&filter[${f.key}][1]=${encodeURIComponent(max)}`;
+                        }
                     }
                 });
             }

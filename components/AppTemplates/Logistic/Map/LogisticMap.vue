@@ -709,9 +709,22 @@
                 zIndexOffset: 1100
             }).addTo(mapInstance.value);
 
+            const clusterRadiusColor = iconType === 'route'
+                ? (byGroup[groupOrder[0]].color || '#b6b6b6')
+                : '#A6B7D4';
             combined.on('click', () => {
                 const el = combined.getElement();
                 if (el) handleMarkerClick(el);
+                if (serviceRadiusCircle) { mapInstance.value.removeLayer(serviceRadiusCircle); serviceRadiusCircle = null; }
+                const radius = props.serviceRadius || 500;
+                serviceRadiusCircle = L.circle(combined.getLatLng(), {
+                    radius,
+                    color: clusterRadiusColor,
+                    fillColor: clusterRadiusColor,
+                    fillOpacity: 0.1,
+                    weight: 1,
+                    dashArray: '5,5'
+                }).addTo(mapInstance.value);
                 setTimeout(() => bindClusterEvents(el), 50);
             });
 
@@ -1171,7 +1184,7 @@
                     </div>
                     <div class="route-popup__extend">
                         <div class="point-attrs">
-                            <span class="point-attrs__item"><span class="point-attrs__label">Название:</span><span class="point-attrs__val">${taskName}</span></span>
+                            <span class="point-attrs__item point-attrs__item_title"><span class="point-attrs__label">Название:</span><span class="point-attrs__val point-attrs__val_title">${taskName}</span></span>
                             <span class="point-attrs__item"><span class="point-attrs__label">Статус точки:</span><span class="point-attrs__val"><span class="route-popup__status route-popup__status_inline" style="background: ${statusColor}"></span></span></span>
                             <span class="point-attrs__item"><span class="point-attrs__label">План. время:</span><span class="point-attrs__val">${planTime}</span></span>
                         </div>
@@ -1568,7 +1581,7 @@
                 </div>
                 <div class="route-popup__extend">
                     <div class="point-attrs">
-                        <span class="point-attrs__item"><span class="point-attrs__label">Название:</span><span class="point-attrs__val">${taskName}</span></span>
+                        <span class="point-attrs__item point-attrs__item_title"><span class="point-attrs__label">Название:</span><span class="point-attrs__val point-attrs__val_title">${taskName}</span></span>
                         <span class="point-attrs__item"><span class="point-attrs__label">Статус точки:</span><span class="point-attrs__val"><span class="route-popup__status route-popup__status_inline" style="background: ${statusColor}"></span></span></span>
                         <span class="point-attrs__item"><span class="point-attrs__label">План. время:</span><span class="point-attrs__val">${planTime}</span></span>
                     </div>

@@ -609,6 +609,11 @@ export class Table {
 
         let header = data
         if (this.options.isCheckClicked) {
+            let clickedFixed = true
+            if (typeof window !== 'undefined') {
+                const stored = window.localStorage.getItem(`table_clicked_fixed_${this.slug}`)
+                if (stored !== null) clickedFixed = stored === '1'
+            }
             header = [{
                 "id": 0,
                 "title": "Выбранная строка",
@@ -618,7 +623,7 @@ export class Table {
                 "hover": false,
                 "sort_order": null,
                 "type": "checkbox",
-                "fixed": true,
+                "fixed": clickedFixed,
                 "fixTarget": "0px",
                 "index": 1,
                 "mask": null,
@@ -1223,6 +1228,12 @@ export class Table {
                 // с тем же slug (например objects для logistic_tasks).
                 fields: this.header.filter(p => p.key !== 'clicked' && p.key !== 'iconDrag')
             })
+            if (typeof window !== 'undefined') {
+                const clickedCol = this.header.find(p => p.key === 'clicked')
+                if (clickedCol) {
+                    window.localStorage.setItem(`table_clicked_fixed_${this.slug}`, clickedCol.fixed ? '1' : '0')
+                }
+            }
         } catch (error) {
             console.log('saveSettings columns error', error)
         }
@@ -1344,6 +1355,9 @@ export class Filter {
             fields = this.appliedFields ?? []
         } else {
             this.appliedFields = fields
+            if (saved_query?.page == null) {
+                this.setter.pages.current = 1
+            }
         }
         // Установка фильтра
         const setFilter = (fields, saved_query) => {

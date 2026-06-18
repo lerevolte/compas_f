@@ -183,7 +183,7 @@
     // max-width ограничение перенесено на section-table в VirtualTable.scss.
     // Здесь переопределяем section-table для логистики (двух-колоночная сетка).
     .section-table {
-        max-width: calc(50vw - 141px);
+        max-width: calc(50vw - 140px);
 
         @media (max-width: 1300px) {
             max-width: calc(100vw - 266px);
@@ -396,5 +396,37 @@
     .table__body {
         flex: 1 1 auto;
         min-height: 150px;
+    }
+}
+
+@media (max-width: 990px) {
+    .logistic {
+        .table {
+            .table__header {
+                display: block;
+            }
+
+            .table__row {
+                flex-direction: row;
+                width: auto;
+                gap: 0;
+                padding: 0;
+                border-bottom: none;
+            }
+
+            .table__cell {
+                flex: 0 0 var(--cell-size);
+                max-width: var(--cell-size);
+                flex-direction: row;
+                align-items: center;
+                min-height: 50px;
+                width: auto;
+                padding: 10px;
+            }
+
+            .table__label {
+                display: none;
+            }
+        }
     }
 }

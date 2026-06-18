@@ -59,6 +59,12 @@
       }
     }
 
+    &.table__cell_copy-select {
+      .icon_sort {
+        background: transparent;
+      }
+    }
+
     &.table__cell_dragging {
       left: 0px;
       

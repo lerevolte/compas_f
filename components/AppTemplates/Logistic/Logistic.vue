@@ -66,7 +66,7 @@
                             isHaveFooter: false,
                             isDisablePull: true,
                             isDisablePut: true,
-                            isDisableSort: true,
+                            isDisableSort: false,
                             isCellCopy: true,
                             updatingCount: logistic.routes.updatingCount
                         }"

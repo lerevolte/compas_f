@@ -511,6 +511,16 @@
             max-width: calc(100% - 5px);
           }
         }
+
+        &:has(.select__values) {
+          .select__content {
+            margin-top: 0;
+          }
+
+          .select__values {
+            min-height: 30px;
+          }
+        }
       }
 
       .select__actions {
