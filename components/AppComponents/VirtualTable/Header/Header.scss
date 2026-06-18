@@ -60,6 +60,8 @@
     }
 
     &.table__cell_copy-select {
+      z-index: 31;
+
       .icon_sort {
         background: transparent;
       }
