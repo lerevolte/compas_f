@@ -424,6 +424,10 @@
                 padding: 10px;
             }
 
+            .table__cell_fixed {
+                position: static;
+            }
+
             .table__label {
                 display: none;
             }

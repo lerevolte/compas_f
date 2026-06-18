@@ -61,9 +61,19 @@
 
     &.table__cell_copy-select {
       z-index: 31;
+      outline: none;
 
       .icon_sort {
         background: transparent;
+      }
+
+      &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border: 1px solid #1253a2;
+        pointer-events: none;
+        z-index: 6;
       }
     }
 
