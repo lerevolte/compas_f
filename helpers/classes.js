@@ -1169,15 +1169,23 @@ export class Table {
             })
         }
 
-        // Обновляем виртуализатор после завершения перетаскивания
+        // Обновляем виртуализатор после завершения перетаскивания.
+        // isShort-таблицы («Задачи в машине», «Задачи логистики» и т.п.) НЕ
+        // используют scroll-виртуализацию — их строки рендерятся напрямую из
+        // body.map (см. Body.vue rows). Пересоздание виртуализатора на каждый
+        // reorder только лишний раз перетряхивало DOM, который Sortable уже
+        // расставил, из-за чего нижние строки «скакали»/мерцали (задача 8453).
+        // Для коротких таблиц пропускаем — порядок и так уже в body.
         await nextTick()
-        this.initVirtualizer()
-        // setTimeout (макрозадача) запускается после всех nextTick виртуализатора —
-        // к этому моменту virtualizer уже пересоздан и scrollTop мог обнулиться.
-        setTimeout(() => {
-            if (scrollEl && scrollEl.scrollTop === 0 && savedTop > 0) scrollEl.scrollTop = savedTop
-            if (scrollEl && scrollEl.scrollLeft === 0 && savedLeft > 0) scrollEl.scrollLeft = savedLeft
-        }, 0)
+        if (!this.options?.isShort) {
+            this.initVirtualizer()
+            // setTimeout (макрозадача) запускается после всех nextTick виртуализатора —
+            // к этому моменту virtualizer уже пересоздан и scrollTop мог обнулиться.
+            setTimeout(() => {
+                if (scrollEl && scrollEl.scrollTop === 0 && savedTop > 0) scrollEl.scrollTop = savedTop
+                if (scrollEl && scrollEl.scrollLeft === 0 && savedLeft > 0) scrollEl.scrollLeft = savedLeft
+            }, 0)
+        }
 
         this.emit('getData', this.body)
     }

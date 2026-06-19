@@ -629,6 +629,13 @@ section {
         margin-right: 20px;
     }
 
+    // Поиск по задаче (AppRelation) делаем немного шире, чтобы помещались
+    // Название · ID · дата доставки в результатах (задача 10).
+    .form__item_select {
+        width: 320px;
+        max-width: 100%;
+    }
+
     .select.select_icon  {
         .select__value {
             display: flex;

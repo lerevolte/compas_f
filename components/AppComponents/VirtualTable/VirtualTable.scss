@@ -339,9 +339,17 @@
   }
 
   &:has(.select_open),
-  &:has(.popup_open),
-  &:has(.table__cell_copy-select) {
+  &:has(.popup_open) {
     z-index: 100;
+  }
+
+  // Выделение ячейки для копирования (isCellCopy) — это лишь inset-рамка
+  // внутри строки, ей не нужно подниматься над липким заголовком (z-index
+  // 55). Раньше copy-select делил z-index:100 с открытыми списками, и
+  // выделенная строка логистики при скролле наезжала на заголовки таблицы
+  // (баг 8442). Держим её ниже заголовка.
+  &:has(.table__cell_copy-select) {
+    z-index: 11;
   }
 
   &.table__row_socket-change {
@@ -539,6 +547,31 @@
       }
     }
 
+  }
+}
+
+// Высоту инпутов в ячейках уменьшали до 30px ради компактного массового
+// редактирования в общих таблицах. На вкладке «Товары и услуги» задачи
+// логистики (slug products) таблица всегда в режиме редактирования —
+// возвращаем привычные 40px (задача 5).
+.table_products {
+  .table__cell {
+    input,
+    textarea {
+      min-height: 40px;
+    }
+
+    input {
+      height: 40px;
+    }
+
+    &[data-column-key="product_id"] .select__value {
+      height: 40px;
+    }
+
+    .form__item_select .select:has(.select__values) .select__values {
+      min-height: 40px;
+    }
   }
 }
 

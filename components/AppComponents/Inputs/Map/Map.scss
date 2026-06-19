@@ -373,4 +373,12 @@
     .leaflet-control-container {
         display: none !important;
     }
+
+    // Контрол зума Яндекс-карты в поле адреса деталки центрируем по вертикали
+    // (как у leaflet-зума в LogisticMap.scss). Версия класса 2-1-79 может
+    // меняться — матчим по части имени.
+    [class*='controls__control'] {
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+    }
 }

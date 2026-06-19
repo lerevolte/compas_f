@@ -107,10 +107,13 @@
                     @click="!option.disabled && selectInstances[index]?.changeValue(option, index)"
                 >
                     <span class="value__text">
-                        {{ option.label.text || option.label.text == null ? option.label.text : option.label }} 
+                        {{ option.label.text || option.label.text == null ? option.label.text : option.label }}
                     </span>
                     <span class="value__text value__text_subtext">
                         ID: {{ option.value }}
+                    </span>
+                    <span class="value__text value__text_subtext" v-if="option.label?.delivery_date">
+                        {{ option.label.delivery_date }}
                     </span>
                 </div>
 

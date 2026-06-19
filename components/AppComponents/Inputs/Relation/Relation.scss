@@ -333,6 +333,14 @@
     cursor: pointer;
     padding: 10px 15px;
     justify-content: space-between;
+    gap: 8px;
+
+    // Подписи (ID, дата доставки в поиске задач логистики) держим вместе
+    // справа: первый текст (название) забирает свободное место, остальные
+    // прижимаются к правому краю одной группой.
+    .value__text:first-child {
+        margin-right: auto;
+    }
 
     &:hover {
         color:variables.$color-black;

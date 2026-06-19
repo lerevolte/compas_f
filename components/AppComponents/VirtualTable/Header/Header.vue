@@ -545,4 +545,19 @@
         nextTick(() => resizer.setFixedLeft())
         nextTick(() => resizer.normalizeToContainerMinWidth())
     })
+
+    // Живое переключение «фиксировать колонку»/«показывать колонку» мутирует
+    // вложенное свойство (column.fixed / column.enabled), а НЕ заменяет массив
+    // header — поэтому watch выше не срабатывал, и column.left пересчитывался
+    // только после перезагрузки (баг 8452: новая фикс-колонка липла к началу
+    // таблицы без учёта уже зафиксированных слева). Следим за сигнатурой
+    // fixed/enabled (порядок колонок) и пересчитываем left сразу.
+    watch(
+        () => table.value.header.map(c => `${c.key}:${c.fixed ? 1 : 0}:${c.enabled ? 1 : 0}`).join('|'),
+        () => {
+            if (table.value.header.length == 0) return
+            resizer.visibleHeader = table.value.header.filter(el => el.enabled)
+            nextTick(() => resizer.setFixedLeft())
+        }
+    )
 </script>

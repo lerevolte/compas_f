@@ -616,14 +616,16 @@
 
         // Collect all task markers with their coords
         const allMarkers = [
-            ...routeMarkers.map(m => ({ marker: m, type: 'route', id: m._taskId, lat: m.getLatLng().lat, lng: m.getLatLng().lng })),
-            ...unassignedMarkers.map(m => ({ marker: m, type: 'unassigned', id: m._taskId, lat: m.getLatLng().lat, lng: m.getLatLng().lng }))
+            ...routeMarkers.map(m => ({ marker: m, type: 'route', id: m._taskId, addrText: m._addrText, lat: m.getLatLng().lat, lng: m.getLatLng().lng })),
+            ...unassignedMarkers.map(m => ({ marker: m, type: 'unassigned', id: m._taskId, addrText: m._addrText, lat: m.getLatLng().lat, lng: m.getLatLng().lng }))
         ];
 
-        // Group by coordinate key (rounded to 6 decimals to handle float imprecision)
+        // Group by address (см. clusterGroupKey): задачи с одним адресом всегда
+        // в одном кластере, даже если координаты слегка разошлись.
         const groups = {};
         allMarkers.forEach(item => {
-            const key = `${item.lat.toFixed(6)}_${item.lng.toFixed(6)}`;
+            const text = item.addrText ? String(item.addrText).trim().toLowerCase().replace(/\s+/g, ' ') : '';
+            const key = text ? `addr:${text}` : `geo:${item.lat.toFixed(4)}_${item.lng.toFixed(4)}`;
             if (!groups[key]) groups[key] = [];
             groups[key].push(item);
         });
@@ -705,7 +707,7 @@
             </div>`;
 
             const combined = L.marker([group[0].lat, group[0].lng], {
-                icon: L.divIcon({ className: 'custom-div-icon', html, iconAnchor: [14, 14] }),
+                icon: L.divIcon({ className: 'custom-div-icon', html, iconAnchor: [12, 12] }),
                 zIndexOffset: 1100
             }).addTo(mapInstance.value);
 
@@ -1204,6 +1206,7 @@
 
             marker._taskId = task.id;
             marker._latLng = task.latLng;
+            marker._addrText = parseAddress(task.address)?.text || '';
             marker.on('click', () => {
                 clickedFromMap = true;
                 const el = marker.getElement();
@@ -1611,6 +1614,7 @@
                 setTimeout(() => { clickedFromMap = false; }, 100);  // ADD THIS
             });
             marker._taskId = task.id;
+            marker._addrText = parseAddress(task.address)?.text || '';
             unassignedMarkers.push(marker);
         });
     };
