@@ -13,7 +13,7 @@
             :forceFallback="true"
             :fallbackOnBody="true"
             :delay="props.options?.dragDelay ?? 120"
-            :delayOnTouchOnly="props.options?.dragDelayOnTouchOnly ?? false"
+            :delayOnTouchOnly="props.options?.dragDelayOnTouchOnly ?? true"
             :touchStartThreshold="props.options?.touchStartThreshold ?? 3"
             :filter="props.options?.dragFilter ?? '.table__cell-content, .blank__text, .blank__link, input, textarea, select, [contenteditable]'"
             :preventOnFilter="false"

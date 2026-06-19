@@ -610,16 +610,23 @@ export class Table {
         let header = data
         if (this.options.isCheckClicked) {
             let clickedFixed = true
+            let clickedEnabled = true
             if (typeof window !== 'undefined') {
                 const stored = window.localStorage.getItem(`table_clicked_fixed_${this.slug}`)
                 if (stored !== null) clickedFixed = stored === '1'
+                // Колонка `clicked` не сохраняется на бэкенд (служебная), поэтому
+                // её видимость (вкл/выкл в настройках отображения) запоминаем
+                // в localStorage — иначе после перезагрузки она снова включалась
+                // (8462).
+                const storedEnabled = window.localStorage.getItem(`table_clicked_enabled_${this.slug}`)
+                if (storedEnabled !== null) clickedEnabled = storedEnabled === '1'
             }
             header = [{
                 "id": 0,
                 "title": "Выбранная строка",
                 "key": "clicked",
                 "width": "44px",
-                "enabled": true,
+                "enabled": clickedEnabled,
                 "hover": false,
                 "sort_order": null,
                 "type": "checkbox",
@@ -1240,6 +1247,7 @@ export class Table {
                 const clickedCol = this.header.find(p => p.key === 'clicked')
                 if (clickedCol) {
                     window.localStorage.setItem(`table_clicked_fixed_${this.slug}`, clickedCol.fixed ? '1' : '0')
+                    window.localStorage.setItem(`table_clicked_enabled_${this.slug}`, clickedCol.enabled ? '1' : '0')
                 }
             }
         } catch (error) {
@@ -3261,11 +3269,22 @@ export class Logistic {
     async createRoute(content) {
         try {
             this.modal.loading = true
-            await api.callMethod('POST', routes.logistic.createRoute, {rows: [{
+            const response = await api.callMethod('POST', routes.logistic.createRoute, {rows: [{
                 ...content,
                 date: this.activeDate
             }]})
-            this.updateActiveRoute({value: [null]})
+            // Авто-выбор созданного маршрута (8458): batch возвращает id новой
+            // записи. Делаем его активным (choseRoute → машина/карта/фильтры) и
+            // перезагружаем таблицу маршрутов, чтобы он появился и подсветился
+            // (restoreRoutesSelection по machine_tasks.route_id). Раньше тут
+            // всегда сбрасывали активный маршрут в null — авто-выбор не работал.
+            const newId = response?.data?.id ?? null
+            if (newId) {
+                this.choseRoute({ id: newId })
+                this.routes.updatingCount++
+            } else {
+                this.updateActiveRoute({value: [null]})
+            }
         } catch (error) {
             console.log(error);
         } finally {

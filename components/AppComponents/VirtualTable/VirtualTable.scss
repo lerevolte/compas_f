@@ -8,9 +8,10 @@
   overflow: hidden;
   margin-bottom: 40px;
   position: relative;
-  // max-width перенесён сюда из .table, чтобы .table (и scroll-кнопки в нём)
-  // занимали полную ширину section-table, а не останавливались раньше.
-  max-width: calc(100vw - 264px);
+  // На странице объектов таблица должна занимать всю ширину контента.
+  // Ограничение calc(100vw - 264px) нужно только в раскладке логистики
+  // (таблицы в колонках рядом с картой) — оно вынесено в Logistic.scss под
+  // .logistic .section-table (задача 27).
 }
 
 .table {

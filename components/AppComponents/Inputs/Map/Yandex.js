@@ -137,7 +137,22 @@ L.Yandex = L.Layer.extend({
 		var map = this._map;
 		var center = map.getCenter();
 		this._yandex.setCenter([center.lat, center.lng], map.getZoom());
-		var offset = L.point(0,0).subtract(L.DomUtil.getPosition(map.getPane('mapPane')));
+		this._alignContainer();
+		// Повторное выравнивание на следующем кадре. Leaflet после moveend делает
+		// _resetView (сбрасывает позицию mapPane и переразмещает слои/маркеры).
+		// Если наш setPosition сработал ДО сброса, контейнер Яндекса оставался
+		// смещён относительно маркеров — маркеры «отвязывались» от тайлов и
+		// зависали на месте относительно контейнера при перетаскивании (8470).
+		// Кадр спустя mapPane уже сброшен, и выравнивание становится корректным.
+		if (typeof requestAnimationFrame === 'function') {
+			var self = this;
+			requestAnimationFrame(function () { self._alignContainer(); });
+		}
+	},
+
+	_alignContainer: function () {
+		if (!this._map || !this._container) { return; }
+		var offset = L.point(0, 0).subtract(L.DomUtil.getPosition(this._map.getPane('mapPane')));
 		L.DomUtil.setPosition(this._container, offset); // move to visible part of pane
 	},
 

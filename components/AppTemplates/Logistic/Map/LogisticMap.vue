@@ -620,18 +620,33 @@
             ...unassignedMarkers.map(m => ({ marker: m, type: 'unassigned', id: m._taskId, addrText: m._addrText, lat: m.getLatLng().lat, lng: m.getLatLng().lng }))
         ];
 
-        // Group by address (см. clusterGroupKey): задачи с одним адресом всегда
-        // в одном кластере, даже если координаты слегка разошлись.
-        const groups = {};
+        // Кластеризуем по БЛИЗОСТИ (8449). У задач с «одним адресом» координаты
+        // могут слегка расходиться (геокодер/ручной пин), а текст адреса —
+        // отличаться форматированием. Поэтому не полагаемся ни на точные
+        // координаты, ни на точное совпадение текста: объединяем маркеры,
+        // которые в пределах ~50 м друг от друга ЛИБО с идентичным
+        // нормализованным адресом.
+        const PROXIMITY_M = 50;
+        const normAddr = (t) => t ? String(t).trim().toLowerCase().replace(/\s+/g, ' ') : '';
+        const clusters = [];
         allMarkers.forEach(item => {
-            const text = item.addrText ? String(item.addrText).trim().toLowerCase().replace(/\s+/g, ' ') : '';
-            const key = text ? `addr:${text}` : `geo:${item.lat.toFixed(4)}_${item.lng.toFixed(4)}`;
-            if (!groups[key]) groups[key] = [];
-            groups[key].push(item);
+            const itemText = normAddr(item.addrText);
+            let target = null;
+            for (const c of clusters) {
+                const sameText = itemText && c.text && itemText === c.text;
+                const near = L.latLng(c.lat, c.lng).distanceTo(L.latLng(item.lat, item.lng)) <= PROXIMITY_M;
+                if (sameText || near) { target = c; break; }
+            }
+            if (target) {
+                target.items.push(item);
+            } else {
+                clusters.push({ lat: item.lat, lng: item.lng, text: itemText, items: [item] });
+            }
         });
 
-        // For groups with >1 marker, hide originals and create combined marker
-        Object.values(groups).forEach(group => {
+        // For clusters with >1 marker, hide originals and create combined marker
+        clusters.forEach(cluster => {
+            const group = cluster.items;
             if (group.length <= 1) return;
 
             group.forEach(item => mapInstance.value.removeLayer(item.marker));
@@ -2020,8 +2035,17 @@
     });
 
     // ── Watchers ──
-    watch(() => props.routeData, () => {
-        renderAll();
+    // Зум/центрирование карты по маршруту (fitBounds) делаем ТОЛЬКО при смене
+    // маршрута (выбор другого маршрута). При изменении порядка/состава задач
+    // внутри того же маршрута routeData тоже меняется (changeRouteTasks создаёт
+    // новый объект с тем же id), но карту перецентрировать не нужно — иначе при
+    // каждом drag&drop порядка карта прыгала к общему охвату маршрута (8469).
+    let _lastFitRouteId = null;
+    watch(() => props.routeData, (newData) => {
+        const newId = newData?.id ?? null;
+        const routeChanged = newId !== _lastFitRouteId;
+        _lastFitRouteId = newId;
+        renderAll({ skipFitBounds: !routeChanged });
     }, { deep: true });
     watch(() => props.unassignedTasks, () => {
         renderAll({ skipFitBounds: true });

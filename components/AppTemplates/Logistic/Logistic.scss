@@ -24,6 +24,13 @@
     margin-bottom: 65px;
     grid-template-columns: repeat(2, 1fr);
 
+    // Ограничение ширины таблиц нужно только в раскладке логистики (таблицы в
+    // колонках рядом с картой). На странице объектов .section-table занимает
+    // всю ширину (задача 27).
+    .section-table {
+        max-width: calc(100vw - 264px);
+    }
+
     &.logistic_dragging {
         .resize {
             overflow: hidden;

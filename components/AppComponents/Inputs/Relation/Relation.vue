@@ -113,7 +113,7 @@
                         ID: {{ option.value }}
                     </span>
                     <span class="value__text value__text_subtext" v-if="option.label?.delivery_date">
-                        {{ option.label.delivery_date }}
+                        {{ formatDeliveryDate(option.label.delivery_date) }}
                     </span>
                 </div>
 
@@ -169,6 +169,14 @@
         'showAll',
         'create'
     ])
+
+    // Дата доставки в результатах поиска задач — в формате d.m.Y (бэкенд отдаёт
+    // Y-m-d). Если формат другой — выводим как есть.
+    const formatDeliveryDate = (d) => {
+        if (!d) return ''
+        const m = String(d).match(/^(\d{4})-(\d{2})-(\d{2})/)
+        return m ? `${m[3]}.${m[2]}.${m[1]}` : d
+    }
 
     class Select {
         constructor(index) {

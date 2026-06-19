@@ -341,6 +341,10 @@ input, textarea {
     border-radius: 5px;
     font-family: inherit;
     caret-color: variables.$color-black;
+    // Явный цвет текста: фон инпута белый, но color НЕ задавался и
+    // наследовался от родителя. В некоторых местах (массовое редактирование
+    // в ячейках таблицы) наследовался белый — текст сливался с фоном (8468).
+    color: variables.$color-black;
     font-size: variables.$font-size-default;
     background-color: variables.$color-white;
     border: 1px solid variables.$color-border;
@@ -629,10 +633,10 @@ section {
         margin-right: 20px;
     }
 
-    // Поиск по задаче (AppRelation) делаем немного шире, чтобы помещались
-    // Название · ID · дата доставки в результатах (задача 10).
+    // Поиск по задаче (AppRelation) делаем шире: иначе не помещается название
+    // в поле/результатах, плюс справа выводятся ID и дата доставки (задача 10).
     .form__item_select {
-        width: 320px;
+        width: 400px;
         max-width: 100%;
     }
 

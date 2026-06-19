@@ -733,7 +733,23 @@
                 for (const row of rows) {
                     const idCell = row.querySelector('.table__cell[data-column-key="id"] .table__text');
                     if (idCell && idCell.textContent.trim() === target) {
-                        row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        // Только вертикальный скролл к строке: scrollIntoView тянет
+                        // и по горизонтали, и таблица, проскролленная вправо,
+                        // прыгала к началу (8467). Скроллим контейнер таблицы по
+                        // вертикали вручную, scrollLeft не трогаем.
+                        const scroller = row.closest('.table');
+                        if (scroller) {
+                            const rowRect = row.getBoundingClientRect();
+                            const scRect = scroller.getBoundingClientRect();
+                            // Строка вне видимой области по вертикали — подводим её.
+                            if (rowRect.top < scRect.top || rowRect.bottom > scRect.bottom) {
+                                const delta = rowRect.top - scRect.top
+                                    - (scroller.clientHeight - row.offsetHeight) / 2;
+                                scroller.scrollTo({ top: scroller.scrollTop + delta, behavior: 'smooth' });
+                            }
+                        } else {
+                            row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        }
                         return true;
                     }
                 }

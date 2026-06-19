@@ -176,12 +176,28 @@
             yMap = new window.ymaps.Map(mapContainer.value, {
                 center: initialCenter,
                 zoom: initialZoom,
-                controls: ['zoomControl'],
+                // Стандартный zoomControl садится в верхний-левый угол. Нам нужен
+                // зум по центру по вертикали слева — поэтому не добавляем его
+                // здесь, а создаём ниже с вычисленной позицией top.
+                controls: [],
                 behaviors: ['drag', 'scrollZoom', 'multiTouch', 'dblClickZoom']
             }, {
                 suppressMapOpenBlock: true,
                 yandexMapDisablePoiInteractivity: true,
             });
+
+            // Контрол зума по центру по вертикали (слева). Yandex позиционирует
+            // контролы абсолютным top/left, «центра» у него нет — считаем top
+            // от высоты контейнера карты (примерная высота контрола ~80px).
+            try {
+                const containerH = mapContainer.value.offsetHeight || 360;
+                const zoomControl = new window.ymaps.control.ZoomControl({
+                    options: {
+                        position: { left: 10, top: Math.max(10, Math.round((containerH - 70) / 2)) }
+                    }
+                });
+                yMap.controls.add(zoomControl);
+            } catch (e) {}
 
             // Подстраховка на ресайз контейнера (например модалка).
             if (typeof ResizeObserver !== 'undefined') {

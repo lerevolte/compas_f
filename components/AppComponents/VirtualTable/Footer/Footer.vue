@@ -74,10 +74,14 @@
 
     const table = inject('table');
 
-    const countList = [
-        { value: 12, label: '12' },
-        { value: 25, label: '25' },
-        { value: 50, label: '50' },
-        { value: 100, label: '100' }
-    ]
+    // Текущий per_page (table.pages.limit) бывает не из набора 12/25/50/100 —
+    // например у задач логистики сохранён per_page 500. Тогда select не находил
+    // совпадающую опцию и показывался пустым (8463). Подмешиваем актуальное
+    // значение в список, чтобы оно всегда отображалось как выбранное.
+    const countList = computed(() => {
+        const base = [12, 25, 50, 100]
+        const limit = Number(table.value?.pages?.limit)
+        const values = (!limit || base.includes(limit)) ? base : [...base, limit].sort((a, b) => a - b)
+        return values.map(v => ({ value: v, label: String(v) }))
+    })
 </script>

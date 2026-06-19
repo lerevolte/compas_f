@@ -225,16 +225,40 @@
                         title: 'Показывать всегда',
                     }"
                 />
-                <AppInput
+                <div
+                    class="form__item form__item_default-value default-value-picker"
                     v-if="!['relation','file','text_group','status','select_dropdown','redactor'].includes(modal.field.type)"
-                    v-model="modal.field.default_value"
-                    :options="{
-                        id: 0,
-                        title: 'Значение по умолчанию',
-                        type: modal.field.type == 'number' ? 'number' : 'text',
-                        name: 'default_value'
-                    }"
-                />
+                >
+                    <AppPopup class="default-value-picker__popup" :isPreventBottom="true" :ignoreSelectors="['default-value-picker']">
+                        <template #header>
+                            <div class="default-value-picker__summary">
+                                <AppCheckbox
+                                    v-model="modal.field.set_default"
+                                    :options="{
+                                        title: (modal.field.default_value !== null && modal.field.default_value !== '')
+                                            ? `Значение по умолчанию - ${modal.field.default_value}`
+                                            : 'Значение по умолчанию',
+                                        noLabelClick: true,
+                                    }"
+                                />
+                            </div>
+                        </template>
+                        <template #content>
+                            <div class="default-value-picker__content">
+                                <AppInput
+                                    v-model="modal.field.default_value"
+                                    @update:modelValue="val => { if (val !== null && val !== '') modal.field.set_default = 1 }"
+                                    :options="{
+                                        id: 0,
+                                        title: 'Значение по умолчанию',
+                                        type: modal.field.type == 'number' ? 'number' : 'text',
+                                        name: 'default_value'
+                                    }"
+                                />
+                            </div>
+                        </template>
+                    </AppPopup>
+                </div>
                 <AppCheckbox
                     v-model="modal.field.has_roles_read"
                     :options="{
@@ -298,6 +322,7 @@
     import AppSelect from '@AppComponents/Inputs/Select/Select.vue';
     import AppCheckbox from '@AppComponents/Inputs/Checkbox/Checkbox.vue'
     import AppColorPicker from '@AppComponents/Inputs/ColorPicker/ColorPicker.vue';
+    import AppPopup from '@AppComponents/Popup/Popup.vue'
     import IconPipette from '@AppIcons/Input/Pipette.vue'
 
     import { useUserStore } from '@/stores/userStore.js'
@@ -357,6 +382,7 @@
                     required: 0,
                     visible_always: 1,
                     default_value: null,
+                    set_default: 0,
                     has_roles_read: 0,
                     roles_read: [],
                     has_roles_write: 0,
