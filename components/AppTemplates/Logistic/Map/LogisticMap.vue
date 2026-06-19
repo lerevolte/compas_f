@@ -710,17 +710,20 @@
             // Фон иконки кластера: если в кластере есть точки маршрута —
             // используем цвет маршрута/машины (а не серый/градиент), как просили
             // (8449). Серый остаётся только у кластеров без маршрутных точек
-            // (чисто необработанные).
+            // (чисто необработанные). Цвет маршрута может быть как сплошным
+            // (#65dd78), так и градиентом (linear-gradient(...)) — градиент
+            // нельзя класть в background-color, поэтому раскладываем правильно:
+            // глиф + градиент через background-image, либо глиф + background-color.
             const routeGroup = groupOrder.map(k => byGroup[k]).find(g => g.type === 'route');
             let iconColorStyle = '';
             if (routeGroup) {
-                if (iconType === 'mixed') {
-                    // Смешанный кластер: оставляем глиф, но фон — цвет маршрута
-                    // вместо градиента.
-                    iconColorStyle = ` style="background-image: url('/img/cluster-mixed.svg'); background-size: 15%; background-color:${routeGroup.color}"`;
-                } else {
-                    iconColorStyle = ` style="background-color:${routeGroup.color}"`;
-                }
+                const glyph = iconType === 'mixed' ? '/img/cluster-mixed.svg' : '/img/cluster-route.svg';
+                const color = routeGroup.color;
+                const isGradient = typeof color === 'string' && /gradient\(/i.test(color);
+                const style = isGradient
+                    ? `background-image: url('${glyph}'), ${color}; background-size: 15%, cover; background-position: center, center; background-repeat: no-repeat, no-repeat;`
+                    : `background-image: url('${glyph}'); background-size: 15%; background-position: center; background-repeat: no-repeat; background-color: ${color};`;
+                iconColorStyle = ` style="${style}"`;
             }
 
             const html = `<div class="route-popup cluster-popup cluster-popup_${iconType}">
@@ -736,8 +739,11 @@
                 zIndexOffset: 1100
             }).addTo(mapInstance.value);
 
-            const clusterRadiusColor = iconType === 'route'
-                ? (byGroup[groupOrder[0]].color || '#b6b6b6')
+            // Цвет круга зоны обслуживания — SVG-stroke, градиент тут недопустим:
+            // прогоняем цвет маршрута через toStrokeColor (вытащит первый
+            // hex/rgb из градиента). Без точек маршрута — серый, как у иконки.
+            const clusterRadiusColor = routeGroup
+                ? toStrokeColor(routeGroup.color || '#b6b6b6')
                 : '#A6B7D4';
             combined.on('click', () => {
                 const el = combined.getElement();
