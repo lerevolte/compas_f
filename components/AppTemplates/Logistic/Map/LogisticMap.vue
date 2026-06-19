@@ -707,11 +707,21 @@
                 extendHtml = `<div class="cluster-menu" data-level="root">${rootItems}</div>${subMenus}`;
             }
 
-            // Для кластера маршрута фон иконки = цвет маршрута (задаём inline);
-            // серый (unassigned) и градиент (mixed) — в CSS по классу типа.
-            const iconColorStyle = iconType === 'route'
-                ? ` style="background-color:${byGroup[groupOrder[0]].color}"`
-                : '';
+            // Фон иконки кластера: если в кластере есть точки маршрута —
+            // используем цвет маршрута/машины (а не серый/градиент), как просили
+            // (8449). Серый остаётся только у кластеров без маршрутных точек
+            // (чисто необработанные).
+            const routeGroup = groupOrder.map(k => byGroup[k]).find(g => g.type === 'route');
+            let iconColorStyle = '';
+            if (routeGroup) {
+                if (iconType === 'mixed') {
+                    // Смешанный кластер: оставляем глиф, но фон — цвет маршрута
+                    // вместо градиента.
+                    iconColorStyle = ` style="background-image: url('/img/cluster-mixed.svg'); background-size: 15%; background-color:${routeGroup.color}"`;
+                } else {
+                    iconColorStyle = ` style="background-color:${routeGroup.color}"`;
+                }
+            }
 
             const html = `<div class="route-popup cluster-popup cluster-popup_${iconType}">
                 <div class="route-popup__main cluster-marker">
