@@ -235,7 +235,10 @@
                                 <AppCheckbox
                                     v-model="modal.field.set_default"
                                     :options="{
-                                        title: (modal.field.default_value !== null && modal.field.default_value !== '')
+                                        // Показываем сохранённое значение всегда, когда оно задано —
+                                        // даже если применение выключено (set_default = 0): пользователь
+                                        // отключил простановку, но значение не сбросил (8461).
+                                        title: (modal.field.default_value != null && modal.field.default_value !== '')
                                             ? `Значение по умолчанию - ${modal.field.default_value}`
                                             : 'Значение по умолчанию',
                                         noLabelClick: true,

@@ -47,13 +47,13 @@
                         @end="val => menu.dragEnd(val)"
                     >
                         <template #item="{ element: item }">
-                            <li class="menu__item" :class="{'menu__item_disabled': !item.enabled}" v-if="item.children.length == 0">
+                            <li class="menu__item" :class="{'menu__item_disabled': !item.enabled}" v-if="menu.canShow(item) && item.children.length == 0">
                                 <IconDrag />
                                 <NuxtLink :class="{'menu__link_active': menu.isActive(item.link)}" class="menu__link" :to="item.link ?? null" @click="menu.isMobile && menu.closeMenu()">
                                     {{ item.name }}
                                 </NuxtLink>
                             </li>
-                            <li class="menu__item" :class="{'menu__item_disabled': !item.enabled}" v-else>
+                            <li class="menu__item" :class="{'menu__item_disabled': !item.enabled}" v-else-if="menu.canShow(item)">
                                 <IconDrag />
         
                                 <details class="menu-item menu-item__details">
@@ -105,13 +105,13 @@
                                 @end="val => menu.dragEnd(val)"
                             >
                                 <template #item="{ element: item }">
-                                    <li class="menu__item" :class="{'menu__item_disabled': !item.enabled}" v-if="item.children.length == 0">
+                                    <li class="menu__item" :class="{'menu__item_disabled': !item.enabled}" v-if="menu.canShow(item) && item.children.length == 0">
                                         <IconDrag />
                                         <NuxtLink :class="{'menu__link_active': menu.isActive(item.link)}" class="menu__link" :to="item.link ?? null" @click="menu.isMobile && menu.closeMenu()">
                                             {{ item.name }}
                                         </NuxtLink>
                                     </li>
-                                    <li class="menu__item" :class="{'menu__item_disabled': !item.enabled}" v-else>
+                                    <li class="menu__item" :class="{'menu__item_disabled': !item.enabled}" v-else-if="menu.canShow(item)">
                                         <IconDrag />
                 
                                         <details class="menu-item__details">
@@ -394,6 +394,20 @@
             setTimeout(() => {
                 this.isOpen = false
             }, 100);
+        }
+
+        // (8478) Пункты «Настройки портала» (/settings), «Настройки ролей
+        // сущности» (/roles) и «Корзина» (/trash) видны только админам.
+        // Скрываем только на отрисовке — данные меню остаются целыми, чтобы
+        // сохранение порядка не выкидывало эти пункты.
+        isAdminOnly(item) {
+            const link = item?.link || ''
+            if (['/settings', '/roles', '/trash'].some(l => link.startsWith(l))) return true
+            return ['Настройки портала', 'Настройки ролей сущности', 'Корзина'].includes(item?.name)
+        }
+
+        canShow(item) {
+            return userStore.user?.is_admin ? true : !this.isAdminOnly(item)
         }
 
         // Первый рабочий link для логотипа.

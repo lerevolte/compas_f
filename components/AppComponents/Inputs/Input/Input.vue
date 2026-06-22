@@ -12,17 +12,9 @@
             :value="modelValue"
             :min="props.options.type == 'number' ? 1 : null"
             :autocomplete="props.options.autocomplete"
-            v-maska="{
-                mask: props.options.mask,
-                tokens: {
-                    A: { pattern: /[a-zA-Zа-яА-Я]/ },
-                    '#': { pattern: /\d/ },
-                    '*': { pattern: /[a-zA-Z0-9]/ },
-                    S: { pattern: /[0-9а-яА-Я]/ }
-                }
-            }"
+            v-maska="maskaOptions"
             @input="onInput"
-            @blur="event => emit('blur', event)"
+            @blur="onBlur"
         >
         <span class="form-item__substring" v-if="props.options.unit">{{ props.options.unit }}</span>
         <AppError v-show="props.error.state">
@@ -70,11 +62,53 @@
         modelValue: [String, Number]
     })
 
+    // Режимы маски (8476/8477):
+    //  - 'email' — спец-маркер: фиксированная maska невозможна, фильтруем символы
+    //    и нормализуем на blur;
+    //  - маска со ':' — время (одиночное '##:##' или диапазон '##:## - ##:##'),
+    //    структуру задаёт maska, диапазоны (часы 00–23, минуты 00–59) доводим на blur.
+    const isEmailMask = computed(() => props.options.mask === 'email')
+    const isTimeMask = computed(() => typeof props.options.mask === 'string' && props.options.mask.includes(':'))
+    const isRangeTime = computed(() => isTimeMask.value && props.options.mask.includes('-'))
+
+    const maskaOptions = computed(() => ({
+        // для email maska-литерал не применяем
+        mask: isEmailMask.value ? null : (props.options.mask ?? null),
+        tokens: {
+            A: { pattern: /[a-zA-Zа-яА-Я]/ },
+            '#': { pattern: /\d/ },
+            '*': { pattern: /[a-zA-Z0-9]/ },
+            S: { pattern: /[0-9а-яА-Я]/ }
+        }
+    }))
+
+    const pad2 = n => String(n).padStart(2, '0')
+
+    // Доводим время до валидного формата. Если введено меньше цифр, чем нужно,
+    // значение не насилуем (пользователь ещё печатает / стёр часть).
+    function normalizeTime(value, isRange) {
+        const digits = (value ?? '').replace(/\D/g, '')
+        const need = isRange ? 8 : 4
+        if (digits.length < need) return value
+        const d = digits.slice(0, need)
+        const clamp = (str, max) => pad2(Math.min(parseInt(str, 10) || 0, max))
+        let res = `${clamp(d.slice(0, 2), 23)}:${clamp(d.slice(2, 4), 59)}`
+        if (isRange) {
+            res += ` - ${clamp(d.slice(4, 6), 23)}:${clamp(d.slice(6, 8), 59)}`
+        }
+        return res
+    }
+
     // Коалесцируем несколько input-событий (сырое + от v-maska) в один emit
     let emitRafId = null
 
     function onInput(event) {
         const target = event.target
+        // e-mail: оставляем только допустимые в адресе символы
+        if (isEmailMask.value) {
+            const filtered = target.value.replace(/[^a-zA-Z0-9@._%+\-]/g, '')
+            if (filtered !== target.value) target.value = filtered
+        }
         if (emitRafId !== null) {
             cancelAnimationFrame(emitRafId)
             emitRafId = null
@@ -84,6 +118,22 @@
             emit('update:modelValue', target.value)
             emitRafId = null
         })
+    }
+
+    function onBlur(event) {
+        const target = event.target
+        let normalized = null
+        if (isTimeMask.value) {
+            normalized = normalizeTime(target.value, isRangeTime.value)
+        } else if (isEmailMask.value) {
+            normalized = (target.value ?? '').trim().toLowerCase()
+        }
+        if (normalized !== null && normalized !== target.value) {
+            target.value = normalized
+            emit('update:prevValue', props.modelValue ? JSON.parse(JSON.stringify(props.modelValue)) : null)
+            emit('update:modelValue', normalized)
+        }
+        emit('blur', event)
     }
 
     defineExpose({ inputRef })

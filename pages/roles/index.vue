@@ -1,5 +1,5 @@
 <template>
-    <main class="page_categories">
+    <main class="page_categories page_roles">
 		<div class="page__header">
 			<AppH1 id="mobile-menu-target">
 				Настройка ролей сущности
@@ -232,3 +232,12 @@
 	})
 
 </script>
+
+<style lang="scss">
+	// (8478) Высота инпутов в таблице ролей — 40px.
+	.page_roles {
+		.table__body .table__cell input {
+			height: 40px;
+		}
+	}
+</style>

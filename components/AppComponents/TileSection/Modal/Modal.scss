@@ -10,12 +10,29 @@
     }
 
     .popup__content {
-        padding: 10px;
-        min-width: 220px;
+        padding: 16px;
+        min-width: 240px;
+        background: variables.$color-white;
+        border: 1px solid variables.$color-border-light;
+        border-radius: 8px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, .08);
     }
 
-    .default-value-picker__content .form__item_input {
-        width: 100%;
+    .default-value-picker__content {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        .form__item_input {
+            width: 100%;
+        }
+
+        .blank__title {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 4px;
+            color: variables.$color-scroll;
+        }
     }
 }
 

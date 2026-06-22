@@ -121,6 +121,14 @@
   </teleport>
 </template>
 
+<script>
+  // (8459) Горизонтальная прокрутка таблицы запоминается между пересозданиями
+  // компонента. Таблица «Задачи в машине» пересоздаётся при смене маршрута
+  // (меняется :key), из-за чего scrollLeft сбрасывался. Карта модульного уровня
+  // живёт всё время работы SPA и хранит позицию по ключу slug+route_id.
+  const tableScrollPositions = new Map()
+</script>
+
 <script setup>
   import './VirtualTable.scss'
 
@@ -219,6 +227,26 @@
   const common = new Common()
   const socket = inject('socket')
 
+  // (8459) Сохранение/восстановление горизонтальной прокрутки таблицы.
+  // Ключ запоминаем только когда таблица привязана к маршруту (query.route_id) —
+  // именно она пересоздаётся при переключении маршрута.
+  const scrollKey = computed(() => {
+    const routeId = props.options?.query?.route_id
+    return routeId != null && routeId !== '' ? `${props.slug}:${routeId}` : null
+  })
+  let scrollRestored = false
+
+  const saveScrollPosition = () => {
+    if (!scrollKey.value || !tableRef.value) return
+    tableScrollPositions.set(scrollKey.value, tableRef.value.scrollLeft)
+  }
+
+  const restoreScrollPosition = () => {
+    if (!scrollKey.value || !tableRef.value) return
+    const left = tableScrollPositions.get(scrollKey.value)
+    if (left) tableRef.value.scrollLeft = left
+  }
+
   const isChoosed = computed(() => {
         // MassAction показываем и при чекбокс-выделении, и при правке строки.
         return table.value.body.some(item => item.isChoose || item.edit)
@@ -238,7 +266,23 @@
           socket.value.entities[props.slug].table = []
         }
       }
+      // Запоминаем позицию горизонтального скролла этой таблицы (8459).
+      tableRef.value?.addEventListener('scroll', saveScrollPosition, { passive: true })
     })
+  })
+
+  onBeforeUnmount(() => {
+    saveScrollPosition()
+    tableRef.value?.removeEventListener('scroll', saveScrollPosition)
+  })
+
+  // После загрузки строк (когда ширина контента уже определена) один раз
+  // восстанавливаем сохранённую позицию прокрутки для текущего маршрута.
+  watch(() => table.value.body.length, (count) => {
+    if (count > 0 && !scrollRestored) {
+      scrollRestored = true
+      nextTick(restoreScrollPosition)
+    }
   })
 
   const initTable = async () => {
