@@ -2084,10 +2084,15 @@ export class Section {
 
                 // Обязательные поля НЕ в режиме редактирования тоже проверяем —
                 // иначе пустое required-поле проходило без ошибки, если его не трогали.
+                // Исключение — пароль (8480): его значение никогда не приходит на
+                // клиент (хранится только на сервере), поэтому нетронутое поле
+                // пароля здесь всегда «пустое». Требовать его при правке других
+                // полей нельзя — пароль уже задан. Если пароль реально меняют,
+                // он попадает в edit-ветку выше и там валидируется как обычно.
                 const requiredReadOnly = section.fields.reduce((arr, f) => {
                     if (f.type === 'text_group') {
-                        f.fields.forEach(sf => { if (!sf.edit && sf.required) arr.push(sf) })
-                    } else if (!f.edit && f.required) {
+                        f.fields.forEach(sf => { if (!sf.edit && sf.required && sf.type !== 'password') arr.push(sf) })
+                    } else if (!f.edit && f.required && f.type !== 'password') {
                         arr.push(f)
                     }
                     return arr
