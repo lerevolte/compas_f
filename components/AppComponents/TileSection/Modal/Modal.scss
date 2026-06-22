@@ -8,15 +8,19 @@
     .popup__header {
         cursor: pointer;
     }
+}
 
-    .popup__content {
-        padding: 16px;
-        min-width: 240px;
-        background: variables.$color-white;
-        border: 1px solid variables.$color-border-light;
-        border-radius: 8px;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, .08);
-    }
+// ВАЖНО: содержимое попапа (.popup__content) выносится Teleport'ом в <body>,
+// поэтому селектор-предок «.default-value-picker» к нему уже НЕ относится.
+// Popup копирует на контент свой модификатор-класс (default-value-picker__popup),
+// по нему и стилизуем (8461).
+.popup__content.default-value-picker__popup {
+    padding: 16px;
+    min-width: 240px;
+    background: variables.$color-white;
+    border: 1px solid variables.$color-border-light;
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, .08);
 
     .default-value-picker__content {
         display: flex;

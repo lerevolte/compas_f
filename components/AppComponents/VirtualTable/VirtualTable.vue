@@ -228,11 +228,16 @@
   const socket = inject('socket')
 
   // (8459) Сохранение/восстановление горизонтальной прокрутки таблицы.
-  // Ключ запоминаем только когда таблица привязана к маршруту (query.route_id) —
-  // именно она пересоздаётся при переключении маршрута.
+  // Таблица «Задачи в машине» пересоздаётся при КАЖДОЙ смене маршрута (меняется
+  // :key), из-за чего scrollLeft сбрасывался в начало. Нужно, чтобы при
+  // переключении маршрута горизонтальная позиция СОХРАНЯЛАСЬ (переносилась) —
+  // поэтому ключ СТАБИЛЬНЫЙ, без route_id (одна позиция на всю таблицу задач в
+  // машине). Идентифицируем эту таблицу по наличию query.route_id.
   const scrollKey = computed(() => {
     const routeId = props.options?.query?.route_id
-    return routeId != null && routeId !== '' ? `${props.slug}:${routeId}` : null
+    if (routeId == null || routeId === '') return null
+    const group = props.options?.group ?? props.slug
+    return `route_tasks:${group}`
   })
   let scrollRestored = false
 
@@ -244,7 +249,12 @@
   const restoreScrollPosition = () => {
     if (!scrollKey.value || !tableRef.value) return
     const left = tableScrollPositions.get(scrollKey.value)
-    if (left) tableRef.value.scrollLeft = left
+    if (!left) return
+    // Ширина контента таблицы устаканивается после отрисовки строк/колонок —
+    // выставляем scrollLeft в следующем кадре, иначе значение клампится к 0.
+    const apply = () => { if (tableRef.value) tableRef.value.scrollLeft = left }
+    apply()
+    requestAnimationFrame(apply)
   }
 
   const isChoosed = computed(() => {
