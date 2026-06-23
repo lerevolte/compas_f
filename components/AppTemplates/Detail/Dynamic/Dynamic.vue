@@ -291,6 +291,7 @@
                 this.history.get(response.data)
                 this.columns.get(response.data.detail)
                 emit('action', { action: 'getColumns', value: response.data.detail.columns })
+                emit('action', { action: 'setPermissions', value: { permissions: response.data.permissions || {}, readonly: !!response.data.detail?.readonly } })
             } catch (error) {
                 console.log(error);
             } finally {

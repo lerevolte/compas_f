@@ -89,11 +89,7 @@
                         />
                         <AppShowMore
                             v-else-if="column.key == 'actions' && table.body[row.index]"
-                            :options="table.options.isTrash
-                                ? cell.actions.trash
-                                : table.slug == 'products'
-                                    ? cell.actions.products
-                                    : table.body[row.index].edit ? cell.actions.edit : cell.actions.default"
+                            :options="cell.rowActions(row.index)"
                             @initClick="action => table[action](table.body[row.index], table.slug)"
                         />
 
@@ -381,6 +377,19 @@
     }, 200, emit)
 
     class Cell {
+        rowActions(rowIndex) {
+            const row = table.value.body[rowIndex]
+            if (table.value.options?.isTrash) return this.actions.trash
+            if (table.value.slug == 'products') return this.actions.products
+            const base = row.edit ? this.actions.edit : this.actions.default
+            return base.filter(a => {
+                if (a.action === 'edit') return table.value.canEditRow(row)
+                if (a.action === 'initDelete') return table.value.canDeleteRow(row)
+                if (a.action === 'copy') return table.value.canCreate()
+                return true
+            })
+        }
+
         constructor() {
             this.actions = {
                 default: [

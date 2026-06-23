@@ -998,6 +998,34 @@ export class Table {
         this.common.copyExternalLink({slug: this.slug, id: row.id})
     }
 
+    ownsRow(row) {
+        const uid = useUserStore().user?.id
+        if (uid == null) return false
+        let owner = row?.user_id
+        if (owner && typeof owner === 'object') owner = owner.value ?? owner.id ?? (Array.isArray(owner) ? owner[0] : null)
+        if (Array.isArray(owner)) owner = owner[0]
+        if (owner && typeof owner === 'object') owner = owner.value ?? owner.id ?? null
+        return owner != null && String(owner) === String(uid)
+    }
+
+    canCreate() {
+        return this.permissions?.create_p !== 'N'
+    }
+
+    canEditRow(row) {
+        const p = this.permissions?.update_p
+        if (p === 'N') return false
+        if (p === 'Y') return this.ownsRow(row)
+        return true
+    }
+
+    canDeleteRow(row) {
+        const p = this.permissions?.delete_p
+        if (p === 'N') return false
+        if (p === 'Y') return this.ownsRow(row)
+        return true
+    }
+
     // Инициализация удаления
     initDelete(rows = []) {
         if (this.permissions?.delete_p === 'N') return

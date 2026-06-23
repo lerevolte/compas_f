@@ -19,15 +19,15 @@
                 />
             </AppH1>
             <div class="detail-page__actions" v-if="!props.is_external" v-show="!detail.header.editTitle && !props.isGlobalEdit">
-                <IconEdit  @click="() => detail.header.initEditTitle({
+                <IconEdit v-if="!detail.readonly" @click="() => detail.header.initEditTitle({
                     textarea: textareaRef.textareaRef.querySelector('textarea'),
                     columns: detail.columns,
                     slug: detail.slug,
                     id: detail.id
                 })"/>
-                <AppShowMore 
+                <AppShowMore
                     :isPreventBottom="true"
-                    :options="detail.isTrash ? detail.actions.trash : detail.actions.default"
+                    :options="detail.headerActions()"
                     @initClick="action => detail.header[action]({
                         columns: detail.columns,
                         is_modal: props.is_modal,
@@ -205,6 +205,8 @@
             this.isGlobalEdit = false
             this.isCopy = false
             this.isTrash = false
+            this.permissions = {}
+            this.readonly = false
             this.actions = {
                 default: [
                     {
@@ -241,6 +243,20 @@
                     }
                 ]
             }
+        }
+
+        setPermissions({permissions, readonly}) {
+            this.permissions = permissions || {}
+            this.readonly = !!readonly
+        }
+
+        headerActions() {
+            if (this.isTrash) return this.actions.trash
+            return this.actions.default.filter(a => {
+                if (a.action === 'copy') return this.permissions?.create_p !== 'N'
+                if (a.action === 'initDelete') return this.permissions?.delete_p !== 'N'
+                return true
+            })
         }
 
         // Получение данных
