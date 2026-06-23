@@ -10,7 +10,8 @@
                     'table__cell_hide': !column.enabled,
                     'table__cell_fixed': column.fixed
                 }"
-                :key="column.key" 
+                :key="column.key"
+                :title="column.title"
                 :style="`--cell-size: ${column.width}; --cell-left: ${column.left}px;`"
                 :data-column-key="column.key"
                 :data-idx="idx"

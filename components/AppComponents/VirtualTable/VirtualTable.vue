@@ -258,8 +258,18 @@
   }
 
   const canCreate = computed(() => table.value.permissions?.create_p !== 'N')
-  const canUpdate = computed(() => table.value.permissions?.update_p !== 'N')
-  const canDelete = computed(() => table.value.permissions?.delete_p !== 'N')
+  const canUpdate = computed(() => {
+    const p = table.value.permissions?.update_p
+    if (p === 'N') return false
+    if (p === 'Y') return table.value.body.filter(r => r.isChoose).every(r => table.value.ownsRow(r))
+    return true
+  })
+  const canDelete = computed(() => {
+    const p = table.value.permissions?.delete_p
+    if (p === 'N') return false
+    if (p === 'Y') return table.value.body.filter(r => r.isChoose).every(r => table.value.ownsRow(r))
+    return true
+  })
 
   const isChoosed = computed(() => {
         // MassAction показываем и при чекбокс-выделении, и при правке строки.

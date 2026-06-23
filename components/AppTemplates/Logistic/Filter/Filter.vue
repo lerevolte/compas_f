@@ -53,18 +53,18 @@
                     if (!props.modelValue || props.modelValue.length == 0) return []
                     for (let tab of props.modelValue) {
                         if (Array.isArray(tab.value)) {
+                            const isRange = !['car_requirements', 'employee_requirements', 'driver_requirements'].includes(tab.key)
                             response = [...response, ...tab.value.map((subvalue, index) => {
-                                // Find matching label from labels array if available
                                 let label = null;
                                 if (tab.labels && Array.isArray(tab.labels)) {
                                     label = tab.labels[index] ?? null;
                                 }
                                 return {
                                     ...tab,
-                                    title: `${tab.title}${tab.value.length > 1 ? index == 0 ? ' (от)' : index == tab.value.length - 1 ? ' (до)' : ' прочее' : ''}`, 
+                                    title: `${tab.title}${(isRange && tab.value.length > 1) ? (index == 0 ? ' (от)' : index == tab.value.length - 1 ? ' (до)' : ' прочее') : ''}`,
                                     value: subvalue ?? null,
                                     label: label
-                                } 
+                                }
                             })]
                         } else {
                             response.push({ ...tab })

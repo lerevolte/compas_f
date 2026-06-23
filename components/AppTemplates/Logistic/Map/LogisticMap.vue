@@ -2034,11 +2034,14 @@
         await initMap();
         document.addEventListener('click', closeSettingsOnClick);
         if (typeof ResizeObserver !== 'undefined' && mapContainerRef.value) {
+            let trailingTimer = null;
             containerResizeObserver = new ResizeObserver(() => {
                 if (!mapInstance.value) return;
                 // pan: false — иначе Leaflet при каждом изменении размера
                 // сдвигает карту, сохраняя центр, и маршрут «едет» за ресайзом.
                 requestAnimationFrame(() => mapInstance.value?.invalidateSize({ pan: false, animate: false }));
+                if (trailingTimer) clearTimeout(trailingTimer);
+                trailingTimer = setTimeout(() => mapInstance.value?.invalidateSize({ pan: false, animate: false }), 300);
             });
             containerResizeObserver.observe(mapContainerRef.value);
         }
