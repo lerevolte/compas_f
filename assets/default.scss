@@ -119,6 +119,7 @@ html {
         grid-column: 2;
         display: flex;
         flex-direction: column;
+        min-width: 0;
     }
 
     &:has(.menu__sublinks) {
