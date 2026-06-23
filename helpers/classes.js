@@ -416,6 +416,7 @@ export class Table {
 
         this.isChanged = false
         this.tableRef = tableRef
+        this.permissions = {}
         this.header = []
         this.body = []
         this.rowVirtualizer = null
@@ -570,6 +571,7 @@ export class Table {
 
     // Установка таблицы
     async set(response) {
+        if (response.permissions) this.permissions = response.permissions
         this.getBody(response.list.data ?? response.list)
         this.setSortItem({
             sort_field: response.list.sort_field,
@@ -962,6 +964,7 @@ export class Table {
 
     // Редактировать строку (батчами для избежания зависаний)
     async edit(rows = []) {
+        if (this.permissions?.update_p === 'N') return
         rows = Array.isArray(rows) ? rows : [rows]
 
         this.backup.body = JSON.parse(JSON.stringify(rows))
@@ -997,7 +1000,8 @@ export class Table {
 
     // Инициализация удаления
     initDelete(rows = []) {
-        rows = typeof rows == 'boolean' || rows.length == 0 ? this.body.filter(item => item.isChoose) : rows 
+        if (this.permissions?.delete_p === 'N') return
+        rows = typeof rows == 'boolean' || rows.length == 0 ? this.body.filter(item => item.isChoose) : rows
 
         this.deleteBuffer = {
             list: Array.isArray(rows) ? rows : [rows],

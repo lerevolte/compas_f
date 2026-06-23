@@ -604,6 +604,7 @@
 
         checkEditting(row, prevValue) {
             if (row.edit) return
+            if (table.value.permissions?.update_p === 'N') return
 
             if (table.value.slug == 'products') {
                 table.value.backupLocalBody()
@@ -932,9 +933,11 @@
         if (window.getSelection && window.getSelection().toString()) return
 
         const content = selected.querySelector('.table__cell-content') ?? selected
-        const text = (content.innerText ?? '').trim()
+        let text = (content.innerText ?? '').trim()
+        if (!text) text = (selected.innerText ?? '').trim()
         if (!text) return
 
+        event.preventDefault()
         common.copyText(text)
         selected.classList.add('table__cell_copied')
         setTimeout(() => selected.classList.remove('table__cell_copied'), 600)

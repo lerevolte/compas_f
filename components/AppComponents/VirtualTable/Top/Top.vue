@@ -67,26 +67,16 @@
         }
     })
 
-    const showMore = ref([
-        {
-            name: 'Скачать Excel',
-            action: 'initDownloadExcel',
-            enabled: true
+    const showMore = computed(() => {
+        const list = []
+        const canCreate = table?.value?.permissions?.create_p !== 'N'
+        if ((props.options?.isEnableCreateOption == undefined || props.options?.isEnableCreateOption) && canCreate) {
+            list.push({ name: 'Создать', action: 'create', enabled: true })
         }
-    ])
-
-    onMounted(() => {
-        if (props.options?.isEnableCreateOption == undefined || props.options?.isEnableCreateOption) {
-            showMore.value.unshift(
-                {
-                    name: 'Создать',
-                    action: 'create',
-                    enabled: true
-                }
-            )
-        }
+        list.push({ name: 'Скачать Excel', action: 'initDownloadExcel', enabled: true })
         if (props.showMore && props.showMore.length > 0) {
-            showMore.value = [...showMore.value, ...props.showMore]
+            list.push(...props.showMore)
         }
+        return list
     })
 </script>

@@ -7,7 +7,7 @@
 
 			<div id="filter-container"></div>
 
-			<AppButton class="button_fill" @click="emit('openModal', {
+			<AppButton v-if="canCreate" class="button_fill" @click="emit('openModal', {
 				type: 'create',
 				slug: props.slug,
 				id: '0'
@@ -19,7 +19,8 @@
 			</AppButton>
 		</div>
 
-		<AppVirtualTable 
+		<AppVirtualTable
+			ref="tableComp"
 			:slug="router.params.slug"
 			:key="router.path"
 			@openModal="item => emit('openModal', item)"
@@ -42,6 +43,9 @@
 	])
 
 	const router = useRoute()
+
+	const tableComp = ref(null)
+	const canCreate = computed(() => tableComp.value?.table?.permissions?.create_p !== 'N')
 
 	const props = defineProps({
 		entity: {

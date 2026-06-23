@@ -8,6 +8,14 @@
     .popup__header {
         cursor: pointer;
     }
+
+    .checkbox__label {
+        text-decoration: underline;
+
+        &:hover {
+            text-decoration: none;
+        }
+    }
 }
 
 // ВАЖНО: содержимое попапа (.popup__content) выносится Teleport'ом в <body>,

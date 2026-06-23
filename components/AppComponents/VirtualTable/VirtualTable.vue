@@ -39,10 +39,10 @@
       :checkedCount="checkedCount"
       :actions="{
         save: table.state == 'edit',
-        edit: !props.options.isTrash && table.state != 'edit',
+        edit: !props.options.isTrash && table.state != 'edit' && canUpdate,
         cancel: true,
         restore: props.options.isTrash,
-        delete: !props.options.isTrash && table.state != 'edit'
+        delete: !props.options.isTrash && table.state != 'edit' && canDelete
       }"
       :loading="table.saving"
       @action="action => table[action.action](action.value)"
@@ -256,6 +256,10 @@
     apply()
     requestAnimationFrame(apply)
   }
+
+  const canCreate = computed(() => table.value.permissions?.create_p !== 'N')
+  const canUpdate = computed(() => table.value.permissions?.update_p !== 'N')
+  const canDelete = computed(() => table.value.permissions?.delete_p !== 'N')
 
   const isChoosed = computed(() => {
         // MassAction показываем и при чекбокс-выделении, и при правке строки.
