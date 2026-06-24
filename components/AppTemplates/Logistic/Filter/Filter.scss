@@ -26,6 +26,12 @@
     max-width: 500px;
     min-height: 85px;
 
+    @media (max-width: 540px) {
+        min-width: 0;
+        max-width: calc(100vw - 30px);
+        width: calc(100vw - 30px);
+    }
+
     .blank__title {
         color: variables.$color-border;
     }

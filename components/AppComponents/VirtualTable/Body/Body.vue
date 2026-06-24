@@ -325,7 +325,7 @@
         const row = table.value.body[rowIndex]
         if (!row) return false
         const isLogistic = row.slug === 'logistic' || row.name === 'Логистика'
-        return isLogistic && ['update_p', 'delete_p', 'export_p'].includes(key)
+        return isLogistic && ['create_p', 'update_p', 'delete_p', 'export_p'].includes(key)
     }
     const draggableRow = ref(null)
     const tableRef = inject('tableRef')
