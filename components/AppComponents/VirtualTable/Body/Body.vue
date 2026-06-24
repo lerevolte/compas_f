@@ -323,7 +323,9 @@
 
     const isHiddenPermissionCell = (rowIndex, key) => {
         const row = table.value.body[rowIndex]
-        return !!row && row.slug === 'logistic_tasks' && ['update_p', 'delete_p', 'export_p'].includes(key)
+        if (!row) return false
+        const isLogistic = row.slug === 'logistic' || row.name === 'Логистика'
+        return isLogistic && ['update_p', 'delete_p', 'export_p'].includes(key)
     }
     const draggableRow = ref(null)
     const tableRef = inject('tableRef')
