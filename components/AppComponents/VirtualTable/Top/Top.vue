@@ -35,6 +35,7 @@
                 }"
                 @reset="table.reset()"
                 @isChanged="table.isChanged = true"
+                @autoSave="() => table.saveSettings()"
                 @update:modelValue="(val) => {table.header = val; table.isChanged = true}"
                 @update:modelVisible="(val) => {table.header = val; table.isChanged = true}"
                 @update:modelList="(val) => {table.header = val; table.isChanged = true}"

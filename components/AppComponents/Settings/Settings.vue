@@ -319,7 +319,8 @@
         'reset',
         'dragEvent',
         'enableField',
-        'isChanged'
+        'isChanged',
+        'autoSave'
     ])
 
     const disabledFields = computed({
@@ -686,6 +687,7 @@
         }
         emit('update:modelList', list)
         emit('isChanged', true)
+        nextTick(() => emit('autoSave'))
     }
 
     // Сбрасываем выбранную подгруппу при выходе из «Отображение».

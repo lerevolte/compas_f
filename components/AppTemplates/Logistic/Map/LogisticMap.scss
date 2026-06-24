@@ -89,6 +89,10 @@
     display: inline-block;
 }
 
+.unassigned-popup .route-popup__extend {
+    display: none !important;
+}
+
 .route-popup__counter {
     display: flex;
     align-items: center;

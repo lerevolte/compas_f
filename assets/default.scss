@@ -634,6 +634,8 @@ section {
     display: flex;
     gap: 15px;
     align-items: center;
+    flex-wrap: wrap;
+    min-width: 0;
 
     h1 {
         margin-right: 20px;
@@ -644,8 +646,9 @@ section {
     // .form__item.form__item_select задаёт width:100% (специфичность 0,2,0) —
     // повышаем специфичность своего правила, иначе ширина перебивалась.
     .form__item.form__item_select {
-        width: 400px;
-        max-width: 100%;
+        width: 100%;
+        max-width: 400px;
+        min-width: 0;
     }
 
     .select.select_icon  {

@@ -15,11 +15,11 @@
                     <div class="settings__item popup__option" @click="nest.save(null)">
                         Применить для себя
                     </div>
-                    <div class="settings__item popup__option settings__item_submenu" @click="nest.set({label: 'Применить для роли', value: 'changeRole'})">
+                    <div class="settings__item popup__option settings__item_submenu" v-if="userStore.user?.is_admin" @click="nest.set({label: 'Применить для роли', value: 'changeRole'})">
                         Применить для роли
                         <SelectArrowSubmenu />
                     </div>
-                    <div class="settings__item popup__option" @click="nest.save('all')">
+                    <div class="settings__item popup__option" v-if="userStore.user?.is_admin" @click="nest.save('all')">
                         Применить для всех
                     </div>
                 </div>
