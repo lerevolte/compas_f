@@ -196,6 +196,11 @@ html {
     &.page__header_table {
         position: relative;
 
+        .page__header__create-placeholder {
+            visibility: hidden;
+            pointer-events: none;
+        }
+
         @media (max-width: 1430px) {
             gap: 10px;
             display: grid;

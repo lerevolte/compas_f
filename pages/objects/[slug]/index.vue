@@ -17,6 +17,12 @@
 					Создать
 				</span>
 			</AppButton>
+			<AppButton v-else class="button_fill page__header__create-placeholder" aria-hidden="true" tabindex="-1">
+				<AppIconPlus />
+				<span class="text">
+					Создать
+				</span>
+			</AppButton>
 		</div>
 
 		<AppVirtualTable

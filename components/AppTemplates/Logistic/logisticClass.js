@@ -371,6 +371,7 @@ export class LogisticWithMap extends Logistic {
         this.activeTaskId = null;
         this.selectedRouteData = null;
         this.unassignedTasks = [];
+        this.filterFields = [];
         this.machine_tasks.updatingCount++;
         this.logistic_tasks.updatingCount++;
         this.routes.updatingCount++;

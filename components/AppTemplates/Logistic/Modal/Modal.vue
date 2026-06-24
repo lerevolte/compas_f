@@ -242,7 +242,7 @@
                     return Object.values(this.tabFilters[tab]).filter(p => p)
                 },
                 set: (val) => {
-                    this.setFilterValue(this.steps.active.slug, {val: val.value, label: val.label.text, origin: val})
+                    this.setFilterValue(this.steps.active.slug, {value: val.value, label: val.label?.text ?? val.label, origin: val})
                 }
             })
             this.computedSavedOptions = computed({

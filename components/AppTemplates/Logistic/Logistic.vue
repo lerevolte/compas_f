@@ -22,7 +22,7 @@
                         height: section.height ? `${section.height}px` : 'auto', 
                         width: '100%'
                     }" 
-                    @endResize="height => logistic.endResize({section, height})"
+                    @endResize="height => onSectionResized({section, height})"
                 >
                     <!-- ★ LogisticMap instead of AppMap -->
                     <LogisticMap v-if="section.key == 'map'"
@@ -337,6 +337,13 @@
     // (template ref внутри v-for собрался бы в массив, что лишнее).
     let mapComp = null;
     const setMapRef = (el) => { mapComp = el || null; };
+
+    const onSectionResized = (payload) => {
+        logistic.value.endResize(payload);
+        if (mapComp && typeof mapComp.refreshSize === 'function') {
+            mapComp.refreshSize();
+        }
+    };
 
     // Вызывается из родительской страницы при поиске по задаче. Делает
     // всё императивно (без полагания на цепочку prop watchers), потому

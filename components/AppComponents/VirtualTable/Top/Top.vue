@@ -74,7 +74,10 @@
         if ((props.options?.isEnableCreateOption == undefined || props.options?.isEnableCreateOption) && canCreate) {
             list.push({ name: 'Создать', action: 'create', enabled: true })
         }
-        list.push({ name: 'Скачать Excel', action: 'initDownloadExcel', enabled: true })
+        const canExport = table?.value?.permissions?.export_p !== 'N'
+        if (canExport) {
+            list.push({ name: 'Скачать Excel', action: 'initDownloadExcel', enabled: true })
+        }
         if (props.showMore && props.showMore.length > 0) {
             list.push(...props.showMore)
         }

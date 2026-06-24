@@ -3247,6 +3247,60 @@ export class Logistic {
             this.columns[`column_${column.value.column}`].push({...column, ...column.value})
             this.columns[`column_${column.value.column}`].sort((a, b) => a.value.position - b.value.position)
         }
+
+        this._applyDeviceLayout()
+    }
+
+    _deviceKey() {
+        const w = (typeof window !== 'undefined') ? window.innerWidth : 1200
+        return w <= 990 ? 'mobile' : 'desktop'
+    }
+
+    _layoutStorageKey() {
+        return `logistic_layout_${this._deviceKey()}`
+    }
+
+    // Раскладка таблиц/карты хранится отдельно для каждого устройства (localStorage):
+    // на телефоне и десктопе удобны разные позиции/высоты. Применяется поверх
+    // серверной (общей) раскладки после загрузки секций.
+    _applyDeviceLayout() {
+        if (typeof window === 'undefined') return
+        let saved = null
+        try { saved = JSON.parse(window.localStorage.getItem(this._layoutStorageKey()) || 'null') } catch (e) { saved = null }
+        if (!saved || typeof saved !== 'object') return
+
+        const all = [...this.columns.column_1, ...this.columns.column_2]
+        const cols = { column_1: [], column_2: [] }
+        for (const section of all) {
+            const ov = saved[section.id]
+            if (ov) {
+                section.value = { ...section.value, column: ov.column, position: ov.position }
+                section.column = ov.column
+                section.position = ov.position
+                if (ov.height != null) section.height = ov.height
+            }
+            const colKey = `column_${section.value?.column ?? section.column ?? 1}`
+            ;(cols[colKey] || cols.column_1).push(section)
+        }
+        const byPos = (a, b) => (a.position ?? a.value?.position ?? 0) - (b.position ?? b.value?.position ?? 0)
+        cols.column_1.sort(byPos)
+        cols.column_2.sort(byPos)
+        this.columns = cols
+    }
+
+    _saveDeviceLayout() {
+        if (typeof window === 'undefined') return
+        const map = {}
+        for (const column in this.columns) {
+            this.columns[column].forEach((section, index) => {
+                map[section.id] = {
+                    column: column.replace('column_', ''),
+                    position: index + 1,
+                    height: section.height
+                }
+            })
+        }
+        try { window.localStorage.setItem(this._layoutStorageKey(), JSON.stringify(map)) } catch (e) {}
     }
 
     // Получение выбранных точек
@@ -3312,13 +3366,14 @@ export class Logistic {
 
     // Обновление колонок
     async updateSections() {
+        this._saveDeviceLayout()
         for (let column in this.columns) {
             this.columns[column].map(async (section, index) => {
                 await api.callMethod('PUT', routes.logistic.updateSection.replace('${id}', section.id), {
                     column: column.replace('column_', ''),
                     position: index + 1,
                     height: section.height
-                })  
+                })
             })
         }
     }

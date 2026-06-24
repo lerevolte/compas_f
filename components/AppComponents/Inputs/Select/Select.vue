@@ -38,7 +38,7 @@
                         <IconClose />
                     </div>
                 </div>
-                <div class="select__value select__value_single" :class="{ 'select__value_typing': select.state.search.length > 0 }" v-else>
+                <div class="select__value select__value_single" :class="{ 'select__value_typing': select.state.search.length > 0 }" :style="activeOption?.color ? `color: ${activeOption.color}` : null" v-else>
                     {{ props.options.type == 'relation' ? activeOption?.label.text : activeOption?.label }}
                 </div>
 
@@ -58,7 +58,7 @@
                     :value="option.value"
                     @click="select.changeValue(option)"
                 >
-                    <span class="value__text">
+                    <span class="value__text" :style="option.color ? `color: ${option.color}` : null">
                         {{ (option.label && typeof option.label === 'object') ? (option.label.text ?? '') : (option.label ?? '') }}
                     </span>
                 </div>

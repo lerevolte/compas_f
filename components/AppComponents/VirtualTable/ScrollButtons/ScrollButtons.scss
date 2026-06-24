@@ -7,11 +7,12 @@
 // width: 100% — растягивается на всю ширину .table (= .section-table,
 // т.к. max-width перенесён на section-table в VirtualTable.scss).
 .scroll-buttons {
+    // Временно скрыты во всех таблицах (задача 8612) — пока не нужны.
+    display: none;
     position: sticky;
     top: calc(50% - 40px);
     height: 0;
     width: 100%;
-    display: flex;
     justify-content: space-between;
     align-items: flex-start;
     left: 0;

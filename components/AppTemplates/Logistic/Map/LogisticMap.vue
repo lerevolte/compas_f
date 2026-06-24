@@ -1996,7 +1996,27 @@
         return false;
     };
 
-    defineExpose({ focusUnassignedTask, focusRouteTask, focusTaskWithRetry: (id) => focusTaskWithRetry(id) });
+    const refreshSize = () => {
+        if (!mapInstance.value) return;
+        const map = mapInstance.value;
+        const run = () => {
+            if (!mapInstance.value) return;
+            map.invalidateSize({ pan: false, animate: false });
+            Object.values(baseLayers).forEach(layer => {
+                if (layer && layer._yandex && layer._yandex.container && typeof layer._yandex.container.fitToViewport === 'function') {
+                    try { layer._yandex.container.fitToViewport(); } catch (e) {}
+                }
+                if (layer && layer.redraw && map.hasLayer(layer)) {
+                    try { layer.redraw(); } catch (e) {}
+                }
+            });
+        };
+        run();
+        requestAnimationFrame(run);
+        setTimeout(run, 250);
+    };
+
+    defineExpose({ focusUnassignedTask, focusRouteTask, focusTaskWithRetry: (id) => focusTaskWithRetry(id), refreshSize });
 
     // Подтянуть пользовательские настройки модуля «Логистика» и применить к карте.
     const fetchedCenter = ref(null);
