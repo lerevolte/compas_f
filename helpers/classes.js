@@ -853,6 +853,26 @@ export class Table {
         })
     }
 
+    // Создание задачи логистики из строки «Библиотеки задач» (addresses):
+    // открываем деталку создания logistic_tasks с полями по умолчанию из адреса.
+    // Поля addresses клонированы из logistic_tasks, поэтому их значения уже в той
+    // же форме, что ожидает форма создания задачи.
+    createTaskFromAddress(row) {
+        const keys = ['name', 'address', 'phone', 'time', 'car_requirements', 'employee_requirements', 'service_time', 'comment', 'contact', 'photo', 'client_id']
+        const defaults = {}
+        for (const key of keys) {
+            if (row[key] !== undefined && row[key] !== null) {
+                defaults[key] = JSON.parse(JSON.stringify(row[key]))
+            }
+        }
+        this.emit('openModal', {
+            type: 'create',
+            slug: 'logistic_tasks',
+            id: 0,
+            defaults
+        })
+    }
+
     // Отмена редактирования
     cancel() {
         if (this.slug == 'products') {
@@ -1290,6 +1310,12 @@ export class Table {
         await api.callMethod('POST', perPageMethod, { per_page: this.pages.limit })
 
         this.isChanged = false
+
+        // Столбцы связанных сущностей (задача 14) резолвит бэкенд по сохранённому
+        // заголовку, поэтому после сохранения настроек перезагружаем данные.
+        if (this.header.some(p => typeof p.key === 'string' && p.key.startsWith('rel__'))) {
+            await this.filter.get()
+        }
     }
 
     // Изменение количества страниц

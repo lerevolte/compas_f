@@ -101,7 +101,10 @@ L.Yandex = L.Layer.extend({
 			moveend: this._update,
 			zoomend: this._onZoomEnd,
 			resize: function () {
-				this._yandex.container.fitToViewport();
+				if (this._yandex && this._yandex.container) {
+					this._yandex.container.fitToViewport();
+				}
+				this._update();
 			}
 		};
 		if (this._zoomAnimated) {

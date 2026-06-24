@@ -14,9 +14,10 @@
                 :isPreventBottom="true"
                 @initClick="action => table[action]()"
             />
-            <AppSettings 
+            <AppSettings
                 v-model:list="table.header"
                 v-model:visible="table.header"
+                :slug="table.slug"
                 :options="{
                     isCheck: {
                         state: true,

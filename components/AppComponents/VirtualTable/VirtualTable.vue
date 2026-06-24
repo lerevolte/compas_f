@@ -1,6 +1,6 @@
 <template>
-  <TableCalc 
-    v-if="table.slug == 'products'"
+  <TableCalc
+    v-if="table.slug == 'products' && props.options?.isLocalTable"
   />
 
   <section class="section-table" ref="sectionRef">

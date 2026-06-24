@@ -43,6 +43,7 @@
             :is_modal="true"
             :isGlobalEdit="['create', 'copy'].includes(modal.type)"
             :isCopy="modal.type === 'copy'"
+            :defaults="modal.defaults ?? null"
             @close="popModal()"
             @closeDetail="() => closeDetail()"
             @updateMetaHeader="item => entity.updateMetaHeader(item)"

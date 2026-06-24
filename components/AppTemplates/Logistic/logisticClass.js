@@ -68,6 +68,7 @@ export class LogisticWithMap extends Logistic {
             this._lastKnownActiveColorId = null;
             this.activeTaskId = null;
             this.selectedRouteData = null;
+            this.filterFields = [];
             this.machine_tasks.updatingCount++;
         }
 
@@ -569,6 +570,33 @@ export class LogisticWithMap extends Logistic {
             this.loadUnassignedTasks();
             this.logistic_tasks.updatingCount++;
             // Перерисовать активный маршрут (Задачи в машине) и карту.
+            if (this.machine_tasks.route_id) {
+                this.machine_tasks.updatingCount++;
+                this.loadRouteForMap(this.machine_tasks.route_id);
+            }
+            if (this.onRouteChanged) this.onRouteChanged();
+        }
+    }
+
+    // Создание задачи логистики из записи «Быстрые задачи» (warehouses) —
+    // полный аналог createTaskFromAddress, запись-источник не меняется.
+    async createTaskFromWarehouse(warehouseId, routeId) {
+        if (!warehouseId || !routeId) return;
+        return this._enqueueRouteMutation(() => this._createTaskFromWarehouse(warehouseId, routeId));
+    }
+
+    async _createTaskFromWarehouse(warehouseId, routeId) {
+        try {
+            await api.callMethod('POST', '/routes/task-from-warehouse', {
+                warehouse_id: warehouseId,
+                route_id: routeId
+            });
+        } catch (error) {
+            console.error('🔴 Error creating task from warehouse:', error);
+        } finally {
+            this.routes.updatingCount++;
+            this.loadUnassignedTasks();
+            this.logistic_tasks.updatingCount++;
             if (this.machine_tasks.route_id) {
                 this.machine_tasks.updatingCount++;
                 this.loadRouteForMap(this.machine_tasks.route_id);

@@ -18,14 +18,66 @@
                     </div>
                 </div>
 
+                <!-- Enable: вложенные группы связанных сущностей (Маршруты, задача 14) -->
+                <div class="settings__list" v-else-if="settings.nest.active.value == 'isCheck' && isRelatedTable && relGroup == null">
+                    <div
+                        class="settings__item popup__option settings__item_submenu"
+                        v-for="group in relatedGroups"
+                        :key="group.key"
+                        @click="openRelGroup(group.key)"
+                    >
+                        {{ group.label }}
+                        <SelectArrowSubmenu />
+                    </div>
+                </div>
+
+                <!-- Enable: столбцы выбранной группы -->
+                <div class="settings__list" v-else-if="settings.nest.active.value == 'isCheck' && isRelatedTable && relGroup != null">
+                    <div class="settings__item popup__option settings__item_back" @click="relGroup = null">
+                        Назад
+                        <SelectArrowSubmenu />
+                    </div>
+                    <!-- Логистика: собственные столбцы маршрута -->
+                    <template v-if="relGroup == 'logistic'">
+                        <div
+                            class="settings__item popup__option popup__option_checkbox"
+                            v-for="field in ownColumns"
+                            :key="field.id ?? field.key"
+                        >
+                            <AppCheckbox
+                                v-model="field.enabled"
+                                :options="{ title: field.name ?? field.title }"
+                                @update:modelValue="() => { emit('enableField', field); emit('isChanged', true) }"
+                            />
+                        </div>
+                    </template>
+                    <!-- Компания / Автопарк / Сотрудники: столбцы связанной сущности -->
+                    <template v-else>
+                        <div class="settings__item popup__option popup__option_disable" v-if="(relatedColumns[relGroup] || []).length == 0">
+                            Загрузка…
+                        </div>
+                        <div
+                            class="settings__item popup__option popup__option_checkbox"
+                            v-for="col in (relatedColumns[relGroup] || [])"
+                            :key="col.key"
+                        >
+                            <AppCheckbox
+                                :modelValue="isRelEnabled(relGroup, col)"
+                                :options="{ title: col.title }"
+                                @update:modelValue="val => toggleRelColumn(relGroup, col, val)"
+                            />
+                        </div>
+                    </template>
+                </div>
+
                 <!-- Enable -->
                 <div class="settings__list" v-else-if="settings.nest.active.value == 'isCheck'">
-                    <div 
-                        class="settings__item popup__option popup__option_checkbox" 
-                        v-for="field in templateListCheck" 
+                    <div
+                        class="settings__item popup__option popup__option_checkbox"
+                        v-for="field in templateListCheck"
                         :key="field.id"
                     >
-                        <AppCheckbox 
+                        <AppCheckbox
                             v-model="field.enabled"
                             :options="{
                                 title: field.name ?? field.title
@@ -224,12 +276,17 @@
     import draggable from 'vuedraggable';
     import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'
     import AppInput from '@AppComponents/Inputs/Input/Input.vue'
+    import api from '@/helpers/api.js'
 
     defineOptions({
         name: "Settings"
     })
 
     const props = defineProps({
+        slug: {
+            default: null,
+            type: String
+        },
         list: null,
         visible: null,
         hidden: null,
@@ -543,7 +600,97 @@
         }
     })
 
-    watch(() => settings.value.nest.active, () => {
+    // ── Задача 14: вложенные группы связанных сущностей для таблицы Маршрутов ──
+    // Ключ столбца связанной сущности: rel__{slug}__{field}.
+    const isRelatedTable = computed(() => props.slug === 'routes')
+    const relatedGroups = [
+        { key: 'logistic', label: 'Логистика', slug: null },
+        { key: 'companies', label: 'Компания', slug: 'companies' },
+        { key: 'cars', label: 'Автопарк', slug: 'cars' },
+        { key: 'employees', label: 'Сотрудники', slug: 'employees' },
+    ]
+    const relGroup = ref(null)
+    const relatedColumns = ref({})
+
+    const SYSTEM_KEYS = ['isChoose', 'actions', 'iconDrag', 'iconDelete']
+
+    // Собственные столбцы маршрута (без системных, групп и связанных).
+    const ownColumns = computed(() => {
+        return (props.list || []).filter(c =>
+            c && !c.is_group && !SYSTEM_KEYS.includes(c.key) && !(typeof c.key === 'string' && c.key.startsWith('rel__'))
+        )
+    })
+
+    const openRelGroup = async (key) => {
+        relGroup.value = key
+        const group = relatedGroups.find(g => g.key == key)
+        if (!group || !group.slug || relatedColumns.value[key]) return
+        try {
+            const response = await api.callMethod('GET', `/tables/${group.slug}`)
+            const cols = (response.data || []).filter(c =>
+                c && !c.is_group && !SYSTEM_KEYS.includes(c.key) && c.type != 'text_group'
+            ).map(c => ({ key: c.key, title: c.title, type: c.type }))
+            relatedColumns.value = { ...relatedColumns.value, [key]: cols }
+        } catch (error) {
+            console.log('related columns load error', error)
+            relatedColumns.value = { ...relatedColumns.value, [key]: [] }
+        }
+    }
+
+    const relColumnKey = (groupKey, col) => `rel__${groupKey}__${col.key}`
+
+    const isRelEnabled = (groupKey, col) => {
+        const key = relColumnKey(groupKey, col)
+        const found = (props.list || []).find(c => c && c.key === key)
+        return !!(found && found.enabled)
+    }
+
+    const toggleRelColumn = (groupKey, col, val) => {
+        const key = relColumnKey(groupKey, col)
+        let list = JSON.parse(JSON.stringify(props.list || []))
+        const existing = list.find(c => c && c.key === key)
+        if (val) {
+            if (existing) {
+                existing.enabled = true
+            } else {
+                list.push({
+                    id: key,
+                    title: col.title,
+                    key,
+                    width: '200px',
+                    enabled: true,
+                    sort_order: '',
+                    type: 'text',
+                    is_plural: 0,
+                    external_link: '',
+                    is_external_link: 0,
+                    is_link: 0,
+                    required: 0,
+                    fixed: '',
+                    index: list.length,
+                    fixTarget: '0px',
+                    read_only: 1,
+                    unit: '',
+                    mask: null,
+                    can_edit: 0,
+                    color: null,
+                    is_hidden: 0,
+                    visible_always: 0,
+                    is_related: true,
+                    options: [],
+                    choosed: []
+                })
+            }
+        } else {
+            list = list.filter(c => !(c && c.key === key))
+        }
+        emit('update:modelList', list)
+        emit('isChanged', true)
+    }
+
+    // Сбрасываем выбранную подгруппу при выходе из «Отображение».
+    watch(() => settings.value.nest.active, (active) => {
+        if (!active || active.value !== 'isCheck') relGroup.value = null
         nextTick(() => popupRef.value?.popup?.applyPosition())
     })
 </script>

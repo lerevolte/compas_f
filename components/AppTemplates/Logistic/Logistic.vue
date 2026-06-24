@@ -142,7 +142,7 @@
                             <!-- Если есть сущность addresses — вместо заголовка
                                  показываем вкладки (в той же строке, что и шестерёнка). -->
                             <template #topTitle>
-                                <span v-if="!hasAddressesEntity">Задачи логистики</span>
+                                <span v-if="!hasWarehousesEntity">Задачи логистики</span>
                                 <span v-else class="logistic-tabs">
                                     <span
                                         class="logistic-tabs__tab"
@@ -151,9 +151,9 @@
                                     >Задачи логистики</span>
                                     <span
                                         class="logistic-tabs__tab"
-                                        :class="{ 'logistic-tabs__tab_active': taskTableTab === 'addresses' }"
-                                        @click="taskTableTab = 'addresses'"
-                                    >Справочник адресов</span>
+                                        :class="{ 'logistic-tabs__tab_active': taskTableTab === 'warehouses' }"
+                                        @click="taskTableTab = 'warehouses'"
+                                    >Быстрые задачи</span>
                                 </span>
                             </template>
                         </AppVirtualTable>
@@ -165,18 +165,18 @@
                              vuedraggable не уносит строку из таблицы; создание
                              делает глобальный mouseup-хендлер. -->
                         <AppVirtualTable
-                            v-if="taskTableTab === 'addresses'"
-                            :slug="'addresses'"
-                            :key="'addresses'"
+                            v-if="taskTableTab === 'warehouses'"
+                            :slug="'warehouses'"
+                            :key="'warehouses'"
                             :options="{
-                                title: 'Справочник адресов',
+                                title: 'Быстрые задачи',
                                 isShort: true,
                                 overscan: 5,
                                 isDraggable: true,
                                 draggableTarget: '.table__row',
                                 dragFilter: 'input, textarea, select, [contenteditable]',
                                 isCellCopy: true,
-                                group: 'addresses_dnd',
+                                group: 'warehouses_dnd',
                                 isDisablePut: true,
                                 isDisablePull: true,
                                 isDisableSort: true,
@@ -188,7 +188,7 @@
                                 isHaveTopHeader: true,
                                 isHaveFooter: false
                             }"
-                            @openModal="item => emit('openModal', { ...item, slug: 'addresses' })"
+                            @openModal="item => emit('openModal', { ...item, slug: 'warehouses' })"
                         >
                             <template #topTitle>
                                 <span class="logistic-tabs">
@@ -199,9 +199,9 @@
                                     >Задачи логистики</span>
                                     <span
                                         class="logistic-tabs__tab"
-                                        :class="{ 'logistic-tabs__tab_active': taskTableTab === 'addresses' }"
-                                        @click="taskTableTab = 'addresses'"
-                                    >Справочник адресов</span>
+                                        :class="{ 'logistic-tabs__tab_active': taskTableTab === 'warehouses' }"
+                                        @click="taskTableTab = 'warehouses'"
+                                    >Быстрые задачи</span>
                                 </span>
                             </template>
                         </AppVirtualTable>
@@ -287,18 +287,18 @@
     const emit = defineEmits(['openModal', 'routeChanged']);
 
     // Вкладки над таблицей задач: 'tasks' (Задачи логистики, по умолчанию) или
-    // 'addresses' (Справочник адресов). Вкладки показываем только если у портала
-    // есть сущность addresses (см. hasAddressesEntity).
+    // 'warehouses' (Быстрые задачи). Вкладки показываем только если у портала
+    // есть сущность warehouses (см. hasWarehousesEntity).
     const taskTableTab = ref('tasks');
 
     const menuStore = useMenuStore();
-    // Рекурсивно ищем пункт addresses в меню/сайдбаре — признак того, что
-    // сущность «Справочник адресов» установлена в данном портале.
-    const hasAddressesEntity = computed(() => {
+    // Рекурсивно ищем пункт warehouses в меню/сайдбаре — признак того, что
+    // сущность «Быстрые задачи» установлена в данном портале.
+    const hasWarehousesEntity = computed(() => {
         const scan = (items) => Array.isArray(items) && items.some(it => {
             if (!it) return false;
-            if (it.slug === 'addresses') return true;
-            if (typeof it.link === 'string' && it.link.includes('/objects/addresses')) return true;
+            if (it.slug === 'warehouses') return true;
+            if (typeof it.link === 'string' && it.link.includes('/objects/warehouses')) return true;
             return scan(it.children) || scan(it.childs) || scan(it.items);
         });
         return scan(menuStore.list);
@@ -373,8 +373,8 @@
     // активном маршруте machine_tasks.route_id).
     const dropTargetMachine = ref(false);
     let draggedTaskId = null;
-    let dragSourceTable = null; // 'unassigned' | 'route' | 'addresses'
-    let addressesTabAtDragStart = false;
+    let dragSourceTable = null; // 'unassigned' | 'route' | 'warehouses'
+    let warehousesTabAtDragStart = false;
     let machineTasksVdHandled = false;
     const markMachineHandled = () => { machineTasksVdHandled = true; };
 
@@ -405,7 +405,7 @@
         // .logistic__section. Заголовок теперь это вкладки, поэтому источник
         // определяем по активной вкладке, а не по тексту заголовка.
         if (el?.closest?.('.logistic__section')) {
-            return taskTableTab.value === 'addresses' ? 'addresses' : 'unassigned';
+            return taskTableTab.value === 'warehouses' ? 'warehouses' : 'unassigned';
         }
         const sec = el?.closest?.('.logistic .section-table');
         if (!sec) return null;
@@ -464,7 +464,7 @@
         if (!id) return;
         draggedTaskId = Number(id);
         dragSourceTable = source;
-        addressesTabAtDragStart = taskTableTab.value === 'addresses';
+        warehousesTabAtDragStart = taskTableTab.value === 'warehouses';
     };
 
     const onGlobalMouseMove = (e) => {
@@ -497,7 +497,7 @@
         // — Для адреса: курсор над таблицей «Задачи в машине» (бросок туда
         //   создаёт задачу на активном маршруте) —
         let overMachine = false;
-        if (dragSourceTable === 'addresses') {
+        if (dragSourceTable === 'warehouses') {
             const machineSection = findMachineTasksSection();
             if (machineSection) {
                 for (const el of stack) {
@@ -532,7 +532,7 @@
         }
 
         // Плейсхолдер-строка в «Задачи в машине» для адреса (как у задач).
-        if (dragSourceTable === 'addresses' && overMachine !== dropTargetMachine.value) {
+        if (dragSourceTable === 'warehouses' && overMachine !== dropTargetMachine.value) {
             dropTargetMachine.value = overMachine;
             clearDropTargetHighlight();
             clearMachinePlaceholder();
@@ -547,10 +547,10 @@
         const routeId = dropTargetRouteId.value;
         const overMachine = dropTargetMachine.value;
         const source = dragSourceTable;
-        const addressTab = addressesTabAtDragStart;
+        const warehouseTab = warehousesTabAtDragStart;
         draggedTaskId = null;
         dragSourceTable = null;
-        addressesTabAtDragStart = false;
+        warehousesTabAtDragStart = false;
         machineTasksVdHandled = false;
         dropTargetRouteId.value = null;
         dropTargetMachine.value = false;
@@ -561,11 +561,11 @@
         // Перетаскивание адреса из «Справочника адресов» → создаём задачу
         // логистики из адреса (адрес остаётся в источнике). Цель: строка
         // маршрута в «Маршрутах» ИЛИ таблица «Задачи в машине» (активный маршрут).
-        if (source === 'addresses') {
+        if (source === 'warehouses') {
             let targetRouteId = routeId;
             if (!targetRouteId && overMachine) targetRouteId = logistic.value.machine_tasks.route_id;
             if (!targetRouteId) return;
-            logistic.value.createTaskFromAddress(id, targetRouteId);
+            logistic.value.createTaskFromWarehouse(id, targetRouteId);
             return;
         }
 
@@ -576,7 +576,7 @@
             // чтобы Sortable.js успел выстрелить @changePositionRow/@removeRow, если
             // перетаскивание всё же завершилось внутри таблицы (reorder/переход в другой маршрут).
             // Если этого не произошло — снимаем задачу с маршрута вручную.
-            if (source === 'route' && addressTab && id) {
+            if (source === 'route' && warehouseTab && id) {
                 // Если мышь отпущена внутри самой таблицы «Задачи в машине», это
                 // обычная отмена drag внутри той же таблицы — задачу трогать не нужно.
                 // elementsFromPoint используем, т.к. ghost-клон (draggable-fallback)
@@ -900,7 +900,16 @@
         if (logistic.value.filterFields.length === 0) return request;
         // Ключ 'search' специально обрабатывается сериализатором запроса
         // (helpers/classes.js: key=='search' -> q=...), поэтому НЕ переименовываем его.
-        logistic.value.filterFields.map(tab => { request[tab.key] = tab.value; });
+        logistic.value.filterFields.forEach(tab => {
+            let value = tab.value;
+            if (Array.isArray(value)) {
+                value = value.filter(v => v !== null && v !== undefined && v !== '');
+                if (value.length === 0) return;
+            } else if (value === null || value === undefined || value === '') {
+                return;
+            }
+            request[tab.key] = value;
+        });
         return request;
     });
 

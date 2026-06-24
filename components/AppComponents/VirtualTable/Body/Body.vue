@@ -165,8 +165,9 @@
                                     mask: column.mask ?? null
                                 }"
                             />
-                            <AppSelect 
-                                v-else-if="column.type == 'select_dropdown'" 
+                            <template v-else-if="column.type == 'select_dropdown' && isHiddenPermissionCell(row.index, column.key)"></template>
+                            <AppSelect
+                                v-else-if="column.type == 'select_dropdown'"
                                 :parentContainer="sectionRef"
                                 :options="{
                                     id: `${row.index}_${column.key}`,
@@ -319,6 +320,11 @@
     const table = inject('table')
     const sectionRef = inject('sectionRef')
     const common = new Common()
+
+    const isHiddenPermissionCell = (rowIndex, key) => {
+        const row = table.value.body[rowIndex]
+        return !!row && row.slug === 'logistic_tasks' && ['update_p', 'delete_p', 'export_p'].includes(key)
+    }
     const draggableRow = ref(null)
     const tableRef = inject('tableRef')
     const isMobile = ref(useMediaQuery('(max-width: 990px)'))
@@ -382,12 +388,16 @@
             if (table.value.options?.isTrash) return this.actions.trash
             if (table.value.slug == 'products') return this.actions.products
             const base = row.edit ? this.actions.edit : this.actions.default
-            return base.filter(a => {
+            let result = base.filter(a => {
                 if (a.action === 'edit') return table.value.canEditRow(row)
                 if (a.action === 'initDelete') return table.value.canDeleteRow(row)
                 if (a.action === 'copy') return table.value.canCreate()
                 return true
             })
+            if (table.value.slug == 'addresses' && !row.edit) {
+                result = [...result, { name: 'Создать задачу', action: 'createTaskFromAddress', enabled: true }]
+            }
+            return result
         }
 
         constructor() {

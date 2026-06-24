@@ -50,11 +50,12 @@
             }"
             @action="item => tabs[item.action](item.value)"
         />
-        <DetailDynamic 
+        <DetailDynamic
             :tabs="tabs"
             :id="detail.id"
             :slug="props.slug ?? router.params.slug"
             :route_id="props.route_id"
+            :defaults="props.defaults"
             :options="{
                 isExternal: props.is_external,
                 isModule: tabs.is_module,
@@ -143,6 +144,10 @@
         isCopy: {
             default: false,
             type: Boolean
+        },
+        defaults: {
+            default: null,
+            type: Object
         }
     })
 

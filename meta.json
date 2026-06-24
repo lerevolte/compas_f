@@ -5,7 +5,12 @@
         "template": null
     },
     "addresses": {
-        "title": "Справочник адресов",
+        "title": "Библиотека задач",
+        "desc": "",
+        "template": null
+    },
+    "warehouses": {
+        "title": "Быстрые задачи",
         "desc": "",
         "template": null
     },
