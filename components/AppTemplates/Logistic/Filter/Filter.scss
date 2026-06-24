@@ -21,16 +21,11 @@
 // задаёт сам Popup через inline-стили — здесь её не трогаем.
 .popup__content.logistic-filter__popup {
     padding: 15px;
-    width: 100%;
-    min-width: 500px;
-    max-width: 500px;
+    box-sizing: border-box;
+    width: min(500px, calc(100vw - 30px));
+    min-width: 0;
+    max-width: calc(100vw - 30px);
     min-height: 85px;
-
-    @media (max-width: 540px) {
-        min-width: 0;
-        max-width: calc(100vw - 30px);
-        width: calc(100vw - 30px);
-    }
 
     .blank__title {
         color: variables.$color-border;
