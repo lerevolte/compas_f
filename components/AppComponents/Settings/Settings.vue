@@ -630,7 +630,17 @@
             const response = await api.callMethod('GET', `/tables/${group.slug}`)
             const cols = (response.data || []).filter(c =>
                 c && !c.is_group && !SYSTEM_KEYS.includes(c.key) && c.type != 'text_group'
-            ).map(c => ({ key: c.key, title: c.title, type: c.type }))
+            ).map(c => ({
+                key: c.key,
+                title: c.title,
+                type: c.type,
+                options: c.options ?? [],
+                is_plural: c.is_plural ?? 0,
+                is_link: c.is_link ?? 0,
+                is_external_link: c.is_external_link ?? 0,
+                related_table: c.related_table ?? null,
+                unit: c.unit ?? ''
+            }))
             relatedColumns.value = { ...relatedColumns.value, [key]: cols }
         } catch (error) {
             console.log('related columns load error', error)
@@ -661,24 +671,25 @@
                     width: '200px',
                     enabled: true,
                     sort_order: '',
-                    type: 'text',
-                    is_plural: 0,
+                    type: col.type ?? 'text',
+                    is_plural: col.is_plural ?? 0,
                     external_link: '',
-                    is_external_link: 0,
-                    is_link: 0,
+                    is_external_link: col.is_external_link ?? 0,
+                    is_link: col.is_link ?? 0,
                     required: 0,
                     fixed: '',
                     index: list.length,
                     fixTarget: '0px',
                     read_only: 1,
-                    unit: '',
+                    unit: col.unit ?? '',
                     mask: null,
                     can_edit: 0,
                     color: null,
                     is_hidden: 0,
                     visible_always: 0,
                     is_related: true,
-                    options: [],
+                    related_table: col.related_table ?? null,
+                    options: col.options ?? [],
                     choosed: []
                 })
             }
