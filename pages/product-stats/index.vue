@@ -40,38 +40,29 @@
                 </div>
             </section>
 
-            <section class="ps-table" v-if="selectedProduct !== null">
+            <section class="ps-table ps-table_tasks" v-if="selectedProduct !== null">
                 <div class="ps-table__title">Задачи логистики с товаром «{{ selectedProduct }}»</div>
-                <div class="ps-table__scroll">
-                    <table class="ps-table__grid">
-                        <thead>
-                            <tr>
-                                <th class="ps-table__th">Статус задачи</th>
-                                <th class="ps-table__th">Название задачи</th>
-                                <th class="ps-table__th">Состав заказа</th>
-                                <th class="ps-table__th ps-table__th_num">Кол-во, шт</th>
-                                <th class="ps-table__th">Ответственный</th>
-                                <th class="ps-table__th">Примечание</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="task in tasks" :key="task.id" class="ps-table__row">
-                                <td class="ps-table__td">
-                                    <span class="ps-status" :style="{ background: task.status_color }">{{ task.status }}</span>
-                                </td>
-                                <td class="ps-table__td">{{ task.name }}</td>
-                                <td class="ps-table__td" v-html="task.products_html"></td>
-                                <td class="ps-table__td ps-table__td_num">{{ formatNum(task.product_qty) }}</td>
-                                <td class="ps-table__td">{{ task.responsible }}</td>
-                                <td class="ps-table__td">{{ task.comment }}</td>
-                            </tr>
-                            <tr v-if="!loadingTasks && tasks.length === 0">
-                                <td class="ps-table__td ps-table__empty" colspan="6">Нет задач</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div class="ps-table__loader" v-if="loadingTasks">Загрузка…</div>
-                </div>
+                <AppVirtualTable
+                    v-if="bottomTable"
+                    :key="'bottom_' + selectedProduct"
+                    :slug="'logistic_tasks'"
+                    :table="bottomTable"
+                    :options="{
+                        isLocalTable: true,
+                        isShort: true,
+                        isPermanentEdit: false,
+                        isHaveQuery: false,
+                        isHaveFilter: false,
+                        isHaveTopHeader: false,
+                        isHaveFooter: false,
+                        isDisableSockets: true,
+                        isDisableMassAction: true,
+                        isTrash: false,
+                        isDraggable: false,
+                        updatingCount: 0
+                    }"
+                />
+                <div class="ps-table__loader" v-if="loadingTasks">Загрузка…</div>
             </section>
         </div>
     </main>
@@ -80,13 +71,14 @@
 <script setup>
     import AppH1 from '@AppComponents/Headers/H1/H1.vue';
     import AppDateFilter from '@AppComponents/DateFilter/DateFilter.vue';
+    import AppVirtualTable from '@AppComponents/VirtualTable/VirtualTable.vue';
     import api from '@/helpers/api.js';
     import routes from '@/helpers/routes.js';
     import { format } from 'date-fns';
 
     const activeDate = ref(new Date());
     const products = ref([]);
-    const tasks = ref([]);
+    const bottomTable = ref(null);
     const selectedProduct = ref(null);
     const loadingProducts = ref(false);
     const loadingTasks = ref(false);
@@ -101,7 +93,7 @@
 
     const loadProducts = async () => {
         selectedProduct.value = null;
-        tasks.value = [];
+        bottomTable.value = null;
         loadingProducts.value = true;
         try {
             const response = await api.callMethod('GET', `${routes.productStats.products}?delivery_date=${apiDate.value}`);
@@ -116,13 +108,14 @@
 
     const selectProduct = async (name) => {
         selectedProduct.value = name;
+        bottomTable.value = null;
         loadingTasks.value = true;
         try {
             const response = await api.callMethod('GET', `${routes.productStats.tasks}?delivery_date=${apiDate.value}&product=${encodeURIComponent(name)}`);
-            tasks.value = Array.isArray(response.data) ? response.data : [];
+            bottomTable.value = response.data ?? null;
         } catch (error) {
             console.log('product-stats tasks', error);
-            tasks.value = [];
+            bottomTable.value = null;
         } finally {
             loadingTasks.value = false;
         }

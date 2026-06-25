@@ -43,12 +43,12 @@
 
     &.table__cell_fixed {
       position: sticky;
-      z-index: 3;
+      z-index: 32;
     }
 
     &.table__cell_stuck {
       margin-right: -1px;
-      z-index: 5;
+      z-index: 34;
 
       .table__cell-border {
         pointer-events: none;

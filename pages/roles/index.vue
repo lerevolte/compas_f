@@ -120,6 +120,9 @@
 			this.active = category.id
 			this.keyUpdate++
 			routerNav.replace({ query: { ...router.query, role: category.id } })
+			if (typeof window !== 'undefined') {
+				try { window.localStorage.setItem('roles_active', String(category.id)) } catch (e) {}
+			}
 		}
 
 		// Инициализация создания
@@ -231,10 +234,14 @@
 		useHead({
 			title: `Настройка ролей сущности | Compas.pro`
 		})
-		const roleFromUrl = router.query.role
-		if (roleFromUrl) {
-			categories.value.active = isNaN(Number(roleFromUrl)) ? roleFromUrl : Number(roleFromUrl)
+		let savedRole = router.query.role
+		if (!savedRole && typeof window !== 'undefined') {
+			try { savedRole = window.localStorage.getItem('roles_active') } catch (e) { savedRole = null }
+		}
+		if (savedRole) {
+			categories.value.active = isNaN(Number(savedRole)) ? savedRole : Number(savedRole)
 			categories.value.keyUpdate++
+			routerNav.replace({ query: { ...router.query, role: categories.value.active } })
 		}
 	})
 

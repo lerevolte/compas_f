@@ -122,8 +122,8 @@
                                 required: false,
                                 isHaveNull: true,
                                 multiple: column.is_plural,
-                                visibleCount: props.options?.isShort ? 0 : 5,
-                                placeholder: '' 
+                                visibleCount: 5,
+                                placeholder: ''
                             }"
                             v-model="cell.useCellModel(row.index, column).value"
                             @clickLink="id => table.open({id, related_table: column.related_table})"
@@ -179,9 +179,9 @@
                                     edit: table.body[row.index] && !column.read_only && (table.body[row.index].edit || table.options?.isPermanentEdit),
                                     searchable: false,
                                     required: false,
-                                    isHaveNull: true,
+                                    isHaveNull: !(typeof table.path === 'string' && table.path.startsWith('/roles')),
                                     multiple: column.is_plural,
-                                    placeholder: '' 
+                                    placeholder: ''
                                 }"
                                 v-model="cell.useCellModel(row.index, column).value"
                                 @update:prevValue="val => cell.checkEditting(table.body[row.index], {value: val, key: column.key})"

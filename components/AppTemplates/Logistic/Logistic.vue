@@ -42,13 +42,7 @@
                         v-else-if="section.key == 'routes'"
                         :slug="'routes'"
                         :key="'routes'"
-                        :showMore="[
-                            {
-                                name: 'Создать маршрут',
-                                action: 'initCreateRoute',
-                                enabled: true
-                            }
-                        ]"
+                        :showMore="routesShowMore"
                         :options="{
                             title: 'Маршруты',
                             isHaveQuery: true,
@@ -71,7 +65,7 @@
                             updatingCount: logistic.routes.updatingCount
                         }"
                         @saveTable="data => logistic.updateRoute(data)"
-                        @getData="data => { logistic.onRoutesTableLoaded(data); restoreRoutesSelection(data); }"
+                        @getData="data => { logistic.onRoutesTableLoaded(data); restoreRoutesSelection(data); updateRoutesPerm(); }"
                         @openModal="item => emit('openModal', item)"
                         @choseRow="data => onRouteRowChosen(data)"
                         @initCreateRoute="logistic.initCreateRoute()"
@@ -784,6 +778,16 @@
     const setTaskTableRef = (key, el) => {
         taskTableRefs[key] = el || null;
     };
+    const routesCanCreate = ref(true);
+    const updateRoutesPerm = () => {
+        const p = routesTableComp?.table?.permissions?.create_p;
+        routesCanCreate.value = p !== 'N';
+    };
+    const routesShowMore = computed(() => routesCanCreate.value
+        ? [{ name: 'Создать маршрут', action: 'initCreateRoute', enabled: true }]
+        : []
+    );
+
     let routesTableComp = null;
     const setRoutesTableRef = (el) => {
         routesTableComp = el || null;
