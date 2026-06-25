@@ -59,9 +59,17 @@
                                 if (tab.labels && Array.isArray(tab.labels)) {
                                     label = tab.labels[index] ?? null;
                                 }
+                                // Если бэкенд прислал точные заголовки границ (titles) —
+                                // используем их как есть, без дописывания «(от)»/«(до)».
+                                let title;
+                                if (tab.titles && Array.isArray(tab.titles) && tab.titles[index]) {
+                                    title = tab.titles[index];
+                                } else {
+                                    title = `${tab.title}${(isRange && tab.value.length > 1) ? (index == 0 ? ' (от)' : index == tab.value.length - 1 ? ' (до)' : ' прочее') : ''}`;
+                                }
                                 return {
                                     ...tab,
-                                    title: `${tab.title}${(isRange && tab.value.length > 1) ? (index == 0 ? ' (от)' : index == tab.value.length - 1 ? ' (до)' : ' прочее') : ''}`,
+                                    title,
                                     value: subvalue ?? null,
                                     label: label
                                 }

@@ -42,27 +42,38 @@
 
             <section class="ps-table ps-table_tasks" v-if="selectedProduct !== null">
                 <div class="ps-table__title">Задачи логистики с товаром «{{ selectedProduct }}»</div>
-                <AppVirtualTable
-                    v-if="bottomTable"
-                    :key="'bottom_' + selectedProduct"
-                    :slug="'logistic_tasks'"
-                    :table="bottomTable"
-                    :options="{
-                        isLocalTable: true,
-                        isShort: true,
-                        isPermanentEdit: false,
-                        isHaveQuery: false,
-                        isHaveFilter: false,
-                        isHaveTopHeader: false,
-                        isHaveFooter: false,
-                        isDisableSockets: true,
-                        isDisableMassAction: true,
-                        isTrash: false,
-                        isDraggable: false,
-                        updatingCount: 0
-                    }"
-                />
-                <div class="ps-table__loader" v-if="loadingTasks">Загрузка…</div>
+                <div class="ps-table__scroll">
+                    <table class="ps-table__grid">
+                        <thead>
+                            <tr>
+                                <th class="ps-table__th">Статус задачи</th>
+                                <th class="ps-table__th">Название задачи</th>
+                                <th class="ps-table__th">Состав заказа</th>
+                                <th class="ps-table__th ps-table__th_num">Кол-во, шт</th>
+                                <th class="ps-table__th">Ответственный</th>
+                                <th class="ps-table__th">Примечание</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="row in bottomRows" :key="row.id" class="ps-table__row ps-table__row_static">
+                                <td class="ps-table__td">
+                                    <AppStatus v-if="statusCol" :options="statusOptions(row)" :model-value="row.point_status" />
+                                </td>
+                                <td class="ps-table__td">{{ cellText(row.name) }}</td>
+                                <td class="ps-table__td" v-html="row.products"></td>
+                                <td class="ps-table__td ps-table__td_num">{{ formatNum(row.product_qty) }}</td>
+                                <td class="ps-table__td">
+                                    <AppRelation v-if="userCol" :options="userOptions(row)" :model-value="row.user_id" />
+                                </td>
+                                <td class="ps-table__td">{{ cellText(row.comment) }}</td>
+                            </tr>
+                            <tr v-if="!loadingTasks && bottomRows.length === 0">
+                                <td class="ps-table__td ps-table__empty" colspan="6">Нет задач</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="ps-table__loader" v-if="loadingTasks">Загрузка…</div>
+                </div>
             </section>
         </div>
     </main>
@@ -71,7 +82,8 @@
 <script setup>
     import AppH1 from '@AppComponents/Headers/H1/H1.vue';
     import AppDateFilter from '@AppComponents/DateFilter/DateFilter.vue';
-    import AppVirtualTable from '@AppComponents/VirtualTable/VirtualTable.vue';
+    import AppStatus from '@AppComponents/Inputs/Status/Status.vue';
+    import AppRelation from '@AppComponents/Inputs/Relation/Relation.vue';
     import api from '@/helpers/api.js';
     import routes from '@/helpers/routes.js';
     import { format } from 'date-fns';
@@ -90,6 +102,48 @@
         const num = Number(n || 0);
         return Number.isInteger(num) ? num : num.toFixed(2);
     };
+
+    const bottomRows = computed(() => bottomTable.value?.list?.data ?? []);
+    const bottomColumns = computed(() => bottomTable.value?.table ?? []);
+    const statusCol = computed(() => bottomColumns.value.find(c => c.key === 'point_status'));
+    const userCol = computed(() => bottomColumns.value.find(c => c.key === 'user_id'));
+
+    const cellText = (v) => {
+        if (v == null) return '';
+        if (typeof v === 'object') return v.value ?? v.text ?? '';
+        return v;
+    };
+
+    const statusOptions = (row) => ({
+        id: `ps_status_${row.id}`,
+        field_id: statusCol.value?.id,
+        title: null,
+        type: 'status',
+        edit: false,
+        list: statusCol.value?.options ?? [],
+        name: 'point_status',
+        required: false,
+        isHaveNull: false,
+        isCanCreate: false,
+        placeholder: ''
+    });
+
+    const userOptions = (row) => ({
+        id: `ps_user_${row.id}`,
+        title: null,
+        edit: false,
+        type: 'relation',
+        list: userCol.value?.options ?? [],
+        slug: userCol.value?.related_table,
+        name: 'user_id',
+        relation: userCol.value?.id,
+        searchable: false,
+        required: false,
+        isHaveNull: true,
+        multiple: !!userCol.value?.is_plural,
+        visibleCount: 5,
+        placeholder: ''
+    });
 
     const loadProducts = async () => {
         selectedProduct.value = null;
@@ -148,17 +202,11 @@
         overflow: hidden;
     }
 
-    .ps-table_tasks {
-        // Таблица без внутреннего скролла — растёт по содержимому, скроллит страница.
-        :deep(.section-table) {
-            height: auto;
-            margin-bottom: 0;
-        }
+    .ps-table__row_static {
+        cursor: default;
 
-        :deep(.table) {
-            height: auto;
-            max-height: none;
-            overflow: visible;
+        &:hover {
+            background: transparent;
         }
     }
 
