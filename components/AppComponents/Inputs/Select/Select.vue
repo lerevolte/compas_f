@@ -150,6 +150,13 @@
             this.throttledFilter = throttle(async (value) => {
                 let response = null
                 if (props.options.type == 'address') {
+                    // Если введены координаты (lat, lng) — подсказки не нужны.
+                    const coordPattern = /^\s*-?\d+\.?\d*[,\s]+-?\d+\.?\d*\s*$/
+                    if (coordPattern.test(value)) {
+                        this.state.list = []
+                        this.state.visibleList = []
+                        return
+                    }
                     const restrict = props.options.subtype ? `&restrict=${props.options.subtype}` : ''
                     response = await api.callMethod("GET", `/map/geocode?address=${value}${restrict}`)
                     this.state.list = response.data.map(p => ({ label: p.text, value: JSON.parse(JSON.stringify(p)) }))

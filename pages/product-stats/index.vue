@@ -128,13 +128,6 @@
 </script>
 
 <style lang="scss" scoped>
-    .product-stats {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        min-height: 0;
-    }
-
     .product-stats__header {
         display: flex;
         align-items: center;
@@ -146,8 +139,6 @@
         display: flex;
         flex-direction: column;
         gap: 30px;
-        flex: 1;
-        min-height: 0;
     }
 
     .ps-table {
@@ -155,25 +146,19 @@
         border-radius: 10px;
         border: 1px solid #ededf0;
         overflow: hidden;
-        flex-shrink: 0;
-    }
-
-    .ps-table:not(.ps-table_tasks) .ps-table__scroll {
-        max-height: 38vh;
-        overflow-y: auto;
     }
 
     .ps-table_tasks {
-        flex: 1;
-        min-height: 280px;
-        display: flex;
-        flex-direction: column;
-        overflow: visible;
-
+        // Таблица без внутреннего скролла — растёт по содержимому, скроллит страница.
         :deep(.section-table) {
-            flex: 1;
-            min-height: 0;
+            height: auto;
             margin-bottom: 0;
+        }
+
+        :deep(.table) {
+            height: auto;
+            max-height: none;
+            overflow: visible;
         }
     }
 
