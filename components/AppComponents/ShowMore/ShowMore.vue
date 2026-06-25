@@ -1,5 +1,6 @@
 <template>
     <AppPopup
+        v-if="hasContent"
         ref="popupRef"
         class="show-more settings"
         :parentContainer="props.parentContainer"
@@ -57,6 +58,15 @@
     })
 
     const popupRef = ref(null)
+    const slots = useSlots()
+
+    // Не выводим дотс, если нет доступных действий и нет слот-контента
+    // (например, у пользователя нет прав ни на одно действие).
+    const hasContent = computed(() => {
+        const opts = Array.isArray(props.options) ? props.options : []
+        const hasOption = opts.some(o => o && o.name && o.enabled !== false)
+        return hasOption || !!slots.default
+    })
 
     const initClick = (action) => {
         // Popup закрывает себя сам через делегированный @click по
