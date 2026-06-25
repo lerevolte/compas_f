@@ -32,7 +32,7 @@ echo "=== 4. Deploying SPA entry ==="
 scp .output/public/index.html $SERVER:$SERVER_PATH/index2.html
 echo ""
 echo "=== 5. Deploying page HTML files ==="
-for dir in auth logistic roles profile settings analytics tariffs trash users external; do
+for dir in auth logistic roles profile settings analytics tariffs trash users external product-stats; do
     if [ -f ".output/public/$dir/index.html" ]; then
         ssh $SERVER "mkdir -p $SERVER_PATH/$dir"
         scp .output/public/$dir/index.html $SERVER:$SERVER_PATH/$dir/index.html

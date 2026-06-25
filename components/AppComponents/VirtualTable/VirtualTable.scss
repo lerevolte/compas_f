@@ -194,6 +194,13 @@
     outline-offset: -1px;
   }
 
+  // active+copy-select в не-фиксированной колонке не должна подниматься над
+  // липким заголовком/зафиксированными столбцами при скролле (8534): рамка
+  // inset, ей не нужен z-index выше строки.
+  &.table__cell_active.table__cell_copy-select:not(.table__cell_fixed) {
+    z-index: auto;
+  }
+
   &.table__cell_copied {
     background: #d9e4f0 !important;
   }

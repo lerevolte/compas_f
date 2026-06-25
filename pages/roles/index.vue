@@ -87,6 +87,7 @@
 	])
 
 	const router = useRoute()
+	const routerNav = useRouter()
 
 	class Categories {
 		constructor() {
@@ -118,6 +119,7 @@
 		set(category) {
 			this.active = category.id
 			this.keyUpdate++
+			routerNav.replace({ query: { ...router.query, role: category.id } })
 		}
 
 		// Инициализация создания
@@ -229,6 +231,11 @@
 		useHead({
 			title: `Настройка ролей сущности | Compas.pro`
 		})
+		const roleFromUrl = router.query.role
+		if (roleFromUrl) {
+			categories.value.active = isNaN(Number(roleFromUrl)) ? roleFromUrl : Number(roleFromUrl)
+			categories.value.keyUpdate++
+		}
 	})
 
 </script>

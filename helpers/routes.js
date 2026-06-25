@@ -135,5 +135,9 @@ export default {
         create: '/external-links',
         delete: '/external-links/${token}',
         table: '/external/${token}/table/${slug}'
+    },
+    productStats: {
+        products: '/product-stats/products',
+        tasks: '/product-stats/tasks'
     }
 }
