@@ -33,16 +33,17 @@
                             <IconActionsSettings />
                         </template>
                         <template #content>
-                            <div 
-                                class="popup__option" 
+                            <div
+                                class="popup__option"
                                 v-for="action in tabs.actions"
+                                v-show="action.action !== 'initUpdate' || userStore.user?.is_admin"
                                 @click="(e) => {
                                     e.target?.closest('.popup')?.classList.remove('popup_open')
                                     tabs[action.action](tab)
                                 }"
                             >
                                 {{ action.name }}
-                            </div> 
+                            </div>
                         </template>
                     </AppPopup>
                 </li>

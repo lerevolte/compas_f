@@ -9,15 +9,19 @@
 
     &.form__item_status_disabled {
         pointer-events: none;
-  
+
+        .form__item-title {
+          color: #bcbcbc;
+        }
+
         .status__rect-container {
           border-radius: 5px;
-    
+
           &::before {
             border-radius: 5px;
           }
         }
-  
+
         .status__arrow {
           display: none;
         }

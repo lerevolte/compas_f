@@ -108,6 +108,10 @@
     color: #fff;
 }
 
+.marker-selected .route-popup__counter {
+    background: #0584FE !important;
+}
+
 // Квадратик статуса точки: в маркере маршрута перед временем и в раскрытой
 // информации (Статус точки). Цвет приходит из поля статуса задачи.
 .route-popup__status {

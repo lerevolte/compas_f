@@ -42,12 +42,11 @@
                 <AppButton class="button_text" v-else-if="section.fields.some(item => item.can_edit || (item.type == 'text_group' && item.fields && item.fields.some(sf => sf.can_edit)))" @click="editAll()">
                     Изменить
                 </AppButton>
-                <AppPopup v-if="!props.options.isModule" :isPreventBottom="true">
+                <AppPopup v-if="!props.options.isModule && userStore.user?.is_admin" :isPreventBottom="true">
                     <template #header>
                         <IconSettings />
                     </template>
                     <template #content>
-                        <!-- Временно скрыто, доработаем позже -->
                         <div class="popup__option popup__option_checkbox" v-if="false">
                             <AppCheckbox
                                 v-model="section.is_short"
@@ -153,7 +152,7 @@
                             isHaveNull: true,
                             visibleCount: 5,
                             isSetDefault: true,
-                            isCanAdd: !props.options.isModule,
+                            isCanAdd: !props.options.isModule && (field.can_create ?? true),
                             multiple: field.is_plural,
                             placeholder: '' 
                         }"
@@ -366,8 +365,9 @@
                             >
                                 Изменить
                             </div>
-                            <div 
-                                class="popup__option" 
+                            <div
+                                class="popup__option"
+                                v-if="userStore.user?.is_admin"
                                 @click="(e) => {
                                     emit('actionField', {
                                         action: 'initUpdate',
@@ -378,7 +378,7 @@
                             >
                                 Настроить
                             </div>
-                            <div class="popup__option popup__option_checkbox" data-popup-close v-if="field.type != 'text_group'">
+                            <div class="popup__option popup__option_checkbox" data-popup-close v-if="field.type != 'text_group' && userStore.user?.is_admin">
                                 <AppCheckbox
                                     v-model="field.visible_always"
                                     :options="{
@@ -403,9 +403,9 @@
                             >
                                 Скрыть
                             </div>
-                           <div 
-                                class="popup__option popup__option_red" 
-                                v-show="!field.is_permanent" 
+                           <div
+                                class="popup__option popup__option_red"
+                                v-show="!field.is_permanent && userStore.user?.is_admin"
                                 @click="(e) => {
                                     emit('actionField', {
                                         action: 'initDelete',
@@ -445,7 +445,7 @@
                     </div>
                 </template>
             </AppPopup>
-            <AppButton class="button_text" @click="emit('actionField', {
+            <AppButton class="button_text" v-if="userStore.user?.is_admin" @click="emit('actionField', {
                 action: 'initCreate',
                 value: null
             })">
@@ -482,7 +482,9 @@
     import AppRelation from '@AppComponents/Inputs/Relation/Relation.vue'
     import AppMap from '@AppComponents/Inputs/Map/Map.vue'
     import AppRedactor from '@AppComponents/Inputs/Redactor/Redactor.vue'
+    import { useUserStore } from '@/stores/userStore.js'
 
+    const userStore = useUserStore()
 
     const emit = defineEmits([
         'update:hidden',

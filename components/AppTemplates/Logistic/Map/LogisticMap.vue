@@ -1655,6 +1655,8 @@
         if (!el) return;
         if (activeMarkerElement && activeMarkerElement !== el) activeMarkerElement.style.zIndex = '';
         el.style.zIndex = 1000; activeMarkerElement = el;
+        document.querySelectorAll('.marker-selected').forEach(m => { if (m !== el) m.classList.remove('marker-selected'); });
+        el.classList.add('marker-selected');
         const ext = el.querySelector('.route-popup__extend');
         document.querySelectorAll('.route-popup__extend.active').forEach(e => { if (e !== ext) e.classList.remove('active'); });
         if (ext) {

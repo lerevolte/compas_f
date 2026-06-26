@@ -44,7 +44,7 @@
                 />
             </template>
             <template #footer>
-                <AppButon class="button_text column-fields__button" @click="section.initCreate(index)" v-if="!props.options.isDisableFooter && !props.options.isGlobalEdit && !props.options?.isModule">
+                <AppButon class="button_text column-fields__button" @click="section.initCreate(index)" v-if="!props.options.isDisableFooter && !props.options.isGlobalEdit && !props.options?.isModule && userStore.user?.is_admin">
                     Создать раздел 
                 </AppButon>
                 <AppHistory 
@@ -155,6 +155,9 @@
     import ModalValidate from './Validate/Validate.vue'
 
     import AppInput from '@AppComponents/Inputs/Input/Input.vue';
+    import { useUserStore } from '@/stores/userStore.js'
+
+    const userStore = useUserStore()
 
     const props = defineProps({
         slug: {

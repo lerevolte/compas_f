@@ -605,7 +605,7 @@
     // Ключ столбца связанной сущности: rel__{slug}__{field}.
     const isRelatedTable = computed(() => props.slug === 'routes')
     const relatedGroups = [
-        { key: 'logistic', label: 'Логистика', slug: null },
+        { key: 'logistic', label: 'Маршруты', slug: null },
         { key: 'companies', label: 'Компания', slug: 'companies' },
         { key: 'cars', label: 'Автопарк', slug: 'cars' },
         { key: 'employees', label: 'Сотрудники', slug: 'employees' },
