@@ -173,7 +173,7 @@
                                     id: `${row.index}_${column.key}`,
                                     title: null,
                                     type: column.type,
-                                    list: column.options,
+                                    list: permissionOptions(row.index, column),
                                     name: column.key,
                                     relation: null,
                                     edit: table.body[row.index] && !column.read_only && (table.body[row.index].edit || table.options?.isPermanentEdit),
@@ -325,7 +325,15 @@
         const row = table.value.body[rowIndex]
         if (!row) return false
         const isLogistic = row.slug === 'logistic' || row.name === 'Логистика'
-        return isLogistic && ['update_p', 'delete_p', 'export_p'].includes(key)
+        return isLogistic && ['create_p', 'update_p', 'delete_p', 'export_p'].includes(key)
+    }
+    const permissionOptions = (rowIndex, column) => {
+        const row = table.value.body[rowIndex]
+        const isLogistic = row && (row.slug === 'logistic' || row.name === 'Логистика')
+        if (isLogistic && column.key === 'read_p') {
+            return (column.options || []).filter(o => o.value !== 'Y')
+        }
+        return column.options
     }
     const draggableRow = ref(null)
     const tableRef = inject('tableRef')

@@ -108,8 +108,9 @@
     color: #fff;
 }
 
-.marker-selected .route-popup__counter {
-    background: #0584FE !important;
+.marker-selected .route-popup .route-popup__counter {
+    background-color: #0584FE !important;
+    border-color: #0584FE !important;
 }
 
 // Квадратик статуса точки: в маркере маршрута перед временем и в раскрытой
