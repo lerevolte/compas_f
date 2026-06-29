@@ -44,3 +44,38 @@
         }
     }
 }
+
+// Блок-ссылка без графика («Статистика товаров по дням»).
+.analytics__grid_extra {
+    margin-top: 20px;
+}
+
+.analytics__chart_link {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+    min-height: 120px;
+    padding: 20px;
+    border: 1px solid #ededf0;
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.12s, box-shadow 0.12s;
+
+    &:hover {
+        border-color: variables.$button-fill;
+        box-shadow: 0 0 3px rgba(0, 0, 0, 0.08);
+    }
+
+    .analytics__chart-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #222;
+    }
+
+    .analytics__chart-hint {
+        font-size: 13px;
+        color: #8f8f8f;
+    }
+}

@@ -818,7 +818,10 @@ export class Table {
             }
             
 
-            if (request.length == 0) return
+            // Для products пустой request — валидный кейс: пользователь удалил
+            // все товары и хочет сохранить задачу без товаров (8551). Поэтому
+            // ранний выход только для остальных таблиц.
+            if (request.length == 0 && this.slug != 'products') return
 
             if (this.slug) {
                 if (this.slug == 'products') {

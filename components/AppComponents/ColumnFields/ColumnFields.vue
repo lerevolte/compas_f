@@ -320,7 +320,13 @@
         // пропадает. Без этого поля остаются с edit=true, но панель сохранения
         // исчезает (новый section после ремаунта не знает о старых правках).
         // Отменяем редактирование, чтобы после возврата на вкладку всё было чисто.
-        section.value.cancel(null, columns.value.list, props.pageId, props.slug, emit, props.options)
+        // ВАЖНО: передаём isGlobalEdit:false — иначе при ремаунте деталки после
+        // СОЗДАНИЯ объекта (savePage → updateComponent++ → detail.get() ставит
+        // loading=true и размонтирует этот блок) cancel эмитил бы closeDetail и
+        // деталка закрывалась. Нужно оставаться в деталке после создания (8570).
+        // Явная «Отмена» в режиме создания закрывает деталку отдельно — через
+        // MassAction, который передаёт настоящие props.options.
+        section.value.cancel(null, columns.value.list, props.pageId, props.slug, emit, { ...props.options, isGlobalEdit: false })
     })
 
     watch(() => props.columns, () => {

@@ -272,8 +272,11 @@
   })
 
   const isChoosed = computed(() => {
-        // MassAction показываем и при чекбокс-выделении, и при правке строки.
-        return table.value.body.some(item => item.isChoose || item.edit)
+        // MassAction показываем при чекбокс-выделении, при правке строки, а
+        // также когда таблица в режиме правки (state=='edit') — иначе при
+        // удалении ВСЕХ товаров на вкладке «Товары и услуги» body пустел и
+        // панель сохранения исчезала, не давая сохранить задачу без товаров (8551).
+        return table.value.state == 'edit' || table.value.body.some(item => item.isChoose || item.edit)
     })
 
   const checkedCount = computed(() => {

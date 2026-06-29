@@ -34,6 +34,10 @@
             @updateMetaHeader="item => entity.updateMetaHeader(item)"
             @openModal="item => entity.openModal(item)"
           />
+          <AppProductStats
+            v-else-if="modal.template == 'product-stats'"
+            @openModal="item => entity.openModal(item)"
+          />
           <AppDetail
             v-else
             :id="modal.id"
@@ -65,6 +69,7 @@
   import AppMenu from '@AppComponents/Menu/Menu.vue';
 	import AppDetail from '@AppTemplates/Detail/Detail.vue';
   import AppAnalyticDetail from '@AppTemplates/Analytic/Detail/Detail.vue';
+  import AppProductStats from '@AppTemplates/ProductStats/ProductStats.vue';
 	import AppWarningLarge from '@AppComponents/Modal/Large/Large.vue'
 
   const router = useRoute()
@@ -134,6 +139,8 @@
         this.addresses = []
         if (item.template == 'chart') {
           window.location.href = `/analytics/${item.slug}`
+        } else if (item.template == 'product-stats') {
+          window.location.href = `/product-stats`
         } else {
           window.location.href = `/objects/${item.slug}/${item.id}`
         }
@@ -146,6 +153,8 @@
 
         if (item.template == 'chart') {
           window.history.replaceState({}, document.title, window.location.origin +  `/analytics/${item.slug}`);
+        } else if (item.template == 'product-stats') {
+          window.history.replaceState({}, document.title, window.location.origin +  `/product-stats`);
         } else {
           window.history.replaceState({}, document.title, window.location.origin +  `/objects/${item.slug}/${item.id}`);
         }
