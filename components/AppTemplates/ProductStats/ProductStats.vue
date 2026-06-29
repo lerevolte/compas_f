@@ -1,5 +1,5 @@
 <template>
-    <div class="product-stats">
+    <div class="product-stats" :class="{ 'product-stats_modal': props.isModal }">
         <div class="page__header product-stats__header">
             <AppH1 id="mobile-menu-target">
                 Статистика товаров по дням
@@ -81,6 +81,15 @@
     import routes from '@/helpers/routes.js';
     import { format } from 'date-fns';
 
+    const props = defineProps({
+        // В модалке аналитики у контента нет внешних отступов (их на странице
+        // даёт <main>), поэтому добавляем их сами через класс (8557).
+        isModal: {
+            type: Boolean,
+            default: false
+        }
+    });
+
     const emit = defineEmits([
         'openModal'
     ]);
@@ -136,6 +145,11 @@
 </script>
 
 <style lang="scss" scoped>
+    // В модалке аналитики нет отступов от <main> — задаём их сами.
+    .product-stats_modal {
+        padding: 25px 15px;
+    }
+
     .product-stats__header {
         display: flex;
         align-items: center;

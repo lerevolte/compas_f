@@ -36,6 +36,7 @@
           />
           <AppProductStats
             v-else-if="modal.template == 'product-stats'"
+            :isModal="true"
             @openModal="item => entity.openModal(item)"
           />
           <AppDetail
