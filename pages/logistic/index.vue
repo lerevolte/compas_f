@@ -31,7 +31,7 @@
 											</div>
 										</div>
 										<div class="stat-grid__item">
-											<div class="stat-grid__label">Кол-во машин, шт</div>
+											<div class="stat-grid__label">Кол-во маршрутов, шт</div>
 											<div class="stat-grid__value">{{ activeStatsData.car_count }}</div>
 										</div>
 										<div class="stat-grid__item">

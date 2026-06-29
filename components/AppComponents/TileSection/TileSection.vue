@@ -272,14 +272,15 @@
                             v-model="field.value"
                         />
 
-                        <AppSelect 
+                        <AppSelect
                             v-else-if="field.type == 'select_dropdown'"
                             :error="field.error"
                             :options="{
                                 ...field,
                                 focus: !localGlobalEdit,
                                 list: field.options,
-                                multiple: field.is_plural
+                                multiple: field.is_plural,
+                                isHaveNull: !field.required
                             }"
                             v-model="field.value"
                         />

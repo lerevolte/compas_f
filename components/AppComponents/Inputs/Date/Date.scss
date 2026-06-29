@@ -213,7 +213,7 @@
     border-radius: 5px;
 }
 
-.dp__action_row { display: none; }
+.dp__action_row { display: none !important; }
 
 .dp__menu_content_wrapper {
     background: #fff;

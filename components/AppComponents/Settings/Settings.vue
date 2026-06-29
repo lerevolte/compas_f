@@ -615,10 +615,14 @@
 
     const SYSTEM_KEYS = ['isChoose', 'actions', 'iconDrag', 'iconDelete']
 
-    // Собственные столбцы маршрута (без системных, групп и связанных).
+    // Собственные столбцы маршрута. «Выделение» (isChoose) и «Действие»
+    // (actions) — стандартные столбцы любой таблицы, поэтому их оставляем
+    // в списке отображения (8); прячем только служебные iconDrag/iconDelete
+    // и связанные (rel__).
+    const OWN_HIDDEN_KEYS = ['iconDrag', 'iconDelete', 'clicked']
     const ownColumns = computed(() => {
         return (props.list || []).filter(c =>
-            c && !c.is_group && !SYSTEM_KEYS.includes(c.key) && !(typeof c.key === 'string' && c.key.startsWith('rel__'))
+            c && !c.is_group && !OWN_HIDDEN_KEYS.includes(c.key) && !(typeof c.key === 'string' && c.key.startsWith('rel__'))
         )
     })
 

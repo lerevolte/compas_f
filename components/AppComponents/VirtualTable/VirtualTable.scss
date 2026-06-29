@@ -223,11 +223,17 @@
     display: flex;
     align-items: center;
 
-    // Группа адресов (текст + кнопка копирования) и файл-превью —
-    // составные значения, для них верхнее выравнивание выглядит лучше.
-    &:has(.table__text-group),
+    // Файл-превью — составное значение, для него верхнее выравнивание
+    // выглядит лучше.
     &:has(.table__file) {
       display: block;
+    }
+
+    // Группа адресов (текст + кнопка копирования) — раньше тоже прижималась
+    // к верху (display:block). Поле типа «Адрес» должно центрироваться по
+    // вертикали в ячейке (8547), поэтому оставляем flex + align-items:center.
+    &:has(.table__text-group) {
+      align-items: center;
     }
 
     a {
@@ -423,6 +429,14 @@
     align-items: start;
     background: var(--color-row);
 
+    // Поля редактирования (статус, дата, инпут, select, relation) — прямые
+    // flex-потомки ячейки с align-items:start, из-за чего прижимались к
+    // верху. Центрируем их по вертикали (8547). Раньше это делалось только
+    // для select — теперь для всех form__item-полей.
+    > .form__item {
+      align-self: center;
+    }
+
     &[data-column-key="clicked"],
     &[data-column-key="isChoose"] {
       padding: 0px;
@@ -447,7 +461,7 @@
     &[data-column-key="product_id"] {
       .select__value {
         display: flex;
-        height: 30px;
+        height: 40px;
         align-items: center;
       }
 
@@ -506,11 +520,11 @@
 
     input,
     textarea {
-      min-height: 30px;
+      min-height: 40px;
     }
 
     input {
-      height: 30px;
+      height: 40px;
       padding-top: 4px;
       padding-bottom: 4px;
     }
@@ -534,7 +548,7 @@
           }
 
           .select__values {
-            min-height: 30px;
+            min-height: 40px;
           }
 
           .form__item_input {
@@ -558,27 +572,28 @@
   }
 }
 
-// Высоту инпутов в ячейках уменьшали до 30px ради компактного массового
-// редактирования в общих таблицах. На вкладке «Товары и услуги» задачи
-// логистики (slug products) таблица всегда в режиме редактирования —
-// возвращаем привычные 40px (задача 5).
-.table_products {
-  .table__cell {
+// Компактные инпуты/селекты (30px вместо стандартных 40px) — только для
+// страницы «Логистика», где идёт массовое редактирование в плотных таблицах.
+// Раньше 30px стояли дефолтом и протекали на страницы списка объектов —
+// там высота должна оставаться 40px (8547). Поэтому 40px — общий дефолт
+// (см. выше), а компактные 30px скоупим под корневой класс .logistic.
+.logistic {
+  .table__body .table__cell {
     input,
     textarea {
-      min-height: 40px;
+      min-height: 30px;
     }
 
     input {
-      height: 40px;
+      height: 30px;
     }
 
     &[data-column-key="product_id"] .select__value {
-      height: 40px;
+      height: 30px;
     }
 
     .form__item_select .select:has(.select__values) .select__values {
-      min-height: 40px;
+      min-height: 30px;
     }
   }
 }
