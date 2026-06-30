@@ -126,23 +126,22 @@
 
     const selectedFields = computed(() => visibleFields.value)
 
-    const storageKey = computed(() => `route-tasks-view:${props.routeId || 'all'}`)
-
-    const persist = () => {
-        if (typeof localStorage === 'undefined') return
+    // Конфиг полей хранится на бэке (один общий на портал), чтобы переживал
+    // перезагрузку и показывался идентично во внешней ссылке (8579).
+    const persist = async () => {
+        if (props.isExternal) return // внешняя ссылка — только просмотр
         try {
             const data = allFields.value.map(f => ({ key: f.key, enabled: !!f.enabled, sort: f.sort }))
-            localStorage.setItem(storageKey.value, JSON.stringify(data))
+            await api.callMethod('PUT', routes.logistic.tasksViewFields, { fields: data })
         } catch (e) {}
     }
 
-    const restore = () => {
-        if (typeof localStorage === 'undefined') return null
+    const loadSavedConfig = async () => {
         try {
-            const raw = localStorage.getItem(storageKey.value)
-            return raw ? JSON.parse(raw) : null
+            const resp = await api.callMethod('GET', routes.logistic.tasksViewFields)
+            return resp.data?.fields ?? []
         } catch (e) {
-            return null
+            return []
         }
     }
 
@@ -162,42 +161,37 @@
     ])
 
     // Конфиг колонок logistic_tasks -> список доступных для отображения полей.
-    const buildFieldsFromTable = (table) => {
+    // savedConfig — общий конфиг с бэка [{key, enabled, sort}].
+    const buildFieldsFromTable = (table, savedConfig) => {
+        const hasConfig = Array.isArray(savedConfig) && savedConfig.length > 0
         const fields = (table ?? [])
             .filter(col => col && col.key && !TECHNICAL_KEYS.has(col.key))
-            .map((col, i) => ({
-                key: col.key,
-                title: col.title || col.key,
-                type: col.type,
-                options: col.options || [],
-                is_plural: col.is_plural || false,
-                related_table: col.related_table || null,
-                sort: i,
-                // По умолчанию включаем «Название» и «Адрес», если они есть.
-                enabled: ['name', 'address'].includes(col.key)
-            }))
-
-        // Применяем сохранённые пользовательские настройки.
-        const saved = restore()
-        if (saved && Array.isArray(saved)) {
-            fields.forEach(f => {
-                const found = saved.find(s => s.key === f.key)
-                if (found) {
-                    f.enabled = !!found.enabled
-                    f.sort = found.sort ?? f.sort
+            .map((col, i) => {
+                const saved = hasConfig ? savedConfig.find(s => s.key === col.key) : null
+                return {
+                    key: col.key,
+                    title: col.title || col.key,
+                    type: col.type,
+                    options: col.options || [],
+                    is_plural: col.is_plural || false,
+                    related_table: col.related_table || null,
+                    sort: saved ? (saved.sort ?? i) : i,
+                    // Если есть сохранённый конфиг — берём его enabled; новые поля
+                    // (которых в конфиге нет) скрыты. Без конфига — дефолт
+                    // «Название» и «Адрес».
+                    enabled: saved ? !!saved.enabled : (hasConfig ? false : ['name', 'address'].includes(col.key))
                 }
             })
-        }
 
         allFields.value = fields
     }
 
-    const loadFields = async () => {
+    const loadFields = async (savedConfig) => {
         // Берём конфиг таблицы logistic_tasks — там есть весь набор колонок,
         // включая отключённые.
         try {
             const response = await api.callMethod('GET', '/objects/logistic_tasks/compose?per_page=1')
-            buildFieldsFromTable(response.data?.table)
+            buildFieldsFromTable(response.data?.table, savedConfig)
         } catch (e) {
             console.error('Не удалось получить поля logistic_tasks:', e)
         }
@@ -227,7 +221,9 @@
                 .replace('${token}', props.routeId)
                 .replace('${slug}', 'logistic_tasks')
             const response = await api.callMethod('GET', route)
-            buildFieldsFromTable(response.data?.table)
+            // Конфиг полей приходит из того же ответа (route_tasks_view) —
+            // тот же набор/порядок колонок, что настроен внутри портала.
+            buildFieldsFromTable(response.data?.table, response.data?.route_tasks_view)
             tasks.value = response.data?.list?.data || []
         } catch (e) {
             console.error('Не удалось загрузить задачи маршрута (внешняя ссылка):', e)
@@ -347,7 +343,8 @@
         if (props.isExternal) {
             await loadExternal()
         } else {
-            await loadFields()
+            const savedConfig = await loadSavedConfig()
+            await loadFields(savedConfig)
             await loadTasks()
         }
     })

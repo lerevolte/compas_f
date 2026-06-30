@@ -124,7 +124,8 @@ export default {
         getModalCompanies: '/objects/search?field_id=1888&q=',
         getModalCars: '/objects/search?field_id=2064&q=',
         getModalEmployees: '/objects/search?field_id=1887&q=',
-        getStatistics: '/analytics/logistics-all'
+        getStatistics: '/analytics/logistics-all',
+        tasksViewFields: '/route-tasks-view/fields'
     },
     chart: {
         get: '/analytics',
