@@ -1211,7 +1211,7 @@
             const html = `
                 <div class="route-popup">
                     <div class="route-popup__main" style="border-color: ${task.routeColor}">
-                        <span class="route-popup__counter" style="background: ${task.routeColor}">${task.order || ''}</span>
+                        <span class="route-popup__counter" style="background: ${task.routeColor}; --route-color: ${task.routeColor}">${task.order || ''}</span>
                         <span class="route-popup__status" style="background: ${statusColor}"></span>
                         <span class="route-popup__time">${planTime}${factDisplay}</span>
                     </div>

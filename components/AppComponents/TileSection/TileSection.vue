@@ -152,7 +152,7 @@
                             isHaveNull: true,
                             visibleCount: 5,
                             isSetDefault: true,
-                            isCanAdd: !props.options.isModule && (field.can_create ?? true),
+                            isCanAdd: !props.options.isModule && (field.can_create ?? true) && (field.can_edit ?? true),
                             multiple: field.is_plural,
                             placeholder: '' 
                         }"

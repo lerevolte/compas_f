@@ -109,8 +109,16 @@
 }
 
 .marker-selected .route-popup .route-popup__counter {
+    // Только фон меняется при выделении; рамка остаётся как у невыделенной
+    // задачи (для нераспределённой — #A6B7D4 из .unassigned-popup) (8533).
     background-color: #0584FE !important;
-    border-color: #0584FE !important;
+}
+
+// Выделенная точка В МАРШРУТЕ (не нераспределённая): рамка 2px цветом
+// маршрута (--route-color задаётся инлайном на счётчике) (8533).
+.marker-selected .route-popup:not(.unassigned-popup) .route-popup__counter {
+    border: 2px solid var(--route-color, #0584FE) !important;
+    box-sizing: border-box;
 }
 
 // Квадратик статуса точки: в маркере маршрута перед временем и в раскрытой
