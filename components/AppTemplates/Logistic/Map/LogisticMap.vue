@@ -1021,10 +1021,15 @@
             const startTime = new Date();
             startTime.setHours(startHours, startMinutes, 0, 0);
 
+            // Поправка на пробки: время в пути от OSRM (по свободной дороге)
+            // умножаем на коэффициент — так же, как бэк в update_tasks. Без
+            // этого время прибытия на карте отличалось от пересчитанного в
+            // таблице (8508).
+            const TRAFFIC_COEFFICIENT = 2;
             const reachPoints = [];
             let cumTravelTime = 0;
             osrmRoute.legs.forEach((leg, i) => {
-                cumTravelTime += leg.duration;
+                cumTravelTime += leg.duration * TRAFFIC_COEFFICIENT;
                 if (i < osrmRoute.legs.length) {
                     reachPoints.push({ time: cumTravelTime });
                 }
