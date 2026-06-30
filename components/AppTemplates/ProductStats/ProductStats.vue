@@ -229,4 +229,12 @@
         text-align: center;
         color: #8f8f8f;
     }
+
+    // Таблица задач логистики — фиксированная высота 500px со скроллом (8579).
+    // .section-table height:100% сам по себе не работает без заданной высоты
+    // родителя, поэтому задаём её здесь.
+    .ps-table_tasks :deep(.section-table) {
+        height: 500px;
+        margin-bottom: 0;
+    }
 </style>

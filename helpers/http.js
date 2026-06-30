@@ -26,7 +26,14 @@ export default {
                             window.location.href = '/auth'
                         }
                     } else {
-                        common.showNotification({title: 'Ошибка', description: error.response.data.message})
+                        const message = error.response?.data?.message
+                        // «Entity not found» — служебная ошибка (например при
+                        // ограничении прав), которая дублирует уже показанную
+                        // человекочитаемую ошибку (напр. «поле обязательно»).
+                        // Её не показываем, чтобы не было двух алертов (8576).
+                        if (message && String(message).trim() !== 'Entity not found') {
+                            common.showNotification({title: 'Ошибка', description: message})
+                        }
                     }
 
                     return error.response

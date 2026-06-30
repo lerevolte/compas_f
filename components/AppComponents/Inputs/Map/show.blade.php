@@ -176,9 +176,10 @@
                         startTime.setHours(startHours, startMinutes, 0, 0);
 
                         // Поправка на пробки: время в пути от маршрутизатора
-                        // (по свободной дороге) умножаем на 1.7, чтобы время
-                        // прибытия на точки и длительность учитывали пробки (8508).
-                        const TRAFFIC_COEFFICIENT = 1.7;
+                        // (по свободной дороге) умножаем на коэффициент, чтобы
+                        // время прибытия на точки и длительность учитывали
+                        // пробки (8508).
+                        const TRAFFIC_COEFFICIENT = 2;
                         const reachPoints = [];
                         let cumulativeTravelTime = 0;
                         route.instructions.forEach(instr => {

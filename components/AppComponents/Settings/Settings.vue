@@ -5,9 +5,19 @@
         </template>
         <template #content>
             <div class="settings__menu">
-                <div class="settings__item popup__option settings__item_back" v-show="settings.nest.active" @click="settings.nest.back()">
+                <!--
+                    Прячем общую кнопку возврата, когда мы внутри столбцов
+                    выбранной сущности (Отображение → Сущность) — там своя
+                    кнопка «Назад» (ниже). Иначе показывались две кнопки
+                    возврата сразу (8576).
+                -->
+                <div
+                    class="settings__item popup__option settings__item_back"
+                    v-show="settings.nest.active && !(settings.nest.active.value == 'isCheck' && isRelatedTable && relGroup != null)"
+                    @click="settings.nest.back()"
+                >
                     {{ settings.nest.active?.label ?? 'Назад' }}
-                    <SelectArrowSubmenu /> 
+                    <SelectArrowSubmenu />
                 </div>
 
                 <!-- Common -->

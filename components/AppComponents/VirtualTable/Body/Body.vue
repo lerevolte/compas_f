@@ -43,7 +43,7 @@
                     :data-index="row.index"
                     :data-id="row.original?.id"
                     :data-height="row.size"
-                    :style="table.isDragging ? `position: relative; top: 0; --color-row: ${row.index % 2 === 0  ? '#f7fbff' : '#FFF'};` : `--row-start: ${row.start}px; --color-row: ${row.index % 2 === 0  ? '#f7fbff' : '#FFF'};`"
+                    :style="(table.isDragging || props.options?.isShort) ? `position: relative; top: 0; --color-row: ${row.index % 2 === 0  ? '#f7fbff' : '#FFF'};` : `--row-start: ${row.start}px; --color-row: ${row.index % 2 === 0  ? '#f7fbff' : '#FFF'};`"
                     :class="{
                         'table__row_hidden': table.options?.isHaveLocalFilter && !checkEnabledRow(table.body[row.index]),
                         'table__row_socket-change': table.body[row.index] && table.body[row.index].socketChange,
