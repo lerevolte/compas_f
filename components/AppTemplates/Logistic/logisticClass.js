@@ -52,6 +52,12 @@ export class LogisticWithMap extends Logistic {
         super.updateRoute?.(data);
         this.routes.updatingCount++;
         this.machine_tasks.updatingCount++;
+        // Правка полей маршрута (например loading_time — время выезда) влияет на
+        // время прибытия точек, но сама по себе его не пересчитывает. Пересчитываем
+        // активный маршрут (8508).
+        if (this.machine_tasks.route_id) {
+            this.recalcRouteTiming(this.machine_tasks.route_id);
+        }
     }
 
     // Маршруты удалены из таблицы «Маршруты»: их задачи возвращаются в
@@ -483,9 +489,12 @@ export class LogisticWithMap extends Logistic {
 
             // Reload unassigned tasks (task may have moved in/out)
             this.loadUnassignedTasks();
-            // Refresh unassigned tasks table only (route tasks table already updated by drag)
             this.logistic_tasks.updatingCount++;
             this.routes.updatingCount++;
+            // Перерисовываем и «Задачи в машине»: drag тасует строки локально, но
+            // время прибытия (plan_time) пересчитывает бэк в update_tasks. Без
+            // рефетча таблица показывала старое время в новом порядке (8508).
+            this.machine_tasks.updatingCount++;
             // Notify parent to refresh analytics
             if (this.onRouteChanged) this.onRouteChanged();
         } catch (error) {
@@ -544,6 +553,32 @@ export class LogisticWithMap extends Logistic {
                     this.loadRouteForMap(this.machine_tasks.route_id);
                 }
             }
+            if (this.onRouteChanged) this.onRouteChanged();
+        }
+    }
+
+    // Пересчёт времени маршрута (plan_time у точек + длительность) без
+    // изменения состава: правка полей задач (service_time) или маршрута
+    // (loading_time) сама по себе не пересчитывает время прибытия, поэтому
+    // переотправляем текущий список задач в update_tasks — он и пересчитает
+    // время с учётом коэффициента пробок (8508).
+    async recalcRouteTiming(routeId) {
+        routeId = routeId ?? this.machine_tasks.route_id;
+        if (!routeId) return;
+        return this._enqueueRouteMutation(() => this._recalcRouteTiming(routeId));
+    }
+
+    async _recalcRouteTiming(routeId) {
+        try {
+            const response = await api.callMethod('GET', `/routes/${routeId}/tasks`);
+            const ids = (response.data?.data || []).map(t => t.id);
+            if (!ids.length) return;
+            await api.callMethod('PUT', `/routes/${routeId}/tasks`, { ids });
+        } catch (error) {
+            console.error('🔴 Error recalculating route timing:', error);
+        } finally {
+            this.machine_tasks.updatingCount++;
+            this.loadRouteForMap(routeId);
             if (this.onRouteChanged) this.onRouteChanged();
         }
     }
