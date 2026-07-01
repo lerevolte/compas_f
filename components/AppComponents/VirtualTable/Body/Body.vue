@@ -275,7 +275,7 @@
                                 {{ cell.useCellSelectModel(row.index, column).value }}
                             </span>
 
-                            <span class="table__text text" v-else-if="column.type == 'json'" v-html="cell.useCellModel(row.index, column).value"></span>
+                            <span class="table__text text" v-else-if="column.type == 'json'" :title="jsonTitle(cell.useCellModel(row.index, column).value)" v-html="cell.useCellModel(row.index, column).value"></span>
 
                             <AppStatus
                                 v-else-if="column.type == 'status'"
@@ -325,6 +325,19 @@
     const table = inject('table')
     const sectionRef = inject('sectionRef')
     const common = new Common()
+
+    // Полное значение json-ячейки (напр. «Состав») для title при наведении:
+    // в ячейке текст усечён в одну строку, а в подсказке показываем весь список.
+    // <br> -> перенос строки, остальные теги убираем.
+    const jsonTitle = (html) => {
+        if (!html || typeof html !== 'string') return null
+        const text = html
+            .replace(/<br\s*\/?>/gi, '\n')
+            .replace(/<[^>]*>/g, '')
+            .replace(/\n+$/g, '')
+            .trim()
+        return text || null
+    }
 
     const isHiddenPermissionCell = (rowIndex, key) => {
         const row = table.value.body[rowIndex]
