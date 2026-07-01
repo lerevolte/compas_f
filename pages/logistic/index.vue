@@ -43,16 +43,16 @@
 											<div class="stat-grid__value">{{ formatDuration(activeStatsData.duration) }}</div>
 										</div>
 										<div class="stat-grid__item">
+											<div class="stat-grid__label">Общий вес, кг</div>
+											<div class="stat-grid__value">{{ activeStatsData.total_weight }}</div>
+										</div>
+										<div class="stat-grid__item">
 											<div class="stat-grid__label">Заложено на доставку, руб</div>
 											<div class="stat-grid__value">{{ activeStatsData.reserve_for_delivery }}</div>
 										</div>
 										<div class="stat-grid__item">
 											<div class="stat-grid__label">Цена доставки, руб</div>
 											<div class="stat-grid__value">{{ activeStatsData.delivery_price }}</div>
-										</div>
-										<div class="stat-grid__item">
-											<div class="stat-grid__label">Общий вес, кг</div>
-											<div class="stat-grid__value">{{ activeStatsData.total_weight }}</div>
 										</div>
 										<div class="stat-grid__item">
 											<div class="stat-grid__label">Процент прибыли</div>

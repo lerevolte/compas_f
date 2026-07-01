@@ -159,9 +159,22 @@
         top: 30px;
     }
 
-    &.draggable-drag {
+    // Клон, который тащится за курсором (forceFallback), в режиме
+    // редактирования содержал ещё имя файла и меню «...», из-за чего был
+    // выше/кривой по сравнению с обычным режимом. Приводим его к размеру
+    // самой картинки — как у ghost-плейсхолдера (8595).
+    &.draggable-drag,
+    &.draggable-fallback {
+        max-width: 100px;
+        max-height: 100px;
+        overflow: hidden;
+
         .show-more {
             display: none !important;
+        }
+
+        .file__name {
+            display: none;
         }
     }
 }

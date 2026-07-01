@@ -915,8 +915,13 @@
         logistic.value.filterFields.forEach(tab => {
             let value = tab.value;
             if (Array.isArray(value)) {
-                value = value.filter(v => v !== null && v !== undefined && v !== '');
-                if (value.length === 0) return;
+                // Диапазоны (грузоподъёмность/объём): сохраняем ПОЗИЦИИ границ.
+                // Раньше null'ы вырезались, из-за чего [null, 5000] схлопывался в
+                // [5000], и бэк читал 5000 как минимум — при снятии фильтра «от»
+                // точка не возвращалась (8587). Пустые границы шлём как null
+                // (бэк их игнорирует), не сдвигая индекс верхней/нижней границы.
+                value = value.map(v => (v === null || v === undefined || v === '') ? null : v);
+                if (value.every(v => v === null)) return;
             } else if (value === null || value === undefined || value === '') {
                 return;
             }

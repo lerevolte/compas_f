@@ -101,6 +101,15 @@
       }
     }
 
+    // «Состав» (products) — многострочное HTML-значение с <br>. Общий для
+    // table_short стиль .table__text{display:flex; white-space:nowrap} ломает
+    // переносы строк, из-за чего товары «пляшут». Для этой колонки возвращаем
+    // блочный поток, чтобы каждый товар был на своей строке.
+    .table__cell[data-column-key="products"] .table__text {
+      display: block;
+      white-space: normal;
+    }
+
   }
 }
 

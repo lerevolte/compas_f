@@ -111,14 +111,18 @@
                 let categories = []
                 let series = []
 
+                const isPie = props.settings?.type === 'pie'
                 for (let row of legend) {
                     series.push({
                         name: row.name,
                         color: row.color,
                         data: row.data.map((item) => {
-                            categories.push(item[0] ? format(item[0]?.split(' ')[0], 'dd.MM.yy', '') : null)
-                            // return item[1]
-                            return Number(common.transformPrice(item[1], 2)) || item[1]
+                            const cat = item[0] ? format(item[0]?.split(' ')[0], 'dd.MM.yy', '') : null
+                            categories.push(cat)
+                            const value = Number(common.transformPrice(item[1], 2)) || item[1]
+                            // Для круговой диаграммы точке нужно имя, иначе
+                            // Highcharts подписывает сектора дефолтным «Slice» (8587).
+                            return isPie ? { name: cat, y: value } : value
                         })
                     })
                 }
@@ -256,6 +260,12 @@
 
     watch(() => props.settings?.type, (newType, prev) => {
         if (isEqual(newType, prev)) return
+        // Переключение в/из круговой диаграммы требует переформатировать точки
+        // данных (для pie нужны {name, y}), поэтому перезагружаем данные (8587).
+        if (newType === 'pie' || prev === 'pie') {
+            chart.value.get()
+            return
+        }
         if (chart.value.chart && chart.value.chart.series) {
             chart.value.chart.series.forEach(series => {
                 series.update({ type: newType }, false)
