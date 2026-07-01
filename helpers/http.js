@@ -27,11 +27,13 @@ export default {
                         }
                     } else {
                         const message = error.response?.data?.message
-                        // «Entity not found» — служебная ошибка (например при
-                        // ограничении прав), которая дублирует уже показанную
-                        // человекочитаемую ошибку (напр. «поле обязательно»).
-                        // Её не показываем, чтобы не было двух алертов (8576).
-                        if (message && String(message).trim() !== 'Entity not found') {
+                        // «Entity not found» / «Object not found» — служебные
+                        // ошибки (например при ограничении прав), которые дублируют
+                        // уже показанную человекочитаемую ошибку (напр. «поле
+                        // обязательно»). Их не показываем, чтобы не было двух
+                        // алертов (8576).
+                        const hiddenMessages = ['Entity not found', 'Object not found']
+                        if (message && !hiddenMessages.includes(String(message).trim())) {
                             common.showNotification({title: 'Ошибка', description: message})
                         }
                     }

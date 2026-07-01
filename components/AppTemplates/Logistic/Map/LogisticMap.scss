@@ -111,7 +111,10 @@
 .marker-selected .route-popup .route-popup__counter {
     // Только фон меняется при выделении; рамка остаётся как у невыделенной
     // задачи (для нераспределённой — #A6B7D4 из .unassigned-popup) (8533).
-    background-color: #0584FE !important;
+    // Используем шорткат background (не background-color): у маркеров с
+    // градиентом инлайн задаёт background: linear-gradient(...) — это
+    // background-image, который перекрывал background-color даже с !important.
+    background: #0584FE !important;
 }
 
 // Выделенная точка В МАРШРУТЕ (не нераспределённая): рамка 2px цветом

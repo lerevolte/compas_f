@@ -123,6 +123,11 @@
                                 isHaveNull: true,
                                 multiple: column.is_plural,
                                 visibleCount: 5,
+                                // В ячейке таблицы множественная связь не должна
+                                // растягивать строку: при >1 привязке показываем
+                                // только «Всего X, посмотреть все», при 1 —
+                                // само значение (8533).
+                                isCompact: true,
                                 placeholder: ''
                             }"
                             v-model="cell.useCellModel(row.index, column).value"

@@ -94,7 +94,21 @@
         'openModal'
     ]);
 
-    const activeDate = ref(new Date());
+    // Выбранную дату запоминаем, чтобы при повторном заходе на страницу она
+    // подставлялась (8584).
+    const DATE_STORAGE_KEY = 'product-stats:date';
+    const restoreDate = () => {
+        try {
+            const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(DATE_STORAGE_KEY) : null;
+            if (raw) {
+                const d = new Date(`${raw}T00:00:00`);
+                if (!Number.isNaN(d.getTime())) return d;
+            }
+        } catch (e) {}
+        return new Date();
+    };
+
+    const activeDate = ref(restoreDate());
     const products = ref([]);
     const bottomTable = ref(null);
     const selectedProduct = ref(null);
@@ -103,6 +117,14 @@
 
     const apiDate = computed(() => format(activeDate.value, 'yyyy-MM-dd'));
     const formattedDate = computed(() => format(activeDate.value, 'dd.MM.yyyy'));
+
+    watch(activeDate, (d) => {
+        try {
+            if (typeof localStorage !== 'undefined' && d) {
+                localStorage.setItem(DATE_STORAGE_KEY, format(d, 'yyyy-MM-dd'));
+            }
+        } catch (e) {}
+    });
 
     const formatNum = (n) => {
         const num = Number(n || 0);

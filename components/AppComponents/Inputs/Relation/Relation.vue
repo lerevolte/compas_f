@@ -10,8 +10,8 @@
             class="select select_icon select-container" 
             :ref="el => setSelectRef(el, index)"
             :data-id="index"
-            :class="{ 
-                'select_hidden': normalizedModelValue.value.length - (props.options?.visibleCount + 1 ?? 6) >= index, 
+            :class="{
+                'select_hidden': isCompactReadonly || normalizedModelValue.value.length - (props.options?.visibleCount + 1 ?? 6) >= index,
                 'select_open': selectInstances[index]?.state.isOpen, 
                 'select_disabled': props.options.edit == false, 
                 'select_empty': getActiveOption(index) == undefined || !getActiveOption(index).value
@@ -128,8 +128,8 @@
         </AppError>
 
         <div class="select__actions">
-            <AppButton 
-                v-if="normalizedModelValue.value.length > props.options?.visibleCount + 1 ?? 6"
+            <AppButton
+                v-if="isCompactReadonly || normalizedModelValue.value.length > ((props.options?.visibleCount ?? 5) + 1)"
                 class="button_text"
                 data-action="show"
                 @click="emit('showAll', true)"
@@ -439,6 +439,15 @@
 
     // Реактивная нормализованная модель
     const normalizedModelValue = ref({ value: [null], localOptions: [null] });
+
+    // Компактный режим для ячейки таблицы (read-only): при >1 привязке
+    // показываем только «Всего X, посмотреть все» и скрываем сами значения,
+    // чтобы связь не растягивала высоту строки (8533).
+    const isCompactReadonly = computed(() =>
+        props.options.isCompact === true
+        && props.options.edit === false
+        && (normalizedModelValue.value?.value?.length || 0) > 1
+    );
 
     // Функция обновления нормализованных данных
     const updateNormalizedData = () => {

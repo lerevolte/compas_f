@@ -516,7 +516,10 @@
     const getClusterItemInfo = (item) => {
         if (item.type === 'route') {
             const task = processedRoute?.tasks?.find(t => t.id === item.id);
-            const planTime = task?.departureTime?.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) || task?.planTime || '';
+            // Показываем время ПРИБЫТИЯ (arrivalTime), а не отбытия
+            // (departureTime = прибытие + время обслуживания). Время
+            // обслуживания уже учтено в прибытии на следующую точку (8508).
+            const planTime = task?.arrivalTime?.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) || task?.planTime || '';
             return {
                 id: item.id,
                 type: 'route',
@@ -1196,7 +1199,9 @@
     const createTaskMarkers = (tasks) => {
         console.log('🟢 createTaskMarkers:', tasks.length);
         tasks.forEach(task => {
-            const planTime = task.departureTime?.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) || '';
+            // План. время на маркере — время ПРИБЫТИЯ, без времени обслуживания
+            // (оно уже прибавлено к прибытию на следующую точку) (8508).
+            const planTime = task.arrivalTime?.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) || '';
             const adjTime = task.adjustedTime?.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) || '';
 
             // Safely extract name
