@@ -111,9 +111,13 @@
                 let categories = []
                 let series = []
 
-                const isPie = props.settings?.type === 'pie'
+                const type = props.settings?.type
+                const isPie = type === 'pie'
                 for (let row of legend) {
                     series.push({
+                        // Явно задаём тип серии, иначе при переключении графика
+                        // на круговую серия оставалась линией (8587).
+                        type: type,
                         name: row.name,
                         color: row.color,
                         data: row.data.map((item) => {
@@ -130,6 +134,7 @@
                 categories = uniq(categories)
 
                 this.chart.update({
+                    chart: { type: type },
                     xAxis: {
                         categories: categories,
                         tickInterval: Math.floor(categories.length / 10),
@@ -213,6 +218,15 @@
                     enabled: false
                 },
                 plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        dataLabels: {
+                            enabled: true,
+                            // Показываем дату и значение сектора, а не дефолтное «Slice».
+                            format: '{point.name}: {point.y}'
+                        }
+                    },
                     series: {
                         marker: {
                             enabled: false
@@ -260,17 +274,13 @@
 
     watch(() => props.settings?.type, (newType, prev) => {
         if (isEqual(newType, prev)) return
-        // Переключение в/из круговой диаграммы требует переформатировать точки
-        // данных (для pie нужны {name, y}), поэтому перезагружаем данные (8587).
-        if (newType === 'pie' || prev === 'pie') {
+        // Пере-собираем серии с новым типом и правильным форматом точек
+        // (для pie — {name, y}, иначе число). set() уже проставляет type серии
+        // и chart.type. Используем сохранённый legend, без повторного запроса.
+        if (chart.value.chart && chart.value.data?.legend) {
+            chart.value.set(chart.value.data.legend)
+        } else {
             chart.value.get()
-            return
-        }
-        if (chart.value.chart && chart.value.chart.series) {
-            chart.value.chart.series.forEach(series => {
-                series.update({ type: newType }, false)
-            })
-            chart.value.chart.redraw()
         }
     })
 
