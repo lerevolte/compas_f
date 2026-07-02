@@ -28,7 +28,7 @@
                         {{ tab.title }}
                     </span>
 
-                    <AppPopup ref="popupRef" class="tab_settings" :isPreventBottom="true" v-if="!props.options.isExternal">
+                    <AppPopup ref="popupRef" class="tab_settings" :isPreventBottom="true" v-if="!props.options.isExternal && userStore.user?.is_admin">
                         <template #header>
                             <IconActionsSettings />
                         </template>

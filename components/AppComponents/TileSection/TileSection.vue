@@ -14,7 +14,7 @@
             </span>
 
             <div class="tile-section__title" v-else>
-                <IconDragDotted class="icon_drag-section" v-if="!props.options?.isModule" />
+                <IconDragDotted class="icon_drag-section" v-if="!props.options?.isModule && userStore.user?.is_admin" />
                 <AppH3 class="textarea_title">
                     <p 
                         class="ghost_text" 
@@ -32,7 +32,7 @@
                         v-model="section.name"
                     />
                 </AppH3>
-                <IconEdit v-if="!props.options?.isModule" v-show="!section.editTitle" @click="section.initEditTitle()"/>
+                <IconEdit v-if="!props.options?.isModule && userStore.user?.is_admin" v-show="!section.editTitle" @click="section.initEditTitle()"/>
             </div>
 
             <div class="tile-section__actions" v-if="!props.options.isGlobalEdit && props.options.type != 'field' && !props.options.isModule">
@@ -347,7 +347,7 @@
                         </div>
                     </template>
 
-                    <AppPopup class="field__settings" v-if="!props.options?.isModule">
+                    <AppPopup class="field__settings" v-if="!props.options?.isModule && userStore.user?.is_admin">
                         <template #header>
                             <IconSettings />
                         </template>
@@ -423,7 +423,7 @@
             </template>
         </draggable> 
 
-        <div class="tile-section__footer" v-if="!props.options.isDisableFooter && !props.options?.isModule">
+        <div class="tile-section__footer" v-if="!props.options.isDisableFooter && !props.options?.isModule && userStore.user?.is_admin">
             <AppPopup :isPreventBottom="true">
                 <template #header>
                     <AppButton class="button_text">

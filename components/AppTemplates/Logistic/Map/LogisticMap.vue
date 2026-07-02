@@ -456,9 +456,27 @@
     let isRendering = false;
     let renderQueued = false;
     let queuedRenderOpts = {};
+    let pendingHiddenRender = null;
+
+    const isContainerVisible = () => {
+        const el = mapContainerRef.value;
+        return !!el && el.offsetWidth > 0 && el.offsetHeight > 0;
+    };
+
+    const flushHiddenRender = () => {
+        if (!pendingHiddenRender || !isContainerVisible()) return;
+        const opts = pendingHiddenRender;
+        pendingHiddenRender = null;
+        renderAll(opts);
+    };
 
     const renderAll = async (opts = {}) => {
         if (!mapInstance.value || !L) return;
+        if (!isContainerVisible()) {
+            const prevSkip = pendingHiddenRender ? !!pendingHiddenRender.skipFitBounds : true;
+            pendingHiddenRender = { ...opts, skipFitBounds: prevSkip && !!(opts.skipFitBounds ?? false) };
+            return;
+        }
         if (isRendering) { renderQueued = true; queuedRenderOpts = opts; return; }
         isRendering = true;
 
@@ -2022,6 +2040,7 @@
                     try { layer.redraw(); } catch (e) {}
                 }
             });
+            flushHiddenRender();
         };
         run();
         requestAnimationFrame(run);
@@ -2071,9 +2090,15 @@
                 if (!mapInstance.value) return;
                 // pan: false — иначе Leaflet при каждом изменении размера
                 // сдвигает карту, сохраняя центр, и маршрут «едет» за ресайзом.
-                requestAnimationFrame(() => mapInstance.value?.invalidateSize({ pan: false, animate: false }));
+                requestAnimationFrame(() => {
+                    mapInstance.value?.invalidateSize({ pan: false, animate: false });
+                    flushHiddenRender();
+                });
                 if (trailingTimer) clearTimeout(trailingTimer);
-                trailingTimer = setTimeout(() => mapInstance.value?.invalidateSize({ pan: false, animate: false }), 300);
+                trailingTimer = setTimeout(() => {
+                    mapInstance.value?.invalidateSize({ pan: false, animate: false });
+                    flushHiddenRender();
+                }, 300);
             });
             containerResizeObserver.observe(mapContainerRef.value);
         }

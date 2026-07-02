@@ -892,7 +892,7 @@
     // pointerdown — только хват за ручку разрешает РЕОРДЕР строк внутри таблицы.
     let draggedFromHandle = false
     const onTablePointerDown = (ev) => {
-        draggedFromHandle = !!ev.target?.closest?.('.table__icon-drag')
+        draggedFromHandle = !!ev.target?.closest?.('.table__icon-drag, .table__cell[data-column-key="iconDrag"]')
 
         // Выделение ячейки для копирования (Ctrl+C, isCellCopy) ставим на
         // pointerdown, а не на @click. На логистике вся строка — источник
@@ -900,7 +900,7 @@
         // click — из-за этого ячейка не получала .table__cell_copy-select и
         // копирование «ломалось». pointerdown (capture) приходит всегда.
         if (!table.value.options?.isCellCopy) return
-        if (ev.target?.closest?.('.table__icon-drag, .show-more, input, textarea, select, [contenteditable], button, a')) return
+        if (ev.target?.closest?.('.table__icon-drag, .table__cell[data-column-key="iconDrag"], .show-more, input, textarea, select, [contenteditable], button, a')) return
         const cellEl = ev.target?.closest?.('.table__cell')
         const rowEl = cellEl?.closest?.('.table__row')
         if (!cellEl || !rowEl) return

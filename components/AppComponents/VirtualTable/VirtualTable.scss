@@ -686,6 +686,7 @@
 .table__cell[data-column-key="iconDrag"] {
   justify-content: center;
   align-items: center;
+  cursor: grab;
 
   .table__icon-drag {
     display: inline-flex;

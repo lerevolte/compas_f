@@ -13,7 +13,7 @@
             :forceFallback="true"
             :fallbackOnBody="true"
             handle=".resize__icon-drag"
-            @end="logistic.dragEnd()"
+            @end="logistic.dragEnd(); refreshMapAfterDrag()"
             @start="logistic.dragStart()"
         >
             <template #item="{ element: section }">
@@ -338,6 +338,14 @@
         if (mapComp && typeof mapComp.refreshSize === 'function') {
             mapComp.refreshSize();
         }
+    };
+
+    const refreshMapAfterDrag = () => {
+        nextTick(() => {
+            if (mapComp && typeof mapComp.refreshSize === 'function') {
+                mapComp.refreshSize();
+            }
+        });
     };
 
     // Вызывается из родительской страницы при поиске по задаче. Делает

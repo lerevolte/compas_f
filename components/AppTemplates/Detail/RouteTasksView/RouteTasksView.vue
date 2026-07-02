@@ -29,7 +29,7 @@
                 </template>
             </draggable>
 
-            <AppPopup class="route-tasks-view__add" :isPreventBottom="true">
+            <AppPopup class="route-tasks-view__add" :isPreventBottom="true" v-if="userStore.user?.is_admin">
                 <template #header>
                     <AppButton class="button_text">
                         Добавить поле
@@ -99,6 +99,8 @@
     import IconDragDotted from '@AppIcons/Actions/DragDotted.vue'
     import IconLoader from '@AppIcons/Loader.vue'
     import { format } from 'date-fns'
+    import { useUserStore } from '@/stores/userStore.js'
+    const userStore = useUserStore()
 
     const props = defineProps({
         routeId: { default: null, type: [Number, String] },
