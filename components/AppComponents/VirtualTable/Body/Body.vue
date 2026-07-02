@@ -418,7 +418,11 @@
             const base = row.edit ? this.actions.edit : this.actions.default
             let result = base.filter(a => {
                 if (a.action === 'edit') return table.value.canEditRow(row)
-                if (a.action === 'initDelete') return table.value.canDeleteRow(row)
+                if (a.action === 'initDelete') {
+                    // Пользователя id=1 удалять нельзя — прячем действие (8588).
+                    if (table.value.slug == 'users' && String(row.id) === '1') return false
+                    return table.value.canDeleteRow(row)
+                }
                 if (a.action === 'copy') return table.value.canCreate()
                 return true
             })

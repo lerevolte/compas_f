@@ -21,6 +21,16 @@
                         </thead>
                         <tbody>
                             <tr
+                                v-if="products.length > 0"
+                                class="ps-table__row ps-table__row_all"
+                                :class="{ 'ps-table__row_active': selectedProduct === ALL_PRODUCTS }"
+                                @click="selectProduct(ALL_PRODUCTS)"
+                            >
+                                <td class="ps-table__td"><b>Все товары</b></td>
+                                <td class="ps-table__td ps-table__td_num">—</td>
+                                <td class="ps-table__td ps-table__td_num">{{ formatNum(allTotalCount) }}</td>
+                            </tr>
+                            <tr
                                 v-for="row in products"
                                 :key="row.name"
                                 class="ps-table__row"
@@ -63,7 +73,7 @@
                         isDisableSockets: true,
                         isTrash: false,
                         isLocalTable: true,
-                        title: `Задачи логистики с товаром «${selectedProduct}»`
+                        title: selectedProduct === ALL_PRODUCTS ? 'Задачи логистики (все товары)' : `Задачи логистики с товаром «${selectedProduct}»`
                     }"
                     :table="bottomTable"
                     @openModal="item => emit('openModal', item)"
@@ -108,6 +118,9 @@
         return new Date();
     };
 
+    // Сентинел для строки «Все товары» (статистика по всем товарам).
+    const ALL_PRODUCTS = '__all_products__';
+
     const activeDate = ref(restoreDate());
     const products = ref([]);
     const bottomTable = ref(null);
@@ -117,6 +130,10 @@
 
     const apiDate = computed(() => format(activeDate.value, 'yyyy-MM-dd'));
     const formattedDate = computed(() => format(activeDate.value, 'dd.MM.yyyy'));
+    // Суммарное количество по всем товарам — для строки «Все товары».
+    const allTotalCount = computed(() =>
+        products.value.reduce((sum, r) => sum + Number(r.total_count || 0), 0)
+    );
 
     watch(activeDate, (d) => {
         try {
@@ -151,7 +168,11 @@
         bottomTable.value = null;
         loadingTasks.value = true;
         try {
-            const response = await api.callMethod('GET', `${routes.productStats.tasks}?delivery_date=${apiDate.value}&product=${encodeURIComponent(name)}`);
+            // Для «Все товары» запрашиваем все задачи на дату (all=1), иначе — по товару.
+            const query = name === ALL_PRODUCTS
+                ? `delivery_date=${apiDate.value}&all=1`
+                : `delivery_date=${apiDate.value}&product=${encodeURIComponent(name)}`;
+            const response = await api.callMethod('GET', `${routes.productStats.tasks}?${query}`);
             bottomTable.value = response.data ?? null;
         } catch (error) {
             console.log('product-stats tasks', error);

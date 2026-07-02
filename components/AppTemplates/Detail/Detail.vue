@@ -259,7 +259,11 @@
             if (this.isTrash) return this.actions.trash
             return this.actions.default.filter(a => {
                 if (a.action === 'copy') return this.permissions?.create_p !== 'N'
-                if (a.action === 'initDelete') return this.permissions?.delete_p !== 'N' && this.permissions?.can_delete !== false
+                if (a.action === 'initDelete') {
+                    // Пользователя id=1 удалять нельзя — прячем действие (8588).
+                    if (this.slug == 'users' && String(this.id) === '1') return false
+                    return this.permissions?.delete_p !== 'N' && this.permissions?.can_delete !== false
+                }
                 return true
             })
         }
