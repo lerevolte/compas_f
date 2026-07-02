@@ -45,6 +45,7 @@
                     :data-height="row.size"
                     :style="(table.isDragging || props.options?.isShort) ? `position: relative; top: 0; --color-row: ${row.index % 2 === 0  ? '#f7fbff' : '#FFF'};` : `--row-start: ${row.start}px; --color-row: ${row.index % 2 === 0  ? '#f7fbff' : '#FFF'};`"
                     :class="{
+                        'table__row_short': props.options?.isShort,
                         'table__row_hidden': table.options?.isHaveLocalFilter && !checkEnabledRow(table.body[row.index]),
                         'table__row_socket-change': table.body[row.index] && table.body[row.index].socketChange,
                         'table__row_clicked': table.body[row.index] && table.body[row.index].clicked, 
@@ -109,7 +110,7 @@
                         <AppRelation  
                             v-else-if="column.type == 'relation' && table.body[row.index]"
                             :options="{
-                                id: `${row.index}_${column.key}`,
+                                id: `${uid}_${row.index}_${column.key}`,
                                 title: null,
                                 edit: table.body[row.index] && !column.read_only && (table.body[row.index]?.edit || table.options.isPermanentEdit),
                                 type: column.type,
@@ -144,7 +145,7 @@
                                     <AppFansyBoxItem 
                                         v-for="file in table.body[row.index][column.key]"
                                         :style="`--count-files: '${table.body[row.index][column.key].length}'`"
-                                        :id="`${row.index}_${column.key}`"
+                                        :id="`${uid}_${row.index}_${column.key}`"
                                         :image="{
                                             path: file.file,
                                             thumbnail_path: file.url,
@@ -162,7 +163,7 @@
                                 @update:model-value="val => cell.useCellModel(row.index, column).value = val"
                                 @update:prevValue="val => cell.checkEditting(table.body[row.index], {value: val, key: column.key})"
                                 :options="{
-                                    id: `${row.index}_${column.key}`,
+                                    id: `${uid}_${row.index}_${column.key}`,
                                     title: null,
                                     type: column.type,
                                     name: column.key,
@@ -175,7 +176,7 @@
                                 v-else-if="column.type == 'select_dropdown'"
                                 :parentContainer="sectionRef"
                                 :options="{
-                                    id: `${row.index}_${column.key}`,
+                                    id: `${uid}_${row.index}_${column.key}`,
                                     title: null,
                                     type: column.type,
                                     list: permissionOptions(row.index, column),
@@ -195,7 +196,7 @@
                             <AppDate 
                                 v-else-if="column.type == 'date'"
                                 :options="{
-                                    id: `${row.index}_${column.key}`,
+                                    id: `${uid}_${row.index}_${column.key}`,
                                     title: null,
                                     type: 'date',
                                     name: 'date',
@@ -211,7 +212,7 @@
                                 v-else-if="column.type == 'status'"
                                 :parentContainer="sectionRef"
                                 :options="{
-                                    id: `${row.index}_${column.key}`,
+                                    id: `${uid}_${row.index}_${column.key}`,
                                     field_id: column.id,
                                     title: null,
                                     type: column.type,
@@ -231,7 +232,7 @@
                                 v-else-if="column.type == 'address'" 
                                 :parentContainer="sectionRef"
                                 :options="{
-                                    id: `${row.index}_${column.key}`,
+                                    id: `${uid}_${row.index}_${column.key}`,
                                     title: null,
                                     type: column.type,
                                     list: column.options,
@@ -280,7 +281,7 @@
                             <AppStatus
                                 v-else-if="column.type == 'status'"
                                 :options="{
-                                    id: `${row.index}_${column.key}`,
+                                    id: `${uid}_${row.index}_${column.key}`,
                                     field_id: column.id,
                                     title: null,
                                     type: column.type,
@@ -325,6 +326,7 @@
     const table = inject('table')
     const sectionRef = inject('sectionRef')
     const common = new Common()
+    const uid = useId()
 
     // Полное значение json-ячейки (напр. «Состав») для title при наведении:
     // в ячейке текст усечён в одну строку, а в подсказке показываем весь список.
@@ -1183,20 +1185,10 @@
                 return
             }
 
-            // Chrome и остальные: клон — ВСЯ строка (ширина W), Sortable ставит её
-            // левым краем по rect.left (= левый край таблицы − scrollLeft), поэтому
-            // колонка 0 клона оказывается там же, где колонка 0 строки. Видимая
-            // часть строки в координатах клона — [scrollLeft, scrollLeft + clientWidth].
-            // Обрезаем клон по этому окну через clip-path: позицию и transform
-            // (которым Sortable водит клон за курсором) НЕ трогаем, фикс-колонки
-            // со своим sticky-transform'ом сами попадают в начало окна.
-            // Режем ВСЕГДА (а не только при scrollLeft > 0): без прокрутки клон
-            // оставался во всю ширину КОНТЕНТА строки — шире видимой области
-            // таблицы-источника. Ghost должен быть на ширину видимой части
-            // таблицы и показывать только видимые столбцы.
-            const fullWidth = Math.max(fallback.scrollWidth, fallback.offsetWidth)
-            const rightInset = Math.max(0, fullWidth - scrollLeft - visible)
-            if (scrollLeft <= 0 && rightInset <= 0) return // строка уже не шире видимой области
+            const boxWidth = fallback.offsetWidth
+            const contentWidth = Math.max(fallback.scrollWidth, boxWidth)
+            const rightInset = Math.max(boxWidth - contentWidth, boxWidth - scrollLeft - visible)
+            if (scrollLeft <= 0 && rightInset >= 0 && contentWidth <= boxWidth) return
             const clip = `inset(0px ${rightInset}px 0px ${scrollLeft}px)`
             fallback.style.webkitClipPath = clip
             fallback.style.clipPath = clip

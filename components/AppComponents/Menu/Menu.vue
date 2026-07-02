@@ -304,14 +304,13 @@
 
         // Изменение отображения поля
         enableField(field) {
-            this.visible = this.visible.map(p => ({
+            const apply = p => ({
                 ...p,
                 enabled: p.id == field.id ? field.enabled : p.enabled
-            }))
-            this.hidden = this.hidden.map(p => ({
-                ...p,
-                enabled: p.id == field.id ? field.enabled : p.enabled
-            }))
+            })
+            this.visible = this.visible.map(apply)
+            this.hidden = this.hidden.map(apply)
+            this.list = [...this.visible, ...this.hidden].sort((a, b) => a.sort - b.sort)
         }
 
         // Вернуть значение по умолчанию
@@ -381,7 +380,7 @@
                 el.sort = index + 1
             })
 
-            this.list = this.list.sort((a, b) => a.sort - b.sort)
+            this.list = [...this.visible, ...this.hidden].sort((a, b) => a.sort - b.sort)
         }
 
         // Сохранение

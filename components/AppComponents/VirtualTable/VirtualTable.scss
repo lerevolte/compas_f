@@ -753,3 +753,20 @@
   }
 }
 
+.table__row_short.draggable-fallback {
+  .table__text {
+    white-space: nowrap;
+    display: flex;
+    flex-wrap: nowrap;
+  }
+
+  .table__cell[data-column-key="products"] .table__text {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    white-space: normal;
+    overflow: hidden;
+    width: 100%;
+  }
+}
+

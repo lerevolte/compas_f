@@ -21,13 +21,13 @@
                         </thead>
                         <tbody>
                             <tr
-                                v-if="products.length > 0"
+                                v-if="products.length > 0 || allOrderCount > 0"
                                 class="ps-table__row ps-table__row_all"
                                 :class="{ 'ps-table__row_active': selectedProduct === ALL_PRODUCTS }"
                                 @click="selectProduct(ALL_PRODUCTS)"
                             >
                                 <td class="ps-table__td"><b>Все товары</b></td>
-                                <td class="ps-table__td ps-table__td_num">—</td>
+                                <td class="ps-table__td ps-table__td_num">{{ allOrderCount }}</td>
                                 <td class="ps-table__td ps-table__td_num">{{ formatNum(allTotalCount) }}</td>
                             </tr>
                             <tr
@@ -41,7 +41,7 @@
                                 <td class="ps-table__td ps-table__td_num">{{ row.order_count }}</td>
                                 <td class="ps-table__td ps-table__td_num">{{ formatNum(row.total_count) }}</td>
                             </tr>
-                            <tr v-if="!loadingProducts && products.length === 0">
+                            <tr v-if="!loadingProducts && products.length === 0 && allOrderCount === 0">
                                 <td class="ps-table__td ps-table__empty" colspan="3">Нет товаров на выбранную дату</td>
                             </tr>
                         </tbody>
@@ -123,6 +123,8 @@
 
     const activeDate = ref(restoreDate());
     const products = ref([]);
+    const allOrderCount = ref(0);
+    const allTotalCount = ref(0);
     const bottomTable = ref(null);
     const selectedProduct = ref(null);
     const loadingProducts = ref(false);
@@ -130,10 +132,6 @@
 
     const apiDate = computed(() => format(activeDate.value, 'yyyy-MM-dd'));
     const formattedDate = computed(() => format(activeDate.value, 'dd.MM.yyyy'));
-    // Суммарное количество по всем товарам — для строки «Все товары».
-    const allTotalCount = computed(() =>
-        products.value.reduce((sum, r) => sum + Number(r.total_count || 0), 0)
-    );
 
     watch(activeDate, (d) => {
         try {
@@ -154,10 +152,15 @@
         loadingProducts.value = true;
         try {
             const response = await api.callMethod('GET', `${routes.productStats.products}?delivery_date=${apiDate.value}`);
-            products.value = Array.isArray(response.data) ? response.data : [];
+            const data = response.data ?? {};
+            products.value = Array.isArray(data.products) ? data.products : [];
+            allOrderCount.value = Number(data.all_order_count ?? 0);
+            allTotalCount.value = Number(data.all_total_count ?? 0);
         } catch (error) {
             console.log('product-stats products', error);
             products.value = [];
+            allOrderCount.value = 0;
+            allTotalCount.value = 0;
         } finally {
             loadingProducts.value = false;
         }

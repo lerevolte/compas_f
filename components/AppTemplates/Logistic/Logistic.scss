@@ -1,21 +1,6 @@
 @use '@/assets/variables.scss' as variables;
 @use '@/assets/mixins.scss' as mixins;
 
-// Схлопывание перетаскиваемой СЕКЦИИ (с картой) в узкую полоску. Раньше
-// селектор был просто .draggable-fallback и цеплял ВСЕ ghost'ы на странице,
-// включая клон строки задачи (.table__row) — из-за height:45px + overflow:hidden
-// он обрезался. Исключаем строки таблицы: у них ghost должен показывать
-// видимую часть строки целиком (см. .resize.draggable-fallback для секций).
-.draggable-fallback:not(.table__row) {
-    .logistic-map__settings,
-    .logistic-map__body,
-    .logistic-map__container {
-        display: none !important;
-    }
-
-    height: 45px !important;
-    overflow: hidden !important;
-}
 .logistic {
     grid-gap: 15px;
     display: grid;
