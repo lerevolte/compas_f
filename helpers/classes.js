@@ -1014,7 +1014,7 @@ export class Table {
     }
 
     copyLink(row) {
-        this.common.copyLink(`${window.location.origin}/${this.slug}/${row.id}`)
+        this.common.copyLink(`${window.location.origin}/objects/${this.slug}/${row.id}`)
     }
 
     copyExternalLink(row) {
