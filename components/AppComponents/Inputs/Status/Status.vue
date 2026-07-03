@@ -22,7 +22,8 @@
                     </figcaption>
                 </figure>
             </div>
-            <div class="status__options" ref="contentRef" :class="{ 'popup__content_top': status.state.isTop }" v-show="!status.state.colorpicker?.isActive">
+            <teleport to="body" :disabled="!props.parentContainer">
+            <div class="status__options status__options_flex" ref="contentRef" :class="{ 'popup__content_top': status.state.isTop }" :style="status.state.float" v-show="status.state.isOpen && !status.state.colorpicker?.isActive">
                 <div class="status__option" v-if="props.options.isHaveNull" :value="null" @click="status.changeValue({ value: null })">
                     Не выбрано
                 </div>
@@ -54,7 +55,7 @@
                 </div>
             </div>
 
-            <div class="status__options colorpicker"  v-if="props.options?.isCanCreate" v-show="status.state.colorpicker?.isActive">
+            <div class="status__options colorpicker status__options_flex" ref="pickerRef" :style="status.state.float" v-if="props.options?.isCanCreate" v-show="status.state.isOpen && status.state.colorpicker?.isActive">
                 <div class="settings__item popup__option settings__item_back" @click="status.toogleColorpicker(false)">
                     Палитра цветов
                     <SelectArrowSubmenu /> 
@@ -73,6 +74,7 @@
                     </AppButton>
                 </div>
             </div>
+            </teleport>
         </div>
     </div>
 </template>
@@ -89,6 +91,7 @@
     
     const statusRef = ref(null)
     const contentRef = ref(null)
+    const pickerRef = ref(null)
 
     const emit = defineEmits([
         'update:modelValue'
@@ -100,6 +103,7 @@
                 list: [],
                 isTop: false,
                 isOpen: false,
+                float: null,
                 colorpicker: {
                     color: '#b6b6b6',
                     isActive: false,
@@ -110,14 +114,58 @@
 
             // Закрытие опций
             this.closeOptions = (event) => {
-                if (statusRef.value && !statusRef.value.contains(event.target)) {
+                const inside = [statusRef.value, contentRef.value, pickerRef.value]
+                    .some(el => el && el.contains(event.target))
+                if (!inside) {
                     this.state.isOpen = false;
                     this.state.isTop = false;
                     this.state.list = props.options.list
                     this.toogleColorpicker(false)
+                    this.unbindFloat()
                     document.removeEventListener('click', this.closeOptions);
                 }
             };
+
+            this.updateFloat = () => {
+                if (!props.parentContainer || !statusRef.value) return
+                const rect = statusRef.value.getBoundingClientRect()
+                const panel = this.state.colorpicker.isActive ? pickerRef.value : contentRef.value
+                const height = panel ? panel.offsetHeight : 0
+                let top = rect.bottom + 5
+                if (height && top + height > window.innerHeight - 10) {
+                    top = Math.max(10, rect.top - height - 5)
+                }
+                this.state.float = {
+                    position: 'fixed',
+                    left: `${Math.round(rect.left)}px`,
+                    top: `${Math.round(top)}px`,
+                    minWidth: `${Math.round(Math.max(rect.width, 200))}px`,
+                    width: 'auto',
+                    margin: '0px',
+                    zIndex: 10000
+                }
+            }
+
+            this.onFloatScroll = () => {
+                if (this._floatRaf) return
+                this._floatRaf = requestAnimationFrame(() => {
+                    this._floatRaf = null
+                    this.updateFloat()
+                })
+            }
+
+            this.bindFloat = () => {
+                if (!props.parentContainer) return
+                nextTick(() => this.updateFloat())
+                window.addEventListener('scroll', this.onFloatScroll, true)
+                window.addEventListener('resize', this.onFloatScroll)
+            }
+
+            this.unbindFloat = () => {
+                this.state.float = null
+                window.removeEventListener('scroll', this.onFloatScroll, true)
+                window.removeEventListener('resize', this.onFloatScroll)
+            }
         }
 
         // Получение активных опций
@@ -138,9 +186,11 @@
             if (this.state.isOpen) {
                 document.addEventListener('click', this.closeOptions);
                 nextTick(() => this.checkPosition());
+                this.bindFloat()
             } else {
                 this.state.isTop = false
                 this.state.list = props.options.list
+                this.unbindFloat()
                 document.removeEventListener('click', this.closeOptions);
             }
         }
@@ -150,7 +200,8 @@
 
             let bottomBound;
             if (props.parentContainer) {
-                bottomBound = props.parentContainer.getBoundingClientRect().bottom;
+                this.state.isTop = false;
+                return;
             } else {
                 bottomBound = window.innerHeight;
                 if (typeof document !== 'undefined') {
@@ -177,6 +228,7 @@
                 this.state.colorpicker.openId += 1
             }
             this.state.colorpicker.isActive = state
+            if (this.state.isOpen) nextTick(() => this.updateFloat())
         }
 
         async createOption() {
@@ -253,5 +305,6 @@
 
     onBeforeUnmount(() => {
         document.removeEventListener('click', status.closeOptions);
+        status.unbindFloat();
     });
 </script>

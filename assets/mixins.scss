@@ -17,7 +17,7 @@
     /* scrollbar для Chrome/Edge/Safari */
     &::-webkit-scrollbar {
         border-radius: 5px;
-        @include resolution(4px, 4px);
+        @include resolution(8px, 8px);
     }
 
     &::-webkit-scrollbar-track {
@@ -26,8 +26,13 @@
 
     &::-webkit-scrollbar-thumb {
         background-color: variables.$color-scroll;
-        border: 2px solid variables.$color-scroll;
+        border: 2px solid transparent;
+        background-clip: padding-box;
         border-radius: 5px;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+        border-width: 0;
     }
 }
 

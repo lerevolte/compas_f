@@ -185,6 +185,18 @@
                         v-model="field.value"
                     />
 
+                    <AppRouteStatuses
+                        v-else-if="field.type == 'route_statuses'"
+                        :options="{ ...field }"
+                        :routeId="props.pageId"
+                    />
+
+                    <AppRouteMap
+                        v-else-if="field.type == 'route_map'"
+                        :options="{ ...field }"
+                        :routeId="props.pageId"
+                    />
+
                     <AppRedactor
                         v-else-if="field.type == 'redactor'"
                         :options="{
@@ -483,6 +495,8 @@
     import AppRelation from '@AppComponents/Inputs/Relation/Relation.vue'
     import AppMap from '@AppComponents/Inputs/Map/Map.vue'
     import AppRedactor from '@AppComponents/Inputs/Redactor/Redactor.vue'
+    import AppRouteStatuses from '@AppComponents/RouteStatuses/RouteStatuses.vue'
+    import AppRouteMap from '@AppComponents/RouteMap/RouteMap.vue'
     import { useUserStore } from '@/stores/userStore.js'
 
     const userStore = useUserStore()

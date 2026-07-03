@@ -19,7 +19,7 @@
                         Применить для роли
                         <SelectArrowSubmenu />
                     </div>
-                    <div class="settings__item popup__option" v-if="userStore.user?.is_admin" @click="nest.save('all')">
+                    <div class="settings__item popup__option" v-if="userStore.user?.is_admin" @click="nest.askAll()">
                         Применить для всех
                     </div>
                 </div>
@@ -39,6 +39,20 @@
             </div>
         </template>
     </AppPopup>
+
+    <teleport to="#menu__overlay" v-if="nest.confirmAll">
+        <AppModalWarning
+            :options="{
+                title: 'Применить для всех?',
+                desc: 'Настройки будут применены для всех пользователей портала и заменят их текущие настройки.',
+                action: 'confirm',
+                actionTitle: 'Применить',
+                template: 'text'
+            }"
+            @confirm="nest.confirmSaveAll()"
+            @close="nest.confirmAll = false"
+        />
+    </teleport>
 </template>
 
 <script setup>
@@ -47,6 +61,7 @@
     import AppPopup from '@AppComponents/Popup/Popup.vue'
     import IconSave from '@AppIcons/Actions/Save.vue'
     import SelectArrowSubmenu from '@AppIcons/Input/SelectArrowSubmenu.vue';
+    import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'
 
     import { useUserStore } from '@/stores/userStore.js'
     const userStore = useUserStore()
@@ -63,6 +78,17 @@
         constructor() {
             this.active = null
             this.history = []
+            this.confirmAll = false
+        }
+
+        askAll() {
+            this.confirmAll = true
+            this.close()
+        }
+
+        confirmSaveAll() {
+            this.confirmAll = false
+            emit('save', 'all')
         }
 
         // Установка активной вкладки

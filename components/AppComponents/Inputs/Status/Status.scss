@@ -118,6 +118,10 @@
     margin-top: 5px;
     position: absolute;
     flex-direction: column;
+
+    &.status__options_flex {
+        display: flex;
+    }
     width: 100%;
     max-height: 300px;
     min-width: 200px; 

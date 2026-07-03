@@ -119,6 +119,8 @@
                                 // из-за чего тянуть можно было только за «пустые»
                                 // места строки. Оставляем фильтр только на инпуты.
                                 dragFilter: 'input, textarea, select, [contenteditable]',
+                                dragDelay: 500,
+                                dragDelayOnTouchOnly: false,
                                 isCellCopy: true,
                                 group: 'logistic_tasks',
                                 isHaveFilter: false,
@@ -169,6 +171,8 @@
                                 isDraggable: true,
                                 draggableTarget: '.table__row',
                                 dragFilter: 'input, textarea, select, [contenteditable]',
+                                dragDelay: 500,
+                                dragDelayOnTouchOnly: false,
                                 isCellCopy: true,
                                 group: 'warehouses_dnd',
                                 isDisablePut: true,
@@ -212,6 +216,8 @@
                             isDraggable: true,
                             draggableTarget: '.table__row',
                             dragFilter: 'input, textarea, select, [contenteditable]',
+                            dragDelay: 500,
+                            dragDelayOnTouchOnly: false,
                             isCellCopy: true,
                             group: 'logistic_tasks',
                             isHaveQuery: true,
