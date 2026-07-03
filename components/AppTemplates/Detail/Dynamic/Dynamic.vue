@@ -156,6 +156,13 @@
                 route_id: props.id
             }
         }
+        if (props.slug === 'cars' && props.tabs?.active?.slug === 'routes') {
+            return {
+                ...base,
+                id: null,
+                car_id: props.id
+            }
+        }
         return base
     })
 

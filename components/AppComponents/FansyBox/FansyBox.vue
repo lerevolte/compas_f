@@ -13,6 +13,7 @@
 
     const options = {
         dragToClose: false,
+        Hash: false,
         Carousel: {
             infinite: true
         }

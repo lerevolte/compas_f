@@ -153,17 +153,17 @@
         })
 
         if (item.template == 'chart') {
-          window.history.replaceState({}, document.title, window.location.origin +  `/analytics/${item.slug}`);
+          window.history.replaceState(window.history.state, document.title, window.location.origin +  `/analytics/${item.slug}`);
         } else if (item.template == 'product-stats') {
-          window.history.replaceState({}, document.title, window.location.origin +  `/product-stats`);
+          window.history.replaceState(window.history.state, document.title, window.location.origin +  `/product-stats`);
         } else {
-          window.history.replaceState({}, document.title, window.location.origin +  `/objects/${item.slug}/${item.id}`);
+          window.history.replaceState(window.history.state, document.title, window.location.origin +  `/objects/${item.slug}/${item.id}`);
         }
       }
     }
 
     updateMetaHeader(item) {
-      window.history.replaceState({}, document.title, window.location.origin +  `/objects/${item.href?.slug}/${item.href?.id}`);
+      window.history.replaceState(window.history.state, document.title, window.location.origin +  `/objects/${item.href?.slug}/${item.href?.id}`);
       useHead({
         title: item.title
       })
@@ -181,7 +181,7 @@
       const targetLink  = isLast && this.basePageLink  ? this.basePageLink  : prevAddress?.link
 
       if (targetLink) {
-        window.history.replaceState({}, document.title, targetLink);
+        window.history.replaceState(window.history.state, document.title, targetLink);
       }
       useHead({
         title: targetTitle
