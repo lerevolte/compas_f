@@ -1498,6 +1498,10 @@ export class Filter {
                 const sortOrder = saved_query.sort_order ?? this.setter.sortItem.sort_order
                 if (sortField != null && sortField !== 'null') response.push(`sort_field=${sortField}`)
                 if (sortOrder != null && sortOrder !== 'null') response.push(`sort_order=${sortOrder}`)
+                const relKeys = (this.setter.header || [])
+                    .filter(c => c && c.enabled && typeof c.key === 'string' && c.key.startsWith('rel__'))
+                    .map(c => c.key)
+                if (relKeys.length) response.push(`rel_fields=${encodeURIComponent(relKeys.join(','))}`)
                 // Пропускаем filter[...] из URL прямо в запрос. Без этого
                 // прямые ссылки вида /objects/<slug>?filter[id]=N не применяли
                 // фильтр — saved_query содержал ключ «filter[id]» как
