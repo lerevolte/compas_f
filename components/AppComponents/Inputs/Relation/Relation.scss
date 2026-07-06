@@ -181,20 +181,16 @@
             flex: 0 0 auto;
             display: grid;
             place-items: center;
-            align-self: center;
-            height: calc(100% - 2px);
+            align-self: stretch;
+            height: auto;
             width: 24px;
-            margin-right: 1px;
             border-radius: 0px 4px 4px 0px;
             background: variables.$color-border-light;
+            pointer-events: auto;
 
             svg {
                 transform: rotate(-90deg);
             }
-        }
-
-        .icon__arrow {
-            right: 30px;
         }
     }
 
@@ -207,7 +203,6 @@
             padding-left: 5px;
             white-space: nowrap;
             color: variables.$color-border;
-            margin-right: 30px;
             position: relative;
             z-index: 2;
         }
@@ -440,24 +435,33 @@
 
 
 .select__content-abs {
-    height: 100%;
-    gap: 5px;
-    top: 0px;
-    right: 0px;
+    top: 1px;
+    right: 1px;
+    bottom: 1px;
+    left: 51px;
     position: absolute;
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     z-index: 2;
-    
-    &::before {
-        content: '';
-        position: absolute;
-        top: 4px;
-        right: 0px;
-        width: 100%;
-        height: calc(100% - 8px);
-        border-radius: 4px;
-        background: variables.$color-white;
-        border-right: 1px solid variables.$color-border;
+    overflow: hidden;
+    border-radius: 0px 4px 4px 0px;
+    pointer-events: none;
+}
+
+.select__content-plate {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    height: 100%;
+    padding: 0px 10px;
+    background: variables.$color-white;
+    pointer-events: auto;
+
+    .icon__arrow {
+        position: static;
+        display: flex;
+        height: 20px;
+        aspect-ratio: 1 / 2;
     }
 }

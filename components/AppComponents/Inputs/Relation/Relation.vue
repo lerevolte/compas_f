@@ -80,12 +80,14 @@
                     />
     
                     <div class="select__content-abs">
-                        <span class="value__text value__text_id">
-                            ID: {{ getActiveOption(index)?.label?.id }}  
+                        <span class="select__content-plate">
+                            <span class="value__text value__text_id">
+                                ID: {{ getActiveOption(index)?.label?.id }}
+                            </span>
+
+                            <IconSelectArrow />
                         </span>
-    
-                        <IconSelectArrow />
-        
+
                         <figure class='relation__arrow' @click="() => clickLink(index)" >
                             <svg xmlns="http://www.w3.org/2000/svg" width="4" height="3" fill="none" viewBox="0 0 4 3"><path fill="#888" d="M0 0h4L2 3z"/></svg>
                         </figure>
