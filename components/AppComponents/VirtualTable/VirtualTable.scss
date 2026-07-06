@@ -610,6 +610,11 @@
     .form__item_select .select:has(.select__values) .select__values {
       min-height: 30px;
     }
+
+    .relation__arrow {
+      top: 5px;
+      width: 30px;
+    }
   }
 }
 

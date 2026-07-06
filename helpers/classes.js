@@ -1274,6 +1274,10 @@ export class Table {
                 sort_field: column.key,
                 sort_order: column.key == this.sortItem.sort_field ? this.sortItem.sort_order == 'asc' ? 'desc' : 'asc' : 'asc'
             })
+            if (this.options?.isLocalTable) {
+                this.sortLocalBody(column)
+                return
+            }
             this.isChanged = true
             this.pages.current = 1
             await this.filter.get()
@@ -1282,6 +1286,47 @@ export class Table {
         } finally {
             this.loading = false
         }
+    }
+
+    sortLocalBody(column) {
+        const order = this.sortItem.sort_order == 'asc' ? 1 : -1
+        const extract = (row) => {
+            let v = row?.[column.key]
+            if (typeof v === 'string') {
+                const trimmed = v.trim()
+                if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+                    try { v = JSON.parse(trimmed) } catch (e) {}
+                }
+            }
+            if (v && typeof v === 'object' && !Array.isArray(v)) {
+                v = v.value ?? v.text ?? null
+            }
+            if (Array.isArray(v)) {
+                v = v.length ? v[0] : null
+            }
+            return v
+        }
+        this.body = [...this.body].sort((a, b) => {
+            const av = extract(a)
+            const bv = extract(b)
+            const aEmpty = av === null || av === undefined || av === ''
+            const bEmpty = bv === null || bv === undefined || bv === ''
+            if (aEmpty && bEmpty) return 0
+            if (aEmpty) return 1
+            if (bEmpty) return -1
+            if (column.type == 'date') {
+                return (new Date(av).getTime() - new Date(bv).getTime()) * order
+            }
+            const an = parseFloat(String(av).replace(',', '.'))
+            const bn = parseFloat(String(bv).replace(',', '.'))
+            if (!isNaN(an) && !isNaN(bn) && String(av).trim() !== '' && String(bv).trim() !== '') {
+                return (an - bn) * order
+            }
+            return String(av).localeCompare(String(bv), 'ru', { numeric: true, sensitivity: 'base' }) * order
+        })
+        nextTick(() => {
+            this.initVirtualizer()
+        })
     }
 
     // Сохранение настроек

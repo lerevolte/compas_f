@@ -50,7 +50,7 @@
             </template>
         </ul>
 
-        <div class="tabs__actions" v-if="!props.options.isExternal">
+        <div class="tabs__actions" v-if="!props.options.isExternal && userStore.user?.is_admin">
             <AppSave 
                 v-show="tabs.isChanged" 
                 @save="(role) => tabs.save(role)"

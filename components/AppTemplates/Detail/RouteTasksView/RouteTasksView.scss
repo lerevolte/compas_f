@@ -118,15 +118,14 @@
 }
 
 .route-tasks-view__task-line {
-    display: flex;
-    gap: 6px;
     font-size: 13px;
     line-height: 1.4;
+    word-break: break-word;
 }
 
 .route-tasks-view__task-label {
     color: variables.$color-border;
-    flex: 0 0 auto;
+    margin-right: 6px;
 }
 
 .route-tasks-view__task-value {

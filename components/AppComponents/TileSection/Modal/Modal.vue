@@ -31,7 +31,7 @@
                 :options="{
                     title: 'Тип поля',
                     isHaveNull: false,
-                    list: Object.keys(modal.types).filter(p => p != 'relation').map(p => {
+                    list: Object.keys(modal.types).filter(p => p != 'relation' && p != 'redactor').map(p => {
                         return {
                             value: p,
                             label: modal.types[p]

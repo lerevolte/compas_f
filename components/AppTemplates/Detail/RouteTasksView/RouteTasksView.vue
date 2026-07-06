@@ -74,12 +74,7 @@
                             v-for="field in selectedFields"
                             :key="field.key"
                             class="route-tasks-view__task-line"
-                        >
-                            <span class="route-tasks-view__task-label">{{ field.title }}:</span>
-                            <span class="route-tasks-view__task-value">
-                                {{ formatValue(task, field) }}
-                            </span>
-                        </div>
+                        ><span class="route-tasks-view__task-label">{{ field.title }}: </span><span class="route-tasks-view__task-value" :style="field.set_color && field.color ? { color: field.color } : null">{{ formatValue(task, field) }}</span></div>
                     </div>
                 </div>
             </div>
@@ -177,6 +172,8 @@
                     options: col.options || [],
                     is_plural: col.is_plural || false,
                     related_table: col.related_table || null,
+                    color: col.color || null,
+                    set_color: col.set_color || 0,
                     sort: saved ? (saved.sort ?? i) : i,
                     // Если есть сохранённый конфиг — берём его enabled; новые поля
                     // (которых в конфиге нет) скрыты. Без конфига — дефолт

@@ -685,11 +685,11 @@
                     width: '200px',
                     enabled: true,
                     sort_order: '',
-                    type: 'text',
-                    is_plural: 0,
+                    type: col.type ?? 'text',
+                    is_plural: col.is_plural ?? 0,
                     external_link: '',
-                    is_external_link: 0,
-                    is_link: 0,
+                    is_external_link: col.is_external_link ?? 0,
+                    is_link: col.is_link ?? 0,
                     required: 0,
                     fixed: '',
                     index: list.length,
@@ -702,8 +702,8 @@
                     is_hidden: 0,
                     visible_always: 0,
                     is_related: true,
-                    related_table: null,
-                    options: [],
+                    related_table: col.related_table ?? null,
+                    options: col.options ?? [],
                     choosed: []
                 })
             }
@@ -712,7 +712,6 @@
         }
         emit('update:modelList', list)
         emit('isChanged', true)
-        nextTick(() => emit('autoSave'))
     }
 
     // Сбрасываем выбранную подгруппу при выходе из «Отображение».

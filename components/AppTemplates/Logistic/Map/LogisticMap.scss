@@ -39,6 +39,43 @@
     min-height: 300px;
     position: relative;
     z-index: 0;
+
+    .leaflet-control-zoom {
+        border: 1px solid variables.$color-border-light;
+        box-shadow: variables.$box-shadow;
+        border-radius: 10px;
+        overflow: hidden;
+
+        a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #fff;
+            color: variables.$color-icon-active;
+            border: none;
+            width: 36px;
+            height: 36px;
+            line-height: 36px;
+            font-size: 20px;
+            font-weight: 600;
+            transition: background-color 0.2s, color 0.2s;
+
+            &:hover {
+                background-color: #f5f8fc;
+                color: variables.$color-hover;
+            }
+
+            &.leaflet-disabled {
+                background-color: #fff;
+                color: variables.$color-border;
+                cursor: default;
+            }
+        }
+
+        a.leaflet-control-zoom-in {
+            border-bottom: 1px solid variables.$color-border-light;
+        }
+    }
 }
 
 // ── Route popup (planned markers) ──

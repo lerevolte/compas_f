@@ -4,7 +4,7 @@
 .column-fields {
     grid-gap: 25px;
     display: grid;
-    grid-template-columns: 1fr 1.4fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
     grid-template-rows: 1fr auto;
 
     &.column-fields_dragging {
@@ -50,6 +50,7 @@
     gap: 25px;
     position: relative;
     z-index: 1;
+    min-width: 0;
 
     &:first-child {
         z-index: 2;
