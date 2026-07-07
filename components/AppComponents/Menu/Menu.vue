@@ -387,16 +387,18 @@
             this.list = [...this.visible, ...this.hidden].sort((a, b) => a.sort - b.sort)
         }
 
-        // Сериализация значимого состояния сайдбара (порядок, видимость,
-        // включённость, имена, вложенность) для сравнения со снимком.
+        // Сериализация значимого состояния сайдбара для сравнения со снимком.
+        // ВАЖНО: НЕ включаем поле sort — updateSortOrder перенумеровывает его
+        // (сохранённые значения → последовательные 1,2,3…) в реактивном цикле
+        // при инициализации, и снимок бы всегда расходился, из-за чего кнопка
+        // «Сохранить» висела всегда (8656). Порядок ловим позицией в массиве.
         serializeList() {
             const pick = (item) => ({
                 id: item?.id,
                 name: item?.name,
-                sort: item?.sort,
-                is_hidden: item?.is_hidden,
-                enabled: item?.enabled,
-                is_group: item?.is_group,
+                is_hidden: item?.is_hidden ? 1 : 0,
+                enabled: item?.enabled ? 1 : 0,
+                is_group: item?.is_group ? 1 : 0,
                 children: Array.isArray(item?.children) ? item.children.map(pick) : []
             })
             return JSON.stringify((this.list || []).map(pick))
@@ -477,8 +479,11 @@
             await menuStore.get()
             await menu.value.update()
             isClient.value = true
-            // Меню загружено — фиксируем снимок. nextTick, чтобы синхронизационные
-            // эмиты AppSettings от последнего update() успели отработать (8656).
+            // Меню загружено — фиксируем снимок. Ждём, пока отработает вся
+            // реактивная инициализация AppSettings (синхронизация visible/hidden
+            // → updateSortOrder), затем снимаем baseline — иначе кнопка «Сохранить»
+            // висела бы всегда (8656). До baseline hasMenuChanges = false.
+            await nextTick()
             await nextTick()
             menu.value.setBaseline()
         }
