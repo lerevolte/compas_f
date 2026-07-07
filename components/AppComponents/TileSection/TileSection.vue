@@ -189,12 +189,14 @@
                         v-else-if="field.type == 'route_statuses'"
                         :options="{ ...field }"
                         :routeId="props.pageId"
+                        :isExternal="props.options?.isExternal"
                     />
 
                     <AppRouteMap
                         v-else-if="field.type == 'route_map'"
                         :options="{ ...field }"
                         :routeId="props.pageId"
+                        :isExternal="props.options?.isExternal"
                     />
 
                     <AppRedactor

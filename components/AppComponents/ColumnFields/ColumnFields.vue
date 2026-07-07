@@ -24,6 +24,7 @@
                         isModule: props.options.isModule,
                         isDisableFooter: props.options.isDisableFooter,
                         isGlobalEdit: props.options.isGlobalEdit,
+                        isExternal: props.options.isExternal,
                     }"
                     :tabs="props.tabs"
                     :sectionClass="section"

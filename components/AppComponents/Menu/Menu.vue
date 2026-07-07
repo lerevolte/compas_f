@@ -161,7 +161,7 @@
                         }"
                         @reset="menu.reset()"
                         @enableField="field => menu.enableField(field)"
-                        @isChanged="menu.isChanged = true"
+                        @isChanged="menu.markChanged()"
                         @dragEvent="state => menu.isDragging = state"
                         @update:modelVisible="(val) => {
                             menu.visible = val; 
@@ -172,10 +172,10 @@
                             menu.updateSortOrder()
                         }"
                         @update:modelList="(val) => {
-                            menu.list = val; 
+                            menu.list = val;
                             menu.visible = val.filter(item => !item.is_hidden)
                             menu.hidden = val.filter(item => item.is_hidden)
-                            menu.isChanged = true
+                            menu.markChanged()
                             menu.updateSortOrder()
                         }"
                     />
@@ -256,6 +256,11 @@
     class Menu {
         constructor() {
             this.isChanged = false
+            // Пока идёт первичная загрузка меню, дочерний AppSettings эмитит
+            // update:modelList/isChanged при синхронизации со списком — это НЕ
+            // правки пользователя. Взводим isChanged только после ready = true,
+            // иначе кнопка «Сохранить» видна всегда (8656).
+            this.ready = false
             this.isHiddenOpen = false
             this.list = []
             this.visible = []
@@ -383,6 +388,13 @@
             this.list = [...this.visible, ...this.hidden].sort((a, b) => a.sort - b.sort)
         }
 
+        // Пометить сайдбар изменённым — только после первичной загрузки, чтобы
+        // синхронизационные эмиты AppSettings при инициализации не показывали
+        // кнопку «Сохранить» без реальных правок (8656).
+        markChanged() {
+            if (this.ready) this.isChanged = true
+        }
+
         // Сохранение
         save(role) {
             menuStore.save(role, this.list)
@@ -445,6 +457,12 @@
             await menuStore.get()
             await menu.value.update()
             isClient.value = true
+            // Меню загружено: гасим флаг и лишь теперь разрешаем отмечать
+            // изменения. nextTick — чтобы синхронизационные эмиты AppSettings от
+            // последнего update() отработали, пока ready ещё false (8656).
+            await nextTick()
+            menu.value.isChanged = false
+            menu.value.ready = true
         }
     })
 

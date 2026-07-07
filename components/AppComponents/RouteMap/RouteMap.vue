@@ -15,6 +15,7 @@
     import '@AppTemplates/Logistic/Map/LogisticMap.scss'
 
     import api from '@/helpers/api.js'
+    import routes from '@/helpers/routes.js'
 
     const props = defineProps({
         routeId: {
@@ -24,6 +25,12 @@
         options: {
             default: () => ({}),
             type: Object
+        },
+        // Внешняя ссылка: routeId = токен, данные берём через публичные
+        // endpoints external/{token}/route-tasks и /route-map (без auth).
+        isExternal: {
+            default: false,
+            type: Boolean
         }
     })
 
@@ -342,14 +349,20 @@
 
         let tasks = []
         let routeColor = '#b6b6b6'
+        const tasksUrl = props.isExternal
+            ? routes.external_link.route_tasks.replace('${token}', props.routeId)
+            : `/routes/${props.routeId}/tasks`
+        const mapUrl = props.isExternal
+            ? routes.external_link.route_map.replace('${token}', props.routeId)
+            : `/routes/${props.routeId}/map_data`
         try {
-            const response = await api.callMethod('GET', `/routes/${props.routeId}/tasks`)
+            const response = await api.callMethod('GET', tasksUrl)
             tasks = response.data?.data || []
         } catch (e) {
             console.log('route-map tasks', e)
         }
         try {
-            const response = await api.callMethod('GET', `/routes/${props.routeId}/map_data`)
+            const response = await api.callMethod('GET', mapUrl)
             routeColor = toRouteColor(response.data?.color)
         } catch (e) {}
 

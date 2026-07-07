@@ -14,6 +14,7 @@
                 isHaveHistory: true,
                 isGlobalEdit: props.options.isGlobalEdit,
                 isCopy: props.options.isCopy,
+                isExternal: props.options.isExternal,
             }"
             :history="{
                 fields: detail.history.events,

@@ -23,6 +23,7 @@
     import './RouteStatuses.scss'
 
     import api from '@/helpers/api.js'
+    import routes from '@/helpers/routes.js'
 
     const props = defineProps({
         routeId: {
@@ -32,6 +33,12 @@
         options: {
             default: () => ({}),
             type: Object
+        },
+        // Внешняя ссылка: routeId = токен, данные берём через публичный
+        // endpoint external/{token}/route-tasks (без auth).
+        isExternal: {
+            default: false,
+            type: Boolean
         }
     })
 
@@ -59,7 +66,10 @@
         if (!props.routeId) return
         loading.value = true
         try {
-            const response = await api.callMethod('GET', `/routes/${props.routeId}/tasks`)
+            const url = props.isExternal
+                ? routes.external_link.route_tasks.replace('${token}', props.routeId)
+                : `/routes/${props.routeId}/tasks`
+            const response = await api.callMethod('GET', url)
             tasks.value = response.data?.data || []
         } catch (e) {
             console.log('route-statuses', e)

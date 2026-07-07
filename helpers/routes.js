@@ -135,7 +135,9 @@ export default {
     external_link: {
         create: '/external-links',
         delete: '/external-links/${token}',
-        table: '/external/${token}/table/${slug}'
+        table: '/external/${token}/table/${slug}',
+        route_tasks: '/external/${token}/route-tasks',
+        route_map: '/external/${token}/route-map'
     },
     productStats: {
         products: '/product-stats/products',
