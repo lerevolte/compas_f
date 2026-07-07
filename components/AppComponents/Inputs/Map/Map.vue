@@ -131,9 +131,4 @@
             buttonRef.classList.remove('button_copy_active')
         }, 3000);
     }
-    watch(() => props.modelValue, (val) => {
-        console.log('Map.vue modelValue changed:', JSON.stringify(val));
-    }, { deep: true })
-
-
 </script>

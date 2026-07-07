@@ -248,14 +248,30 @@
                         </template>
                         <template #content>
                             <div class="default-value-picker__content">
+                                <AppMap
+                                    v-if="modal.field.type == 'address'"
+                                    v-model="modal.field.default_value"
+                                    @update:modelValue="val => { if (val && (val.text || val.coords)) modal.field.set_default = 1 }"
+                                    :options="{
+                                        id: 0,
+                                        title: 'Значение по умолчанию',
+                                        type: 'address',
+                                        name: 'default_value',
+                                        subtype: modal.field.subtype,
+                                        edit: true,
+                                        showSelect: true
+                                    }"
+                                />
                                 <AppInput
+                                    v-else
                                     v-model="modal.field.default_value"
                                     @update:modelValue="val => { if (val !== null && val !== '') modal.field.set_default = 1 }"
                                     :options="{
                                         id: 0,
                                         title: 'Значение по умолчанию',
                                         type: modal.field.type == 'number' ? 'number' : 'text',
-                                        name: 'default_value'
+                                        name: 'default_value',
+                                        mask: modal.field.mask ?? null
                                     }"
                                 />
                             </div>
@@ -323,6 +339,7 @@
     import AppFile from '@AppComponents/Inputs/File/File.vue'
     import AppInput from '@AppComponents/Inputs/Input/Input.vue';
     import AppSelect from '@AppComponents/Inputs/Select/Select.vue';
+    import AppMap from '@AppComponents/Inputs/Map/Map.vue';
     import AppCheckbox from '@AppComponents/Inputs/Checkbox/Checkbox.vue'
     import AppColorPicker from '@AppComponents/Inputs/ColorPicker/ColorPicker.vue';
     import AppPopup from '@AppComponents/Popup/Popup.vue'

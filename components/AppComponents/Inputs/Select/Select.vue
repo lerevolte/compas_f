@@ -28,7 +28,7 @@
                     }"
                     :model-value="select.state.search"
                     @update:modelValue="(value) => { select.state.search = value; select.filterOptions(value); }"
-                    @keyup.enter="() => { const v = select.state.search; emit('searchEnter', v); select.state.search = ''; select.filterOptions(''); select.state.isOpen = false; }"
+                    @keyup.enter="() => { const v = select.state.search; if (select.commitAddressCoords(v)) return; emit('searchEnter', v); select.state.search = ''; select.filterOptions(''); select.state.isOpen = false; }"
                 />
     
                 <div class="select__values" ref="selectValuesRef" v-if="props.options.multiple">
@@ -83,6 +83,20 @@
     import isEqual from 'lodash/isEqual'
     import AppError from '@AppComponents/Error/Error.vue'
 
+    // Распознаёт введённую строку координат "lat, lng" (разделитель — запятая
+    // и/или пробел). Возвращает {text, coords:[lat,lng]} с text = сама строка
+    // координат, либо null. Используется, чтобы при вводе координат в поле
+    // адреса в text сохранялись именно координаты, а не обратно-геокодированный
+    // адрес (по всем путям: выбор из списка, blur, Enter).
+    const COORD_CAPTURE = /^(-?\d+(?:\.\d+)?)[,\s]+(-?\d+(?:\.\d+)?)$/
+    const parseCoords = (str) => {
+        if (typeof str !== 'string') return null
+        const typed = str.trim()
+        const m = typed.match(COORD_CAPTURE)
+        if (!m) return null
+        return { text: typed, coords: [parseFloat(m[1]), parseFloat(m[2])] }
+    }
+
     const selectRef = ref(null)
     const contentRef = ref(null)
     const selectValuesRef = ref(null)
@@ -107,7 +121,6 @@
 
 
             this.closeOptions = (event) => {
-                console.log('closeOptions ENTER, isOpen:', this.state.isOpen, 'search:', this.state.search);
                 if (!this.state.isOpen) return;
                 // Если mousedown был внутри селекта (пользователь начал выделять текст),
                 // то возникающий click — это «продолжение» этого жеста, и закрывать
@@ -120,12 +133,11 @@
                     // For address type - save typed text as value
                     if (props.options.type == 'address' && this.state.search && this.state.search.trim()) {
                         const typed = this.state.search.trim();
-                        const coordPattern = /^(-?\d+\.?\d*)[,\s]+(-?\d+\.?\d*)$/;
-                        const match = typed.match(coordPattern);
-                        const newValue = match 
-                            ? { text: typed, coords: [parseFloat(match[1]), parseFloat(match[2])] }
+                        const coords = parseCoords(typed);
+                        const newValue = coords
+                            ? coords
                             : { text: typed, coords: props.modelValue?.coords ?? null };
-                        
+
                         emit('update:modelValue', newValue);
                         
                         this.state.isOpen = false;
@@ -150,11 +162,15 @@
             this.throttledFilter = throttle(async (value) => {
                 let response = null
                 if (props.options.type == 'address') {
-                    // Если введены координаты (lat, lng) — подсказки не нужны.
-                    const coordPattern = /^\s*-?\d+\.?\d*[,\s]+-?\d+\.?\d*\s*$/
-                    if (coordPattern.test(value)) {
-                        this.state.list = []
-                        this.state.visibleList = []
+                    // Если введены координаты (lat, lng) — обратно-геокодированные
+                    // подсказки не запрашиваем. В список кладём саму строку
+                    // координат как единственную опцию, чтобы при выборе/blur в
+                    // text сохранились координаты, а не адрес.
+                    const coords = parseCoords(value)
+                    if (coords) {
+                        const opt = { label: coords.text, value: coords }
+                        this.state.list = [opt]
+                        this.state.visibleList = [opt]
                         return
                     }
                     const restrict = props.options.subtype ? `&restrict=${props.options.subtype}` : ''
@@ -220,6 +236,22 @@
                     emit('update:modelValue', props.options.type == 'address' ? option.value : String(option.value))
                 }
             }
+        }
+
+        // Для поля адреса: если в поиске введены координаты — сохраняем их как
+        // значение (text = координаты) и закрываем список. Возвращает true, если
+        // координаты распознаны и сохранены (вызывается по Enter).
+        commitAddressCoords(value) {
+            if (props.options.type != 'address') return false
+            const coords = parseCoords(value)
+            if (!coords) return false
+            emit('update:prevValue', JSON.parse(JSON.stringify(props.modelValue)))
+            emit('update:modelValue', coords)
+            this.state.list = [{ label: coords.text, value: coords }]
+            this.state.visibleList = this.state.list
+            this.state.search = ''
+            this.state.isOpen = false
+            return true
         }
 
         // Открытие/закрытие опций
@@ -357,7 +389,6 @@
     })
 
     watch(() => props.options.list, () => {
-        console.log('watch options.list fired');
         select.setOptions()
     })
 

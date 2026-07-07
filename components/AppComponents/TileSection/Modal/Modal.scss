@@ -5,12 +5,29 @@
 // подписью (показывает сохранённое значение), по клику на подпись —
 // выпадашка с инпутом (задача 8461).
 .default-value-picker {
+    max-width: 100%;
+    overflow: hidden;
+
     .popup__header {
         cursor: pointer;
+        max-width: 100%;
+        overflow: hidden;
     }
 
+    .default-value-picker__summary,
+    .form__item_checkbox {
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    // Подпись показывает сохранённое значение (может быть длинным) — обрезаем
+    // многоточием в одну строку, чтобы длинный текст не вылезал за модалку (8651).
     .checkbox__label {
         text-decoration: underline;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
 
         &:hover {
             text-decoration: none;
