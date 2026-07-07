@@ -387,21 +387,27 @@
             this.list = [...this.visible, ...this.hidden].sort((a, b) => a.sort - b.sort)
         }
 
-        // Сериализация значимого состояния сайдбара для сравнения со снимком.
-        // ВАЖНО: НЕ включаем поле sort — updateSortOrder перенумеровывает его
-        // (сохранённые значения → последовательные 1,2,3…) в реактивном цикле
-        // при инициализации, и снимок бы всегда расходился, из-за чего кнопка
-        // «Сохранить» висела всегда (8656). Порядок ловим позицией в массиве.
+        // Каноническая сериализация состояния сайдбара для сравнения со снимком.
+        // Считаем ОТДЕЛЬНО видимые и скрытые в их относительном порядке — так
+        // представление инвариантно к тому, как элементы разложены в this.list.
+        // Это критично: при инициализации updateSortOrder пересобирает this.list
+        // как [видимые…, скрытые…] и перенумеровывает sort, поэтому «сырой»
+        // снимок массива всегда расходился и кнопка «Сохранить» висела всегда
+        // (8656). sort в проекцию НЕ включаем (это лишь производная от порядка).
         serializeList() {
             const pick = (item) => ({
                 id: item?.id,
                 name: item?.name,
-                is_hidden: item?.is_hidden ? 1 : 0,
                 enabled: item?.enabled ? 1 : 0,
                 is_group: item?.is_group ? 1 : 0,
-                children: Array.isArray(item?.children) ? item.children.map(pick) : []
+                children: Array.isArray(item?.children)
+                    ? item.children.map(pick)
+                    : []
             })
-            return JSON.stringify((this.list || []).map(pick))
+            const list = this.list || []
+            const visible = list.filter(i => !i?.is_hidden).map(pick)
+            const hidden = list.filter(i => i?.is_hidden).map(pick)
+            return JSON.stringify({ visible, hidden })
         }
 
         // Зафиксировать текущее состояние как «сохранённое» (после загрузки/сейва).
