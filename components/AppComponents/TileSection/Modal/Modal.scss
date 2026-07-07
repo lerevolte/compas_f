@@ -41,7 +41,8 @@
 // по нему и стилизуем (8461).
 .popup__content.default-value-picker__popup {
     padding: 16px;
-    min-width: 240px;
+    min-width: 340px;
+    max-width: 480px;
     background: variables.$color-white;
     border: 1px solid variables.$color-border-light;
     border-radius: 8px;
@@ -54,6 +55,18 @@
 
         .form__item_input {
             width: 100%;
+        }
+
+        // Многострочное значение по умолчанию — даём textarea заметную высоту и
+        // полную ширину, чтобы не было узкого окна ввода (8651).
+        .form__item_textarea {
+            width: 100%;
+
+            textarea {
+                width: 100%;
+                min-height: 120px;
+                resize: vertical;
+            }
         }
 
         .blank__title {
