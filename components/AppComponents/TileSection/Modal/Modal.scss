@@ -47,6 +47,11 @@
     border: 1px solid variables.$color-border-light;
     border-radius: 8px;
     box-shadow: 0 6px 20px rgba(0, 0, 0, .08);
+    // Базовый .popup__content имеет max-height:300px + overflow:auto, из-за чего
+    // выпадашка подсказок адреса (position:absolute) обрезалась окном попапа.
+    // Для этого попапа разрешаем overflow — контент небольшой (8651).
+    max-height: none;
+    overflow: visible;
 
     .default-value-picker__content {
         display: flex;

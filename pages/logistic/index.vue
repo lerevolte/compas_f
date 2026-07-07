@@ -363,9 +363,11 @@
 
 	const loadDaySummary = async () => {
 		try {
-			const dateStr = typeof logisticPage.value.activeDate === 'string' 
-				? logisticPage.value.activeDate 
-				: format(logisticPage.value.activeDate, 'yyyy-MM-dd');
+			// Календарь отдаёт ISO-строку "yyyy-MM-ddT00:00:00.000000Z", кнопки —
+			// Date. Нормализуем к чистому yyyy-MM-dd в обоих случаях, иначе при
+			// выборе даты через календарь бэк получал невалидную дату и попап
+			// аналитики не подгружался (8659).
+			const dateStr = format(new Date(logisticPage.value.activeDate), 'yyyy-MM-dd');
 			const response = await api.callMethod('GET', `/analytics/logistics-day-summary?date=${dateStr}`);
 			daySummary.value = response.data || response;
 			if (daySummary.value.carriers?.length) {

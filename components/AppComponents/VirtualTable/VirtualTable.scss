@@ -642,6 +642,27 @@
     .table__label {
       display: block;
     }
+
+    // На мобилке строка — вертикальная карточка. Служебные ячейки «выделение»
+    // (isChoose) и «действие» (actions) выравниваем по левому краю (8661):
+    // неусловный блок ниже центрирует иконку действий, из-за чего на телефоне
+    // ячейки выглядели криво.
+    .table__cell[data-column-key="actions"],
+    .table__cell[data-column-key="isChoose"] {
+      align-items: flex-start;
+      justify-content: flex-start;
+    }
+
+    .table__cell[data-column-key="actions"] {
+      .show-more {
+        width: auto;
+        justify-content: flex-start;
+      }
+
+      .show-more .popup__header {
+        justify-content: flex-start;
+      }
+    }
   }
 }
 
