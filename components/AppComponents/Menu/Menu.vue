@@ -178,7 +178,7 @@
                         }"
                     />
                     <AppSave
-                        v-show="hasMenuChanges"
+                        v-if="hasMenuChanges"
                         @save="(role) => menu.save(role)"
                     />
                 </div>
