@@ -466,6 +466,20 @@
         menu.value.baseline !== null && menu.value.serializeList() !== menu.value.baseline
     )
 
+    // ВРЕМЕННАЯ ДИАГНОСТИКА (8656): печатает в консоль браузера состояние кнопки.
+    // Наличие строк «SIDEBAR-SAVE-DEBUG» подтверждает, что свежая сборка доехала.
+    // Удалить после того, как поймём причину.
+    watchEffect(() => {
+        const cur = menu.value.serializeList()
+        console.log('SIDEBAR-SAVE-DEBUG', {
+            visible: hasMenuChanges.value,
+            baselineSet: menu.value.baseline !== null,
+            equal: cur === menu.value.baseline,
+            baseline: menu.value.baseline,
+            current: cur
+        })
+    })
+
     // Загружаем данные самыми первыми на сайте
     if (props.options?.type == 'default') {
         menu.value.list = Array.isArray(menuStore?.list) ? menuStore.list : []
