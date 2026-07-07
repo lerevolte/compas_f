@@ -178,7 +178,7 @@
                         }"
                     />
                     <AppSave
-                        v-show="menu.hasChanges"
+                        v-show="hasMenuChanges"
                         @save="(role) => menu.save(role)"
                     />
                 </div>
@@ -407,11 +407,6 @@
             this.baseline = this.serializeList()
         }
 
-        // Есть ли несохранённые изменения сайдбара — видимость кнопки «Сохранить».
-        get hasChanges() {
-            return this.baseline !== null && this.serializeList() !== this.baseline
-        }
-
         // Сохранение
         save(role) {
             menuStore.save(role, this.list)
@@ -455,6 +450,13 @@
     }
 
     const menu = ref(new Menu())
+
+    // Видимость кнопки «Сохранить» в сайдбаре: есть несохранённые изменения —
+    // текущий список отличается от снимка (baseline), зафиксированного после
+    // загрузки/сохранения (8656). computed в setup — гарантированно реактивен.
+    const hasMenuChanges = computed(() =>
+        menu.value.baseline !== null && menu.value.serializeList() !== menu.value.baseline
+    )
 
     // Загружаем данные самыми первыми на сайте
     if (props.options?.type == 'default') {

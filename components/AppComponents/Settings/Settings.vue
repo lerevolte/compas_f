@@ -112,7 +112,7 @@
 
                 <!-- Fixed -->
                 <div class="settings__list" v-else-if="settings.nest.active.value == 'isFixed'">
-                    <div class="settings__item popup__option popup__option_checkbox" v-for="field in isInitGroup ? settings.nest.templateField.list : list" :key="field.id">
+                    <div class="settings__item popup__option popup__option_checkbox" v-for="field in (isInitGroup ? settings.nest.templateField.list : list).filter(f => f.enabled !== false)" :key="field.id">
                         <AppCheckbox 
                             v-model="field.fixed"
                             :options="{

@@ -651,6 +651,22 @@
     .table__cell[data-column-key="isChoose"] {
       align-items: flex-start;
       justify-content: flex-start;
+      text-align: left;
+    }
+
+    // Чекбокс выделения — жёстко к левому краю карточки (8661): сам чекбокс
+    // прижимаем без авто-центрирования и отступов.
+    .table__cell[data-column-key="isChoose"] .form__item_checkbox {
+      width: auto;
+      align-self: flex-start;
+      justify-content: flex-start;
+      margin: 0;
+
+      label {
+        justify-content: flex-start;
+        margin: 0;
+        padding: 0;
+      }
     }
 
     .table__cell[data-column-key="actions"] {

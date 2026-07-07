@@ -186,6 +186,26 @@
                 applySettings();
             });
         });
+
+        // Кликабельным делаем весь блок .menu-item (radio/checkbox), а не только
+        // маленький лейбл — иначе по опции не всегда попадаешь (8666). Клик по
+        // самому input/label обрабатывается нативно, поэтому его пропускаем,
+        // чтобы не сработало дважды.
+        panel.querySelectorAll('.menu-item.radio-item, .menu-item.checkbox-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                const tag = e.target.tagName;
+                if (tag === 'INPUT' || tag === 'LABEL') return;
+                const input = item.querySelector('input');
+                if (!input) return;
+                if (input.type === 'radio') {
+                    if (input.checked) return;
+                    input.checked = true;
+                } else {
+                    input.checked = !input.checked;
+                }
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+        });
     };
 
     const toggleSettings = () => {

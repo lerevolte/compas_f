@@ -164,6 +164,26 @@
     const selectInstances = ref([])
     const clickedItem = ref(null)
 
+    // Пустая опция (без названия): label='' или label.text пустой. У товаров
+    // (products) в выпадашку попадали 3 безымянные опции с id 1/2/3 — выбрать
+    // такой «товар» бессмысленно, поэтому скрываем пустые опции (8657).
+    const isEmptyOption = (p) => {
+        if (!p) return true
+        const label = p.label
+        if (label == null) return true
+        if (typeof label === 'object') {
+            const t = label.text
+            return t == null || String(t).trim() === ''
+        }
+        return String(label).trim() === ''
+    }
+    // Фильтруем пустые опции только для товаров, чтобы не задеть другие связи,
+    // где пустое значение может быть осмысленным.
+    const dropEmptyForProducts = (list, options) =>
+        options?.relation_type === 'products'
+            ? (list ?? []).filter(p => !isEmptyOption(p))
+            : (list ?? [])
+
     const emit = defineEmits([
         'update:modelValue',
         'clickLink',
@@ -225,7 +245,7 @@
                     response = await api.callMethod("GET", `/objects/search?per_page=12&field_id=${props.options.relation}&q=${encodeURIComponent(value)}`)
                 }
 
-                this.state.list = response.data.map(p => ({ label: p.label, value: p.value }))
+                this.state.list = dropEmptyForProducts(response.data.map(p => ({ label: p.label, value: p.value })), props.options)
             }, 100);
         }
 
@@ -248,7 +268,7 @@
             if (props.options.searchable) {
                 this.throttledFilter(value)
             } else {
-                this.state.list = props.options.list.filter(p => 
+                this.state.list = dropEmptyForProducts(props.options.list, props.options).filter(p =>
                     p.label.text ? p.label.text.toLowerCase().includes(value.toLowerCase()) : p.label.toLowerCase().includes(value.toLowerCase())
                 )
             }
@@ -325,7 +345,7 @@
                 this.state.isTop = false;
                 this.state.search = ''
                 if (!props.options.searchable) {
-                    this.state.list = props.options.list
+                    this.state.list = dropEmptyForProducts(props.options.list, props.options)
                 }
                 if (this.selectRef) {
                     const input = this.selectRef.querySelector('input');
@@ -365,7 +385,7 @@
         }
 
         setOptions() {
-            this.state.list = props.options.list ?? []
+            this.state.list = dropEmptyForProducts(props.options.list, props.options)
         }
     }
 
