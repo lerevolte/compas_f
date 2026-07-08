@@ -221,6 +221,7 @@ export class LogisticWithMap extends Logistic {
                     name: row.name || `Точка ${index + 1}`,
                     address: addressStr,
                     service_time: row.service_time || 0,
+                    time: row.time || '',
                     factTime: row.fact_time || row.factTime || '',
                     planTime: row.plan_time || row.planTime || '',
                     statusColor: row.statusColor || '#ccc'

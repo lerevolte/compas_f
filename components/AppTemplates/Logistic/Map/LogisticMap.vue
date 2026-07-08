@@ -67,6 +67,38 @@
         analytics: { stops: true, signal_loss: true, actual_path: true }
     });
 
+    const MAP_TYPES = ['OpenStreetMap', 'Яндекс.Карты', 'Яндекс.Спутник'];
+    const USER_SETTINGS_KEY = 'logistic_map_settings';
+
+    const persistUserSettings = () => {
+        if (typeof window === 'undefined') return;
+        try {
+            window.localStorage.setItem(USER_SETTINGS_KEY, JSON.stringify({
+                orders: settings.orders,
+                route_display: settings.route_display,
+                map_type: settings.map_type,
+                analytics: { ...settings.analytics }
+            }));
+        } catch (e) {}
+    };
+
+    const restoreUserSettings = () => {
+        if (typeof window === 'undefined') return;
+        try {
+            const raw = window.localStorage.getItem(USER_SETTINGS_KEY);
+            if (!raw) return;
+            const saved = JSON.parse(raw);
+            if (typeof saved.orders === 'string') settings.orders = saved.orders;
+            if (typeof saved.route_display === 'string') settings.route_display = saved.route_display;
+            if (MAP_TYPES.includes(saved.map_type)) settings.map_type = saved.map_type;
+            if (saved.analytics && typeof saved.analytics === 'object') {
+                for (const key of ['stops', 'signal_loss', 'actual_path']) {
+                    if (typeof saved.analytics[key] === 'boolean') settings.analytics[key] = saved.analytics[key];
+                }
+            }
+        } catch (e) {}
+    };
+
     // Следит за фактическим размером контейнера карты: при ресайзе блока
     // (Resize.vue меняет CSS-переменную высоты) Leaflet сам не узнаёт о
     // новом размере и оставляет «серую» область до перезагрузки — поэтому
@@ -167,6 +199,7 @@
                     // необработанных задач — полностью перерисовываем карту.
                     // skipFitBounds: только фильтруем точки, зум не меняем.
                     settings.orders = val;
+                    persistUserSettings();
                     renderAll({ skipFitBounds: true });
                     return;
                 }
@@ -1823,11 +1856,13 @@
         Object.values(baseLayers).forEach(l => mapInstance.value.removeLayer(l));
         if (baseLayers[settings.map_type]) {
             baseLayers[settings.map_type].addTo(mapInstance.value);
-            // Yandex tiles need invalidateSize after async init
+            refreshSize();
             if (settings.map_type.startsWith('Яндекс')) {
-                setTimeout(() => mapInstance.value?.invalidateSize(), 500);
+                setTimeout(refreshSize, 600);
             }
         }
+
+        persistUserSettings();
 
         // Route display style — just redraw the route line
         if (processedRoute) {
@@ -2123,6 +2158,7 @@
     // ── Lifecycle ──
     onMounted(async () => {
         await applyModuleSettings();
+        restoreUserSettings();
         await initMap();
         document.addEventListener('click', closeSettingsOnClick);
         if (typeof ResizeObserver !== 'undefined' && mapContainerRef.value) {

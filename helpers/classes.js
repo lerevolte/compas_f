@@ -577,10 +577,11 @@ export class Table {
             sort_field: response.list.sort_field,
             sort_order: response.list.sort_order
         })
+        const perPage = Number(response.list.per_page)
         this.pages = {
             current: response.list.current_page,
             total: response.list.last_page,
-            limit: response.list.per_page
+            limit: [12, 25, 50, 100].includes(perPage) ? perPage : 25
         }
         await this.initVirtualizer()
         if (this.rowVirtualizer) {
@@ -1486,7 +1487,9 @@ export class Filter {
             let response = []
 
             if (saved_query) {
-                response.push(`per_page=${saved_query.per_page ?? this.setter.pages.limit}`)
+                const rawPerPage = Number(saved_query.per_page ?? this.setter.pages.limit)
+                const perPage = [12, 25, 50, 100].includes(rawPerPage) ? rawPerPage : 25
+                response.push(`per_page=${perPage}`)
                 response.push(`page=${saved_query.page ?? this.setter.pages.current}`)
                 // sort_field/sort_order пушим только если реально заданы. Иначе в
                 // запрос уходила строка "sort_field=null" (sortItem пуст при первой

@@ -39,7 +39,7 @@
                 <AppButton class="button_text" v-if="section.fields.find(item => item.edit || (item.type == 'text_group' && item.fields.find(item => item.edit)))" @click="fieldObject.section.cancelEditAll(props.section)">
                     Отмена
                 </AppButton>
-                <AppButton class="button_text" v-else-if="(userStore.user && !userStore.user.is_admin) || section.fields.some(item => item.can_edit || (item.type == 'text_group' && item.fields && item.fields.some(sf => sf.can_edit)))" @click="editAll()">
+                <AppButton class="button_text" v-else-if="section.fields.some(item => item.can_edit || (item.type == 'text_group' && item.fields && item.fields.some(sf => sf.can_edit)))" @click="editAll()">
                     Изменить
                 </AppButton>
                 <AppPopup v-if="!props.options.isModule && userStore.user?.is_admin" :isPreventBottom="true">

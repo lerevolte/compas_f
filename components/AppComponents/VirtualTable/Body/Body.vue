@@ -428,7 +428,7 @@
                 if (a.action === 'copy') return table.value.canCreate()
                 return true
             })
-            if (table.value.slug == 'addresses' && !row.edit) {
+            if (table.value.slug == 'addresses' && !row.edit && table.value.permissions?.create_task_p !== 'N') {
                 result = [...result, { name: 'Создать задачу', action: 'createTaskFromAddress', enabled: true }]
             }
             return result
