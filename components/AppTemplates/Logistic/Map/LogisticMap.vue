@@ -547,6 +547,24 @@
         return fallback;
     };
 
+    const parseTimeWindow = (raw) => {
+        let s = raw;
+        if (s && typeof s === 'object') s = s.value;
+        if (typeof s !== 'string') return null;
+        const m = s.match(/(\d{1,2}):(\d{2})\s*[-–—]\s*(\d{1,2}):(\d{2})/);
+        if (!m) return null;
+        return { start: +m[1] * 60 + +m[2], end: +m[3] * 60 + +m[4] };
+    };
+
+    const arrivalTimeClass = (task) => {
+        const win = parseTimeWindow(task?.time);
+        if (!win || !task?.arrivalTime) return '';
+        const arrival = task.arrivalTime.getHours() * 60 + task.arrivalTime.getMinutes();
+        if (arrival > win.end) return 'red';
+        if (win.end - arrival >= 60) return 'orange';
+        return '';
+    };
+
     // Унифицированная информация о точке кластера. groupKey/groupName/groupColor
     // определяют «принадлежность» (маршрут или необработанные) — это сразу
     // обобщает кластеры на N маршрутов, когда на карту начнут выводить все
@@ -567,6 +585,7 @@
                 statusColor: task?.statusColor || '#ccc',
                 order: task?.order || '',
                 planTime,
+                planTimeClass: arrivalTimeClass(task),
                 factTime: task?.factTime || '',
                 name: extractTaskName(task?.name, `#${item.id}`)
             };
@@ -581,6 +600,7 @@
             statusColor: ut?.statusColor || '#ccc',
             order: '',
             planTime: ut?.planTime || ut?.plan_time || '',
+            planTimeClass: '',
             factTime: '',
             name: extractTaskName(ut?.name, `#${item.id}`)
         };
@@ -594,7 +614,7 @@
         return `<div class="cluster-point" data-task-id="${info.id}" data-type="${info.type}">
             <span class="route-popup__status route-popup__status_inline" style="background:${info.statusColor}"></span>
             <span class="cluster-point__order">${info.order}.</span>
-            <span class="cluster-point__time">${info.planTime}</span>${fact}
+            <span class="cluster-point__time ${info.planTimeClass || ''}">${info.planTime}</span>${fact}
         </div>`;
     };
 
@@ -1255,19 +1275,20 @@
             const factTimeStr = task.factTime || '';
             const factDisplay = factTimeStr ? ` → <span class="fact-time">${factTimeStr}</span>` : '';
             const statusColor = task.statusColor || '#ccc';
+            const planTimeClass = arrivalTimeClass(task);
 
             const html = `
                 <div class="route-popup">
                     <div class="route-popup__main" style="border-color: ${task.routeColor}">
                         <span class="route-popup__counter" style="background: ${task.routeColor}; --route-color: ${task.routeColor}">${task.order || ''}</span>
                         <span class="route-popup__status" style="background: ${statusColor}"></span>
-                        <span class="route-popup__time">${planTime}${factDisplay}</span>
+                        <span class="route-popup__time"><span class="${planTimeClass}">${planTime}</span>${factDisplay}</span>
                     </div>
                     <div class="route-popup__extend">
                         <div class="point-attrs">
                             <span class="point-attrs__item point-attrs__item_title"><span class="point-attrs__label">Название:</span><span class="point-attrs__val point-attrs__val_title">${taskName}</span></span>
                             <span class="point-attrs__item"><span class="point-attrs__label">Статус точки:</span><span class="point-attrs__val"><span class="route-popup__status route-popup__status_inline" style="background: ${statusColor}"></span></span></span>
-                            <span class="point-attrs__item"><span class="point-attrs__label">План. время:</span><span class="point-attrs__val">${planTime}</span></span>
+                            <span class="point-attrs__item"><span class="point-attrs__label">План. время:</span><span class="point-attrs__val ${planTimeClass}">${planTime}</span></span>
                         </div>
                     </div>
                 </div>`;

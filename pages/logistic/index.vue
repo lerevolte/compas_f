@@ -457,7 +457,6 @@
 		}
 
 		&_child {
-			padding-left: 28px;
 			font-size: 12px;
 		}
 

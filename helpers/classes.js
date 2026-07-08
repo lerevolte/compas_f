@@ -1600,7 +1600,7 @@ export class Filter {
             })
         }
 
-        this.fields = response.filter(field => !['isChoose', 'actions', 'file'].includes(field.type)).map((p, index) => {
+        this.fields = response.filter(field => !['isChoose', 'actions', 'file', 'route_statuses', 'route_map'].includes(field.type)).map((p, index) => {
             return {
                 ...p,
                 sort: p.sort ?? index,

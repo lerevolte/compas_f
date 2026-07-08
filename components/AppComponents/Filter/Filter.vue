@@ -62,15 +62,8 @@
             </div>
 
             <div class="filter__group">
-                <!--
-                    Инпут «Поиск» в попапе показываем, когда есть текст,
-                    активен тоггл «Поиск» или уже применён чип. v-model
-                    отдельный — попапный инпут отображает ТЕКУЩИЙ применённый
-                    поиск (как в чипе), а внешний (header) инпут после
-                    submit чистится.
-                -->
                 <div class="filter__fields" v-if="filter.state.search || filter.state.searchInPopup || filter.state.searchEnabled || filter.state.activeTabs.some(t => t.key === 'search')">
-                    <div class="filter__field" :class="{'filter__field_disabled': filter.state.activeTabs.length == 0}">
+                    <div class="filter__field">
                         <AppInput
                             class="filter__field_search"
                             @keyup.enter="filter.updateInfo({ fromPopup: true })"
