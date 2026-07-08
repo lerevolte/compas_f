@@ -105,6 +105,12 @@
     // дёргаем invalidateSize() на каждое изменение размеров.
     let containerResizeObserver = null;
 
+    const mapTypeFamily = (type) => (typeof type === 'string' && type.startsWith('Яндекс')) ? 'yandex' : 'osm';
+    const crsForMapType = (type) => mapTypeFamily(type) === 'yandex' ? L.CRS.EPSG3395 : L.CRS.EPSG3857;
+    let currentMapFamily = null;
+    let preservedView = null;
+    let skipFitAfterInit = false;
+
     // ── Layer refs ──
     let baseLayers = {};
     let routeMarkers = [];
@@ -382,8 +388,11 @@
             shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
         });
 
-        const center = fetchedCenter.value || props.defaultCenter;
-        mapInstance.value = L.map(mapContainerRef.value, { center, zoom: 10, zoomControl: true, minZoom: 3, maxZoom: 18, doubleClickZoom: false });
+        const center = preservedView?.center || fetchedCenter.value || props.defaultCenter;
+        const zoom = preservedView?.zoom ?? 10;
+        mapInstance.value = L.map(mapContainerRef.value, { center, zoom, zoomControl: true, minZoom: 3, maxZoom: 18, doubleClickZoom: false, crs: crsForMapType(settings.map_type) });
+        currentMapFamily = mapTypeFamily(settings.map_type);
+        preservedView = null;
 
         // Monkey-patch L.Marker to prevent _animateZoom crash on removed markers
         const origAnimateZoom = L.Marker.prototype._animateZoom;
@@ -441,10 +450,26 @@
         mapReady.value = true;
         console.log('🟢 Map initialized');
 
+        const skipFit = skipFitAfterInit;
+        skipFitAfterInit = false;
         setTimeout(() => {
             if (!mapInstance.value) return;
-            renderAll();
+            renderAll(skipFit ? { skipFitBounds: true } : {});
         }, 300);
+    };
+
+    const recreateMapForCrs = async () => {
+        if (!mapInstance.value) { await initMap(); return; }
+        const c = mapInstance.value.getCenter();
+        preservedView = { center: [c.lat, c.lng], zoom: mapInstance.value.getZoom() };
+        skipFitAfterInit = true;
+        clearAllLayers();
+        Object.values(baseLayers || {}).forEach(l => { try { mapInstance.value.removeLayer(l); } catch (e) {} });
+        try { mapInstance.value.remove(); } catch (e) {}
+        mapInstance.value = null;
+        baseLayers = {};
+        mapReady.value = false;
+        await initMap();
     };
 
     // ── Clear all ──
@@ -1852,7 +1877,12 @@
 
         console.log('🟢 applySettings:', JSON.stringify(settings));
 
-        // Switch base layer
+        if (mapTypeFamily(settings.map_type) !== currentMapFamily) {
+            persistUserSettings();
+            recreateMapForCrs();
+            return;
+        }
+
         Object.values(baseLayers).forEach(l => mapInstance.value.removeLayer(l));
         if (baseLayers[settings.map_type]) {
             baseLayers[settings.map_type].addTo(mapInstance.value);
