@@ -390,7 +390,8 @@
 
         const center = preservedView?.center || fetchedCenter.value || props.defaultCenter;
         const zoom = preservedView?.zoom ?? 10;
-        mapInstance.value = L.map(mapContainerRef.value, { center, zoom, zoomControl: true, minZoom: 3, maxZoom: 18, doubleClickZoom: false, crs: crsForMapType(settings.map_type) });
+        const isOsm = mapTypeFamily(settings.map_type) === 'osm';
+        mapInstance.value = L.map(mapContainerRef.value, { center, zoom, zoomControl: true, minZoom: 3, maxZoom: 18, doubleClickZoom: false, crs: crsForMapType(settings.map_type), zoomAnimation: isOsm, markerZoomAnimation: isOsm });
         currentMapFamily = mapTypeFamily(settings.map_type);
         preservedView = null;
 
