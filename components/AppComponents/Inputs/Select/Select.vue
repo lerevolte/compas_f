@@ -192,14 +192,14 @@
             }, 100);
         }
 
-        // Получение активных опций
         getActiveOptions(value) {
             if (props.options.multiple) {
                 return value == null || value == '' ? [] : value.map(option => this.state.list.find(p => p.value == option));
             } else if (props.options.type == 'address') {
                 return this.state.list ? this.state.list.find(p => isEqual(p.value, value)) : null
             } else {
-                return this.state.list ? this.state.list.find(p => p.value == value) : null
+                if (value === null || value === undefined || value === '') return null
+                return this.state.list ? this.state.list.find(p => String(p.value) === String(value)) : null
             }
         }
 

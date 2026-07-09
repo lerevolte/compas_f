@@ -226,15 +226,31 @@
             }
         }
 
-        // Открытие датапикера
+        ownPopups() {
+            const owners = new Set()
+            let node = dateRef.value
+            while (node) {
+                const content = node.closest?.('.popup__content')
+                const ownerId = content?.dataset?.popupOwner
+                if (!ownerId) break
+                const root = document.querySelector(`.popup[data-popup-id="${ownerId}"]`)
+                if (!root || owners.has(root)) break
+                owners.add(root)
+                node = root.parentElement
+            }
+            return owners
+        }
+
         open() {
-            document.querySelectorAll('.popup_open').forEach(el => el.classList.remove('popup_open'))
+            const owners = this.ownPopups()
+            document.querySelectorAll('.popup_open').forEach(el => {
+                if (owners.has(el)) return
+                el.classList.remove('popup_open')
+            })
             document.querySelectorAll('.status_open').forEach(el => el.classList.remove('status_open'))
             document.querySelectorAll('.select_open').forEach(el => el.classList.remove('select_open'))
             emit('open', dateRef.value)
         }
-
-        // Получение дат для инпута
         getInputsValue(value) {
             if (props.options.multiple) {
                 if (value) {
@@ -251,8 +267,6 @@
                 }
             }
         }
-
-        // Установка дат для инпута
         setInputsValue() {
             const checkDate = (value) => {
                 if (value.split('.').length == 3) {
@@ -275,8 +289,6 @@
                 emit('update:modelValue', [start.value, end.value])
             }
         }
-
-        // Применить
         apply() {
             datepicker.value?.selectDate()
             datepicker.value?.closeMenu()
