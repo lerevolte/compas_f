@@ -227,19 +227,16 @@
                 />
                 <div
                     class="form__item form__item_default-value default-value-picker"
-                    v-if="!['relation','file','text_group','status','select_dropdown','redactor'].includes(modal.field.type)"
+                    v-if="modal.field.key != 'id' && !['relation','file','text_group','status','select_dropdown','redactor'].includes(modal.field.type)"
                 >
-                    <AppPopup class="default-value-picker__popup" :isPreventBottom="true" :ignoreSelectors="['default-value-picker']">
+                    <AppPopup class="default-value-picker__popup" :isPreventBottom="true" :ignoreSelectors="['default-value-picker', '.dp__menu']">
                         <template #header>
                             <div class="default-value-picker__summary">
                                 <AppCheckbox
                                     v-model="modal.field.set_default"
                                     :options="{
-                                        // Показываем сохранённое значение всегда, когда оно задано —
-                                        // даже если применение выключено (set_default = 0): пользователь
-                                        // отключил простановку, но значение не сбросил (8461).
                                         title: (modal.field.default_value != null && modal.field.default_value !== '')
-                                            ? `Значение по умолчанию - ${modal.field.default_value}`
+                                            ? `Значение по умолчанию - ${defaultValueLabel(modal.field)}`
                                             : 'Значение по умолчанию',
                                         noLabelClick: true,
                                     }"
@@ -261,6 +258,16 @@
                                         searchable: true,
                                         isSaveSearch: true,
                                         edit: true
+                                    }"
+                                />
+                                <AppDate
+                                    v-else-if="modal.field.type == 'date'"
+                                    v-model="modal.field.default_value"
+                                    @update:modelValue="val => { if (val !== null && val !== '') modal.field.set_default = 1 }"
+                                    :options="{
+                                        id: 0,
+                                        title: 'Значение по умолчанию',
+                                        name: 'default_value'
                                     }"
                                 />
                                 <AppTextarea
@@ -348,6 +355,7 @@
     import AppBlank from '@AppComponents/Blank/Blank.vue'
     import AppButton from '@AppComponents/Button/Button.vue'
     import AppFile from '@AppComponents/Inputs/File/File.vue'
+    import AppDate from '@AppComponents/Inputs/Date/Date.vue';
     import AppInput from '@AppComponents/Inputs/Input/Input.vue';
     import AppSelect from '@AppComponents/Inputs/Select/Select.vue';
     import AppTextarea from '@AppComponents/Inputs/Textarea/Textarea.vue';
@@ -598,6 +606,14 @@
 
             return [...response, ...props.hidden]
         }
+    }
+
+    const defaultValueLabel = (field) => {
+        if (field.type == 'date' && field.default_value) {
+            const date = new Date(field.default_value)
+            if (!isNaN(date.getTime())) return date.toLocaleDateString('ru-RU')
+        }
+        return field.default_value
     }
 
     const modal = ref(new Modal())

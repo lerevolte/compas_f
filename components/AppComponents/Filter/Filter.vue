@@ -174,6 +174,7 @@
                             class="popup__option popup__option_checkbox"
                             v-model="filter.state.searchEnabled"
                             :options="{title: 'Поиск'}"
+                            @update:modelValue="filter.savedFilter.updateSavedFilter()"
                         />
                         <AppCheckbox
                             class="popup__option popup__option_checkbox"
@@ -632,6 +633,7 @@
         save() {
             const request = {
                 title: this.active.title,
+                search: filter.state.searchEnabled,
                 fields: filter.state.fields.filter(f => f.enabled).map((p, index) => {
                     return {
                         key: p.key,
@@ -676,7 +678,9 @@
         // Установка полей дефолтного фильтра
         setDefaultFields() {
             const hiddenFilter = injectedFilter.saves.find(f => f.is_hidden)
-            
+
+            filter.state.searchEnabled = !!hiddenFilter?.search
+
             Object.assign(this.active, {
                 id: hiddenFilter ? hiddenFilter.id : 0,
                 title: null,
@@ -700,6 +704,8 @@
 
             injectedFilter.updateSavedFilter({
                 title: hiddenFilter.title,
+                search: filter.state.searchEnabled,
+                is_hidden: hiddenFilter.is_hidden,
                 fields: filter.state.fields.filter(f => f.enabled).map((p, index) => {
                     return {
                         key: p.key,

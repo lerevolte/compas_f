@@ -199,8 +199,8 @@
 
     async function loadQuestions() {
         try {
-            const response = await api.callMethod('GET', '/objects/faq/compose')
-            const rows = response?.data?.list?.data ?? []
+            const response = await api.callMethod('GET', '/redactor/questions')
+            const rows = Array.isArray(response?.data) ? response.data : []
             questions.value = rows.map(row => {
                 let name = row.name
                 if (name && typeof name == 'object') name = name.value

@@ -1275,11 +1275,11 @@ export class Table {
                 sort_field: column.key,
                 sort_order: column.key == this.sortItem.sort_field ? this.sortItem.sort_order == 'asc' ? 'desc' : 'asc' : 'asc'
             })
+            this.isChanged = true
             if (this.options?.isLocalTable) {
                 this.sortLocalBody(column)
                 return
             }
-            this.isChanged = true
             this.pages.current = 1
             await this.filter.get()
         } catch (error) {
@@ -1634,7 +1634,8 @@ export class Filter {
     async updateSavedFilter(filter) {
         await api.callMethod('PUT', routes.filter.edit.replace('${slug}', this.setter.slug) + `/${filter.id}`, {
             fields: filter.fields,
-            title: filter.title
+            title: filter.title,
+            search: filter.search ? 1 : 0
         })
 
         this.saves[this.saves.findIndex(p => p.id == filter.id)] = filter
@@ -1644,12 +1645,14 @@ export class Filter {
     async createSavedFilter(filter) {
         const response = await api.callMethod('POST', routes.filter.create.replace('${slug}', this.setter.slug), {
             fields: filter.fields,
-            title: filter.title
+            title: filter.title,
+            search: filter.search ? 1 : 0
         })
         this.saves.push({
             id: response.data.id,
             title: filter.title,
             is_hidden: false,
+            search: !!filter.search,
             fields: filter.fields
         })
     }
