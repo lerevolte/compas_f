@@ -5,32 +5,7 @@
     display: flex;
     align-items: center;
 
-    .popup__header {
-        // Иконка из 3 точек очень узкая (3×13). Раньше клик ловился только
-        // по самой иконке — попадание было неудобным. Расширяем зону клика
-        // до квадрата ~28×28, включая центрирование самой иконки.
-        padding: 6px 12px;
-        min-width: 28px;
-        min-height: 28px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 4px;
-        transition: background 0.12s;
-
-        &:hover {
-            background: rgba(166, 183, 212, 0.15);
-
-            .icon-action {
-                svg {
-                    * {
-                        fill: variables.$color-icon-active;
-                    }
-                }
-            }
-        }
+    & > .popup__header {
+        @include mixins.iconButton();
     }
 }
-// .show-more .popup__content { top: 15px } больше не нужен — координаты
-// контенту попапа теперь ставит JS (applyPosition в Popup.vue) после
-// Teleport-а в body, и старая absolute-вёрстка не работает.

@@ -60,6 +60,39 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+@mixin iconButton($size: 28px) {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: $size;
+    min-height: $size;
+    padding: 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.12s;
+
+    &:hover {
+        background: rgba(166, 183, 212, 0.15);
+
+        .icon-action {
+            svg {
+                * {
+                    fill: variables.$color-icon-active;
+                }
+            }
+        }
+
+        .icon_search {
+            svg {
+                * {
+                    stroke: variables.$color-icon-active;
+                }
+            }
+        }
+    }
+}
+
 // Наведение на блок
 @mixin hoverElem() {
     transition: 0.2s all;

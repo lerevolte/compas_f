@@ -508,6 +508,14 @@ section {
     }
 }
 
+.settings,
+.tab_settings,
+.logistic-filter__popup {
+    & > .popup__header {
+        @include mixins.iconButton();
+    }
+}
+
 
 .draggable-ghost {
     background: #fbfcfd;
