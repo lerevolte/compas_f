@@ -73,7 +73,7 @@
     transition: background 0.12s;
 
     &:hover {
-        background: rgba(166, 183, 212, 0.15);
+        background: variables.$color-hover-button;
 
         .icon-action {
             svg {

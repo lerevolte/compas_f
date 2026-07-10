@@ -9,13 +9,11 @@
                     :class="{ 'map__frame-selection_active': selectionActive }"
                     @click="toggleSelectionMode"
                 />
-                <!-- Открыть выбранный маршрут в Яндекс.Картах -->
                 <button
                     v-if="hasRoutePoints"
                     class="logistic-map__open-route"
                     @click.stop="openRouteInYandex"
                 >Открыть маршрут</button>
-                <!-- Settings -->
                 <div class="logistic-map__settings" @click.stop>
                     <button class="logistic-map__settings-button" @click.stop="toggleSettings">
                         <IconSettings />
