@@ -6,6 +6,7 @@
   <section class="section-table" ref="sectionRef">
     <TableTop v-if="props.options?.isHaveTopHeader" :options="props.options" :showMore="props.showMore" :title="props.options?.title ?? null">
       <template v-if="$slots.topTitle" #title><slot name="topTitle" /></template>
+      <template v-if="$slots.topActions" #actions><slot name="topActions" /></template>
     </TableTop>
     <div ref="tableRef" class="table" :class="{'table_permanent-edit': props.options.isPermanentEdit, 'table_short': props.options?.isShort, 'table_dragging': table.isDragging, 'table_append-on-drop': props.options?.isAppendOnDrop, 'table_products': table.slug == 'products'}">
       <TableHeader>
@@ -317,6 +318,10 @@
 
     await nextTick()
     if (props.slug == null && props.path == null) return
+    if (props.slug != null && table.value.slug !== props.slug) {
+      table.value.setSortItem({ sort_field: null, sort_order: null })
+      table.value.isChanged = false
+    }
     table.value.slug = props.slug
     table.value.path = props.path
     if (props.options?.isLocalTable) {

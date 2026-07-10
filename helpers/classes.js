@@ -3318,9 +3318,6 @@ export class Logistic {
         return `logistic_layout_${this._deviceKey()}`
     }
 
-    // Раскладка таблиц/карты хранится отдельно для каждого устройства (localStorage):
-    // на телефоне и десктопе удобны разные позиции/высоты. Применяется поверх
-    // серверной (общей) раскладки после загрузки секций.
     _applyDeviceLayout() {
         if (typeof window === 'undefined') return
         let saved = null
@@ -3422,18 +3419,8 @@ export class Logistic {
         this.updateSections()
     }
 
-    // Обновление колонок
-    async updateSections() {
+    updateSections() {
         this._saveDeviceLayout()
-        for (let column in this.columns) {
-            this.columns[column].map(async (section, index) => {
-                await api.callMethod('PUT', routes.logistic.updateSection.replace('${id}', section.id), {
-                    column: column.replace('column_', ''),
-                    position: index + 1,
-                    height: section.height
-                })
-            })
-        }
     }
 
     // Инициализация создания маршрута

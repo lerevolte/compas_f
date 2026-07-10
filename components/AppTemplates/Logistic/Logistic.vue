@@ -76,11 +76,6 @@
                         class="logistic__section"
                         v-else-if="section.key == 'tasks'"
                     >
-                        <LogisticFilter
-                            v-if="taskTableTab === 'tasks'"
-                            v-model="logistic.filterFields"
-                            @update:modelValue="data => logistic.changeFilter(data)"
-                        />
                         <AppVirtualTable
                             v-if="taskTableTab === 'tasks'"
                             :ref="el => setTaskTableRef('unassigned', el)"
@@ -100,24 +95,12 @@
                                 overscan: 5,
                                 isDraggable: true,
                                 isDisableSockets: false,
-                                // socketFilter не задаём: дефолт VirtualTable
-                                // показывает плашку только для строк, чьи id
-                                // уже есть в body этой таблицы. Это автоматически
-                                // делит правки между «Задачи логистики» и
-                                // «Задачи в машине» по принадлежности задачи.
                                 isCheckClicked: true,
-                                // Задача, перетянутая ИЗ «Задачи в машине» сюда,
-                                // тоже должна вставать в конец, а плейсхолдер —
-                                // под всеми строками (симметрично машине).
                                 isAppendOnDrop: true,
                                 isDisableSort: false,
                                 isDisablePull: false,
                                 isDisablePut: false,
                                 draggableTarget: '.table__row',
-                                // Драг с любой точки строки: дефолтный dragFilter
-                                // исключает .table__cell-content (текст ячеек),
-                                // из-за чего тянуть можно было только за «пустые»
-                                // места строки. Оставляем фильтр только на инпуты.
                                 dragFilter: 'input, textarea, select, [contenteditable]',
                                 dragDelay: 150,
                                 dragDelayOnTouchOnly: true,
@@ -136,8 +119,6 @@
                             @addRow="row => logistic.onTaskDroppedToUnassigned(row)"
                             @removeRow="row => logistic.onTaskDroppedToUnassigned(row)"
                         >
-                            <!-- Если есть сущность addresses — вместо заголовка
-                                 показываем вкладки (в той же строке, что и шестерёнка). -->
                             <template #topTitle>
                                 <span v-if="!hasWarehousesEntity">Задачи логистики</span>
                                 <span v-else class="logistic-tabs">
@@ -153,14 +134,14 @@
                                     >Быстрые задачи</span>
                                 </span>
                             </template>
+                            <template #topActions>
+                                <LogisticFilter
+                                    v-model="logistic.filterFields"
+                                    @update:modelValue="data => logistic.changeFilter(data)"
+                                />
+                            </template>
                         </AppVirtualTable>
 
-                        <!-- Таблица «Справочник адресов». Строки можно перетащить
-                             на маршрут / в «Задачи в машине» — создаётся задача
-                             логистики, адрес-источник остаётся (Part 3). Группа
-                             drag&drop уникальная (никем не принимается), поэтому
-                             vuedraggable не уносит строку из таблицы; создание
-                             делает глобальный mouseup-хендлер. -->
                         <AppVirtualTable
                             v-if="taskTableTab === 'warehouses'"
                             :slug="'warehouses'"

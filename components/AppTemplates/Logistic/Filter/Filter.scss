@@ -2,23 +2,14 @@
 @use '@/assets/mixins.scss' as mixins;
 
 .logistic-filter {
-    position: absolute;
-    top: 16px;
-    right: 85px;
-    // Над шапкой/телом таблицы, иначе лупу перекрывает sticky-заголовок.
-    z-index: 5;
+    display: flex;
+    align-items: center;
 
     .blank__title {
         color: variables.$color-border;
     }
 }
 
-// popup__content телепортируется в <body>, поэтому селектор
-// `.logistic-filter .popup__content` (как предок-потомок) до него больше не
-// достаёт. Модификатор-класс `logistic-filter__popup` прокидывается прямо на
-// сам popup__content (см. Popup.vue → contentClass), поэтому стилизуем
-// комбинированным селектором, не зависящим от контейнера. Позицию (top/left)
-// задаёт сам Popup через inline-стили — здесь её не трогаем.
 .popup__content.logistic-filter__popup {
     padding: 15px;
     box-sizing: border-box;
@@ -31,16 +22,6 @@
         color: variables.$color-border;
     }
 }
-
-.logistic__section {
-    &:has(.section__tab-save) {
-        .logistic-filter {
-            right: 130px;
-        }
-    }
-}
-
-
 
 .logistic-filter__input {
     position: relative;

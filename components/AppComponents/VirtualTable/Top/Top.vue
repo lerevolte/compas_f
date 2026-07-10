@@ -4,6 +4,7 @@
             <slot name="title">{{ props.title }}</slot>
         </div>
         <div class="section-table__top-group">
+            <slot name="actions" />
             <AppSave
                 class="section__tab-save"
                 v-if="table.isChanged"
