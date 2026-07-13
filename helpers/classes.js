@@ -862,7 +862,7 @@ export class Table {
     // Поля addresses клонированы из logistic_tasks, поэтому их значения уже в той
     // же форме, что ожидает форма создания задачи.
     createTaskFromAddress(row) {
-        const keys = ['name', 'address', 'phone', 'time', 'car_requirements', 'employee_requirements', 'service_time', 'comment', 'contact', 'photo', 'client_id']
+        const keys = ['name', 'address', 'phone', 'time', 'car_requirements', 'employee_requirements', 'service_time', 'comment', 'contact', 'photo', 'client_id', 'weight', 'delivery_price']
         const defaults = {}
         for (const key of keys) {
             if (row[key] !== undefined && row[key] !== null) {

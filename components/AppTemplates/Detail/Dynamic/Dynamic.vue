@@ -301,15 +301,22 @@
                 // Префилл формы создания значениями по умолчанию (например, при
                 // «Создать задачу» из «Библиотеки задач» — поля берутся из адреса).
                 if (props.defaults && props.options.isGlobalEdit && response.data.detail?.columns) {
+                    const applyDefault = (field) => {
+                        if (!(field.key in props.defaults)) return
+                        const def = props.defaults[field.key]
+                        if (field.value && typeof field.value === 'object' && !Array.isArray(field.value) && 'value' in field.value) {
+                            field.value.value = (def && typeof def === 'object' && 'value' in def) ? def.value : def
+                        } else {
+                            field.value = def
+                        }
+                    }
                     for (const colKey in response.data.detail.columns) {
                         for (const section of response.data.detail.columns[colKey]) {
                             for (const field of section.fields) {
-                                if (!(field.key in props.defaults)) continue
-                                const def = props.defaults[field.key]
-                                if (field.value && typeof field.value === 'object' && !Array.isArray(field.value) && 'value' in field.value) {
-                                    field.value.value = (def && typeof def === 'object' && 'value' in def) ? def.value : def
+                                if (field.type === 'text_group' && Array.isArray(field.fields)) {
+                                    field.fields.forEach(applyDefault)
                                 } else {
-                                    field.value = def
+                                    applyDefault(field)
                                 }
                             }
                         }
