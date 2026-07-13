@@ -618,7 +618,7 @@
         if (!win || !task?.arrivalTime) return '';
         const arrival = task.arrivalTime.getHours() * 60 + task.arrivalTime.getMinutes();
         if (arrival > win.end) return 'red';
-        if (win.end - arrival >= 60) return 'orange';
+        if (win.end - arrival < 60) return 'orange';
         return '';
     };
 

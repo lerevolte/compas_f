@@ -105,6 +105,7 @@
                     v-model="tabs.modal.content.roles_read"
                     :isPreventBottom="true"
                     :options="{
+                        id: 'tab_roles_read',
                         title: 'Роли',
                         list: userStore.roles.map(p => {
                             return {

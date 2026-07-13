@@ -88,7 +88,7 @@
                             <IconSelectArrow />
                         </span>
 
-                        <figure class='relation__arrow' @click="() => clickLink(index)" >
+                        <figure class='relation__arrow' v-if="props.options.slug != 'roles'" @click="() => clickLink(index)" >
                             <svg xmlns="http://www.w3.org/2000/svg" width="4" height="3" fill="none" viewBox="0 0 4 3"><path fill="#888" d="M0 0h4L2 3z"/></svg>
                         </figure>
                     </div>
@@ -119,7 +119,7 @@
                     </span>
                 </div>
 
-                <div class="select__option select__option_create" :value="null" @click="emit('create', {related_table: props.options.relation})">
+                <div class="select__option select__option_create" v-if="props.options.slug != 'roles'" :value="null" @click="emit('create', {related_table: props.options.relation})">
                     Создать
                 </div>
             </div>

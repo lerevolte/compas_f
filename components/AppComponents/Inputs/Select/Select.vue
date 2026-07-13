@@ -341,6 +341,15 @@
             const contentRect = contentRef.value.getBoundingClientRect();
 
             this.state.isTop = props.isPreventBottom ? false : contentRect.bottom > bottomBound;
+
+            if (this.state.isTop) {
+                contentRef.value.style.maxHeight = '';
+            } else {
+                const available = Math.floor(bottomBound - contentRect.top - 10);
+                contentRef.value.style.maxHeight = contentRect.bottom > bottomBound && available > 0
+                    ? `${Math.max(available, 100)}px`
+                    : '';
+            }
         }
     }
 

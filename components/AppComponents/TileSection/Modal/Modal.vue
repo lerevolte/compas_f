@@ -307,6 +307,7 @@
                     v-model="modal.field.roles_read"
                     :isPreventBottom="true"
                     :options="{
+                        id: 'roles_read',
                         title: 'Роли',
                         list: userStore.roles.map(p => {
                             return {
@@ -328,6 +329,7 @@
                     v-model="modal.field.roles_write"
                     :isPreventBottom="true"
                     :options="{
+                        id: 'roles_write',
                         title: 'Роли',
                         list: userStore.roles.map(p => {
                             return {

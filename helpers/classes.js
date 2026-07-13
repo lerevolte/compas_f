@@ -2288,6 +2288,9 @@ export class Section {
                             for (let subfield of field.fields) {
                                 if (subfield.edit) {
                                     if (subfield.type == 'relation' && subfield.value.value) {
+                                        if (subfield.value.localOptions) {
+                                            subfield.value.localOptions = subfield.value.localOptions.filter(p => p != null && p.value != null)
+                                        }
                                         subfield.value.value = subfield.value?.value.filter(p => p)
                                     }
                                     this.buffer.backup = this.buffer.backup.filter(f => f.id != subfield.id)
@@ -2296,7 +2299,7 @@ export class Section {
                             }
                         } else if (field.edit) {
                             if (field.type == 'relation' && field.value.value) {
-                                field.value.localOptions = field.value.localOptions.filter(p => p)
+                                field.value.localOptions = field.value.localOptions.filter(p => p != null && p.value != null)
                                 field.value.value = field.value?.value.filter(p => p)
                             }
                             this.buffer.backup = this.buffer.backup.filter(f => f.id != field.id)

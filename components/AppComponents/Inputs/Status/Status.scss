@@ -7,12 +7,14 @@
         @include mixins.blankGap();
     }
 
-    &.form__item_status_disabled {
-        pointer-events: none;
-
+    &.form__item_status_static {
         .form__item-title {
           color: #bcbcbc;
         }
+    }
+
+    &.form__item_status_disabled {
+        pointer-events: none;
 
         .status__rect-container {
           border-radius: 5px;

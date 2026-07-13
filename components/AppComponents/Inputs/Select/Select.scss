@@ -120,9 +120,11 @@
     max-width: calc(100% - 50px);
     position: absolute;
     align-items: center;
+    pointer-events: none;
     @include mixins.userSelect(none);
 
     .select__value {
+        pointer-events: auto;
         gap: 5px;
         top: 0px;
         left: 0px;
