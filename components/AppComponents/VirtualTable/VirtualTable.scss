@@ -557,18 +557,10 @@
           }
         }
 
-        &:has(.select__values) {
+        &.select_multiple {
           .select__content {
             margin-top: 0;
-          }
-
-          .select__values {
             min-height: 40px;
-          }
-
-          .form__item_input {
-            top: 0;
-            height: 100%;
           }
         }
       }
@@ -607,8 +599,13 @@
       height: 30px;
     }
 
-    .form__item_select .select:has(.select__values) .select__values {
+    .form__item_select .select.select_multiple .select__content {
       min-height: 30px;
+    }
+
+    .form__item_select .select.select_multiple input {
+      height: 28px;
+      min-height: 28px;
     }
   }
 }

@@ -7,10 +7,11 @@
         <div 
             class="select" 
             ref="selectRef" 
-            :class="{ 
-                'select_open': select.state.isOpen, 
-                'select_disabled': props.options.edit == false, 
-                'select_empty': activeOption == undefined 
+            :class="{
+                'select_open': select.state.isOpen,
+                'select_disabled': props.options.edit == false,
+                'select_empty': activeOption == undefined,
+                'select_multiple': props.options.multiple
             }">
             <div class="select__content" @click="event => select.toggleOptions(event)">
                 <IconWarning v-if="props.options.required && !activeOption"/>
