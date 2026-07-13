@@ -31,7 +31,7 @@
                     @keyup.enter="() => { const v = select.state.search; if (select.commitAddressCoords(v)) return; emit('searchEnter', v); select.state.search = ''; select.filterOptions(''); select.state.isOpen = false; }"
                 />
     
-                <div class="select__values" ref="selectValuesRef" v-if="props.options.multiple">
+                <div class="select__values" ref="selectValuesRef" v-if="props.options.multiple" :class="{ 'select__values_typing': select.state.search.length > 0 }">
                     <div class="select__value" v-for="option in activeOption" @click="select.changeValue(option)">
                         {{ option?.label }}
 

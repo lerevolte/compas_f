@@ -60,6 +60,10 @@
             opacity: 0.5;
         }
 
+        .select__values {
+            opacity: 0.5;
+        }
+
         input {
             border: 1px solid #0584fe;
         }
@@ -122,6 +126,14 @@
     align-items: center;
     pointer-events: none;
     @include mixins.userSelect(none);
+
+    &.select__values_typing {
+        opacity: 0 !important;
+
+        .select__value {
+            pointer-events: none;
+        }
+    }
 
     .select__value {
         pointer-events: auto;

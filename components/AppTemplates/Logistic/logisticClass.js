@@ -94,20 +94,20 @@ export class LogisticWithMap extends Logistic {
         const row = rows.find(r => Number(r?.id) === Number(activeId));
         if (!row) return;
 
-        // color у строки может быть скаляром (id field_value) или объектом
-        // {value, localOptions:[{label:{color:...}}]} — приводим к скаляру.
         const extract = (v) => {
             if (v == null) return null;
             if (typeof v === 'object') {
+                if (Array.isArray(v.value)) return v.value[0] ?? null;
                 return v.value ?? v.id ?? null;
             }
             return v;
         };
-        const newColorId = extract(row.color);
-        const oldColorId = this._lastKnownActiveColorId ?? null;
-        if (newColorId !== oldColorId) {
-            this._lastKnownActiveColorId = newColorId;
-            this.loadRouteForMap(activeId);
+        const newColorKey = `${extract(row.car_id)}:${extract(row.employee_id)}`;
+        const oldColorKey = this._lastKnownActiveColorId ?? null;
+        if (newColorKey !== oldColorKey) {
+            const isFirst = oldColorKey === null;
+            this._lastKnownActiveColorId = newColorKey;
+            if (!isFirst) this.loadRouteForMap(activeId);
         }
     }
 

@@ -349,9 +349,14 @@
     }
     const permissionOptions = (rowIndex, column) => {
         const row = table.value.body[rowIndex]
+        const isRolesTable = typeof table.value.path === 'string' && table.value.path.startsWith('/roles')
+        if (!isRolesTable) return column.options
         const isLogistic = row && (row.slug === 'logistic' || row.name === 'Логистика')
         if (isLogistic && column.key === 'read_p') {
-            return (column.options || []).filter(o => o.value !== 'Y')
+            return (column.options || []).filter(o => o.value !== 'Y' && o.value !== 'E')
+        }
+        if (!row || row.slug !== 'routes' || !['read_p', 'update_p'].includes(column.key)) {
+            return (column.options || []).filter(o => o.value !== 'E')
         }
         return column.options
     }
