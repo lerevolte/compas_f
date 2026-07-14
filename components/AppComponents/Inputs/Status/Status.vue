@@ -170,6 +170,9 @@
 
         // Получение активных опций
         getActiveOptions(value) {
+            if ((value === null || value === undefined || value === '') && props.options.isHaveNull) {
+                return { value: null, label: { text: 'Не выбрано', color: '', file: null } }
+            }
             return this.state.list ? this.state.list.find(p => p.value == value) ?? this.state.list[0] : this.state.list[0]
         }
 

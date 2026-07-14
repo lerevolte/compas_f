@@ -221,7 +221,7 @@
                                     relation: null,
                                     edit: table.body[row.index] && !column.read_only && (table.body[row.index].edit || table.options?.isPermanentEdit),
                                     required: false,
-                                    isHaveNull: true,
+                                    isHaveNull: false,
                                     isCanCreate: column.can_create ?? false,
                                     placeholder: ''
                                 }"
@@ -278,8 +278,15 @@
 
                             <span class="table__text text" v-else-if="column.type == 'json'" :title="jsonTitle(cell.useCellModel(row.index, column).value)" v-html="cell.useCellModel(row.index, column).value"></span>
 
+                            <AppRouteStatuses
+                                v-else-if="column.type == 'route_statuses' && table.body[row.index].id"
+                                :options="{ title: null }"
+                                :routeId="table.body[row.index].id"
+                            />
+
                             <AppStatus
                                 v-else-if="column.type == 'status'"
+                                :parentContainer="sectionRef"
                                 :options="{
                                     id: `${uid}_${row.index}_${column.key}`,
                                     field_id: column.id,
@@ -315,6 +322,7 @@
     import AppButton from '@AppComponents/Button/Button.vue'
     import AppFansyBox from '@AppComponents/FansyBox/FansyBox.vue'
     import AppStatus from '@AppComponents/Inputs/Status/Status.vue'
+    import AppRouteStatuses from '@AppComponents/RouteStatuses/RouteStatuses.vue'
     import AppFansyBoxItem from '@AppComponents/FansyBox/Item/Item.vue'
     import IconDrag from '@AppIcons/Actions/Drag.vue'
     import IconClose from '@AppIcons/Close.vue'
