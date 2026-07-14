@@ -13,8 +13,8 @@
                 :title="taskTitle(task)"
             ></div>
         </div>
-        <div class="route-statuses" v-else>
-            <div class="route-statuses__segment" :title="loading ? 'Загрузка…' : 'Нет задач'"></div>
+        <div class="route-statuses" v-else-if="!loading">
+            <div class="route-statuses__segment" title="Нет задач"></div>
         </div>
     </div>
 </template>
@@ -45,6 +45,8 @@
     const tasks = ref([])
     const loading = ref(false)
 
+    const tasksCache = useState('route-statuses-cache', () => new Map())
+
     const taskTitle = (task) => {
         const name = task?.name
         if (typeof name === 'string') {
@@ -64,16 +66,21 @@
 
     const load = async () => {
         if (!props.routeId) return
-        loading.value = true
+        const cacheKey = `${props.isExternal ? 'ext' : 'int'}_${props.routeId}`
+        if (tasksCache.value.has(cacheKey)) {
+            tasks.value = tasksCache.value.get(cacheKey)
+        } else {
+            loading.value = true
+        }
         try {
             const url = props.isExternal
                 ? routes.external_link.route_tasks.replace('${token}', props.routeId)
                 : `/routes/${props.routeId}/tasks`
             const response = await api.callMethod('GET', url)
             tasks.value = response.data?.data || []
+            tasksCache.value.set(cacheKey, tasks.value)
         } catch (e) {
             console.log('route-statuses', e)
-            tasks.value = []
         } finally {
             loading.value = false
         }

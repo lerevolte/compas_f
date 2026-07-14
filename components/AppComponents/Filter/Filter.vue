@@ -135,7 +135,7 @@
                                     ...field,
                                     edit: true,
                                     list: field.options,
-                                    isHaveNull: true,
+                                    isHaveNull: false,
                                 }"
                                 v-model="filter.state.tabsValues[field.key]"
                             />
@@ -347,11 +347,19 @@
             };
         }
 
+        defaultTabValue(key) {
+            const field = this.state.fields.find(p => p.key == key)
+            if (field?.type == 'status') {
+                return (field.options ?? []).find(o => !o.label?.is_hidden)?.value ?? null
+            }
+            return null
+        }
+
         // Удаление несохранённых полей
         dropUnsavedFields() {
             console.log('dropUnsavedFields called');
             for (let key in this.state.tabsValues) {
-                this.state.tabsValues[key] = null
+                this.state.tabsValues[key] = this.defaultTabValue(key)
             }
             this.state.search = ''
             this.state.searchInPopup = ''
@@ -406,8 +414,10 @@
             const existingSearchChip = this.state.activeTabs.find(t => t.key == 'search')?.value || ''
             const effectiveSearch = inputSearch || existingSearchChip
 
+            const isFieldEnabled = key => this.state.fields.find(field => field.key == key)?.enabled !== false
+
             this.state.hiddenTabs = []
-            this.state.activeTabs = Object.keys(this.state.tabsValues).filter(key => (this.state.tabsValues[key] || typeof this.state.tabsValues[key] == 'boolean') && key != 'search').map(key => (
+            this.state.activeTabs = Object.keys(this.state.tabsValues).filter(key => (this.state.tabsValues[key] || typeof this.state.tabsValues[key] == 'boolean') && key != 'search' && isFieldEnabled(key)).map(key => (
                 {
                     label: this.state.fields.find(field => field.key == key)?.title,
                     key: key,
@@ -424,7 +434,7 @@
 
             this.closeContent(null, true)
 
-            const request = JSON.parse(JSON.stringify(Object.keys(this.state.tabsValues))).filter(key => (this.state.tabsValues[key] || typeof this.state.tabsValues[key] == 'boolean') && key != 'search').map(key => (
+            const request = JSON.parse(JSON.stringify(Object.keys(this.state.tabsValues))).filter(key => (this.state.tabsValues[key] || typeof this.state.tabsValues[key] == 'boolean') && key != 'search' && isFieldEnabled(key)).map(key => (
                 {
                     label: this.state.fields.find(field => field.key == key)?.title,
                     key: key,
@@ -460,7 +470,7 @@
         // Удаление вкладки
         deleteTab(tab) {
             this.state.activeTabs = this.state.activeTabs.filter(p => p.key != tab.key)
-            this.state.tabsValues[tab.key] = null
+            this.state.tabsValues[tab.key] = this.defaultTabValue(tab.key)
 
             if (tab.key == 'search') {
                 this.state.search = ''
@@ -473,7 +483,7 @@
         clearHiddenTabs() {
             for (let tab of this.state.hiddenTabs) {
                 this.state.activeTabs = this.state.activeTabs.filter(p => p.key != tab.key)
-                this.state.tabsValues[tab.key] = null
+                this.state.tabsValues[tab.key] = this.defaultTabValue(tab.key)
 
                 if (tab.key == 'search') {
                     this.state.search = ''
@@ -497,7 +507,7 @@
             this.state.fields = JSON.parse(JSON.stringify(injectedFilter.fields))
 
             this.state.fields.forEach(element => {
-                this.state.tabsValues[element.key] = null
+                this.state.tabsValues[element.key] = this.defaultTabValue(element.key)
             });
 
             this.savedFilter.setDefaultFields()
