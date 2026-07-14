@@ -359,18 +359,28 @@
         dropUnsavedFields() {
             console.log('dropUnsavedFields called');
             for (let key in this.state.tabsValues) {
-                this.state.tabsValues[key] = this.defaultTabValue(key)
+                this.state.tabsValues[key] = null
             }
             this.state.search = ''
             this.state.searchInPopup = ''
             this.state.activeTabs = []
 
-            this.updateInfo()
+            this.updateInfo({ skipDefaults: true })
             this.closeContent(null, true)
         }
 
         // Обновление информации
         updateInfo(opts = {}) {
+            if (!opts.skipDefaults) {
+                for (let key in this.state.tabsValues) {
+                    if (this.state.tabsValues[key] == null && this.state.fields.find(p => p.key == key)?.enabled !== false) {
+                        const defaultValue = this.defaultTabValue(key)
+                        if (defaultValue != null) {
+                            this.state.tabsValues[key] = defaultValue
+                        }
+                    }
+                }
+            }
             const setValue = (key, type = null) => {
                 // Трансформация селекта
                 const transformSelect = (item, key, type = null) => {
@@ -470,20 +480,20 @@
         // Удаление вкладки
         deleteTab(tab) {
             this.state.activeTabs = this.state.activeTabs.filter(p => p.key != tab.key)
-            this.state.tabsValues[tab.key] = this.defaultTabValue(tab.key)
+            this.state.tabsValues[tab.key] = null
 
             if (tab.key == 'search') {
                 this.state.search = ''
                 this.state.searchInPopup = ''
             }
 
-            this.updateInfo()
+            this.updateInfo({ skipDefaults: true })
         }
 
         clearHiddenTabs() {
             for (let tab of this.state.hiddenTabs) {
                 this.state.activeTabs = this.state.activeTabs.filter(p => p.key != tab.key)
-                this.state.tabsValues[tab.key] = this.defaultTabValue(tab.key)
+                this.state.tabsValues[tab.key] = null
 
                 if (tab.key == 'search') {
                     this.state.search = ''
@@ -491,7 +501,7 @@
                 }
             }
 
-            this.updateInfo()
+            this.updateInfo({ skipDefaults: true })
         }
 
         setTabValue(tab) {
@@ -507,7 +517,7 @@
             this.state.fields = JSON.parse(JSON.stringify(injectedFilter.fields))
 
             this.state.fields.forEach(element => {
-                this.state.tabsValues[element.key] = this.defaultTabValue(element.key)
+                this.state.tabsValues[element.key] = null
             });
 
             this.savedFilter.setDefaultFields()
