@@ -121,7 +121,9 @@
                         name: row.name,
                         color: row.color,
                         data: row.data.map((item) => {
-                            const cat = item[0] ? format(item[0]?.split(' ')[0], 'dd.MM.yy', '') : null
+                            const raw = item[0] ? String(item[0]).split(' ')[0] : null
+                            const parsed = raw ? new Date(raw) : null
+                            const cat = parsed && !isNaN(parsed) ? format(parsed, 'dd.MM.yy') : raw
                             categories.push(cat)
                             const value = Number(common.transformPrice(item[1], 2)) || item[1]
                             // Для круговой диаграммы точке нужно имя, иначе
