@@ -651,7 +651,7 @@
             } else if (props.modal.content.type == 'status') {
                 modal.value.field = {
                     ...props.modal.content,
-                    options: props.modal.content.options.map(option => {
+                    options: props.modal.content.options.filter(option => !option.label?.is_hidden).map(option => {
                         return {
                             label: option.label.text,
                             value: option.label.id,

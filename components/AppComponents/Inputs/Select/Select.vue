@@ -402,6 +402,12 @@
         select.setOptions()
     })
 
+    watch(() => props.modelValue, () => {
+        if (props.options.type == 'address' && !select.state.isOpen) {
+            select.setOptions()
+        }
+    })
+
     watch(() => props.options?.edit, (next, prev) => {
         if (next) {
             if (props.options?.focus) {

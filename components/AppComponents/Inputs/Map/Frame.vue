@@ -16,7 +16,8 @@
     const emit = defineEmits([
         'map-ready',
         'route-built',
-        'getSelectedPoints'
+        'getSelectedPoints',
+        'map-click'
     ]);
 
     const props = defineProps({
@@ -184,6 +185,10 @@
             }, {
                 suppressMapOpenBlock: true,
                 yandexMapDisablePoiInteractivity: true,
+            });
+
+            yMap.events.add('click', (event) => {
+                emit('map-click', event.get('coords'));
             });
 
             // Контрол зума по центру по вертикали (слева). Yandex позиционирует

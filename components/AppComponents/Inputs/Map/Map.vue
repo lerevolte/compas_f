@@ -37,6 +37,7 @@
                 defaultZoom: props.frameOptions?.defaultZoom ?? 10
             }"
             @getSelectedPoints="data => emit('getSelectedPoints', data)"
+            @map-click="pickAddressFromMap"
         />
     </div>
 </template>
@@ -49,6 +50,7 @@
     import AppButton from '@AppComponents/Button/Button.vue';
     import MapFrame from './Frame.vue'
     import { Common } from '@/helpers/classes.js'
+    import api from '@/helpers/api.js'
 
     const common = new Common()
 
@@ -122,6 +124,20 @@
         if (typeof v === 'string') return v
         return v.text ?? null
     })
+
+    const pickAddressFromMap = async (coords) => {
+        if (!props.options.edit) return
+        const lat = Number(coords?.[0])
+        const lng = Number(coords?.[1])
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
+        const point = [Number(lat.toFixed(6)), Number(lng.toFixed(6))]
+        const response = await api.callMethod('GET', `/map/geocode?address=${point[0]},${point[1]}`)
+        const found = Array.isArray(response.data) ? response.data[0] : null
+        emit('update:modelValue', {
+            text: found?.text ?? `${point[0]}, ${point[1]}`,
+            coords: point
+        })
+    }
 
     const copyText = (value, buttonRef) => {
         buttonRef.classList.add('button_copy_active')
