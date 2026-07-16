@@ -209,7 +209,7 @@
                 </div>`
 
             const marker = L.marker(point.coords, {
-                icon: L.divIcon({ className: 'custom-div-icon', html, iconAnchor: [13, 13], popupAnchor: [0, -40] }),
+                icon: L.divIcon({ className: 'custom-div-icon', html, iconAnchor: [10, 10], popupAnchor: [0, -40] }),
                 zIndexOffset: 1000
             }).addTo(map)
 
@@ -287,7 +287,7 @@
             </div>`
 
             const combined = L.marker([group[0].lat, group[0].lng], {
-                icon: L.divIcon({ className: 'custom-div-icon', html, iconAnchor: [12, 12] }),
+                icon: L.divIcon({ className: 'custom-div-icon', html, iconAnchor: [10, 10] }),
                 zIndexOffset: 1100
             }).addTo(map)
 

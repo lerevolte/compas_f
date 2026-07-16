@@ -29,7 +29,8 @@
             </div>
         </div>
 
-        <IconSearch class="filter__mobile-search" @click="event => filter.toggleOptions(event)"/>
+        <IconSearchActive v-if="filter.state.activeTabs.length > 0 || filter.state.hiddenTabs.length > 0" class="filter__mobile-search" @click="event => filter.toggleOptions(event)"/>
+        <IconSearch v-else class="filter__mobile-search" @click="event => filter.toggleOptions(event)"/>
 
         <div class="filter__content" v-if="filter.state.fields.length > 0 || filter.state.activeTabs.length > 0">
             <div class="mobile-filter__header">
@@ -267,6 +268,7 @@
     import AppShowMore from '@AppComponents/ShowMore/ShowMore.vue'
     import IconClose from '@AppIcons/Close.vue';
     import IconSearch from '@AppIcons/Input/Search.vue';
+    import IconSearchActive from '@AppIcons/Input/SearchActive.vue';
     import AppButton from '@AppComponents/Button/Button.vue'
     import AppDate from '@AppComponents/Inputs/Date/Date.vue';
     import AppInput from '@AppComponents/Inputs/Input/Input.vue';

@@ -853,7 +853,7 @@
             </div>`;
 
             const combined = L.marker([group[0].lat, group[0].lng], {
-                icon: L.divIcon({ className: 'custom-div-icon', html, iconAnchor: [12, 12] }),
+                icon: L.divIcon({ className: 'custom-div-icon', html, iconAnchor: [10, 10] }),
                 zIndexOffset: 1100
             }).addTo(mapInstance.value);
 
@@ -1351,13 +1351,7 @@
                 </div>`;
 
             const marker = L.marker(task.latLng, {
-                // iconAnchor = центр .route-popup__counter (24×24): счётчик —
-                // первый элемент внутри .route-popup__main с рамкой 1px, поэтому
-                // его центр ≈ (13, 13) от левого-верхнего угла иконки. Так
-                // географическая точка задачи (и центр круга зоны обслуживания,
-                // см. handleMarkerClick/focusRouteTask) совпадает с центром
-                // счётчика, без смещения.
-                icon: L.divIcon({ className: 'custom-div-icon', html, iconAnchor: [13, 13], popupAnchor: [0, -40] }),
+                icon: L.divIcon({ className: 'custom-div-icon', html, iconAnchor: [10, 10], popupAnchor: [0, -40] }),
                 zIndexOffset: 1000
             }).addTo(mapInstance.value);
 
@@ -1748,7 +1742,7 @@
                 </div>
             </div>`;
             const marker = L.marker([addr.coords[0], addr.coords[1]], {
-                icon: L.divIcon({ className: 'custom-div-icon', html, iconAnchor: [15, 15] }),
+                icon: L.divIcon({ className: 'custom-div-icon', html, iconAnchor: [10, 10] }),
                 zIndexOffset: 500
             }).addTo(mapInstance.value);
             marker._selected = false;

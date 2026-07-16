@@ -51,12 +51,12 @@
                 :pageId="props.id"
                 :options="{
                     draggableTarget: '.icon_drag',
-                    isDraggable: true,
+                    isDraggable: canEditProducts,
                     isLocalTable: true,
                     isHaveQuery: false,
                     query: {},
                     isHaveFilter: false,
-                    isPermanentEdit: true,
+                    isPermanentEdit: canEditProducts,
                     isTrash: false,
                     isHaveTopHeader: true,
                     isHaveFooter: false,
@@ -341,6 +341,11 @@
     }
 
     const detail = ref(new Detail())
+    const canEditProducts = computed(() => {
+        const keys = detail.value?.products?.table || []
+        if (!keys.length) return true
+        return keys.some(c => !c.read_only)
+    })
     const socket = inject('socket')
 
     watch(() => props.updateComponent, () => {

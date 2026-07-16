@@ -1,8 +1,8 @@
 <template>
     <div class="logistic-filter">
-        <AppPopup class="logistic-filter__popup" align="right">
+        <AppPopup v-if="hasActiveFilters" class="logistic-filter__popup" align="right">
             <template #header>
-                <IconSearch class="filter__mobile-search"/>
+                <IconSearchActive class="filter__mobile-search"/>
             </template>
             <template #content>
                 <div class="logistic-filter__input">
@@ -28,7 +28,7 @@
 <script setup>
     import './Filter.scss';
     import AppPopup from '@AppComponents/Popup/Popup.vue'
-    import IconSearch from '@AppIcons/Input/Search.vue';
+    import IconSearchActive from '@AppIcons/Input/SearchActive.vue';
     import AppInput from '@AppComponents/Inputs/Input/Input.vue'
     import IconClose from '@AppIcons/Close.vue';
     const emit = defineEmits([
@@ -112,6 +112,10 @@
         }
     }
     const filter = ref(new Filter())
+    const hasActiveFilters = computed(() => {
+        if (!props.modelValue || props.modelValue.length == 0) return false
+        return props.modelValue.some(tab => Array.isArray(tab.value) ? tab.value.some(v => v != null) : tab.value != null)
+    })
     onMounted(() => {
         filter.value.get()
     })
