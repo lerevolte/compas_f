@@ -52,12 +52,21 @@ body {
     font-family: PT Sans;
     overflow-x: hidden;
     min-height: 100vh;
+    overscroll-behavior: none;
     scroll-behavior: smooth;
     scroll-padding-top: var(--headerHeight);
 
     &.body_uncscroll {
         overflow: hidden;
         max-height: 100vh;
+    }
+}
+
+@media (pointer: coarse) {
+    html,
+    body {
+        height: 100%;
+        overflow: hidden;
     }
 }
 
@@ -506,6 +515,11 @@ section {
             }
         }
     }
+}
+
+.icon_search {
+    display: flex;
+    cursor: pointer;
 }
 
 .settings,

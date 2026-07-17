@@ -85,7 +85,7 @@
 
         .icon_search {
             svg {
-                * {
+                [stroke] {
                     stroke: variables.$color-icon-active;
                 }
             }

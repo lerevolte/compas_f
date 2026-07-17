@@ -399,12 +399,12 @@
     border-radius: 4px;
     font-size: 13px;
     font-weight: 500;
-    color: variables.$color-focus;
+    color: variables.$color-icon;
     cursor: pointer;
-    transition: background 0.12s;
+    transition: color 0.12s;
 
     &:hover {
-        background: variables.$color-hover-button;
+        color: variables.$color-icon-active;
     }
 }
 
