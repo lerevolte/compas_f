@@ -322,7 +322,7 @@
                             :item="{
                                 title: field.title,
                                 link: field.is_external_link && field.value ? field.value.external_link ?? null : null,
-                                text: field.is_external_link && field.value ? field.value.value ?? field.value : field.value,
+                                text: field.is_external_link && field.value ? field.value.value ?? field.value : (field.mask ? common.formatByMask(field.value, field.mask) : field.value),
                                 unit: field.unit ?? null
                             }"
                         />
@@ -484,7 +484,7 @@
     
     import AppTextarea from '@AppComponents/Inputs/Textarea/Textarea.vue';
     import AppCheckbox from '@AppComponents/Inputs/Checkbox/Checkbox.vue'
-    import { Field } from '@AppHelpers/classes.js'
+    import { Field, Common } from '@AppHelpers/classes.js'
 
     import { format } from 'date-fns'
     import IconDrag from '@AppIcons/Actions/Drag.vue'
@@ -502,6 +502,7 @@
     import { useUserStore } from '@/stores/userStore.js'
 
     const userStore = useUserStore()
+    const common = new Common()
 
     const emit = defineEmits([
         'update:hidden',

@@ -136,7 +136,7 @@
                                     ...field,
                                     edit: true,
                                     list: field.options,
-                                    isHaveNull: false,
+                                    isHaveNull: true,
                                 }"
                                 v-model="filter.state.tabsValues[field.key]"
                             />
@@ -349,14 +349,6 @@
             };
         }
 
-        defaultTabValue(key) {
-            const field = this.state.fields.find(p => p.key == key)
-            if (field?.type == 'status') {
-                return (field.options ?? []).find(o => !o.label?.is_hidden)?.value ?? null
-            }
-            return null
-        }
-
         // Удаление несохранённых полей
         dropUnsavedFields() {
             console.log('dropUnsavedFields called');
@@ -373,16 +365,6 @@
 
         // Обновление информации
         updateInfo(opts = {}) {
-            if (!opts.skipDefaults) {
-                for (let key in this.state.tabsValues) {
-                    if (this.state.tabsValues[key] == null && this.state.fields.find(p => p.key == key)?.enabled !== false) {
-                        const defaultValue = this.defaultTabValue(key)
-                        if (defaultValue != null) {
-                            this.state.tabsValues[key] = defaultValue
-                        }
-                    }
-                }
-            }
             const setValue = (key, type = null) => {
                 // Трансформация селекта
                 const transformSelect = (item, key, type = null) => {

@@ -109,17 +109,21 @@
     import AppSelect from '@AppComponents/Inputs/Select/Select.vue'
     import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'
 
-    // Типы блоков редактора. Слаги соответствуют структуре detail_text,
-    // которую ждёт публичный сайт (см. BlogController + дамп admin_compas_main).
     const TYPES = [
         { value: 'wrap', label: 'Текст' },
+        { value: 'logistic-program', label: 'Логистическая программа' },
+        { value: 'question', label: 'Вопрос' }
+    ]
+
+    const LEGACY_TYPES = [
         { value: 'check-sts', label: 'Проверка по СТС' },
         { value: 'check-vu', label: 'Проверка по ВУ' },
         { value: 'check-post', label: 'Проверка по постановлению' },
         { value: 'check-gos', label: 'Проверка по гос. номеру' },
-        { value: 'check-inn', label: 'Проверка по ИНН' },
-        { value: 'question', label: 'Вопрос' }
+        { value: 'check-inn', label: 'Проверка по ИНН' }
     ]
+
+    const LOGISTIC_PROGRAM_HTML = '<section class="main-page section_without-background lg-hero"><!--[--><div class="main-page__container"><h1><!--[-->Логистическая программа для грузоперевозок <span class="lg-hero__accent">Бесплатно 24/7 365 дней в году!</span><!--]--></h1><p class="main-page__form-subtitle"> Получите максимальную выгоду от ваших маршрутов. Compas.pro — логистическая программа, которая помогает простраивать оптимальные маршруты, анализировать водителей, повышать эффективность машин и лояльность клиентов </p><div class="main-page__actions lg-hero__actions"><a href="/auth/registration" class=""><button class="button_blue lg-hero__reg"><span><!--[--> Зарегистрируйтесь <!--]--></span></button></a><div class="main-page__fansy-box"><!--[--><button type="button" class="fines__button" data-fancybox="finesBlock" data-src="#video-about"><span><!--[--><div id="video-about" class="video-modal fines-video__top"><iframe width="720" height="405" src="https://rutube.ru/play/embed/9050946b577ad1df9bad0507bbd97195/" frameborder="0" allow="clipboard-write; autoplay" webkitallowfullscreen="" mozallowfullscreen="" allowfullscreen=""></iframe><div class="fines-video__cover"><img src="https://rutube.ru/api/video/9050946b577ad1df9bad0507bbd97195/thumbnail/?redirect=1" alt=""><div class="guide__video-play play-video"><img src="https://compas.pro/landing/images/icons/play-rutube.svg" alt=""></div></div></div><figure class="ibg fines__icon"><img src="https://compas.pro/landing/images/icons/youtube_blue.svg" alt="О сервисе"></figure> О сервисе <span class="button-text"> (4 мин 28 сек) </span><!--]--></span></button><!--]--></div></div></div><figure class="ibg main-page__image"><img src="https://compas.pro/landing/images/logistics/i1.webp" alt="Логистический сервис Компас"></figure><!--]--></section>'
 
     const props = defineProps({
         options: {
@@ -146,7 +150,7 @@
     let uid = 0
 
     function typeLabel(type) {
-        return TYPES.find(t => t.value == type)?.label ?? type
+        return [...TYPES, ...LEGACY_TYPES].find(t => t.value == type)?.label ?? type
     }
 
     // Приведение входного значения к массиву блоков. С бэкенда значение может
@@ -185,6 +189,10 @@
         const block = { _uid: ++uid, type }
 
         if (type == 'wrap') block.body = ''
+        else if (type == 'logistic-program') {
+            block.type = 'wrap'
+            block.body = LOGISTIC_PROGRAM_HTML
+        }
         else if (type == 'question') block.questionId = null
 
         blocks.value.push(block)

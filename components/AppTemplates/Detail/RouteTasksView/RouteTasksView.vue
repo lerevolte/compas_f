@@ -71,10 +71,15 @@
                     <div class="route-tasks-view__task-index">{{ idx + 1 }}</div>
                     <div class="route-tasks-view__task-body">
                         <div
-                            v-for="field in selectedFields"
+                            v-for="field in fieldsForTask(task)"
                             :key="field.key"
                             class="route-tasks-view__task-line"
-                        ><span class="route-tasks-view__task-label">{{ field.title }}: </span><span class="route-tasks-view__task-value" :style="field.set_color && field.color ? { color: field.color } : null">{{ formatValue(task, field) }}</span></div>
+                        ><span class="route-tasks-view__task-label">{{ field.title }}: </span><span class="route-tasks-view__task-value" :style="field.set_color && field.color ? { color: field.color } : null">{{ formatValue(task, field) }}</span><AppButton
+                            v-if="field.type === 'address' && hasValue(task, field)"
+                            class="button_text button_copy route-tasks-view__copy"
+                            title="Скопировать адрес"
+                            @click="event => copyAddress(task, field, event.target)"
+                        /></div>
                     </div>
                 </div>
             </div>
@@ -94,8 +99,10 @@
     import IconDragDotted from '@AppIcons/Actions/DragDotted.vue'
     import IconLoader from '@AppIcons/Loader.vue'
     import { format } from 'date-fns'
+    import { Common } from '@/helpers/classes.js'
     import { useUserStore } from '@/stores/userStore.js'
     const userStore = useUserStore()
+    const common = new Common()
 
     const props = defineProps({
         routeId: { default: null, type: [Number, String] },
@@ -122,6 +129,22 @@
     const hiddenFields = computed(() => allFields.value.filter(f => !f.enabled))
 
     const selectedFields = computed(() => visibleFields.value)
+
+    const hasValue = (task, field) => {
+        const formatted = formatValue(task, field)
+        return formatted !== '—' && formatted !== '' && formatted !== null && formatted !== undefined
+    }
+
+    const fieldsForTask = (task) => selectedFields.value.filter(field => field.visible_always === 1 || hasValue(task, field))
+
+    const copyAddress = (task, field, buttonRef) => {
+        buttonRef.classList.add('button_copy_active')
+        common.copyText(formatValue(task, field))
+
+        setTimeout(() => {
+            buttonRef.classList.remove('button_copy_active')
+        }, 3000)
+    }
 
     // Конфиг полей хранится на бэке (один общий на портал), чтобы переживал
     // перезагрузку и показывался идентично во внешней ссылке (8579).
@@ -174,10 +197,8 @@
                     related_table: col.related_table || null,
                     color: col.color || null,
                     set_color: col.set_color || 0,
+                    visible_always: Number(col.visible_always ?? 0),
                     sort: saved ? (saved.sort ?? i) : i,
-                    // Если есть сохранённый конфиг — берём его enabled; новые поля
-                    // (которых в конфиге нет) скрыты. Без конфига — дефолт
-                    // «Название» и «Адрес».
                     enabled: saved ? !!saved.enabled : (hasConfig ? false : ['name', 'address'].includes(col.key))
                 }
             })

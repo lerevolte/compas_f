@@ -8,6 +8,7 @@ import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 
 import { format, startOfMonth, endOfMonth } from 'date-fns'
+import { Mask } from 'maska'
 import { toast } from 'vue3-toastify';
 import { useUserStore } from '@/stores/userStore.js'
 
@@ -17,6 +18,24 @@ export class Common {
     // Преобразование цены
     transformPrice(price, fixed) {
         return parseFloat(price).toFixed(fixed).replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+    }
+
+    formatByMask(value, mask) {
+        if (value === null || value === undefined || value === '' || !mask || mask == 'email' || typeof value == 'object') return value
+        try {
+            const masked = new Mask({
+                mask,
+                tokens: {
+                    A: { pattern: /[a-zA-Zа-яА-Я]/ },
+                    '#': { pattern: /\d/ },
+                    '*': { pattern: /[a-zA-Z0-9]/ },
+                    S: { pattern: /[0-9а-яА-Я]/ }
+                }
+            }).masked(String(value))
+            return masked || value
+        } catch (e) {
+            return value
+        }
     }
 
     // Преобразование номера
@@ -1868,6 +1887,23 @@ export class HeaderEditable {
             id: id,
             slug: slug,
             type: 'copy',
+        })
+    }
+
+    createTaskFromAddress({columns}) {
+        const keys = ['name', 'address', 'phone', 'time', 'car_requirements', 'employee_requirements', 'service_time', 'comment', 'contact', 'photo', 'client_id', 'weight', 'delivery_price']
+        const defaults = {}
+        for (const key of keys) {
+            const field = this.common.findColumnField(columns, key)
+            if (field && field.value !== undefined && field.value !== null) {
+                defaults[key] = JSON.parse(JSON.stringify(field.value))
+            }
+        }
+        this.emit('openModal', {
+            type: 'create',
+            slug: 'logistic_tasks',
+            id: 0,
+            defaults
         })
     }
 

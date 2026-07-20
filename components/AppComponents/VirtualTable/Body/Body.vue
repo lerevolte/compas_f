@@ -249,8 +249,8 @@
                         </template>
 
                         <div class="table__cell-content" v-else-if="table.body[row.index] && (!table.body[row.index].edit || column.read_only)">
-                            <span class="table__text text" :style="column.set_color && column.color ? { color: column.color } : null" :title="cell.useCellModel(row.index, column).value != null ? `${cell.useCellModel(row.index, column).value}${column.unit ? ' ' + column.unit : ''}` : null" v-if="['text', 'number'].includes(column.type) && (!column.is_external_link || !table.body[row.index][column.key]?.external_link)">
-                                {{ cell.useCellModel(row.index, column).value }}<span class="table__unit" v-if="column.unit && cell.useCellModel(row.index, column).value"> {{ column.unit }}</span>
+                            <span class="table__text text" :style="column.set_color && column.color ? { color: column.color } : null" :title="cell.useCellModel(row.index, column).value != null ? `${common.formatByMask(cell.useCellModel(row.index, column).value, column.mask)}${column.unit ? ' ' + column.unit : ''}` : null" v-if="['text', 'number'].includes(column.type) && (!column.is_external_link || !table.body[row.index][column.key]?.external_link)">
+                                {{ common.formatByMask(cell.useCellModel(row.index, column).value, column.mask) }}<span class="table__unit" v-if="column.unit && cell.useCellModel(row.index, column).value"> {{ column.unit }}</span>
                             </span>
 
                             <a :href="cell.useCellModel(row.index, column, 'external_link').value" target="_blank" class="table__text text" :title="cell.useCellModel(row.index, column, 'value').value" v-else-if="column.type == 'text' && column.is_external_link">

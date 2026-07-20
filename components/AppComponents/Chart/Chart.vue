@@ -105,7 +105,6 @@
             }
         }
 
-        // Установка значений у графика
         set(legend) {
             if (legend && legend.length > 0) {
                 let categories = []
@@ -113,10 +112,32 @@
 
                 const type = props.settings?.type
                 const isPie = type === 'pie'
+
+                if (isPie && legend.length > 1) {
+                    const points = legend
+                        .filter((row, index) => {
+                            const active = props.activeSeries?.[index]?.active ?? row.active
+                            return active === undefined || !!active
+                        })
+                        .map(row => ({
+                            name: row.name,
+                            y: Number(common.transformPrice(row.sum, 2)) || Number(row.sum) || 0
+                        }))
+
+                    this.chart.update({
+                        chart: { type: type },
+                        xAxis: { categories: [] },
+                        series: JSON.parse(JSON.stringify([{
+                            type: type,
+                            name: this.title || 'Итого за период',
+                            data: points
+                        }]))
+                    }, true, true)
+                    return
+                }
+
                 for (let row of legend) {
                     series.push({
-                        // Явно задаём тип серии, иначе при переключении графика
-                        // на круговую серия оставалась линией (8587).
                         type: type,
                         name: row.name,
                         color: row.color,
@@ -126,8 +147,6 @@
                             const cat = parsed && !isNaN(parsed) ? format(parsed, 'dd.MM.yy') : raw
                             categories.push(cat)
                             const value = Number(common.transformPrice(item[1], 2)) || item[1]
-                            // Для круговой диаграммы точке нужно имя, иначе
-                            // Highcharts подписывает сектора дефолтным «Slice» (8587).
                             return isPie ? { name: cat, y: value } : value
                         })
                     })
@@ -293,9 +312,16 @@
 
     watch(() => props.activeSeries, (newType, prev) => {
         if (isEqual(newType, prev)) return
-        
+
+        if (props.settings?.type === 'pie' && chart.value.data?.legend?.length > 1) {
+            chart.value.set(chart.value.data.legend)
+            return
+        }
+
         chart.value.chart.series.forEach((series, index) => {
-            chart.value.chart.series[index].setVisible(props.activeSeries[index].active, false)
+            if (props.activeSeries[index]) {
+                chart.value.chart.series[index].setVisible(props.activeSeries[index].active, false)
+            }
         })
         chart.value.chart.redraw()
     })

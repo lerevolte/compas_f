@@ -133,6 +133,12 @@
     word-break: break-word;
 }
 
+.route-tasks-view__copy {
+    display: inline-flex;
+    margin-left: 8px;
+    font-size: 12px;
+}
+
 .route-tasks-view__empty {
     color: variables.$color-border;
     padding: 20px;
