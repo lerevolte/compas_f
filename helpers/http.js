@@ -51,9 +51,15 @@ function isDirectForbiddenView(url, message) {
     if (typeof window === 'undefined') return false
     if (String(message).trim() != 'Forbidden') return false
     const path = new URL(String(url), window.location.origin).pathname
-    const match = path.match(/^\/api\/objects\/([^/]+)\/([^/]+)\/compose$/)
-    if (!match) return false
-    return window.location.pathname == `/objects/${match[1]}/${match[2]}`
+    const current = window.location.pathname.replace(/\/+$/, '') || '/'
+
+    const detailMatch = path.match(/^\/api\/objects\/([^/]+)\/([^/]+)\/compose$/)
+    if (detailMatch) return current == `/objects/${detailMatch[1]}/${detailMatch[2]}`
+
+    const listMatch = path.match(/^\/api\/objects\/([^/]+)\/compose$/)
+    if (listMatch) return current == `/objects/${listMatch[1]}` || current == `/${listMatch[1]}`
+
+    return false
 }
 
 function JSON_stringify(s, emit_unicode) {

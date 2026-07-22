@@ -110,6 +110,8 @@
         'searchEnter'
     ])
 
+    const clonePrevValue = (value) => value === undefined ? null : JSON.parse(JSON.stringify(value))
+
     class Select {
         constructor() {
             this.state = reactive({
@@ -217,20 +219,20 @@
         changeValue(option) {
             if (props.options.multiple) {
                 if (props.modelValue == null) {
-                    emit('update:prevValue', JSON.parse(JSON.stringify(props.modelValue)))
+                    emit('update:prevValue', clonePrevValue(props.modelValue))
                     emit('update:modelValue', [option.value])
                 } else {
                     if (props.modelValue.includes(option.value)) {
-                        emit('update:prevValue', JSON.parse(JSON.stringify(props.modelValue)))
+                        emit('update:prevValue', clonePrevValue(props.modelValue))
                         emit('update:modelValue', props.modelValue.filter(p => p != option.value))
                     } else {
-                        emit('update:prevValue', JSON.parse(JSON.stringify(props.modelValue)))
+                        emit('update:prevValue', clonePrevValue(props.modelValue))
                         emit('update:modelValue', [...props.modelValue, option.value])
                     }
                 }
             } else {
                 this.toggleOptions()
-                emit('update:prevValue', JSON.parse(JSON.stringify(props.modelValue)))
+                emit('update:prevValue', clonePrevValue(props.modelValue))
                 if (props.options?.isFullOption) {
                     emit('update:modelValue', option)
                 } else {
@@ -246,7 +248,7 @@
             if (props.options.type != 'address') return false
             const coords = parseCoords(value)
             if (!coords) return false
-            emit('update:prevValue', JSON.parse(JSON.stringify(props.modelValue)))
+            emit('update:prevValue', clonePrevValue(props.modelValue))
             emit('update:modelValue', coords)
             this.state.list = [{ label: coords.text, value: coords }]
             this.state.visibleList = this.state.list
@@ -306,7 +308,7 @@
                     // Legacy: значение могло прийти строкой (например, "Москва" для
                     // Главного города). Приводим к {text, coords}, чтобы дальше
                     // работала единая схема и не падал option.label.text.
-                    let option = JSON.parse(JSON.stringify(props.modelValue))
+                    let option = clonePrevValue(props.modelValue)
                     if (typeof option === 'string') {
                         option = { text: option, coords: null }
                     }

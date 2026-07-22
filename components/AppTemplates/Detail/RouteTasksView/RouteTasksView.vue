@@ -74,7 +74,7 @@
                             v-for="field in fieldsForTask(task)"
                             :key="field.key"
                             class="route-tasks-view__task-line"
-                        ><span class="route-tasks-view__task-label">{{ field.title }}: </span><span class="route-tasks-view__task-value" :style="field.set_color && field.color ? { color: field.color } : null">{{ formatValue(task, field) }}</span><AppButton
+                        ><span class="route-tasks-view__task-label">{{ field.title }}: </span><span class="route-tasks-view__task-value" :style="field.set_color && field.color ? { color: field.color } : null">{{ formatValue(task, field) }}</span> <AppButton
                             v-if="field.type === 'address' && hasValue(task, field)"
                             class="button_text button_copy route-tasks-view__copy"
                             title="Скопировать адрес"
@@ -255,6 +255,17 @@
 
     const reload = () => props.isExternal ? loadExternal() : loadTasks()
 
+    const htmlToText = (html) => String(html ?? '')
+        .replace(/<br\s*\/?>/gi, '; ')
+        .replace(/<[^>]*>/g, '')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&amp;/gi, '&')
+        .replace(/&lt;/gi, '<')
+        .replace(/&gt;/gi, '>')
+        .replace(/&quot;/gi, '"')
+        .replace(/\s*;\s*$/, '')
+        .trim()
+
     const formatValue = (task, field) => {
         const raw = task[field.key]
         if (raw === null || raw === undefined || raw === '') return '—'
@@ -264,7 +275,11 @@
         if (field.key === 'products') {
             let products = raw
             if (typeof products === 'string') {
-                try { products = JSON.parse(products) } catch (e) { return raw }
+                try {
+                    products = JSON.parse(products)
+                } catch (e) {
+                    return htmlToText(products) || '—'
+                }
             }
             if (!Array.isArray(products) || products.length === 0) return '—'
             return products.map(p => {
