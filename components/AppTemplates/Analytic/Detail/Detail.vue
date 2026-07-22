@@ -61,6 +61,7 @@
                 }"
                 :table="detail.table"
                 @changeActive="data => detail.changeVisible(data)"
+                @openModal="item => emit('openModal', { id: item.id, slug: item.slug, type: 'open' })"
             />
         </div>
     </div>
