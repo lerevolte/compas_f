@@ -117,6 +117,14 @@
         return opts;
     });
 
+    const isPointVisible = (coords) => {
+        const bounds = typeof yMap.getBounds === 'function' ? yMap.getBounds() : null;
+        if (!bounds) return false;
+        const [[minLat, minLng], [maxLat, maxLng]] = bounds;
+        return coords[0] >= minLat && coords[0] <= maxLat
+            && coords[1] >= minLng && coords[1] <= maxLng;
+    };
+
     const renderPoints = () => {
         if (!yMap || !window.ymaps) return;
         const points = normalizedPoints.value;
@@ -139,8 +147,9 @@
                 placemark.geometry.setCoordinates(coords);
                 placemark.options.set(placemarkOptions.value);
             }
-            const zoom = props.options.defaultZoom ?? 10;
-            yMap.setCenter(coords, zoom, { duration: 0 });
+            if (!isPointVisible(coords)) {
+                yMap.setCenter(coords, yMap.getZoom(), { duration: 0 });
+            }
             return;
         }
 

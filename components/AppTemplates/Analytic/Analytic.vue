@@ -81,6 +81,7 @@
     import api from '@/helpers/api.js'
     import { format } from 'date-fns'
     import routes from '@/helpers/routes.js'
+    import { readAnalyticsRange, writeAnalyticsRange } from '@/helpers/analyticsRange.js'
     import AppChart from '@AppComponents/Chart/Chart.vue'
     import AppDateFilterRange from '@AppComponents/DateFilter/Range.vue'
     import AppSelect from '@AppComponents/Inputs/Select/Select.vue'
@@ -94,7 +95,7 @@
     class Analytics {
         constructor() {
             this.sections = []
-            this.activeRange = [format(new Date(), 'yyyy-MM-dd'), format(new Date(), 'yyyy-MM-dd')]
+            this.activeRange = readAnalyticsRange() ?? [format(new Date(), 'yyyy-MM-dd'), format(new Date(), 'yyyy-MM-dd')]
         }
 
         // Получение всех секций
@@ -134,6 +135,8 @@
     })
 
     const analytics = ref(new Analytics())
+
+    watch(() => analytics.value.activeRange, value => writeAnalyticsRange(value), { deep: true })
 
     onMounted(() => {
         analytics.value.get()

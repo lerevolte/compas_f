@@ -442,7 +442,7 @@
                 return true
             })
             if (table.value.slug == 'addresses' && !row.edit && table.value.permissions?.create_task_p !== 'N') {
-                result = [...result, { name: 'Создать задачу', action: 'createTaskFromAddress', enabled: true }]
+                result = [{ name: 'Создать задачу', action: 'createTaskFromAddress', enabled: true }, ...result]
             }
             return result
         }

@@ -11,7 +11,7 @@
             :ref="el => setSelectRef(el, index)"
             :data-id="index"
             :class="{
-                'select_hidden': isCompactReadonly || normalizedModelValue.value.length - (props.options?.visibleCount + 1 ?? 6) >= index,
+                'select_hidden': isCompactReadonly || index >= ((props.options?.visibleCount ?? 5) + 1),
                 'select_open': selectInstances[index]?.state.isOpen, 
                 'select_disabled': props.options.edit == false, 
                 'select_empty': getActiveOption(index) == undefined || !getActiveOption(index).value

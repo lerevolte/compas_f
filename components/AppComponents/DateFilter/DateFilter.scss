@@ -48,8 +48,9 @@
         cursor: pointer;
     
         &::after {
-            content: "Выбрать день";
+            content: var(--date-filter-label, "Выбрать день");
             position: absolute;
+            white-space: nowrap;
             @include mixins.position(10px, 40px);
         }
 
@@ -66,6 +67,10 @@
                 content: url("/icons/calendarFill.svg");
             }
         }
+    }
+
+    &.date-fitler__date_custom {
+        width: 230px;
     }
 
     .dp__input {

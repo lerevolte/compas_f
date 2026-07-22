@@ -649,9 +649,10 @@
                     options: [...groupFieldOptions, ...modal.value.getTextGroupOptions()],
                 }
             } else if (props.modal.content.type == 'status') {
+                const statusOptions = Array.isArray(props.modal.content.options) ? props.modal.content.options : []
                 modal.value.field = {
                     ...props.modal.content,
-                    options: props.modal.content.options.filter(option => !option.label?.is_hidden).map(option => {
+                    options: statusOptions.filter(option => option.label && !option.label.is_hidden).map(option => {
                         return {
                             label: option.label.text,
                             value: option.label.id,
@@ -666,7 +667,6 @@
                     roles_write: props.modal.content.roles_write ? props.modal.content.roles_write.filter(p => userStore.roles.find(r => r.id == p))  : [],
                     roles_read: props.modal.content.roles_write ? props.modal.content.roles_read.filter(p => userStore.roles.find(r => r.id == p))  : [],
                 }
-                console.log(modal.value.field);
             }
         }
     })

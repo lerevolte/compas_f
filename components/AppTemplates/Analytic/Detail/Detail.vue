@@ -72,6 +72,7 @@
     import { format } from 'date-fns'
     import routes from '@/helpers/routes.js'
     import api from '@/helpers/api.js'
+    import { readAnalyticsRange, writeAnalyticsRange } from '@/helpers/analyticsRange.js'
 	import AppH1 from '@AppComponents/Headers/H1/H1.vue';
     import IconArrowBack from '@AppIcons/ArrowBack.vue';
     import AppChart from '@AppComponents/Chart/Chart.vue'
@@ -109,7 +110,7 @@
             }
             this.activeSeries = []
             this.slug = props.slug ?? router.params.type
-            this.activeRange = props.dateRange ?? [format(new Date(), 'yyyy-MM-dd'), format(new Date(), 'yyyy-MM-dd')]
+            this.activeRange = props.dateRange ?? readAnalyticsRange() ?? [format(new Date(), 'yyyy-MM-dd'), format(new Date(), 'yyyy-MM-dd')]
             this.type = {
                 value: 'line',
                 options: [
@@ -186,4 +187,6 @@
     }
 
     const detail = ref(new Detail())
+
+    watch(() => detail.value.activeRange, value => writeAnalyticsRange(value), { deep: true })
 </script>

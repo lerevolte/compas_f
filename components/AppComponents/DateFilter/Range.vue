@@ -8,8 +8,10 @@
             {{ range.title }}
         </div>
         
-        <AppDate 
+        <AppDate
             class="date-fitler__date"
+            :class="{'date-fitler__date_custom': !!customLabel}"
+            :style="customLabel ? { '--date-filter-label': `'${customLabel}'` } : null"
             v-model="inputDateValue"
             :options="{
                 multiple: true,
@@ -74,4 +76,20 @@
             value: [format(subDays(new Date(), 365), 'yyyy-MM-dd'), format(new Date(), 'yyyy-MM-dd')]
         }
     ] 
+
+    const formatDay = (value) => {
+        const day = String(value ?? '').slice(0, 10)
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return null
+        return day.split('-').reverse().join('.')
+    }
+
+    const customLabel = computed(() => {
+        const value = props.modelValue
+        if (!Array.isArray(value) || value.length < 2) return null
+        if (ranges.some(range => isEqual(range.value, value))) return null
+        const start = formatDay(value[0])
+        const end = formatDay(value[1])
+        if (!start || !end) return null
+        return start === end ? start : `${start} — ${end}`
+    })
 </script>
