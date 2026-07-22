@@ -9,6 +9,7 @@
 
     @media (max-width: 990px) {
         grid-template-columns: 1fr;
+        padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
     }
 
     &_solo {

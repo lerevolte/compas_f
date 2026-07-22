@@ -91,10 +91,14 @@
         const need = isRange ? 8 : 4
         if (digits.length < need) return value
         const d = digits.slice(0, need)
-        const clamp = (str, max) => pad2(Math.min(parseInt(str, 10) || 0, max))
-        let res = `${clamp(d.slice(0, 2), 23)}:${clamp(d.slice(2, 4), 59)}`
+        const clampTime = (h, m) => {
+            let hours = Math.min(parseInt(h, 10) || 0, 24)
+            let minutes = hours === 24 ? 0 : Math.min(parseInt(m, 10) || 0, 59)
+            return `${pad2(hours)}:${pad2(minutes)}`
+        }
+        let res = clampTime(d.slice(0, 2), d.slice(2, 4))
         if (isRange) {
-            res += ` - ${clamp(d.slice(4, 6), 23)}:${clamp(d.slice(6, 8), 59)}`
+            res += ` - ${clampTime(d.slice(4, 6), d.slice(6, 8))}`
         }
         return res
     }
