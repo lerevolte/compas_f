@@ -210,6 +210,20 @@
     if (!getRoute.value.isAuth) {
       socket.value.init(emit)
     }
+
+    if (window.matchMedia('(pointer: coarse)').matches) {
+      const resetWindowScroll = () => {
+        if (window.visualViewport && window.visualViewport.scale > 1) return
+        const active = document.activeElement
+        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return
+        if (window.scrollX || window.scrollY) {
+          window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+        }
+      }
+      window.addEventListener('scroll', resetWindowScroll, { passive: true })
+      window.visualViewport?.addEventListener('resize', () => setTimeout(resetWindowScroll, 50))
+      document.addEventListener('focusout', () => setTimeout(resetWindowScroll, 100))
+    }
   })
 
   const entity = ref(new Entity())

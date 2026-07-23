@@ -399,7 +399,8 @@
 
         // Во внешней ссылке деталку по двойному клику не открываем.
         if (table.value.options?.isExternal) return
-        if (table.value.state == 'edit' || table.value.options?.isPermanentEdit || (cell && ['isChoose'].includes(cell.getAttribute('data-column-key')))) return
+        if (table.value.options?.isAnalytic) return
+        if (table.value.state == 'edit' || table.value.options?.isPermanentEdit || (cell && ['isChoose', 'active', 'clicked'].includes(cell.getAttribute('data-column-key')))) return
         if (event.target.closest('.show-more')) return
         // Support both Element and Event inputs
         const el = elem?.getAttribute ? elem : (elem?.currentTarget || elem?.target)
@@ -409,7 +410,7 @@
         }
     }, (elem, event) => {
         let cell = event.target.closest('.table__cell')
-        if (table.value.state == 'edit' || table.value.options?.isPermanentEdit || (cell && ['isChoose', 'actions'].includes(cell.getAttribute('data-column-key')))) return
+        if (table.value.state == 'edit' || table.value.options?.isPermanentEdit || (cell && ['isChoose', 'actions', 'active', 'clicked'].includes(cell.getAttribute('data-column-key')))) return
         const el = elem?.getAttribute ? elem : (elem?.currentTarget || elem?.target)
         const rowIndex = el?.getAttribute ? el.getAttribute('data-index') : null
         if (table.value.body[rowIndex]?.clicked) return

@@ -26,6 +26,19 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         return navigateTo('/')
     }
 
+    if (userStore.token && to.path.startsWith('/logistic')) {
+        const hasLogistic = (list) => (list || []).some(item =>
+            String(item?.link || '').startsWith('/logistic') ||
+            (item?.children || []).some(child => String(child?.link || '').startsWith('/logistic'))
+        )
+        if (!hasLogistic(menuStore.list)) {
+            await menuStore.get()
+            if (!hasLogistic(menuStore.list)) {
+                return abortNavigation(createError({ statusCode: 403, statusMessage: 'Forbidden', fatal: true }))
+            }
+        }
+    }
+
     // Если есть токен и путь корневой, редиректим на первую ссылку меню
     if (userStore.token && to.path === '/') {
         // Всегда тянем актуальное меню с бэка — в persisted state может лежать

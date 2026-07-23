@@ -85,6 +85,80 @@ import 'leaflet/dist/leaflet.css'  // CSS можно через nuxt.config
 - API base URL — runtimeConfig.public.apiBase, не хардкод
 - API-вызовы — useFetch / $fetch
 - Lodash — через `useLodash` (nuxt-lodash), не прямой импорт
+- Новые комментарии в код не добавлять
+
+## Алиасы импортов (nuxt.config.ts)
+
+- `@AppComponents` → components/AppComponents (базовые UI-компоненты)
+- `@AppTemplates` → components/AppTemplates (крупные блоки: Detail, Logistic, Analytic)
+- `@AppIcons` → components/AppIcons
+- `@AppHelpers` → helpers/
+
+## Ключевые файлы
+
+- `helpers/classes.js` — «ядро» фронта: классы Table (виртуализированная
+  таблица на @tanstack/vue-virtual, useVirtualizer по tableRef), Common
+  (useDoubleClick, уведомления, копирование), History, Columns, Socket,
+  HeaderEditable. Большинство поведений таблиц/деталок меняется здесь.
+- `helpers/http.js` + `helpers/api.js` — обёртка axios. ВАЖНО:
+  `api.callMethod` НЕ реджектится на HTTP-ошибках — резолвится
+  `{data, status}`, статус проверять вручную. 401 → сброс токена и /auth;
+  403 'Forbidden' → полностраничный error только при прямом просмотре
+  (isDirectForbiddenView), в модалке деталка рисует свой экран 403, тостов нет.
+- `helpers/routes.js` — константы всех API-путей (не хардкодить URL в компонентах).
+- `middleware/auth.global.js` — проверка токена; `/` редиректит на первый
+  видимый пункт меню; `/logistic` гейтится наличием пункта логистики в меню
+  (прав нет → пункт удалён бэком → 403).
+- `stores/{userStore,menuStore}.js` — persisted (persist: true, localStorage);
+  учитывать возможный стейл после смены прав.
+
+## Модалки деталок (app.vue)
+
+Деталки открываются стеком модалок (`entity.openModal` в app.vue, до 9 уровней,
+рендер в `#detail__overlay`). При открытии URL подменяется через
+`history.replaceState` на `/objects/{slug}/{id}` (это НЕ навигация роутера),
+title восстанавливается при закрытии (basePageTitle). Событие `openModal`
+пробрасывается вверх из любых таблиц/деталок до app.vue.
+
+## Таблицы (VirtualTable)
+
+- Клики по строке: одинарный = выделение (choseRow), двойной = открыть деталку
+  (`common.useDoubleClick`). Служебные колонки исключаются по data-column-key
+  (isChoose, actions, active, clicked) — новые колонки-чекбоксы добавлять в эти
+  списки в Body.vue. В таблицах аналитики (options.isAnalytic) двойной клик
+  отключён — открытие только по entity-link (колонка name c row.link).
+- Значения ячеек типа json (например «Состав») рендерятся через v-html
+  (`Название, <b> N шт.</b>` через запятую) — формат задаёт
+  setFieldValue/useCellModel в classes.js.
+- Тексты истории со `<span data-slug data-id>` становятся ссылками на объекты.
+
+## Контракт страницы (pages/*)
+
+Каждая страница обязана:
+1. Отдать элемент `id="mobile-menu-target"` (обычно на AppH1 в шапке) — туда
+   телепортируется бургер мобильного меню (Menu.vue); без него бургер пропадает.
+2. Выставить title через `useHead({ title: '... | Compas.pro' })`.
+Страница `/` — транзитная (редирект по меню из middleware), но обязана иметь
+и таргет, и title (см. pages/index.vue).
+
+## Скролл на тач-устройствах (не ломать)
+
+При `@media (pointer: coarse)` у html/body стоит `overflow: hidden` —
+скроллером служит `.page` (assets/default.scss). iOS Safari может сместить
+window (фокус инпута/клавиатура) и смещение застревает («пружинит, не
+долистать до верха/низа»); в app.vue стоит пиннинг window-скролла для
+pointer:coarse (не срабатывает при фокусе в инпуте и pinch-zoom) — не удалять.
+
+## Realtime
+
+`Socket` (classes.js) слушает события бэка (ObjectUpdated/HistoryUpdated и др.)
+и копит изменения; таблицы показывают плашку «N изменений [Загрузить]».
+У модалок отдельная логика flushPendingOwn при закрытии стека (app.vue).
+
+## Тесты
+
+Автотестов на фронте нет; проверка — `npm run generate` (обязан пройти без
+ошибок) и ручная проверка страниц с картой.
 
 ## Что НЕ делать
 

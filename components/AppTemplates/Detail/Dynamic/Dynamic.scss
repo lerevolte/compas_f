@@ -1,2 +1,34 @@
 @use '@/assets/variables.scss' as variables;
 @use '@/assets/mixins.scss' as mixins;
+
+.dynamic__forbidden {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    flex: 1;
+    padding: 60px 20px;
+
+    .dynamic__forbidden-code {
+        font-size: 64px;
+        line-height: 1;
+        font-weight: 700;
+        color: variables.$color-icon;
+    }
+
+    .dynamic__forbidden-title {
+        margin-top: 12px;
+        font-size: variables.$font-size-h2;
+        font-weight: 700;
+        color: variables.$color-black;
+    }
+
+    .dynamic__forbidden-text {
+        margin-top: 8px;
+        max-width: 420px;
+        font-size: variables.$font-size-default;
+        line-height: 1.4;
+        color: variables.$color-scroll;
+    }
+}

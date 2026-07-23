@@ -35,6 +35,10 @@
         return 'Произошла ошибка. Попробуйте обновить страницу или вернуться на главную.'
     })
 
+    useHead({
+        title: computed(() => `${title.value} | Compas.pro`)
+    })
+
     const goHome = () => {
         clearError({ redirect: '/' })
     }

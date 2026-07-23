@@ -74,7 +74,7 @@
                             v-for="field in fieldsForTask(task)"
                             :key="field.key"
                             class="route-tasks-view__task-line"
-                        ><span class="route-tasks-view__task-label">{{ field.title }}: </span><span class="route-tasks-view__task-value" :style="field.set_color && field.color ? { color: field.color } : null">{{ formatValue(task, field) }}</span> <AppButton
+                        ><span class="route-tasks-view__task-label">{{ field.title }}: </span><span v-if="field.key === 'products'" class="route-tasks-view__task-value" :style="field.set_color && field.color ? { color: field.color } : null" v-html="formatProductsHtml(task[field.key]) || '—'"></span><span v-else class="route-tasks-view__task-value" :style="field.set_color && field.color ? { color: field.color } : null">{{ formatValue(task, field) }}</span> <AppButton
                             v-if="field.type === 'address' && hasValue(task, field)"
                             class="button_text button_copy route-tasks-view__copy"
                             title="Скопировать адрес"
@@ -266,32 +266,34 @@
         .replace(/\s*;\s*$/, '')
         .trim()
 
+    const formatProductsHtml = (raw) => {
+        if (raw === null || raw === undefined || raw === '') return ''
+        let products = raw
+        if (typeof products === 'string') {
+            try {
+                products = JSON.parse(products)
+            } catch (e) {
+                return ''
+            }
+        }
+        if (!Array.isArray(products) || products.length === 0) return ''
+        return products.map(p => {
+            if (!p) return ''
+            let name = p.name
+            if (typeof name === 'object' && name !== null) {
+                name = name.value ?? name.text ?? ''
+            }
+            if (Array.isArray(name)) name = name[0] ?? ''
+            return `${name}, <b> ${p.count} шт.</b>`
+        }).join(', ')
+    }
+
     const formatValue = (task, field) => {
         const raw = task[field.key]
         if (raw === null || raw === undefined || raw === '') return '—'
 
-        // products хранится JSON-строкой и не декодируется на бэке (поле явно
-        // исключено). Рендерим как "Название × количество" через запятую.
         if (field.key === 'products') {
-            let products = raw
-            if (typeof products === 'string') {
-                try {
-                    products = JSON.parse(products)
-                } catch (e) {
-                    return htmlToText(products) || '—'
-                }
-            }
-            if (!Array.isArray(products) || products.length === 0) return '—'
-            return products.map(p => {
-                let name = p?.name
-                if (typeof name === 'object' && name !== null) {
-                    name = name.value ?? name.text ?? ''
-                }
-                if (Array.isArray(name)) name = name[0] ?? ''
-                name = String(name || 'Товар').trim()
-                const count = p?.count ?? 1
-                return `${name} × ${count}`
-            }).join('; ')
+            return htmlToText(formatProductsHtml(raw)) || '—'
         }
 
         if (field.type === 'address') {

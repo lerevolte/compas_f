@@ -1,6 +1,12 @@
 <template>
     <IconLoader class="detail_loader" v-if="detail.loading"/>
 
+    <div class="dynamic__forbidden" v-else-if="detail.forbidden">
+        <div class="dynamic__forbidden-code">403</div>
+        <p class="dynamic__forbidden-title">Доступ запрещён</p>
+        <p class="dynamic__forbidden-text">У вас нет прав для просмотра этого объекта. Обратитесь к администратору портала, чтобы получить доступ.</p>
+    </div>
+
     <template v-else>
         <ColumnFields 
             v-if="props.tabs.active?.tab == 'order' || props.options.isModule"
@@ -227,6 +233,7 @@
     class Detail {
         constructor() {
             this.loading = false
+            this.forbidden = false
             this.products = {
                 table: [],
                 list: []
@@ -241,6 +248,7 @@
             try {
                 let response = null
                 this.loading = true
+                this.forbidden = false
 
 
                 if (props.options.isExternal) {
@@ -258,6 +266,11 @@
                     response = await api.callMethod('GET', `${route}${queryString}`)
                     socket.value.set({slug: props.slug, id: props.id})
                     this.socket = socket.value.entities[props.slug]?.details[props.id]
+                }
+
+                if (response?.status == 403) {
+                    this.forbidden = true
+                    return
                 }
 
                 if (!props.options.isModule) {

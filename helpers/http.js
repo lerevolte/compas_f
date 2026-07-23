@@ -30,7 +30,7 @@ export default {
                         showError(createError({ statusCode: 403, statusMessage: 'Forbidden', fatal: true }))
                     } else {
                         const message = error.response?.data?.message
-                        const hiddenMessages = ['Entity not found', 'Object not found']
+                        const hiddenMessages = ['Entity not found', 'Object not found', 'Forbidden']
                         if (message && !hiddenMessages.includes(String(message).trim())) {
                             common.showNotification({title: 'Ошибка', description: message})
                         }
@@ -50,6 +50,7 @@ export default {
 function isDirectForbiddenView(url, message) {
     if (typeof window === 'undefined') return false
     if (String(message).trim() != 'Forbidden') return false
+    if (document.getElementById('detail__overlay')) return false
     const path = new URL(String(url), window.location.origin).pathname
     const current = window.location.pathname.replace(/\/+$/, '') || '/'
 
