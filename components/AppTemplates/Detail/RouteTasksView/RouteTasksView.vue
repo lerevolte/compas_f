@@ -273,7 +273,9 @@
             try {
                 products = JSON.parse(products)
             } catch (e) {
-                return ''
+                return String(raw)
+                    .replace(/<br\s*\/?>\s*$/i, '')
+                    .replace(/<br\s*\/?>/gi, ', ')
             }
         }
         if (!Array.isArray(products) || products.length === 0) return ''
