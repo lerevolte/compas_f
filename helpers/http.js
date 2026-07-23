@@ -60,6 +60,12 @@ function isDirectForbiddenView(url, message) {
     const listMatch = path.match(/^\/api\/objects\/([^/]+)\/compose$/)
     if (listMatch) return current == `/objects/${listMatch[1]}` || current == `/${listMatch[1]}`
 
+    if (current.startsWith('/logistic') && (
+        path.startsWith('/api/routes') ||
+        path.startsWith('/api/logistic/') ||
+        path.startsWith('/api/analytics/logistics')
+    )) return true
+
     return false
 }
 

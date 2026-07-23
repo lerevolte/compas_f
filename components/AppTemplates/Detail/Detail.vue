@@ -18,7 +18,7 @@
                     v-model="detail.header.name"
                 />
             </AppH1>
-            <div class="detail-page__actions" v-if="!props.is_external" v-show="!detail.header.editTitle && !props.isGlobalEdit">
+            <div class="detail-page__actions" v-if="!props.is_external && !detail.forbidden" v-show="!detail.header.editTitle && !props.isGlobalEdit">
                 <IconEdit v-if="!detail.readonly" @click="() => detail.header.initEditTitle({
                     textarea: textareaRef.textareaRef.querySelector('textarea'),
                     columns: detail.columns,
@@ -210,6 +210,7 @@
             this.isGlobalEdit = false
             this.isCopy = false
             this.isTrash = false
+            this.forbidden = false
             this.permissions = {}
             this.readonly = false
             this.actions = {
@@ -253,6 +254,10 @@
         setPermissions({permissions, readonly}) {
             this.permissions = permissions || {}
             this.readonly = !!readonly
+        }
+
+        setForbidden(value) {
+            this.forbidden = !!value
         }
 
         headerActions() {

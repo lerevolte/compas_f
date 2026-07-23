@@ -249,6 +249,7 @@
                 let response = null
                 this.loading = true
                 this.forbidden = false
+                emit('action', { action: 'setForbidden', value: false })
 
 
                 if (props.options.isExternal) {
@@ -270,6 +271,7 @@
 
                 if (response?.status == 403) {
                     this.forbidden = true
+                    emit('action', { action: 'setForbidden', value: true })
                     return
                 }
 

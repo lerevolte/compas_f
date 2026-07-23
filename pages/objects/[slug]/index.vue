@@ -2,14 +2,14 @@
     <main>
 		<div class="page__header page__header_table">
 			<AppH1 id="mobile-menu-target">
-				{{ metaJSON[props.slug]?.title }}
+				{{ metaJSON[pageSlug]?.title }}
 			</AppH1>
 
 			<div id="filter-container"></div>
 
 			<AppButton v-if="canCreate" class="button_fill" @click="emit('openModal', {
 				type: 'create',
-				slug: props.slug,
+				slug: pageSlug,
 				id: '0'
 			})">
 				<AppIconPlus />
@@ -52,6 +52,7 @@
 
 	const tableComp = ref(null)
 	const canCreate = computed(() => tableComp.value?.table?.permissions?.create_p !== 'N')
+	const pageSlug = computed(() => props.slug || router.params.slug)
 
 	const props = defineProps({
 		entity: {
@@ -71,9 +72,12 @@
 	onMounted(() => {
 
 		setTimeout(() => {
-			useHead({
-				title: `${metaJSON[props.slug]?.title} | Compas.pro`
-			})
+			const title = metaJSON[pageSlug.value]?.title
+			if (title) {
+				useHead({
+					title: `${title} | Compas.pro`
+				})
+			}
 		}, 100);
 	})
 
