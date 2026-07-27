@@ -25,12 +25,12 @@
                             <IconDrag class="redactor__drag" />
                             <span class="redactor__item-title">{{ typeLabel(block.type) }}</span>
                             <button type="button" class="redactor__move" title="Переместить вверх" :disabled="index == 0" @click="moveBlock(index, -1)">
-                                <svg width="8" height="5" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg width="10" height="6" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M0.5 7L7 1L13.5 7" stroke="currentColor" stroke-width="2" />
                                 </svg>
                             </button>
                             <button type="button" class="redactor__move" title="Переместить вниз" :disabled="index == blocks.length - 1" @click="moveBlock(index, 1)">
-                                <svg width="8" height="5" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg width="10" height="6" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M0.5 1L7 7L13.5 1" stroke="currentColor" stroke-width="2" />
                                 </svg>
                             </button>
