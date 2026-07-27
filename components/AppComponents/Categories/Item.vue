@@ -4,10 +4,10 @@
             {{ props.item.label }}
         </span>
 
-        <AppShowMore 
-            v-if="props.item.value != 1 && props.modalActions"
+        <AppShowMore
+            v-if="props.item.value != 1 && actions.length > 0"
             :isPreventBottom="true"
-            :options="props.modalActions"
+            :options="actions"
             @initClick="action => emit('action', {action: action, value: props.item})"
         />
     </div>
@@ -16,8 +16,9 @@
 <script setup>
     import './Categories.scss';
 
+    import { computed } from 'vue'
 	import AppShowMore from '@AppComponents/ShowMore/ShowMore.vue'
-    
+
     const emit = defineEmits([
         'action'
     ])
@@ -42,5 +43,10 @@
             ],
             type: Object
         },
+    })
+
+    const actions = computed(() => {
+        const list = props.modalActions || []
+        return props.item?.is_permanent ? list.filter(a => a.action != 'initDelete') : list
     })
 </script>

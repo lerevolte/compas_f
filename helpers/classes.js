@@ -2311,12 +2311,15 @@ export class Section {
                 })
             }
 
-            const response = await api.callMethod('POST', routes.detail.edit_fields.replaceAll('${slug}', slug), {
+            const saveRoute = options?.isExternal
+                ? routes.external_link.save.replace('${token}', pageId)
+                : routes.detail.edit_fields.replaceAll('${slug}', slug)
+            const response = await api.callMethod('POST', saveRoute, {
                 rows: [
                     request
                 ]
             })
-    
+
             for (let column in columns) {
                 for (let section of columns[column]) {
                     for (let field of section.fields) {

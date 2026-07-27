@@ -194,17 +194,17 @@
 
                 <!-- Set Update Group -->
                 <div class="settings__list settings__list_group" v-if="settings.nest.active != null && settings.nest.active.value == 'updateGroup'">
-                    <div 
-                        class="settings__item popup__option settings__item_submenu" 
-                        v-for="field in props.list.filter(p => p.children.length > 0)" 
+                    <div
+                        class="settings__item popup__option settings__item_submenu"
+                        v-for="field in props.list.filter(p => p.is_group || (p.children || []).length > 0)"
                         :key="field.id"
                         @click="settings.nest.initUpdate(field)"
                     >
-                        {{ field.name }}
+                        {{ field.name || 'Без названия' }}
                         <SelectArrowSubmenu />
-                    </div>    
+                    </div>
 
-                    <div class="settings__item popup__option popup__option_disable" v-show="props.list.filter(p => p.children.length > 0).length == 0">
+                    <div class="settings__item popup__option popup__option_disable" v-show="props.list.filter(p => p.is_group || (p.children || []).length > 0).length == 0">
                         Групп нет
                     </div>
                 </div>
@@ -214,7 +214,7 @@
 
                 <!-- Update Group -->
                 <div class="settings__list settings__list_group" v-if="settings.nest.active != null && settings.nest.active.value == 'initGroup'">
-                    <div class="settings__item popup__option" @click="settings.nest.initName(settings.nest.templateField.name)">
+                    <div class="settings__item popup__option popup__option_stay" @click="settings.nest.initName(settings.nest.templateField.name)">
                         Название: {{ settings.nest.templateField.name }}
                     </div>
                     <div class="settings__item popup__option settings__item_submenu" @click="settings.nest.set({label: 'Сущности', value: 'isCheck'})">
@@ -225,9 +225,9 @@
                         Порядок
                         <SelectArrowSubmenu />
                     </div>
-                    <div 
-                        v-show="settings.nest.templateField.list.filter(p => p.enabled).length > 0 || settings.nest.templateField.name != ''" 
-                        class="settings__item popup__option popup__option_blue" 
+                    <div
+                        v-show="settings.nest.templateField.list.filter(p => p.enabled).length > 0 && settings.nest.templateField.name != ''"
+                        class="settings__item popup__option popup__option_blue"
                         @click="settings.nest.save()"
                     >
                         Сохранить
@@ -484,8 +484,10 @@
                 })
             } else if (this.statusTemplate == 'update') {
                 let findedLink = visible.value.find(item => item.id == this.templateField.id) ?? hidden.value.find(item => item.id == this.templateField.id)
-                findedLink.name = this.templateField.name
-                findedLink.children = JSON.parse(JSON.stringify(this.templateField.list))
+                if (findedLink) {
+                    findedLink.name = this.templateField.name
+                    findedLink.children = JSON.parse(JSON.stringify(this.templateField.list))
+                }
             }
 
             for (let field of this.templateField.list) {

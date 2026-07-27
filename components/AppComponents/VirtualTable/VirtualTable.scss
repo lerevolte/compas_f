@@ -571,6 +571,13 @@
           .select__content {
             margin-top: 0;
             min-height: 40px;
+            max-height: 40px;
+            overflow: hidden;
+          }
+
+          &.select_open .select__content {
+            max-height: none;
+            overflow: visible;
           }
         }
       }
@@ -611,6 +618,11 @@
 
     .form__item_select .select.select_multiple .select__content {
       min-height: 30px;
+      max-height: 30px;
+    }
+
+    .form__item_select .select.select_open.select_multiple .select__content {
+      max-height: none;
     }
 
     .form__item_select .select.select_multiple input {

@@ -137,7 +137,8 @@ export default {
         delete: '/external-links/${token}',
         table: '/external/${token}/table/${slug}',
         route_tasks: '/external/${token}/route-tasks',
-        route_map: '/external/${token}/route-map'
+        route_map: '/external/${token}/route-map',
+        save: '/external/${token}/batch'
     },
     productStats: {
         products: '/product-stats/products',
