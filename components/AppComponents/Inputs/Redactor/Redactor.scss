@@ -77,6 +77,34 @@
     border-bottom: none;
 }
 
+.redactor__move {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 4px;
+    color: #a6b7d4;
+    transition: 0.1s all;
+
+    &:hover:not(:disabled) {
+        background: variables.$color-border-light;
+        color: variables.$color-focus;
+    }
+
+    &:disabled {
+        opacity: 0.35;
+        cursor: default;
+    }
+}
+
+.redactor_dragging .redactor__move {
+    visibility: hidden;
+}
+
 .redactor__remove {
     display: flex;
     align-items: center;
