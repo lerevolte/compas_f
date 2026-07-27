@@ -18,21 +18,11 @@
                 fallback-class="draggable-fallback"
                 @end="emitChange"
             >
-                <template #item="{ element: block, index }">
+                <template #item="{ element: block }">
                     <div class="redactor__item" :class="`redactor__item_${block.type}`">
                         <div class="redactor__item-head">
                             <IconDrag class="redactor__drag" />
                             <span class="redactor__item-title">{{ typeLabel(block.type) }}</span>
-                            <button type="button" class="redactor__move" title="Переместить вверх" :disabled="index == 0" @click="moveBlock(index, -1)">
-                                <svg width="12" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M0.5 7L7 1L13.5 7" stroke="currentColor" stroke-width="1.5" />
-                                </svg>
-                            </button>
-                            <button type="button" class="redactor__move" title="Переместить вниз" :disabled="index == blocks.length - 1" @click="moveBlock(index, 1)">
-                                <svg width="12" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M0.5 1L7 7L13.5 1" stroke="currentColor" stroke-width="1.5" />
-                                </svg>
-                            </button>
                             <button type="button" class="redactor__remove" title="Удалить блок" @click="removeBlock(block)">
                                 <IconClose />
                             </button>
@@ -207,16 +197,6 @@
 
         blocks.value.push(block)
         modal.value = { state: false, type: 'wrap' }
-        emitChange()
-    }
-
-    function moveBlock(index, offset) {
-        const target = index + offset
-        if (target < 0 || target >= blocks.value.length) return
-        const items = [...blocks.value]
-        const [moved] = items.splice(index, 1)
-        items.splice(target, 0, moved)
-        blocks.value = items
         emitChange()
     }
 

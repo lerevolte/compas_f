@@ -46,7 +46,6 @@
     })
 
     const actions = computed(() => {
-        const list = props.modalActions || []
-        return props.item?.is_permanent ? list.filter(a => a.action != 'initDelete') : list
+        return props.item?.is_permanent ? [] : (props.modalActions || [])
     })
 </script>

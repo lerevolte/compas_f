@@ -175,6 +175,7 @@
                             menu.visible = val.filter(item => !item.is_hidden)
                             menu.hidden = val.filter(item => item.is_hidden)
                             menu.updateSortOrder()
+                            menu.save(null)
                         }"
                     />
                     <AppSave

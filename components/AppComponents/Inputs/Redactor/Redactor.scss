@@ -50,6 +50,17 @@
     }
 }
 
+.redactor .redactor__item-head {
+    .icon_drag.redactor__drag {
+        opacity: 0;
+        transition: 0.1s all;
+    }
+
+    &:hover .icon_drag.redactor__drag {
+        opacity: 1;
+    }
+}
+
 .redactor__remove {
     display: flex;
     align-items: center;
