@@ -61,6 +61,22 @@
     }
 }
 
+.redactor.redactor_dragging .redactor__item-head .icon_drag.redactor__drag {
+    opacity: 1;
+}
+
+.redactor_dragging .redactor__item .redactor__item-body,
+.redactor__item.draggable-ghost .redactor__item-body,
+.redactor__item.draggable-fallback .redactor__item-body {
+    display: none;
+}
+
+.redactor_dragging .redactor__item .redactor__item-head,
+.redactor__item.draggable-ghost .redactor__item-head,
+.redactor__item.draggable-fallback .redactor__item-head {
+    border-bottom: none;
+}
+
 .redactor__remove {
     display: flex;
     align-items: center;

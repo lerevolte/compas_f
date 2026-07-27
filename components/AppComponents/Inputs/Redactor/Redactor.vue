@@ -1,5 +1,5 @@
 <template>
-    <div class="redactor">
+    <div class="redactor" :class="{ 'redactor_dragging': isDragging }">
         <label class="blank__title" v-if="props.options.title && props.options.title != ''">
             {{ props.options.title }}
         </label>
@@ -16,7 +16,8 @@
                 drag-class="draggable-drag"
                 ghost-class="draggable-ghost"
                 fallback-class="draggable-fallback"
-                @end="emitChange"
+                @start="isDragging = true"
+                @end="onDragEnd"
             >
                 <template #item="{ element: block }">
                     <div class="redactor__item" :class="`redactor__item_${block.type}`">
@@ -146,6 +147,7 @@
     const questions = ref([])
     const blocks = ref([])
     const modal = ref({ state: false, type: 'wrap' })
+    const isDragging = ref(false)
 
     let uid = 0
 
@@ -197,6 +199,11 @@
 
         blocks.value.push(block)
         modal.value = { state: false, type: 'wrap' }
+        emitChange()
+    }
+
+    function onDragEnd() {
+        isDragging.value = false
         emitChange()
     }
 
