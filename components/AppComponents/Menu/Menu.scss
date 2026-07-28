@@ -744,3 +744,23 @@
         pointer-events: auto;
     }
 }
+@media (max-width: 990px) {
+    .popup__content.menu__popup {
+        z-index: 2001;
+        width: calc(100vw - 30px);
+        max-width: none;
+        min-width: 0;
+        gap: 5px;
+        box-shadow: none;
+        background: variables.$color-white;
+
+        .popup__option {
+            background-color: variables.$color-background;
+            border: 1px solid #eeeff1;
+            border-radius: 5px;
+            font-size: 15px;
+            font-weight: 600;
+            padding: 15px;
+        }
+    }
+}

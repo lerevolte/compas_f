@@ -26,6 +26,7 @@
                 fields: detail.history.events,
                 loading: detail.history.loading
             }"
+            :eventsVisibility="detail.eventsVisibility"
             :pageId="props.id"
             :headerName="props.headerName"
             @action="action => action.action == 'get' ? detail.get() : emit('action', action)"
@@ -241,6 +242,11 @@
             this.socket = null
             this.history = new History()
             this.columns = new Columns()
+            this.eventsVisibility = {
+                visible: true,
+                has_roles_read: false,
+                roles_read: []
+            }
         }
 
         // Получение данных
@@ -252,7 +258,10 @@
                 emit('action', { action: 'setForbidden', value: false })
 
 
-                if (props.options.isExternal) {
+                if (props.options.isExternal && props.options.isModule) {
+                    const route = routes.external_link.module.replace('${token}', props.id).replace('${tab}', props.tabs.active.tab)
+                    response = await api.callMethod('GET', route)
+                } else if (props.options.isExternal) {
                     const route = routes.detail.external.replace('${token}', props.id)
                     response = await api.callMethod('GET', route)
                 } else if (props.options.isModule) {
@@ -341,6 +350,11 @@
                 this.products.table = response.data.table.tableKeys
                 this.products.list = response.data.table.tableBody
                 this.history.get(response.data)
+                this.eventsVisibility = response.data.events_visibility ?? {
+                    visible: true,
+                    has_roles_read: false,
+                    roles_read: []
+                }
                 this.columns.get(response.data.detail)
                 emit('action', { action: 'getColumns', value: response.data.detail.columns })
                 emit('action', { action: 'setPermissions', value: { permissions: response.data.permissions || {}, readonly: !!response.data.detail?.readonly } })

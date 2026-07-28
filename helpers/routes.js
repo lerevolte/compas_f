@@ -59,6 +59,7 @@ export default {
     tabs: {
         update: '/entities/${slug}/menu',
         settings: '/tabs/${slug}/permissions',
+        events_visibility: '/tabs/${slug}/events-visibility',
         reset: '/entities/${slug}/menu/reset',
 
     },
@@ -136,6 +137,7 @@ export default {
         create: '/external-links',
         delete: '/external-links/${token}',
         table: '/external/${token}/table/${slug}',
+        module: '/external/${token}/module/${tab}',
         route_tasks: '/external/${token}/route-tasks',
         route_map: '/external/${token}/route-map',
         save: '/external/${token}/batch'

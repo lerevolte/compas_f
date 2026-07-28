@@ -2,6 +2,7 @@
     <div class="history">
         <div class="history__header">
             {{ props.title }}
+            <slot name="actions" />
         </div>
         <div class="history__body">
             <div class="history__group history-group" v-for="group in Object.keys(history.list)" :key="group">

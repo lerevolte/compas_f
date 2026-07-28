@@ -48,14 +48,20 @@
                 <AppButon class="button_text column-fields__button" @click="section.initCreate(index)" v-if="!props.options.isDisableFooter && !props.options.isGlobalEdit && !props.options?.isModule && userStore.user?.is_admin">
                     Создать раздел 
                 </AppButon>
-                <AppHistory 
-                    v-if="props.options.isHaveHistory && index == 'column_2'"
+                <AppHistory
+                    v-if="props.options.isHaveHistory && index == 'column_2' && props.eventsVisibility?.visible !== false"
                     :title="'События'"
                     :history="props.history.fields"
                     :loading="props.history.loading"
                     @openModal="item => emit('openModal', item)"
                     @showMoreHistory="page => emit('showMoreHistory', page)"
-                />
+                >
+                    <template #actions v-if="userStore.user?.is_admin && !props.options.isExternal && props.slug">
+                        <span class="icon-action" @click="initEventsModal()">
+                            <IconActionsSettings />
+                        </span>
+                    </template>
+                </AppHistory>
             </template>
         </draggable> 
 
@@ -111,6 +117,50 @@
                 />
             </AppModalWarning>
         </teleport>
+        <teleport to="#menu__overlay" v-if="eventsModal.state">
+            <AppModalWarning
+                :options="{
+                    title: 'Настройки раздела',
+                    action: 'update',
+                    actionTitle: 'Сохранить',
+                    template: 'slot'
+                }"
+                :loading="eventsModal.loading"
+                @update="saveEventsVisibility()"
+                @close="eventsModal.state = false"
+            >
+                <div class="modal__fields">
+                    <AppBlank
+                        :item="{
+                            title: 'Раздел',
+                            text: 'События'
+                        }"
+                    />
+                    <AppCheckbox
+                        v-model="eventsModal.content.has_roles_read"
+                        :options="{
+                            title: 'Ограничить видимость раздела',
+                        }"
+                    />
+                    <AppSelect
+                        v-show="eventsModal.content.has_roles_read"
+                        v-model="eventsModal.content.roles_read"
+                        :isPreventBottom="true"
+                        :options="{
+                            id: 'events_roles_read',
+                            title: 'Роли',
+                            list: userStore.roles.map(p => {
+                                return {
+                                    value: p.id,
+                                    label: p.label
+                                }
+                            }),
+                            multiple: true
+                        }"
+                    />
+                </div>
+            </AppModalWarning>
+        </teleport>
         <teleport to="#menu__overlay" v-if="field.modal.state">
             <FieldModal 
                 :columns="columns.list"
@@ -144,8 +194,10 @@
 
 <script setup>
     import './ColumnFields.scss';
-    
+
     import draggable from 'vuedraggable';
+    import api from '@/helpers/api.js'
+    import routes from '@/helpers/routes.js'
     import { Section, Field } from '@AppHelpers/classes.js'
     import AppButon from '@AppComponents/Button/Button.vue';
     import AppHistory from '@AppComponents/History/History.vue';
@@ -154,6 +206,10 @@
     import AppTileSection from '@AppComponents/TileSection/TileSection.vue';
     import MassAction from '@AppComponents/MassAction/MassAction.vue'
     import ModalValidate from './Validate/Validate.vue'
+    import IconActionsSettings from '@AppIcons/Actions/Settings.vue';
+    import AppBlank from '@AppComponents/Blank/Blank.vue'
+    import AppCheckbox from '@AppComponents/Inputs/Checkbox/Checkbox.vue'
+    import AppSelect from '@AppComponents/Inputs/Select/Select.vue'
 
     import AppInput from '@AppComponents/Inputs/Input/Input.vue';
     import { useUserStore } from '@/stores/userStore.js'
@@ -197,6 +253,14 @@
                     current_page: 1
                 }
             },
+            type: Object
+        },
+        eventsVisibility: {
+            default: () => ({
+                visible: true,
+                has_roles_read: false,
+                roles_read: []
+            }),
             type: Object
         },
         options: {
@@ -311,6 +375,40 @@
     const columns = ref(new Columns())
     const section = ref(new Section(props.slug))
     const field = ref(new Field())
+
+    const eventsModal = ref({
+        state: false,
+        loading: false,
+        content: {
+            has_roles_read: false,
+            roles_read: []
+        }
+    })
+
+    const initEventsModal = () => {
+        eventsModal.value.content = {
+            has_roles_read: !!props.eventsVisibility?.has_roles_read,
+            roles_read: [...(props.eventsVisibility?.roles_read ?? [])]
+        }
+        eventsModal.value.state = true
+    }
+
+    const saveEventsVisibility = async () => {
+        try {
+            eventsModal.value.loading = true
+            const content = eventsModal.value.content
+            const roles = content.has_roles_read ? content.roles_read : []
+            await api.callMethod('PUT', routes.tabs.events_visibility.replace('${slug}', props.slug), {
+                has_roles_read: content.has_roles_read && roles.length > 0,
+                roles_read: roles
+            })
+        } catch (error) {
+            console.log(error);
+        } finally {
+            eventsModal.value.loading = false
+            eventsModal.value.state = false
+        }
+    }
 
     onMounted(() => {
         columns.value.get()

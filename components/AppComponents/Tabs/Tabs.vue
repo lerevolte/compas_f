@@ -173,14 +173,9 @@
         'action'
     ])
 
-    // Во внешней ссылке скрываем «Модули» (выпадающий список с childs) и
-    // «История изменений». Остальные вкладки (привязанные сущности, «Маршрут
-    // списком» и т.п.) остаются доступными.
     const hideInExternal = (tab) => {
         if (!props.options.isExternal) return false
-        if (tab.tab === 'history' || tab.tab === 'modules') return true
-        if (tab.childs && tab.childs.length > 0) return true
-        return false
+        return tab.tab === 'history'
     }
 
     class Tabs {
