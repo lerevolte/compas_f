@@ -457,7 +457,7 @@
                 const actualLeft = rect.left - tableRect.left
                 const tolerance = 2
 
-                let isStuck = Math.abs(actualLeft - stickyLeft) <= tolerance
+                let isStuck = actualLeft <= stickyLeft + tolerance
                 if (!isScrolledHorizontally) {
                     isStuck = false
                 }

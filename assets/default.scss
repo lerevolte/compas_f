@@ -730,6 +730,11 @@ section {
         gap: 20px;
         flex-direction: column;
         align-items: start;
+        width: 100%;
+
+        .form__item.form__item_select {
+            width: 100%;
+        }
 
         #mobile-menu-target {
             margin-bottom: 0px;

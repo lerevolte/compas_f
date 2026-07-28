@@ -504,6 +504,8 @@
     })
 
     watch(() => route.path, () => {
+        menu.value.isOpen = false
+        popupRef.value?.popup?._close?.()
         isClient.value = false
         nextTick(() => {
             isClient.value = true

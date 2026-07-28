@@ -215,7 +215,13 @@
       const resetWindowScroll = () => {
         if (window.visualViewport && window.visualViewport.scale > 1) return
         const active = document.activeElement
-        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return
+        const isEditable = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)
+        if (isEditable) {
+          if (window.scrollX) {
+            window.scrollTo({ top: window.scrollY, left: 0, behavior: 'instant' })
+          }
+          return
+        }
         if (window.scrollX || window.scrollY) {
           window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
         }
