@@ -128,6 +128,7 @@
   // (меняется :key), из-за чего scrollLeft сбрасывался. Карта модульного уровня
   // живёт всё время работы SPA и хранит позицию по ключу slug+route_id.
   const tableScrollPositions = new Map()
+  const unsavedHeaderSettings = new Map()
 </script>
 
 <script setup>
@@ -301,7 +302,28 @@
 
   onBeforeUnmount(() => {
     saveScrollPosition()
+    saveUnsavedHeader()
     tableRef.value?.removeEventListener('scroll', saveScrollPosition)
+  })
+
+  const saveUnsavedHeader = () => {
+    if (!scrollKey.value) return
+    if (table.value.isChanged && Array.isArray(table.value.header) && table.value.header.length) {
+      unsavedHeaderSettings.set(scrollKey.value, JSON.parse(JSON.stringify(table.value.header)))
+    } else {
+      unsavedHeaderSettings.delete(scrollKey.value)
+    }
+  }
+
+  let headerRestored = false
+  watch(() => table.value.header, (header) => {
+    if (headerRestored || !scrollKey.value) return
+    if (!Array.isArray(header) || !header.length) return
+    headerRestored = true
+    const saved = unsavedHeaderSettings.get(scrollKey.value)
+    if (!saved) return
+    table.value.header = JSON.parse(JSON.stringify(saved))
+    table.value.isChanged = true
   })
 
   // После загрузки строк (когда ширина контента уже определена) один раз

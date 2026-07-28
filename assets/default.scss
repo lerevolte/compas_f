@@ -52,6 +52,7 @@ body {
     font-family: PT Sans;
     overflow-x: hidden;
     min-height: 100vh;
+    min-height: 100dvh;
     overscroll-behavior: none;
     scroll-behavior: smooth;
     scroll-padding-top: var(--headerHeight);
@@ -59,6 +60,7 @@ body {
     &.body_uncscroll {
         overflow: hidden;
         max-height: 100vh;
+        max-height: 100dvh;
     }
 }
 
@@ -102,6 +104,7 @@ html {
 #__nuxt,
 .wrapper {
     min-height: 100vh;
+    min-height: 100dvh;
 }
 
 
@@ -117,6 +120,7 @@ html {
     grid-template-columns: 230px 1fr;
     overflow: auto;
     max-height: 100vh;
+    max-height: 100dvh;
     overflow-x: hidden;
     @include mixins.scrollBar();
 
@@ -160,6 +164,7 @@ html {
     @media (max-width: 990px) {
         grid-template-columns: 1fr;
         height: 100vh;
+        height: 100dvh;
         grid-template-rows: 1fr;
 
         main {
@@ -167,9 +172,11 @@ html {
             padding: 15px 10px;
 
             &:has(.detail) {
+                padding: 15px 0;
+
                 .detail__actions {
-                    margin-left: -35px;
-                    width: calc(100% + 70px);
+                    margin-left: 0;
+                    width: 100%;
                 }
             }
         }

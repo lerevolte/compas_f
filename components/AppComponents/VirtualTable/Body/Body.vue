@@ -1158,6 +1158,9 @@
         // раскрываем её обратно, иначе единственная задача маршрута пропадает.
         nextTick(unhideStuckRows)
         setTimeout(unhideStuckRows, 60)
+        const refreshFixedCells = () => tableRef?.value?.dispatchEvent(new CustomEvent('vt-fixed-update'))
+        nextTick(refreshFixedCells)
+        setTimeout(refreshFixedCells, 100)
     }
 
     // Корректировка клона-призрака (forceFallback) при горизонтальной прокрутке.

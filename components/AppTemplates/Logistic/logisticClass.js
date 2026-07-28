@@ -415,15 +415,13 @@ export class LogisticWithMap extends Logistic {
     async _changeRouteTasks(routeId, ids) {
         try {
             const response = await api.callMethod('PUT', `/routes/${routeId}/tasks`, { ids });
-            // Данные этого ответа — самые свежие на момент PUT; всё, что
-            // запрашивалось раньше, не должно их перезатереть.
-            const seq = ++this._routeDataSeq;
-            
-            // Use response data directly — it's already in correct order
+            const isActiveRoute = Number(this.machine_tasks.route_id) === Number(routeId);
+            const seq = isActiveRoute ? ++this._routeDataSeq : null;
+
             const responseData = response.data || response;
             const rows = responseData.data || [];
-            
-            if (rows.length > 0) {
+
+            if (seq !== null && rows.length > 0) {
                 const tasks = rows.map((row, index) => {
                     let addressStr = row.address;
                     if (typeof addressStr === 'object' && addressStr !== null) {
@@ -472,9 +470,7 @@ export class LogisticWithMap extends Logistic {
                         signal_loss_events: []
                     };
                 }
-            } else if (seq === this._routeDataSeq) {
-                // Маршрут опустел (вытащили последнюю задачу) — чистим данные
-                // выбранного маршрута, чтобы на карте не висели старые точки.
+            } else if (seq !== null && seq === this._routeDataSeq) {
                 this.selectedRouteData = {
                     id: routeId,
                     name: `Маршрут ${routeId}`,
@@ -578,8 +574,10 @@ export class LogisticWithMap extends Logistic {
         } catch (error) {
             console.error('🔴 Error recalculating route timing:', error);
         } finally {
-            this.machine_tasks.updatingCount++;
-            this.loadRouteForMap(routeId);
+            if (Number(this.machine_tasks.route_id) === Number(routeId)) {
+                this.machine_tasks.updatingCount++;
+                this.loadRouteForMap(routeId);
+            }
             if (this.onRouteChanged) this.onRouteChanged();
         }
     }
@@ -665,7 +663,9 @@ export class LogisticWithMap extends Logistic {
             this.machine_tasks.updatingCount++;
             this.loadUnassignedTasks();
             this.logistic_tasks.updatingCount++;
-            this.loadRouteForMap(routeId);
+            if (Number(this.machine_tasks.route_id) === Number(routeId)) {
+                this.loadRouteForMap(routeId);
+            }
             if (this.onRouteChanged) this.onRouteChanged();
         }
     }
