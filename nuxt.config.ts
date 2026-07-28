@@ -7,7 +7,7 @@ export default defineNuxtConfig({
   ssr: false,
   app: {
     head: {
-      viewport: 'width=device-width, initial-scale=1, viewport-fit=cover',
+      viewport: 'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover',
       meta: [
         // theme-color подтягивает цвет URL-бара / статус-бара iOS Safari (15+)
         // под фон сайта — без этого видны серые плашки сверху и снизу.

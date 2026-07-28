@@ -352,6 +352,16 @@
   top: var(--row-start);
   left: 0;
   display: flex;
+
+  // Строка обязана быть шириной во ВЕСЬ прокручиваемый контент таблицы:
+  // sticky-ячейка не может выйти за границы родителя, и если строка уже
+  // scrollWidth (у relative-строк ширина по умолчанию = clientWidth),
+  // зафиксированные колонки после определённого горизонтального скролла
+  // упираются в край строки и «уезжают» вместе с контентом (8826).
+  &.table__row_short {
+    width: max-content;
+    min-width: 100%;
+  }
   // Safari: will-change: transform создаёт containing block,
   // sticky-ячейки начинают прилипать к строке вместо таблицы.
   // @supports включает свойство только для не-Safari браузеров.
@@ -427,6 +437,8 @@
     .table__row:not(.draggable-fallback) {
       position: relative !important;
       top: 0 !important;
+      width: max-content;
+      min-width: 100%;
     }
   }
 
