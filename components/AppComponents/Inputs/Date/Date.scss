@@ -369,18 +369,36 @@
     body > .dp__outer_menu_wrap {
         left: 50% !important;
         right: auto !important;
-        transform: translateX(-50%) !important;
-        max-width: calc(100vw - 20px);
     }
 
-    .dp__menu {
+    body > .dp__outer_menu_wrap .dp__menu {
+        transform: translateX(-50%);
+        width: max-content;
         max-width: calc(100vw - 20px);
-        flex-wrap: wrap;
+        --dp-cell-size: 30px;
+        --dp-menu-min-width: 0;
+    }
+
+    body > .dp__outer_menu_wrap .dp__menu_content_wrapper {
+        max-width: 100%;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+    }
+
+    .dp__menu .dp__menu_content_wrapper:has(> .dp__sidebar_left) > .dp__sidebar_left {
+        grid-row: auto;
+        grid-column: 1;
+        width: 100%;
+
+        .datapicker__footer {
+            flex-wrap: wrap;
+        }
     }
 
     .dp__menu .dp__sidebar_right,
     .dp__sidebar_right {
         width: 100%;
+        max-width: 100%;
 
         &::before {
             display: none;
@@ -393,7 +411,7 @@
         border-top: 1px solid variables.$color-border;
     }
 
-    .dp__menu .dp__sidebar_left {
-        width: 100%;
+    .dp__menu .dp__instance_calendar {
+        max-width: 100%;
     }
 }
