@@ -287,7 +287,7 @@
                                 {{ cell.useCellSelectModel(row.index, column).value }}
                             </span>
 
-                            <span class="table__text text" v-else-if="column.type == 'json'" :title="jsonTitle(cell.useCellModel(row.index, column).value)" v-html="cell.useCellModel(row.index, column).value"></span>
+                            <span class="table__text text" v-else-if="column.type == 'json'" :title="jsonTitle(cell.useCellModel(row.index, column).value)" v-html="jsonInline(cell.useCellModel(row.index, column).value)"></span>
 
                             <AppRouteStatuses
                                 v-else-if="column.type == 'route_statuses' && table.body[row.index].id"
@@ -368,6 +368,13 @@
             .replace(/\n+$/g, '')
             .trim()
         return text || null
+    }
+
+    const jsonInline = (html) => {
+        if (typeof html !== 'string') return html
+        return html
+            .replace(/(\s*<br\s*\/?>\s*)+$/gi, '')
+            .replace(/\s*<br\s*\/?>\s*/gi, ', ')
     }
 
     const isHiddenPermissionCell = (rowIndex, key) => {

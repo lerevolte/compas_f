@@ -108,11 +108,10 @@
     // строку с усечением (line-clamp), остальное скрыто — строка не
     // растягивается (8595).
     .table__cell[data-column-key="products"] .table__text {
-      display: -webkit-box;
-      -webkit-line-clamp: 1;
-      -webkit-box-orient: vertical;
-      white-space: normal;
+      display: block;
+      white-space: nowrap;
       overflow: hidden;
+      text-overflow: ellipsis;
       width: 100%;
     }
 
@@ -715,6 +714,10 @@
 
     .table__cell .select.select_disabled .select__value {
       left: 0;
+    }
+
+    .table__body .table__cell[data-column-key="product_id"] .select.select_icon figcaption {
+      padding-left: 0;
     }
 
     .table__cell.table__cell_hide-empty {
