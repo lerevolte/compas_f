@@ -212,7 +212,13 @@
     }
 
     if (window.matchMedia('(pointer: coarse)').matches) {
+      const resetContainersScrollX = () => {
+        document.querySelectorAll('.page, .modal__body').forEach(el => {
+          if (el.scrollLeft) el.scrollLeft = 0
+        })
+      }
       const resetWindowScroll = () => {
+        resetContainersScrollX()
         if (window.visualViewport && window.visualViewport.scale > 1) return
         const active = document.activeElement
         const isEditable = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)
@@ -227,6 +233,12 @@
         }
       }
       window.addEventListener('scroll', resetWindowScroll, { passive: true })
+      document.addEventListener('scroll', (e) => {
+        const el = e.target
+        if (el instanceof Element && (el.classList.contains('page') || el.classList.contains('modal__body'))) {
+          if (el.scrollLeft) el.scrollLeft = 0
+        }
+      }, { capture: true, passive: true })
       window.visualViewport?.addEventListener('resize', () => setTimeout(resetWindowScroll, 50))
       document.addEventListener('focusout', () => setTimeout(resetWindowScroll, 100))
     }
