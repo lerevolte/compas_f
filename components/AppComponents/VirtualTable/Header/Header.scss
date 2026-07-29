@@ -23,6 +23,12 @@
       @include mixins.textVerticalHidden(2);
     }
 
+    &.table__cell_readonly {
+      & > .text {
+        color: variables.$color-border;
+      }
+    }
+
     &.table__cell_resize {
       .table__cell-border {
         height: 100vh;

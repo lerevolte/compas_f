@@ -230,6 +230,12 @@
     margin-bottom: 5px;
   }
 
+  &.table__cell_readonly {
+    .table__label {
+      color: variables.$color-border;
+    }
+  }
+
   .table__cell-content {
     overflow: hidden;
     width: 100%;
@@ -353,11 +359,6 @@
   left: 0;
   display: flex;
 
-  // Строка обязана быть шириной во ВЕСЬ прокручиваемый контент таблицы:
-  // sticky-ячейка не может выйти за границы родителя, и если строка уже
-  // scrollWidth (у relative-строк ширина по умолчанию = clientWidth),
-  // зафиксированные колонки после определённого горизонтального скролла
-  // упираются в край строки и «уезжают» вместе с контентом (8826).
   &.table__row_short {
     width: max-content;
     min-width: 100%;
@@ -707,8 +708,17 @@
       }
 
       .show-more .popup__header {
-        justify-content: flex-start;
+        width: auto;
+        justify-content: center;
       }
+    }
+
+    .table__cell .select.select_disabled .select__value {
+      left: 0;
+    }
+
+    .table__cell.table__cell_hide-empty {
+      display: none !important;
     }
   }
 }

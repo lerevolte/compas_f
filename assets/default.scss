@@ -259,6 +259,16 @@ html {
                     height: auto;
                 }
             }
+
+            .page__header__create-placeholder {
+                display: none;
+            }
+
+            &:has(.page__header__create-placeholder) {
+                .filter__mobile-search {
+                    right: -10px;
+                }
+            }
         }
 
         @media (max-width: 390px) {

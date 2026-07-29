@@ -1,6 +1,6 @@
 <template>
     <div class="table-calc">
-        <AppButton class="button_fill button_small" @click="table.addLocalRow()">
+        <AppButton class="button_fill button_small" v-if="canEdit" @click="table.addLocalRow()">
             <AppIconPlus />
             Добавить строку
         </AppButton>
@@ -42,6 +42,11 @@
 
     const table = inject('table')
     const common = new Common()
+
+    const canEdit = computed(() => {
+        const cols = (table.value.header || []).filter(c => !['actions', 'isChoose', 'clicked', 'iconDrag', 'iconDelete'].includes(c.key))
+        return cols.length == 0 || cols.some(c => !c.read_only)
+    })
 
     const calculateContent = computed({
         get() {

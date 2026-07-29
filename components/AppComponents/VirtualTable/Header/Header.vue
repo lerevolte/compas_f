@@ -5,10 +5,11 @@
                 v-for="(column, idx) in table.header" 
                 class="table__cell" 
                 :class="{
-                    'table__cell_hide-text': column.width.replace('px', '') < 50, 
+                    'table__cell_hide-text': column.width.replace('px', '') < 50,
                     'table__cell_sort': column.key == table.sortItem.sort_field,
                     'table__cell_hide': !column.enabled,
-                    'table__cell_fixed': column.fixed
+                    'table__cell_fixed': column.fixed,
+                    'table__cell_readonly': !!column.read_only && !['isChoose', 'clicked', 'actions', 'iconDrag', 'iconDelete'].includes(column.key)
                 }"
                 :key="column.key"
                 :title="column.title"

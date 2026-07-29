@@ -56,11 +56,13 @@
                     >
                     <div 
                         v-for="column in table.header" 
-                        class="table__cell" 
-                        :class="{ 
+                        class="table__cell"
+                        :class="{
                             'table__cell_loading': table.loading,
                             'table__cell_fixed': column.fixed,
                             'table__cell_hide': !column.enabled,
+                            'table__cell_readonly': !!column.read_only && !['isChoose', 'clicked', 'actions', 'iconDrag', 'iconDelete'].includes(column.key),
+                            'table__cell_hide-empty': column.visible_always === 0 && !table.body[row.index]?.edit && isCellValueEmpty(table.body[row.index], column),
                         }"
                         :data-column-key="column.key" 
                         :key="`row-${index}_${column.key}`" 
@@ -344,6 +346,16 @@
     const sectionRef = inject('sectionRef')
     const common = new Common()
     const uid = useId()
+
+    const isCellValueEmpty = (row, column) => {
+        if (!row) return true
+        let value = row[column.key]
+        if (value && typeof value === 'object' && !Array.isArray(value) && 'value' in value) {
+            value = value.value
+        }
+        if (Array.isArray(value)) return value.length === 0
+        return value === null || value === undefined || value === ''
+    }
 
     // Полное значение json-ячейки (напр. «Состав») для title при наведении:
     // в ячейке текст усечён в одну строку, а в подсказке показываем весь список.

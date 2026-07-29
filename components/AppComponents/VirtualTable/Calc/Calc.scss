@@ -24,3 +24,26 @@
     display: flex;
     align-items: center;
 }
+
+@media (max-width: 990px) {
+    .table-calc {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+        padding: 15px;
+
+        button {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    .table-calc__group {
+        gap: 10px 25px;
+        flex-wrap: wrap;
+    }
+
+    .table-calc__item {
+        gap: 10px;
+    }
+}

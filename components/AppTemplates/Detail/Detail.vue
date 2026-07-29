@@ -19,7 +19,7 @@
                 />
             </AppH1>
             <div class="detail-page__actions" v-if="!props.is_external && !detail.forbidden" v-show="!detail.header.editTitle && !props.isGlobalEdit">
-                <IconEdit v-if="!detail.readonly" @click="() => detail.header.initEditTitle({
+                <IconEdit v-if="!detail.readonly && canEditTitle" @click="() => detail.header.initEditTitle({
                     textarea: textareaRef.textareaRef.querySelector('textarea'),
                     columns: detail.columns,
                     slug: detail.slug,
@@ -355,6 +355,11 @@
     }
 
     const detail = ref(new Detail())
+
+    const canEditTitle = computed(() => {
+        const field = common.findColumnField(detail.value.columns, 'name')
+        return field ? !!field.can_edit : true
+    })
     const tabs = ref(new Tabs())
 
     onMounted(() => {
