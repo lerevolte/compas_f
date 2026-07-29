@@ -132,7 +132,10 @@
             .modal__body {
                 background: variables.$color-white;
                 overflow-x: hidden;
-                overflow-x: clip;
+
+                & > * {
+                    overflow-x: clip;
+                }
                 // Контент не лезет под нотч и home-indicator, при этом
                 // белый фон занимает весь экран.
                 padding-top: env(safe-area-inset-top);

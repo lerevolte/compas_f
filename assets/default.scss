@@ -171,6 +171,7 @@ html {
         main {
             grid-column: 1;
             padding: 15px 10px;
+            overflow-x: clip;
 
             &:has(.detail) {
                 padding: 15px 0;
