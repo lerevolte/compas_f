@@ -385,10 +385,17 @@
         }
     })
 
+    const eventsVisibilityLocal = ref(null)
+
+    watch(() => props.eventsVisibility, () => {
+        eventsVisibilityLocal.value = null
+    })
+
     const initEventsModal = () => {
+        const current = eventsVisibilityLocal.value ?? props.eventsVisibility
         eventsModal.value.content = {
-            has_roles_read: !!props.eventsVisibility?.has_roles_read,
-            roles_read: [...(props.eventsVisibility?.roles_read ?? [])]
+            has_roles_read: !!current?.has_roles_read,
+            roles_read: [...(current?.roles_read ?? [])]
         }
         eventsModal.value.state = true
     }
@@ -398,10 +405,16 @@
             eventsModal.value.loading = true
             const content = eventsModal.value.content
             const roles = content.has_roles_read ? content.roles_read : []
+            const hasRoles = content.has_roles_read && roles.length > 0
             await api.callMethod('PUT', routes.tabs.events_visibility.replace('${slug}', props.slug), {
-                has_roles_read: content.has_roles_read && roles.length > 0,
+                has_roles_read: hasRoles,
                 roles_read: roles
             })
+            eventsVisibilityLocal.value = {
+                ...(props.eventsVisibility ?? {}),
+                has_roles_read: hasRoles,
+                roles_read: hasRoles ? roles : []
+            }
         } catch (error) {
             console.log(error);
         } finally {

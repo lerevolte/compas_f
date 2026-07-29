@@ -375,6 +375,8 @@
         transform: none;
         width: max-content;
         max-width: calc(100vw - 30px);
+        max-height: calc(100dvh - 30px);
+        overflow: auto;
         --dp-cell-size: 30px;
         --dp-menu-min-width: 0;
     }

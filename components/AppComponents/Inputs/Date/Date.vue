@@ -12,7 +12,7 @@
 			:enable-time-picker="false"
 			:max-time="{ hours: 0, minutes: 0, seconds: 0 }"
 			:month-change-on-scroll="true"
-			:multi-calendars="props.options.multiple"
+			:multi-calendars="props.options.multiple && !isMobileViewport"
 			:range="props.options.multiple"
 			locale="ru"
 			ref="datepicker"
@@ -145,6 +145,15 @@
     })
 
     const datepicker = ref(null)
+    const isMobileViewport = ref(false)
+
+    onMounted(() => {
+        const media = window.matchMedia('(max-width: 700px)')
+        isMobileViewport.value = media.matches
+        media.addEventListener?.('change', (e) => {
+            isMobileViewport.value = e.matches
+        })
+    })
 
     const emit = defineEmits([
         'update:modelValue',
