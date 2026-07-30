@@ -468,6 +468,7 @@
                     return table.value.canDeleteRow(row)
                 }
                 if (a.action === 'copy') return table.value.canCreate()
+                if (a.action === 'copyExternalLink') return table.value.permissions?.external_link_read_p !== 'N'
                 return true
             })
             if (table.value.slug == 'addresses' && !row.edit && table.value.permissions?.create_task_p !== 'N') {

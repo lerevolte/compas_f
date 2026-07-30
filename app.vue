@@ -171,6 +171,7 @@
     }
 
     closeDetail() {
+      if (this.addresses.length <= this.modal.length) return
       let prevAddress = this.addresses.pop()
       // Если закрыли последнюю модалку — насильно возвращаемся к заголовку
       // страницы, который захватили в openModal(). Иначе title мог застрять

@@ -720,6 +720,17 @@
       padding-left: 0;
     }
 
+    .table__cell[data-column-key="product_id"] .select.select_disabled {
+      .select__content-container {
+        display: none;
+      }
+
+      .select__value {
+        position: static;
+        height: auto !important;
+      }
+    }
+
     .table__cell.table__cell_hide-empty {
       display: none !important;
     }

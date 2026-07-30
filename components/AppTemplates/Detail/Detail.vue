@@ -268,6 +268,7 @@
                     if (this.slug == 'users' && String(this.id) === '1') return false
                     return this.permissions?.delete_p !== 'N' && this.permissions?.can_delete !== false
                 }
+                if (a.action === 'copyExternalLink') return this.permissions?.external_link_read_p !== 'N'
                 return true
             })
             if (this.slug === 'addresses' && this.permissions?.create_task_p !== 'N') {
