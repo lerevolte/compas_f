@@ -145,5 +145,9 @@ export default {
     productStats: {
         products: '/product-stats/products',
         tasks: '/product-stats/tasks'
+    },
+    bitrix24: {
+        deal_stages: '/bitrix24/deal-stages',
+        change_stage: '/bitrix24/deals/${id}/stage'
     }
 }

@@ -192,6 +192,21 @@
                         :isExternal="props.options?.isExternal"
                     />
 
+                    <AppDealStages
+                        v-else-if="field.type == 'deal_stages'"
+                        :options="{ ...field }"
+                        :pageId="props.pageId"
+                    />
+
+                    <AppMultiText
+                        v-else-if="field.type == 'multi_text'"
+                        :options="{
+                            ...field,
+                            edit: field.edit
+                        }"
+                        v-model="field.value"
+                    />
+
                     <AppRouteMap
                         v-else-if="field.type == 'route_map'"
                         :options="{ ...field }"
@@ -499,6 +514,8 @@
     import AppRedactor from '@AppComponents/Inputs/Redactor/Redactor.vue'
     import AppRouteStatuses from '@AppComponents/RouteStatuses/RouteStatuses.vue'
     import AppRouteMap from '@AppComponents/RouteMap/RouteMap.vue'
+    import AppDealStages from '@AppComponents/DealStages/DealStages.vue'
+    import AppMultiText from '@AppComponents/Inputs/MultiText/MultiText.vue'
     import { useUserStore } from '@/stores/userStore.js'
 
     const userStore = useUserStore()

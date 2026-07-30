@@ -1,0 +1,44 @@
+.multi-text {
+    width: 100%;
+
+    .blank__title {
+        display: block;
+        margin-bottom: 5px;
+    }
+}
+
+.multi-text__row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+
+    .form__item_input {
+        flex: 1 1 auto;
+    }
+}
+
+.multi-text__remove {
+    display: flex;
+    cursor: pointer;
+    flex: 0 0 auto;
+
+    svg {
+        width: 12px;
+        aspect-ratio: 1;
+    }
+}
+
+.multi-text__view {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.multi-text__value {
+    font-size: 16px;
+
+    &.multi-text__value_empty {
+        color: #a6b7d4;
+    }
+}

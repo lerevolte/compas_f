@@ -1,4 +1,3 @@
-
 {
     "users": {
         "slug": "users",
@@ -179,5 +178,17 @@
         "title_singular": "Логистика",
         "title_plural": "Логистика",
         "color": "#6D67DA"
+    },
+    "deals": {
+        "slug": "deals",
+        "title_singular": "Сделка",
+        "title_plural": "Сделки",
+        "color": "#E8A33D"
+    },
+    "contacts": {
+        "slug": "contacts",
+        "title_singular": "Контакт",
+        "title_plural": "Контакты",
+        "color": "#4A90D9"
     }
 }

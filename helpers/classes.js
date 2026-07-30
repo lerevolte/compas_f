@@ -2862,6 +2862,10 @@ export class Field {
                 if (field.edit || (target.classList.contains('value__text_link') || target.classList.contains('select__value-img'))) return
             } else if (field.type == 'status') {
                 if (field.edit) return
+            } else if (field.type == 'multi_text') {
+                if (field.edit) return
+            } else if (field.type == 'deal_stages') {
+                return
             } else if (field.type == 'redactor') {
                 // Редактор всегда активен и сам отмечает поле как изменённое через
                 // обработчик update:model-value, поэтому клик по нему не должен

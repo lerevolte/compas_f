@@ -188,5 +188,15 @@
         "title": "Пользователи",
         "desc": "",
         "template": null
+    },
+    "deals": {
+        "title": "Сделки",
+        "desc": "",
+        "template": null
+    },
+    "contacts": {
+        "title": "Контакты",
+        "desc": "",
+        "template": null
     }
 }

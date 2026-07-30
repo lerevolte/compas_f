@@ -71,6 +71,15 @@ import 'leaflet/dist/leaflet.css'  // CSS можно через nuxt.config
 Признаки проблемы: `window is not defined`, `ReferenceError: navigator`,
 `document is not defined`, `self is not defined` при `npm run generate`.
 
+## Тестовый портал avixo
+
+avixo.compas.pro — тестовый портал: новые фичи выкатываются сначала туда
+(бэкенд ставит сущности только в его БД). Фронт один на все порталы, поэтому
+новые компоненты/типы полей должны быть данными-управляемыми: рендерить ветку
+только когда бэкенд прислал соответствующий field.type / сущность, и ничего
+не ломать на порталах, где фичи нет. Подробнее — CLAUDE.md бэкенда
+(«Тестовый портал avixo»).
+
 ## Команды
 - Dev: `npm run dev`
 - Билд для прода: `npm run generate` (НЕ `nuxt build`!)
