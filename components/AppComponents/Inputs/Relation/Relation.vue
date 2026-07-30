@@ -275,18 +275,20 @@
         }
 
         getList(selectIndex) {
+            const limit = (list) => this.state.search?.length > 0 ? list : list.slice(0, 10)
+
             if (!props.modelValue || !props.modelValue.value) {
-                return this.state.list ?? []
+                return limit(this.state.list ?? [])
             }
 
             if (this.state?.list?.length > 0) {
-                return this.state.list.map(p => {
+                return limit(this.state.list).map(p => {
                     return {
                         ...p,
                         disabled: normalizedModelValue.value.value[selectIndex] == p.value || props.modelValue.value.includes(p.value)
                     }
                 })
-            } 
+            }
 
             return []
         }
