@@ -68,7 +68,8 @@
                     isHaveTopHeader: true,
                     isHaveFooter: false,
                     isDisableSockets: true,
-                    updatingCount: 0
+                    updatingCount: 0,
+                    parentSlug: props.slug ?? 'logistic_tasks'
                 }"
                 :table="detail.products"
                 :slug="'products'"

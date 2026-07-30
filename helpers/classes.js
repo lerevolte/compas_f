@@ -845,7 +845,7 @@ export class Table {
 
             if (this.slug) {
                 if (this.slug == 'products') {
-                    await api.callMethod('PUT', routes.table.set_products.replace('${page_id}', this.pageId), {
+                    await api.callMethod('PUT', routes.table.set_products.replace('${parent_slug}', this.options?.parentSlug ?? 'logistic_tasks').replace('${page_id}', this.pageId), {
                         products: request
                     })
                 } else {

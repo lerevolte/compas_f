@@ -48,7 +48,7 @@ export default {
         restore: '/objects/${slug}/restore',
         update_products: '/tables/order_products',
         reset_products: '/tables/order_products/reset',
-        set_products: '/logistic_tasks/${page_id}/set_products'
+        set_products: '/${parent_slug}/${page_id}/set_products'
     },
     filter: {
         move: '/filters/${slug}/change-sort',
