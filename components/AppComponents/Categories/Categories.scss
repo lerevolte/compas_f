@@ -92,3 +92,56 @@
     cursor: pointer;
     width: 100%;
 }
+.categories__node {
+    width: 100%;
+
+    .categories__children {
+        width: 100%;
+
+        .categories__node {
+            padding-left: 20px;
+        }
+    }
+}
+
+.categories__item_tree {
+    justify-content: flex-start;
+
+    .categories__text {
+        padding: 10px 5px;
+    }
+
+    .show-more {
+        margin-left: auto;
+        opacity: 0;
+    }
+
+    &:hover .show-more {
+        opacity: 1;
+    }
+}
+
+.categories__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    min-width: 20px;
+    height: 20px;
+    margin-left: 8px;
+    cursor: pointer;
+
+    .icon__triangle {
+        display: flex;
+        align-items: center;
+    }
+
+    &.categories__toggle_closed .icon__triangle {
+        transform: rotate(-90deg);
+    }
+
+    &.categories__toggle_hidden {
+        visibility: hidden;
+        cursor: default;
+    }
+}

@@ -25,11 +25,12 @@
 
     .icon__arrow {
         position: absolute;
-        top: 10px;
+        top: 50%;
         right: 15px;
         display: flex;
         height: 20px;
         aspect-ratio: 1 / 2;
+        translate: 0 -50%;
         transform: rotate(0deg);
 
         svg {
@@ -126,10 +127,6 @@
                 left: 0;
                 @include mixins.userSelect(none);
             }
-        }
-
-        .icon__arrow {
-            top: 12px;
         }
 
         .select__options {

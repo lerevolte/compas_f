@@ -27,7 +27,8 @@
     const textareaInputRef = ref(null)
     
     const emit = defineEmits([
-        'update:modelValue'
+        'update:modelValue',
+        'update:prevValue'
     ])
     
     const props = defineProps({
@@ -53,6 +54,12 @@
         }
     })
 
+    const autoGrow = () => {
+        if (!props.options.autosize || !textareaInputRef.value) return;
+        textareaInputRef.value.style.height = 'auto';
+        textareaInputRef.value.style.height = textareaInputRef.value.scrollHeight + 'px';
+    }
+
     const handleInput = (event) => {
         if (props.options.preventEnter) {
             const newValue = event.target.value;
@@ -61,7 +68,9 @@
                 return;
             }
         }
+        emit('update:prevValue', props.modelValue ? JSON.parse(JSON.stringify(props.modelValue)) : null);
         emit('update:modelValue', event.target.value);
+        autoGrow();
     }
 
     const handleKeydownEnter = (event) => {
@@ -71,7 +80,12 @@
         }
     }
 
+    watch(() => props.modelValue, () => {
+        nextTick(autoGrow);
+    })
+
     onMounted(() => {
+        nextTick(autoGrow);
         if (props.options.focus) {
             nextTick(() => {
                 textareaInputRef.value.focus();

@@ -159,8 +159,21 @@
 
 
                         <template v-else-if="table.body[row.index] && !column.read_only && (table.body[row.index].edit || table.options?.isPermanentEdit)" >
+                            <AppTextarea
+                                v-if="column.type == 'text' && column.is_plural"
+                                :model-value="cell.useCellModel(row.index, column).value"
+                                @update:model-value="val => cell.useCellModel(row.index, column).value = val"
+                                @update:prevValue="val => cell.checkEditting(table.body[row.index], {value: val, key: column.key})"
+                                :options="{
+                                    id: `${uid}_${row.index}_${column.key}`,
+                                    title: null,
+                                    name: column.key,
+                                    autosize: true,
+                                    placeholder: ''
+                                }"
+                            />
                             <AppInput
-                                v-if="['text', 'number'].includes(column.type)" 
+                                v-else-if="['text', 'number'].includes(column.type)"
                                 :model-value="cell.useCellModel(row.index, column).value"
                                 @update:model-value="val => cell.useCellModel(row.index, column).value = val"
                                 @update:prevValue="val => cell.checkEditting(table.body[row.index], {value: val, key: column.key})"
@@ -330,6 +343,7 @@
     import AppCheckbox from '@AppComponents/Inputs/Checkbox/Checkbox.vue'
     import AppShowMore from '@AppComponents/ShowMore/ShowMore.vue'
     import AppInput from '@AppComponents/Inputs/Input/Input.vue'
+    import AppTextarea from '@AppComponents/Inputs/Textarea/Textarea.vue'
     import AppButton from '@AppComponents/Button/Button.vue'
     import AppFansyBox from '@AppComponents/FansyBox/FansyBox.vue'
     import AppStatus from '@AppComponents/Inputs/Status/Status.vue'

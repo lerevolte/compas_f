@@ -10,8 +10,20 @@
             </p>
 
             <template v-for="column in error.columns" :key="`${error.id}_${column.key}`">
+                <AppTextarea
+                    v-if="column.type == 'text' && column.is_plural"
+                    :model-value="cellModel(error.id, column).value"
+                    @update:model-value="val => cellModel(error.id, column).value = val"
+                    :options="{
+                        id: `validate_${error.id}_${column.key}`,
+                        title: column.title,
+                        name: column.key,
+                        autosize: true,
+                        placeholder: ''
+                    }"
+                />
                 <AppInput
-                    v-if="['text', 'number'].includes(column.type)"
+                    v-else-if="['text', 'number'].includes(column.type)"
                     :model-value="cellModel(error.id, column).value"
                     @update:model-value="val => cellModel(error.id, column).value = val"
                     :options="{
@@ -127,6 +139,7 @@
     import './Validate.scss'
 
     import AppInput from '@AppComponents/Inputs/Input/Input.vue'
+    import AppTextarea from '@AppComponents/Inputs/Textarea/Textarea.vue'
     import AppSelect from '@AppComponents/Inputs/Select/Select.vue'
     import AppDate from '@AppComponents/Inputs/Date/Date.vue'
     import AppStatus from '@AppComponents/Inputs/Status/Status.vue'

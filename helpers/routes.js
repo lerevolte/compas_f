@@ -91,6 +91,12 @@ export default {
         update: '/roles/${id}',
         delete: '/roles/${id}'
     },
+    product_categories: {
+        get: '/products/categories',
+        create: '/products/categories',
+        update: '/products/categories/${id}',
+        delete: '/products/categories/${id}'
+    },
     settings: {
         common: {
             get: '/settings/account',

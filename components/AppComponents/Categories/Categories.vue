@@ -8,6 +8,7 @@
             </AppButton>
         </div>
         <div class="categories__body">
+            <slot>
             <template v-for="item in props.list" :key="item.value">
                 <details class="categories__item categories__item_details" v-if="item.children">
                     <summary class="categories__summary">
@@ -24,7 +25,7 @@
                         />
                     </div>
                 </details>
-                <CategoriesItem 
+                <CategoriesItem
                     v-else
                     :active="props.active"
                     :item="item"
@@ -32,6 +33,7 @@
                     @action="action => emit('action', action)"
                 />
             </template>
+            </slot>
         </div>
     </aside>
 </template>
