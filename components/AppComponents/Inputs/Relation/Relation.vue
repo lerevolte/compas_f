@@ -28,7 +28,7 @@
                     <figure class='select__value-icon' v-if="getActiveOption(index)">
                         <img 
                             class="select__value-img"
-                            v-if="typeof getActiveOption(index).label?.file == 'string' && getActiveOption(index).label?.file != ''" :src='getActiveOption(index).label?.file' alt=''
+                            v-if="isImageSrc(getActiveOption(index).label?.file)" :src='getActiveOption(index).label?.file' alt=''
                             @click="() => clickLink(index)" 
                         >
                         <div 
@@ -157,6 +157,7 @@
     import AppInput from '@AppComponents/Inputs/Input/Input.vue';
     import IconSelectArrow from '@AppIcons/Input/SelectArrow.vue';
     import api from '@/helpers/api.js'
+    import { isImageSrc } from '@AppHelpers/classes.js'
     import throttle from 'lodash/throttle'
     import AppError from '@AppComponents/Error/Error.vue'
 

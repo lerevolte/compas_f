@@ -9,7 +9,7 @@
                 <figure class="status__value">
                     <div class="status__rect">
                         <div class="status__rect-container" :style="`--bgColor: ${activeOption?.label?.color}`">
-                            <img class="status__value-rect" v-if="activeOption?.label?.file != '' && activeOption?.label?.file != null" :src="activeOption?.label?.file" />
+                            <img class="status__value-rect" v-if="isImageSrc(activeOption?.label?.file)" :src="activeOption?.label?.file" />
                             <div class="status__value-rect" v-else ></div>
                         </div>
                         <figure class='status__arrow'>
@@ -38,7 +38,7 @@
                     <figure class="status__value">
                         <div class="status__rect">
                             <div class="status__rect-container" :style="`--bgColor: ${option.label.color}`">
-                                <img class="status__value-rect" v-if="option.label.file != '' && option.label.file != null" :src="option.label.file" />
+                                <img class="status__value-rect" v-if="isImageSrc(option.label.file)" :src="option.label.file" />
                                 <div class="status__value-rect" v-else ></div>
                             </div>
                         </div>
@@ -85,6 +85,7 @@
 
     import api from '@/helpers/api.js'
     import routes from '@/helpers/routes.js'
+    import { isImageSrc } from '@AppHelpers/classes.js'
     import AppButton from '@AppComponents/Button/Button.vue'
     import { ColorPicker } from 'vue-accessible-color-picker'
     import SelectArrowSubmenu from '@AppIcons/Input/SelectArrowSubmenu.vue';

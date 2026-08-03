@@ -350,7 +350,7 @@
     
     import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'
 
-    import { Validator } from '@AppHelpers/classes.js'
+    import { Validator, isImageSrc } from '@AppHelpers/classes.js'
     import draggable from 'vuedraggable'; 
     import IconClose from '@AppIcons/Close.vue'
     import IconDrag from '@AppIcons/Actions/Drag.vue'
@@ -657,7 +657,7 @@
                             label: option.label.text,
                             value: option.label.id,
                             color: option.label.color,
-                            file: option.label.file ? [{url: option.label.file}] : null
+                            file: isImageSrc(option.label.file) ? [{url: option.label.file}] : null
                         }
                     })
                 }

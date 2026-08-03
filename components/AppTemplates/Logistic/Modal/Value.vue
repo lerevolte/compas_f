@@ -1,7 +1,7 @@
 <template>
     <figure class='modal-step__icon'>
         <img 
-            v-if="props.item.label.file && props.item.label.file != ''"
+            v-if="isImageSrc(props.item.label.file)"
             class="modal-step__icon-img"
             :src="props.item.label.file"
             alt=''
@@ -22,6 +22,7 @@
 </template>
 
 <script setup>
+    import { isImageSrc } from '@AppHelpers/classes.js'
     const props = defineProps({
         item: {
             default: {

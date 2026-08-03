@@ -12,6 +12,12 @@ import { Mask } from 'maska'
 import { toast } from 'vue3-toastify';
 import { useUserStore } from '@/stores/userStore.js'
 
+export function isImageSrc(file) {
+    if (typeof file != 'string') return false
+    const src = file.trim()
+    return src != '' && src != '[]' && src != '{}' && src != 'null' && src != 'undefined'
+}
+
 export class Common {
     constructor() {}
 
@@ -524,8 +530,11 @@ export class Table {
                 })
             }
             this.loading = true
+            const fieldCols = (response.table ?? []).filter(c => !['actions', 'isChoose', 'clicked', 'iconDrag', 'iconDelete'].includes(c.key))
+            const editable = fieldCols.length == 0 || fieldCols.some(c => !c.read_only)
+            this.permissions = { ...this.permissions, update_p: editable ? 'A' : 'N', delete_p: editable ? 'A' : 'N' }
             this.set(response, true)
-            this.getHeader(response.table)
+            this.getHeader(editable ? response.table : (response.table ?? []).filter(c => c.key !== 'actions' && c.key !== 'isChoose'))
             await this.initVirtualizer()
             if (this.rowVirtualizer) {
                 this.rowVirtualizer.scrollToIndex(0)
@@ -1805,12 +1814,13 @@ export class History {
 }
 
 export class HeaderEditable {
-    constructor ({columns, emit}) {
+    constructor ({columns, emit, reload}) {
         this.id = null
         this.slug = null
         this.editTitle = false
         this.name = ''
         this.emit = emit
+        this.reload = reload ?? null
         this.columns = columns ?? []
         this.common = new Common()
         this.boundCheckClick = null
@@ -1932,7 +1942,7 @@ export class HeaderEditable {
                 ids: [this.modal.content.id]
             })
             if (this.modal.content.is_modal) {
-                this.emit('close', true)
+                this.reload ? this.reload() : this.emit('close', true)
             } else {
                 navigateTo(`/objects/${this.modal.content.slug}`)
             }
@@ -1974,7 +1984,7 @@ export class HeaderEditable {
                 ids: [this.modal.content.id]
             })
             if (this.modal.content.is_modal) {
-                this.emit('close', true)
+                this.reload ? this.reload() : this.emit('close', true)
             } else {
                 navigateTo(`/objects/${this.modal.content.slug}`)
             }

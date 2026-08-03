@@ -472,7 +472,7 @@
         rowActions(rowIndex) {
             const row = table.value.body[rowIndex]
             if (table.value.options?.isTrash) return this.actions.trash
-            if (table.value.slug == 'products') return this.actions.products
+            if (table.value.slug == 'products') return table.value.permissions?.delete_p == 'N' ? [] : this.actions.products
             const base = row.edit ? this.actions.edit : this.actions.default
             let result = base.filter(a => {
                 if (a.action === 'edit') return table.value.canEditRow(row)

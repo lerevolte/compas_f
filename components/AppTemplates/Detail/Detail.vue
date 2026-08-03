@@ -204,7 +204,7 @@
         constructor() {
             this.id = null
             this.slug = null
-            this.header = new HeaderEditable({columns: this.columns, emit: emit})
+            this.header = new HeaderEditable({columns: this.columns, emit: emit, reload: () => detail.value.updateComponent++})
             this.updateComponent = 0
             this.columns = {}
             this.isGlobalEdit = false
