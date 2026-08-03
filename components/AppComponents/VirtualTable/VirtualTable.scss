@@ -555,6 +555,16 @@
       width: 100%;
     }
 
+    .form__item.form__item_textarea {
+      width: 100%;
+      min-width: 0;
+
+      textarea {
+        width: 100%;
+        min-height: 40px;
+      }
+    }
+
     input,
     textarea {
       min-height: 40px;
@@ -617,6 +627,10 @@
   .table__body .table__cell {
     input,
     textarea {
+      min-height: 30px;
+    }
+
+    .form__item.form__item_textarea textarea {
       min-height: 30px;
     }
 

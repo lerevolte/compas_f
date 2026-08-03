@@ -23,6 +23,14 @@
             </div>
             <div class="table-calc__item">
                 <span class="table-calc__label">
+                    Общий объем:
+                </span>
+                <strong class="table-calc__value">
+                    {{ common.transformPrice(calculateContent.volume, 0) }}
+                </strong>
+            </div>
+            <div class="table-calc__item">
+                <span class="table-calc__label">
                     Сумма:
                 </span>
                 <strong class="table-calc__value">
@@ -56,6 +64,7 @@
             return {
                 count: table.value.body.reduce((count, row) => count + Number(row.product_count || 0), 0),
                 weight: table.value.body.reduce((weight, row) => weight + (Number(row.product_count || 0) * Number(row.product_weight || 0)), 0),
+                volume: table.value.body.reduce((volume, row) => volume + (Number(row.product_count || 0) * Number(row.product_volume || 0)), 0),
                 sum: table.value.body.reduce((sum, row) => sum + (Number(row.product_count || 0) * Number(row.product_price || 0)), 0)
             }
         }

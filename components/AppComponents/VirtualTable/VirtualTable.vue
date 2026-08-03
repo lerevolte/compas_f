@@ -366,6 +366,12 @@
     }
   }
 
+  watch(() => [props.table?.table, props.table?.list], () => {
+    if (props.options?.isLocalTable && isClient.value) {
+      table.value.getLocalTable(props.table)
+    }
+  })
+
   watch(() => props.options.updatingCount, () => {
     if (props.options.updatingCount) {
       // Сбрасываем socket-очередь перед ручной перезагрузкой — иначе баннер

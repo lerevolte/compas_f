@@ -331,6 +331,10 @@
                 document.addEventListener('mousedown', this._mousedownHandler)
                 nextTick(() => this.checkPosition(event));
 
+                if (props.options?.relation_type) {
+                    this.throttledFilter('')
+                }
+
                 // Fill search with current value text for editing
                 const activeOpt = getActiveOption(this.index);
                 if (activeOpt?.value) {

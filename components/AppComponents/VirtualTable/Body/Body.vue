@@ -1264,7 +1264,7 @@
         // остальные ключи копируем в row напрямую.
         for (let key in row) {
             if (key in activeOption) {
-                if (["count", "weight", "price"].includes(key)) {
+                if (["count", "weight", "volume", "price"].includes(key)) {
                     row[`product_${key}`] = activeOption[key];
                 } else {
                     row[key] = activeOption[key];
@@ -1275,6 +1275,7 @@
         if (activeOption.price !== undefined) row.product_price = activeOption.price
         if (activeOption.count !== undefined) row.product_count = activeOption.count
         if (activeOption.weight !== undefined) row.product_weight = activeOption.weight
+        if (activeOption.volume !== undefined) row.product_volume = activeOption.volume
 
         row.name = activeOption.text
         row.product_name = activeOption.text

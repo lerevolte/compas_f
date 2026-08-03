@@ -73,6 +73,7 @@
                 }"
                 :table="detail.products"
                 :slug="'products'"
+                @saveTable="detail.get()"
                 @openModal="item => emit('action', {
                     action: 'openModal',
                     value: item
