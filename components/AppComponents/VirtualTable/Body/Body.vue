@@ -300,6 +300,29 @@
                                 {{ cell.useCellSelectModel(row.index, column).value }}
                             </span>
 
+                            <span class="table__text text" :title="multiTextValue(row.index, column)" v-else-if="column.type == 'multi_text'">
+                                {{ multiTextValue(row.index, column) }}
+                            </span>
+
+                            <span
+                                class="table__text text"
+                                v-else-if="column.type == 'deal_stages'"
+                                :title="stageOption(row.index, column)?.label"
+                                :style="{ display: 'inline-flex', alignItems: 'center', gap: '6px' }"
+                            >
+                                <span
+                                    v-if="stageOption(row.index, column)"
+                                    :style="{
+                                        width: '8px',
+                                        height: '8px',
+                                        minWidth: '8px',
+                                        borderRadius: '50%',
+                                        background: stageOption(row.index, column)?.color || '#ccc'
+                                    }"
+                                ></span>
+                                {{ stageOption(row.index, column)?.label ?? '' }}
+                            </span>
+
                             <span class="table__text text" v-else-if="column.type == 'json'" :title="jsonTitle(cell.useCellModel(row.index, column).value)" v-html="jsonInline(cell.useCellModel(row.index, column).value)"></span>
 
                             <AppRouteStatuses
@@ -730,6 +753,27 @@
     }
 
     const cell = new Cell()
+
+    const multiTextValue = (rowIndex, column) => {
+        let value = table.value.body[rowIndex]?.[column.key]
+        if (typeof value === 'string') {
+            try {
+                const parsed = JSON.parse(value)
+                if (Array.isArray(parsed)) value = parsed
+            } catch (e) {}
+        }
+        if (Array.isArray(value)) {
+            return value.filter(v => v != null && v !== '').join(', ')
+        }
+        return value ?? ''
+    }
+
+    const stageOption = (rowIndex, column) => {
+        let value = table.value.body[rowIndex]?.[column.key]
+        if (value && typeof value === 'object' && 'value' in value) value = value.value
+        if (value == null || value === '') return null
+        return (column.options || []).find(option => option.value == value) ?? { label: value, color: null }
+    }
 
     const getItemKey = (item) => {
         // Используем original если доступен (реальные данные строки), иначе сам item

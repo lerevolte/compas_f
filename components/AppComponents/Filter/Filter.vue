@@ -94,13 +94,14 @@
                             <IconDrag 
                                 class="icon_drag-field"
                             />
-                            <AppSelect 
-                                v-if="field.type == 'select_dropdown' || field.type == 'relation'"
+                            <AppSelect
+                                v-if="field.type == 'select_dropdown' || field.type == 'relation' || field.type == 'deal_stages'"
                                 :isPreventBottom="true"
                                 :options="{
                                     ...field,
                                     list: field.options ?? [],
                                     isHaveNull: true,
+                                    multiple: field.type == 'deal_stages' ? true : field.multiple,
                                     searchable: field.type == 'relation',
                                     relation: field.type == 'relation' ? field.id : null
                                 }"
@@ -394,6 +395,14 @@
                         return transformSelect(this.state.tabsValues[key], key, type)
                     case 'relation':
                         return transformSelect(this.state.tabsValues[key], key, type)
+                    case 'deal_stages': {
+                        const value = this.state.tabsValues[key]
+                        if (Array.isArray(value)) {
+                            const transformed = value.map(item => transformSelect(item, key, type)).filter(v => v != null)
+                            return type == 'request' ? transformed : transformed.join(', ')
+                        }
+                        return transformSelect(value, key, type)
+                    }
                     default:
                         return this.state.tabsValues[key]
                 }
