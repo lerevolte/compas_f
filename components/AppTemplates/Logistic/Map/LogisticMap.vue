@@ -842,11 +842,12 @@
             let iconColorStyle = '';
             if (routeGroup) {
                 const glyph = iconType === 'mixed' ? '/img/cluster-mixed.svg' : '/img/cluster-route.svg';
+                const glyphSize = iconType === 'mixed' ? '14px' : 'auto 12px';
                 const color = routeGroup.color;
                 const isGradient = typeof color === 'string' && /gradient\(/i.test(color);
                 const style = isGradient
-                    ? `background-image: url('${glyph}'), ${color}; background-size: 15%, cover; background-position: center, center; background-repeat: no-repeat, no-repeat;`
-                    : `background-image: url('${glyph}'); background-size: 15%; background-position: center; background-repeat: no-repeat; background-color: ${color};`;
+                    ? `background-image: url('${glyph}'), ${color}; background-size: ${glyphSize}, cover; background-position: center, center; background-repeat: no-repeat, no-repeat;`
+                    : `background-image: url('${glyph}'); background-size: ${glyphSize}; background-position: center; background-repeat: no-repeat; background-color: ${color};`;
                 iconColorStyle = ` style="${style}"`;
             }
 

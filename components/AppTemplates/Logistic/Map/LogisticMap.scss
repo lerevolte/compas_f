@@ -641,7 +641,7 @@
     margin-right: 8px;
     border-radius: 7px;
     background-color: #A6B7D4; // фолбэк/серый (для unassigned); route — inline, mixed — градиент
-    background-size: 15%;
+    background-size: auto 12px;
     background-position: center;
     background-repeat: no-repeat;
 }
@@ -657,7 +657,7 @@
 
 .cluster-popup_route .cluster-marker__icon {
     background-image: url('/img/cluster-route.svg');
-    background-size: 15%;
+    background-size: auto 12px;
 }
 
 .cluster-popup_mixed .cluster-marker__icon {

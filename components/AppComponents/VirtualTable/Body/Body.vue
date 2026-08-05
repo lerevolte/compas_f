@@ -131,6 +131,7 @@
                                 // только «Всего X, посмотреть все», при 1 —
                                 // само значение (8533).
                                 isCompact: true,
+                                isCanAdd: table.body[row.index] && !column.read_only && (table.body[row.index]?.edit || table.options.isPermanentEdit) && (column.can_edit ?? true),
                                 placeholder: ''
                             }"
                             v-model="cell.useCellModel(row.index, column).value"
@@ -763,7 +764,13 @@
             } catch (e) {}
         }
         if (Array.isArray(value)) {
-            return value.filter(v => v != null && v !== '').join(', ')
+            return value
+                .filter(v => v != null && v !== '')
+                .map(v => column.mask ? common.formatByMask(v, column.mask) : v)
+                .join(', ')
+        }
+        if (value != null && value !== '' && column.mask) {
+            return common.formatByMask(value, column.mask)
         }
         return value ?? ''
     }

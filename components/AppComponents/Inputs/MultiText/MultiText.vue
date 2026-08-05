@@ -10,7 +10,7 @@
                     :options="{
                         id: `${props.options.id}_${index}`,
                         title: '',
-                        type: 'text',
+                        type: props.options.mask === 'email' ? 'email' : 'text',
                         name: '',
                         mask: props.options.mask ?? null,
                         placeholder: ''
@@ -29,7 +29,7 @@
 
         <div class="multi-text__view" v-else>
             <p class="multi-text__value" v-for="(item, index) in filled" :key="index">
-                {{ item }}
+                {{ props.options.mask ? common.formatByMask(item, props.options.mask) : item }}
             </p>
             <p class="multi-text__value multi-text__value_empty" v-if="filled.length === 0">
                 Не заполнено
@@ -43,6 +43,9 @@
     import AppInput from '@AppComponents/Inputs/Input/Input.vue'
     import AppButton from '@AppComponents/Button/Button.vue'
     import IconClose from '@AppIcons/Close.vue'
+    import { Common } from '@AppHelpers/classes.js'
+
+    const common = new Common()
 
     const props = defineProps({
         options: {
