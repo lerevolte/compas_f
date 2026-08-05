@@ -298,6 +298,16 @@
                 setTimeout(() => {
                     tabs.value.set({tab: tabs.value.list.find(p => p.slug == props.tab_slug), is_module: false})
                 }, 100);
+            } else if (!tabs.value.is_module) {
+                const current = tabs.value.list.find(p => p.tab == tabs.value.active.tab && p.enabled)
+                if (!current) {
+                    const available = tabs.value.list.find(p => p.enabled && (!p.childs || p.childs.length == 0))
+                    if (available && available.tab != tabs.value.active.tab) {
+                        setTimeout(() => {
+                            tabs.value.set({tab: available, is_module: false})
+                        }, 100);
+                    }
+                }
             }
         }
 
