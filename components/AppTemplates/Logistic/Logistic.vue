@@ -301,6 +301,44 @@
     const logistic = ref(new LogisticWithMap(props.activeDate));
     logistic.value.onRouteChanged = () => emit('routeChanged');
 
+    const socket = inject('socket', null);
+
+    const extractRelId = (v) => {
+        if (v == null) return null;
+        if (Array.isArray(v)) return v[0] ?? null;
+        if (typeof v === 'object') {
+            if (Array.isArray(v.value)) return v.value[0] ?? null;
+            return v.value ?? v.id ?? null;
+        }
+        return v;
+    };
+
+    watch(() => socket?.value?.entities?.logistic_tasks, (ent) => {
+        if (!ent) return;
+        const activeId = Number(logistic.value.machine_tasks.route_id || 0);
+        if (!activeId) return;
+        const isCreateForActiveRoute = (row) => Number(extractRelId(row?.route_id)) === activeId;
+
+        let consumed = false;
+        if (Array.isArray(ent.pendingOwn) && ent.pendingOwn.length) {
+            const rest = ent.pendingOwn.filter(p => !(p.kind === 'create' && isCreateForActiveRoute(p.data?.viewList)));
+            if (rest.length !== ent.pendingOwn.length) {
+                ent.pendingOwn = rest;
+                consumed = true;
+            }
+        }
+        if (Array.isArray(ent.table) && ent.table.length) {
+            const rest = ent.table.filter(p => !(p.state === 'create' && isCreateForActiveRoute(p.row)));
+            if (rest.length !== ent.table.length) {
+                ent.table = rest;
+                consumed = true;
+            }
+        }
+        if (consumed) {
+            logistic.value.machine_tasks.updatingCount++;
+        }
+    }, { deep: true });
+
     // Прокидываем activeTaskId из URL в state, чтобы карта/таблица подсветили
     // нужную задачу. Watch на случай позднего получения данных.
     if (props.activeTaskId) {
