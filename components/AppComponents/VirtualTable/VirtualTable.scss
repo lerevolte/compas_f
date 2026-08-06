@@ -168,6 +168,10 @@
   min-height: 50px;
   padding: 10px;
 
+  &:has(.form__item_textarea) {
+    z-index: 1;
+  }
+
   &.table__cell_fixed {
     position: sticky;
     z-index: 10;
