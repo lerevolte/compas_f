@@ -372,6 +372,13 @@
 
             if (!popupRef || !contentRef) return;
 
+            contentRef.style.position = ''
+            contentRef.style.left = ''
+            contentRef.style.width = ''
+            contentRef.style.top = ''
+            contentRef.style.bottom = ''
+            contentRef.style.margin = ''
+
             let bottomBound;
             if (props.parentContainer) {
                 bottomBound = props.parentContainer.getBoundingClientRect().bottom;
@@ -389,6 +396,33 @@
             }
             const contentRect = contentRef.getBoundingClientRect();
             this.state.isTop = props.isPreventBottom ? false : contentRect.bottom > bottomBound;
+
+            // Внутри скролл-контейнера таблицы absolute-выпадашка клипается
+            // overflow'ом — раскрываем её поверх через position: fixed.
+            if (popupRef.closest('.table')) {
+                const rect = popupRef.getBoundingClientRect()
+                contentRef.style.position = 'fixed'
+                contentRef.style.margin = '0'
+                contentRef.style.left = rect.left + 'px'
+                contentRef.style.width = rect.width + 'px'
+                if (this.state.isTop) {
+                    contentRef.style.top = 'auto'
+                    contentRef.style.bottom = (window.innerHeight - rect.top + 5) + 'px'
+                } else {
+                    contentRef.style.top = (rect.bottom + 5) + 'px'
+                    contentRef.style.bottom = 'auto'
+                }
+                if (this._scrollHandler) {
+                    window.removeEventListener('scroll', this._scrollHandler, true)
+                }
+                this._scrollHandler = (e) => {
+                    if (e.target && e.target.nodeType === 1 && contentRef.contains(e.target)) return
+                    window.removeEventListener('scroll', this._scrollHandler, true)
+                    this._scrollHandler = null
+                    if (this.state.isOpen) this.toggleOptions()
+                }
+                window.addEventListener('scroll', this._scrollHandler, true)
+            }
         }
 
         setOptions() {

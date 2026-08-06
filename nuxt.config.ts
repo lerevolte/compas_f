@@ -20,6 +20,12 @@ export default defineNuxtConfig({
     'nuxt-lodash',
     'pinia-plugin-persistedstate/nuxt',
   ],
+  piniaPluginPersistedstate: {
+    cookieOptions: {
+      maxAge: 60 * 60 * 24 * 30,
+      sameSite: 'lax',
+    },
+  },
   vite: {
     cacheDir: 'node_modules/.vite',
     resolve: {

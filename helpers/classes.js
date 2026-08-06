@@ -946,34 +946,42 @@ export class Table {
         try {
             this.downloadExcelBuffer.state = true
             this.downloadExcelBuffer.loading = true
-            let request = [
-                `sort_field=${this.sortItem.sort_field}`,
-                `sort_order=${this.sortItem.sort_order}`,
-                ...this.header.filter(p => p.key != 'isChoose' && p.key != 'actions' && p.enabled).map(p => {
-                    return `fields[]=${p.key}`
-                })
-            ]
 
-            if (this.dependences.state) {
-                const otherKeys = Object.keys(this.dependences.query)
-                for (let key of otherKeys) {
-                    if (key == 'trashed') {
-                        request.push(`${key}=${this.dependences.query[key] ? 1 : 0}`)
-                    } else if (Array.isArray(this.dependences.query[key])) {
-                        for (let value of this.dependences.query[key]) {
-                            request.push(`filter[${key}][]=${value}`)
+            // База — та же query-строка, что у текущей выдачи таблицы
+            // (фильтры, поиск q, trashed, dependences), без пагинации.
+            let request = (this.filter?.query ?? '')
+                .split('&')
+                .filter(p => p && !p.startsWith('per_page=') && !p.startsWith('page='))
+
+            if (!request.length) {
+                request = [
+                    `sort_field=${this.sortItem.sort_field}`,
+                    `sort_order=${this.sortItem.sort_order}`
+                ]
+                if (this.dependences.state) {
+                    for (let key of Object.keys(this.dependences.query)) {
+                        if (key == 'trashed') {
+                            request.push(`${key}=${this.dependences.query[key] ? 1 : 0}`)
+                        } else if (Array.isArray(this.dependences.query[key])) {
+                            for (let value of this.dependences.query[key]) {
+                                request.push(`filter[${key}][]=${encodeURIComponent(value)}`)
+                            }
+                        } else {
+                            request.push(`filter[${key}]=${encodeURIComponent(this.dependences.query[key])}`)
                         }
-                    } else {
-                        request.push(`filter[${key}]=${this.dependences.query[key]}`)
                     }
                 }
             }
+
+            request.push(...this.header.filter(p => p.key != 'isChoose' && p.key != 'actions' && p.enabled).map(p => {
+                return `fields[]=${p.key}`
+            }))
 
             response = await api.callMethod('GET', routes.table.download.replace('${slug}', this.slug) + `?${request.join('&')}`)
         } catch (error) {
             console.log('error_download_excel', error);
         } finally {
-            this.downloadExcelBuffer.link = response.data.link
+            this.downloadExcelBuffer.link = response?.data?.link ?? null
             this.downloadExcelBuffer.loading = false
         }
     }
