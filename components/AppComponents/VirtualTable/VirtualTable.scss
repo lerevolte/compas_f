@@ -366,12 +366,6 @@
     width: max-content;
     min-width: 100%;
   }
-  // Safari: will-change: transform создаёт containing block,
-  // sticky-ячейки начинают прилипать к строке вместо таблицы.
-  // @supports включает свойство только для не-Safari браузеров.
-  @supports not (-webkit-touch-callout: none) {
-    will-change: transform;
-  }
 
   &.table__row_edit {
     .form__item_status {
