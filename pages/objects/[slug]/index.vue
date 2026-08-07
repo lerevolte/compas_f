@@ -105,32 +105,34 @@
 					</p>
 				</template>
 				<template v-else-if="catalog.modal.action == 'create' || catalog.modal.action == 'update'">
-					<AppInput
-						v-model="catalog.modal.content.name"
-						:options="{
-							id: 'category_name',
-							title: 'Название',
-							type: 'text',
-							name: 'name'
-						}"
-					/>
-					<AppSelect
-						:isPreventBottom="true"
-						:options="{
-							id: 'category_parent',
-							title: 'Категория',
-							type: 'select_dropdown',
-							list: catalog.parentOptions(),
-							name: 'parent_id',
-							edit: true,
-							searchable: false,
-							required: false,
-							isHaveNull: true,
-							multiple: false,
-							placeholder: 'Без родительской категории'
-						}"
-						v-model="catalog.modal.content.parent_id"
-					/>
+					<div class="modal__fields">
+						<AppInput
+							v-model="catalog.modal.content.name"
+							:options="{
+								id: 'category_name',
+								title: 'Название',
+								type: 'text',
+								name: 'name'
+							}"
+						/>
+						<AppSelect
+							:isPreventBottom="true"
+							:options="{
+								id: 'category_parent',
+								title: 'Категория',
+								type: 'select_dropdown',
+								list: catalog.parentOptions(),
+								name: 'parent_id',
+								edit: true,
+								searchable: false,
+								required: false,
+								isHaveNull: true,
+								multiple: false,
+								placeholder: 'Без родительской категории'
+							}"
+							v-model="catalog.modal.content.parent_id"
+						/>
+					</div>
 				</template>
 			</AppModalWarning>
 		</teleport>

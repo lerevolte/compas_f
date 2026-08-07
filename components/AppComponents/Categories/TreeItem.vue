@@ -55,7 +55,7 @@
         }
     })
 
-    const open = ref(true)
+    const open = ref(false)
 
     const hasChildren = computed(() => {
         return Array.isArray(props.item.children) && props.item.children.length > 0
