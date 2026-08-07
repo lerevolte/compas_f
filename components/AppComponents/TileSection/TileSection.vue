@@ -194,7 +194,7 @@
 
                     <AppDealStages
                         v-else-if="field.type == 'deal_stages'"
-                        :options="{ ...field, mode: 'value' }"
+                        :options="{ ...field, mode: 'value', isExternal: props.options?.isExternal }"
                         :pageId="props.pageId"
                     />
 

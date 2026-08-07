@@ -4,13 +4,60 @@
             {{ props.options.title }}
         </label>
 
-        <span class="deal-stages__value" v-if="current" :title="current.label">
+        <span
+            class="deal-stages__value"
+            :class="{'deal-stages__value_clickable': isValueClickable}"
+            v-if="current"
+            :title="current.label"
+            @click="isValueClickable ? listModal = true : null"
+        >
             <span class="deal-stages__dot" :style="{ background: current.color || '#ccc' }"></span>
             {{ current.label }}
         </span>
-        <span class="deal-stages__value deal-stages__value_empty" v-else>
+        <span
+            class="deal-stages__value deal-stages__value_empty"
+            :class="{'deal-stages__value_clickable': isValueClickable}"
+            v-else
+            @click="isValueClickable ? listModal = true : null"
+        >
             не заполнено
         </span>
+
+        <teleport to="#menu__overlay" v-if="listModal">
+            <dialog class="modal modal_warning" open>
+                <div class="modal__background" @click="listModal = false"></div>
+
+                <div class="modal__content">
+                    <IconClose class="modal__close" @click="listModal = false" />
+
+                    <AppH2>
+                        Изменить стадию
+                    </AppH2>
+
+                    <div class="deal-stages__list">
+                        <AppButton
+                            v-for="stage in stages"
+                            :key="stage.value"
+                            class="deal-stages__list-button"
+                            :class="{
+                                'skeleton': loading,
+                                'deal-stages__list-button_active': stage.value == value
+                            }"
+                            @click="stage.value == value ? null : applyStage(stage)"
+                        >
+                            <span class="deal-stages__dot" :style="{ background: stage.color || '#ccc' }"></span>
+                            {{ stage.label }}
+                        </AppButton>
+                    </div>
+
+                    <div class="modal__buttons">
+                        <AppButton @click="listModal = false">
+                            Отмена
+                        </AppButton>
+                    </div>
+                </div>
+            </dialog>
+        </teleport>
     </div>
 
     <div class="deal-stages deal-stages_bar" v-else>
@@ -152,8 +199,16 @@
         : props.options.value)
     const confirmStage = ref(null)
     const finalModal = ref(null)
+    const listModal = ref(false)
     const loading = ref(false)
     const hoverIndex = ref(null)
+
+    const isValueClickable = computed(() =>
+        props.pageId
+        && stages.value.length > 0
+        && props.options.can_edit !== false
+        && props.options.isExternal !== true
+    )
 
     watch(() => props.options.value, (next) => {
         value.value = typeof next === 'object' && next !== null ? next.value : next
@@ -224,6 +279,7 @@
             loading.value = false
             confirmStage.value = null
             finalModal.value = null
+            listModal.value = false
         }
     }
 
