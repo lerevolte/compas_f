@@ -14,7 +14,7 @@
     </div>
 
     <div class="deal-stages deal-stages_bar" v-else>
-        <div class="deal-stages__bar" v-if="stages.length > 0" @mouseleave="hoverIndex = null">
+        <div class="deal-stages__bar" v-if="stages.length > 0" @pointerleave="hoverIndex = null">
             <div
                 class="deal-stages__segment"
                 v-for="(stage, index) in processStages"
@@ -25,7 +25,7 @@
                 }"
                 :style="{ '--stage-color': paintColor }"
                 :title="stage.label"
-                @mouseenter="hoverIndex = index"
+                @pointerenter="e => e.pointerType == 'mouse' && (hoverIndex = index)"
                 @click="props.options.edit == false ? null : confirmStage = stage"
             >
                 <span class="deal-stages__segment-name">
@@ -41,7 +41,7 @@
                 }"
                 :style="{ '--stage-color': paintColor }"
                 :title="finalLabel"
-                @mouseenter="hoverIndex = finalIndex"
+                @pointerenter="e => e.pointerType == 'mouse' && (hoverIndex = finalIndex)"
                 @click="props.options.edit == false ? null : finalModal = 'choice'"
             >
                 <span class="deal-stages__segment-name">

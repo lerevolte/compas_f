@@ -76,8 +76,10 @@
         color: #fff;
     }
 
-    &.deal-stages__segment_hovered {
-        min-width: max-content;
+    @media (hover: hover) {
+        &.deal-stages__segment_hovered {
+            min-width: max-content;
+        }
     }
 }
 
