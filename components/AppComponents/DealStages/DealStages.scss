@@ -33,8 +33,10 @@
 
 .deal-stages__bar {
     width: 100%;
+    max-width: 100%;
     display: flex;
-    gap: 2px;
+    gap: 0;
+    overflow: hidden;
 }
 
 .deal-stages__segment {
@@ -43,7 +45,9 @@
     height: 26px;
     display: flex;
     align-items: center;
-    padding: 0 10px 0 14px;
+    box-sizing: border-box;
+    overflow: hidden;
+    padding: 0 8px 0 14px;
     background: #e3e3e3;
     color: #666;
     font-size: 12px;
@@ -70,12 +74,13 @@
     }
 
     &.deal-stages__segment_hovered {
-        flex: 0 1 auto;
-        min-width: fit-content;
+        min-width: max-content;
     }
 }
 
 .deal-stages__segment-name {
+    display: block;
+    width: 100%;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
