@@ -270,6 +270,31 @@
     }
 }
 
+.select__dot {
+    width: 8px;
+    height: 8px;
+    min-width: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.select__option {
+    .value__text {
+        &.value__text_dot {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+    }
+}
+
+.select__value {
+    .select__dot {
+        margin-right: 6px;
+    }
+}
+
 .select__value-icon {
     gap: 30px;
     display: flex;

@@ -34,12 +34,14 @@
     
                 <div class="select__values" ref="selectValuesRef" v-if="props.options.multiple">
                     <div class="select__value" v-for="option in activeOption" @click="select.changeValue(option)">
+                        <span class="select__dot" v-if="option?.color" :style="`background: ${option.color}`"></span>
                         {{ option?.label }}
 
                         <IconClose />
                     </div>
                 </div>
-                <div class="select__value select__value_single" :class="{ 'select__value_typing': select.state.search.length > 0 }" :style="activeOption?.color ? `color: ${activeOption.color}` : null" v-else>
+                <div class="select__value select__value_single" :class="{ 'select__value_typing': select.state.search.length > 0 }" v-else>
+                    <span class="select__dot" v-if="activeOption?.color" :style="`background: ${activeOption.color}`"></span>
                     {{ props.options.type == 'relation' ? activeOption?.label.text : activeOption?.label }}
                 </div>
 
@@ -59,7 +61,8 @@
                     :value="option.value"
                     @click="select.changeValue(option)"
                 >
-                    <span class="value__text" :style="option.color ? `color: ${option.color}` : null">
+                    <span class="value__text" :class="{'value__text_dot': option.color}">
+                        <span class="select__dot" v-if="option.color" :style="`background: ${option.color}`"></span>
                         {{ (option.label && typeof option.label === 'object') ? (option.label.text ?? '') : (option.label ?? '') }}
                     </span>
                 </div>

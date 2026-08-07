@@ -16,6 +16,10 @@
     grid-template-rows: repeat(2, auto) 1fr;
     height: 100%;
 
+    &:has(> .deal-stages_bar) {
+        grid-template-rows: repeat(3, auto) 1fr;
+    }
+
     .arrow-back {
         order: 1;
         display: none !important;

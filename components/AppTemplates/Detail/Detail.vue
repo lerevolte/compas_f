@@ -38,7 +38,13 @@
                 />
             </div>
         </header>
-        <AppTabs 
+        <AppDealStages
+            v-if="stageField && detail.id && !detail.isGlobalEdit && !detail.forbidden && !props.is_external"
+            :options="{ ...stageField, title: null, mode: 'bar', edit: stageField.can_edit !== false }"
+            :pageId="detail.id"
+            @changed="detail.updateComponent++"
+        />
+        <AppTabs
             :tabs="tabs.list"
             :activeTab="tabs.active?.tab"
             :isModule="tabs.is_module"
@@ -101,6 +107,7 @@
     import DetailDynamic from './Dynamic/Dynamic.vue';
     import IconArrowBack from '@AppIcons/ArrowBack.vue';
     import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'
+    import AppDealStages from '@AppComponents/DealStages/DealStages.vue'
 
     const textareaRef = ref(null)
     const router = useRoute()
@@ -370,6 +377,17 @@
     const canEditTitle = computed(() => {
         const field = common.findColumnField(detail.value.columns, 'name')
         return field ? !!field.can_edit : true
+    })
+
+    const stageField = computed(() => {
+        for (const column in detail.value.columns) {
+            for (const section of detail.value.columns[column] ?? []) {
+                for (const field of section.fields ?? []) {
+                    if (field.type == 'deal_stages') return field
+                }
+            }
+        }
+        return null
     })
     const tabs = ref(new Tabs())
 

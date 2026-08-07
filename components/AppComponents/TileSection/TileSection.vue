@@ -194,7 +194,7 @@
 
                     <AppDealStages
                         v-else-if="field.type == 'deal_stages'"
-                        :options="{ ...field }"
+                        :options="{ ...field, mode: 'value' }"
                         :pageId="props.pageId"
                     />
 
