@@ -120,15 +120,6 @@
                     </span>
                 </div>
 
-                <div
-                    class="select__option select__option_create"
-                    v-if="props.options.relation_type == 'products' && (selectInstances[index]?.state?.search || '').trim().length > 0"
-                    :value="null"
-                    @click="selectInstances[index]?.commitCustom()"
-                >
-                    Добавить «{{ selectInstances[index].state.search.trim() }}»
-                </div>
-
                 <div class="select__option select__option_create" v-if="props.options.slug != 'roles'" :value="null" @click="emit('create', {related_table: props.options.relation})">
                     Создать
                 </div>
@@ -223,6 +214,7 @@
                     return
                 }
                 if (this.selectRef && !this.selectRef.contains(event.target)) {
+                    this.commitCustomIfTyped()
                     this.state.isOpen = false;
                     this.state.search = ''
                     this.state.isTop = false
@@ -290,18 +282,27 @@
         }
 
         changeValue(option, selectIndex) {
+            this.state.search = ''
             this.toggleOptions()
             updateModelValue(option.value, option, selectIndex);
         }
 
-        commitCustom() {
+        commitCustomIfTyped() {
+            if (props.options?.relation_type != 'products') return false
             const text = (this.state.search || '').trim()
-            if (!text) return
+            if (!text) return false
+            const active = getActiveOption(this.index)
+            if (active?.label?.text && String(active.label.text).trim() === text) return false
+            updateModelValue(null, { value: null, label: { id: null, text } }, this.index);
+            return true
+        }
+
+        commitCustom() {
+            this.commitCustomIfTyped()
             this.state.search = ''
             if (this.state.isOpen) {
                 this.toggleOptions()
             }
-            updateModelValue(null, { value: null, label: { id: null, text } }, this.index);
         }
 
         toggleOptions(event) {
@@ -312,6 +313,7 @@
             
             selectInstances.value.forEach((instance, idx) => {
                 if (idx !== this.index && instance.state.isOpen) {
+                    instance.commitCustomIfTyped();
                     instance.state.isOpen = false;
                     instance.state.isTop = false
                     instance.state.search = '';
@@ -347,6 +349,7 @@
                     }
                 });
             } else {
+                this.commitCustomIfTyped()
                 this.state.isTop = false;
                 this.state.search = ''
                 this.clearFixedPosition()
