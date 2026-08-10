@@ -103,7 +103,8 @@
                                     isHaveNull: true,
                                     multiple: field.type == 'deal_stages' ? true : field.multiple,
                                     searchable: field.type == 'relation',
-                                    relation: field.type == 'relation' ? field.id : null
+                                    relation: field.type == 'relation' ? field.id : null,
+                                    isShowDot: field.type == 'deal_stages'
                                 }"
                                 v-model="filter.state.tabsValues[field.key]"
                                 @update:list="options => field.options = options"
@@ -290,9 +291,6 @@
     let checkTabsWidthTimeout = null
     let isCheckingTabs = false
 
-    // Сдвигаем каретку инпута за чипсами фильтров: ставим на .filter__header
-    // CSS-переменную --filter-tabs-width, равную фактической ширине .filter__tabs.
-    // Иначе пользователь не может ввести поисковый запрос, когда фильтры применены.
     const updateTabsWidthVar = () => {
         if (typeof document === 'undefined') return
         const headers = document?.querySelectorAll?.('.filter > .filter__header') || []
@@ -319,9 +317,6 @@
             this.state = reactive({
                 activeTabs: [],
                 hiddenTabs: [],
-                // search — значение во внешнем (header) инпуте, чистится после
-                // submit. searchInPopup — значение в попапном инпуте «Поиск»,
-                // отражает ТЕКУЩИЙ применённый запрос (как в чипе), не чистится.
                 search: '',
                 searchInPopup: '',
                 searchEnabled: false,
@@ -330,17 +325,10 @@
                 tabsValues: {}
             });
 
-            // Закрытие опций
             this.closeContent = (event, state = false) => {
                 if (!state && event && event.target) {
-                    // Контент вложенных AppPopup/AppShowMore/дейтпикера
-                    // телепортирован в body (см. Popup.vue) — клик по нему
-                    // НЕ «снаружи фильтра», попап фильтра закрывать нельзя.
                     if (typeof event.target.closest === 'function'
                         && event.target.closest('.popup__content, .dp__menu')) return;
-                    // Элемент мог быть выкинут из DOM до того, как событие
-                    // дошло до document (чекбокс «Выбрать поле» перерисовал
-                    // список) — contains() даст false-срабатывание «вне».
                     if (event.target.isConnected === false) return;
                 }
                 if (state || (this.filterRef.value && !this.filterRef.value.contains(event.target))) {
@@ -350,7 +338,6 @@
             };
         }
 
-        // Удаление несохранённых полей
         dropUnsavedFields() {
             console.log('dropUnsavedFields called');
             for (let key in this.state.tabsValues) {
@@ -364,10 +351,8 @@
             this.closeContent(null, true)
         }
 
-        // Обновление информации
         updateInfo(opts = {}) {
             const setValue = (key, type = null) => {
-                // Трансформация селекта
                 const transformSelect = (item, key, type = null) => {
                     const field = this.state.fields.find(p => p.key == key)
                     if (field) {
@@ -407,12 +392,6 @@
                         return this.state.tabsValues[key]
                 }
             }
-            // Текст применяемого поиска: новый ввод из инпута (header/popup)
-            // или, если ввода нет, — уже применённый ранее чип «Поиск».
-            // Без этого fallback на existing chip применение любого фильтра
-            // снимало активный поисковый чип (state.search чистится после
-            // submit, и effectiveSearch стало пустым → updateInfo строил
-            // activeTabs без 'search').
             const inputSearch = opts.fromPopup ? this.state.searchInPopup : this.state.search
             const existingSearchChip = this.state.activeTabs.find(t => t.key == 'search')?.value || ''
             const effectiveSearch = inputSearch || existingSearchChip
@@ -450,14 +429,10 @@
             console.log('updateInfo request:', request);
             injectedFilter.get(request)
 
-            // Чистим внешний header-инпут (дублировал значение чипа). Попапный
-            // оставляем с текущим применённым значением, чтобы пользователь
-            // мог его поправить и снова отправить Enter.
             this.state.search = ''
             this.state.searchInPopup = effectiveSearch || ''
         }
 
-        // Открытие/закрытие опций
         toggleOptions(event) {
             if (this.state.isOpen && this.filterRef.value.contains(event.target)) return
             this.state.isOpen = !this.state.isOpen;
@@ -470,7 +445,6 @@
             }
         }
 
-        // Удаление вкладки
         deleteTab(tab) {
             this.state.activeTabs = this.state.activeTabs.filter(p => p.key != tab.key)
             this.state.tabsValues[tab.key] = null
@@ -505,7 +479,6 @@
             }
         }
 
-        // Получение полей
         getFields() {
             this.state.fields = JSON.parse(JSON.stringify(injectedFilter.fields))
 
@@ -540,7 +513,6 @@
         }
     }
 
-    // Сохраненный фильтр
     class SavedFilter {
         constructor() {
             this.actions = [
@@ -577,7 +549,6 @@
             })
         }
 
-        // Обновление сортировки
         updateSort() {
             injectedFilter.saves = injectedFilter.saves.map((p, index) => {
                 p.sort = p.is_hidden ? -1 : index
@@ -585,7 +556,6 @@
             })
         }
  
-        // Получение полей и значений из сохраненного фильтра
         get(item, is_update = true) {
             let findedField = null
             let flag = false
@@ -604,7 +574,6 @@
             }
 
             if (is_update) {
-                // filter.updateInfo()
             }
 
             if (flag) {
@@ -612,7 +581,6 @@
             }
         }
 
-        // Перемещение сохраненного фильтра вверх
         moveUp(item, index) {
             if (index <= 0) return
             const prev = savedFilters.value[index - 1]
@@ -622,7 +590,6 @@
             injectedFilter.moveSavedFilters(savedFilters.value.map(p => p.id))
         }
 
-        // Перемещение сохраненного фильтра вниз
         moveDown(item, index) {
             if (index >= savedFilters.value.length - 1) return
             const curr = savedFilters.value[index]
@@ -642,7 +609,6 @@
             })
         }
 
-        // Редактирование сохраненного фильтра
         save() {
             const request = {
                 title: this.active.title,
@@ -666,20 +632,17 @@
             this.clear()
         }
 
-        // Инициализация создания
         initCreate() {
             this.active.state = true
             this.active.id = 'new'
             this.active.is_hidden = false
         }
 
-        // Отмена редактирования
         cancel() {
             injectedFilter.saves[injectedFilter.saves.findIndex(p => p.id == this.active.id)] = this.backupTemplate
             this.clear()
         }
 
-        // Очистка создания
         clear() {
             Object.assign(this.active, {
                 id: 0,
@@ -688,7 +651,6 @@
             })
         }
 
-        // Установка полей дефолтного фильтра
         setDefaultFields() {
             const hiddenFilter = injectedFilter.saves.find(f => f.is_hidden)
 
@@ -711,7 +673,6 @@
             filter.updateFields(this.active.fields)
         }
 
-        // Обновление дефолтного фильтра
         updateSavedFilter(item = null) {
             const hiddenFilter = injectedFilter.saves.find(f => f.is_hidden)
 
@@ -730,7 +691,6 @@
             })
         }
 
-        // Удаление сохраненного фильтра
         delete(item) {
             injectedFilter.deleteSavedFilter(item.id)
         }
@@ -748,52 +708,41 @@
 
     const filter = new Filter(filterRef)
 
-    // Инициализация обсерверов
     const initObservers = () => {
         if (!filterTabsRef.value || !filterRef.value) return;
 
-        // Следим за реальной шириной чипсов и прокидываем её через CSS-переменную.
         if (tabsWidthObserver.value) tabsWidthObserver.value.disconnect()
         tabsWidthObserver.value = new ResizeObserver(() => updateTabsWidthVar())
         tabsWidthObserver.value.observe(filterTabsRef.value)
         updateTabsWidthVar()
 
-        // Отслеживание изменения длины плашек
         const checkTabsWidth = () => {
             if (isCheckingTabs) return;
             if (!filterTabsRef.value || !filterRef.value) return;
             
-            // Очищаем предыдущий таймаут
             if (checkTabsWidthTimeout) {
                 clearTimeout(checkTabsWidthTimeout)
             }
             
-            // Debounce для избежания слишком частых вызовов
             checkTabsWidthTimeout = setTimeout(() => {
                 isCheckingTabs = true
                 
                 const containerWidth = filterRef.value.offsetWidth
                 const availableWidth = containerWidth - 100 // Запас 100px
                 
-                // Получаем все видимые табы (без элемента "и еще N")
                 const visibleTabs = filterTabsRef.value.querySelectorAll('.filter__tab:not(.filter__tab_other)')
                 const otherTab = filterTabsRef.value.querySelector('.filter__tab_other')
                 
-                // Вычисляем общую ширину видимых табов
                 let totalTabsWidth = 0
                 visibleTabs.forEach(tab => {
                     totalTabsWidth += tab.offsetWidth
                 })
                 
-                // Добавляем ширину элемента "и еще N", если он есть
                 if (otherTab && filter.state.hiddenTabs.length > 0) {
                     totalTabsWidth += otherTab.offsetWidth
                 }
                 
-                // Если не влезает - перемещаем самый длинный таб в hiddenTabs
-                // Продолжаем пока все не влезет
                 while (totalTabsWidth > availableWidth && filter.state.activeTabs.length > 0) {
-                    // Найти самый длинный элемент среди активных табов
                     let maxField = null
                     let maxFieldLength = 0
                     let maxFieldElement = null
@@ -815,7 +764,6 @@
                             filter.state.activeTabs = filter.state.activeTabs.filter((tab) => tab.key != field.key)
                             totalTabsWidth -= maxFieldLength
                             
-                            // Обновляем список видимых табов
                             const newVisibleTabs = filterTabsRef.value.querySelectorAll('.filter__tab:not(.filter__tab_other)')
                             if (newVisibleTabs.length === 0) break
                         } else {
@@ -826,14 +774,10 @@
                     }
                 }
                 
-                // Если влезает и есть скрытые табы - пытаемся вернуть обратно
-                // Продолжаем пока есть место и скрытые табы
                 while (totalTabsWidth <= availableWidth && filter.state.hiddenTabs.length > 0) {
-                    // Берем последний добавленный таб (он был первым скрыт)
                     const fieldToRestore = filter.state.hiddenTabs[filter.state.hiddenTabs.length - 1]
                     
                     if (fieldToRestore) {
-                        // Временно добавляем таб для проверки ширины
                         const tempTab = document.createElement('div')
                         tempTab.className = 'filter__tab'
                         tempTab.setAttribute('data-key', fieldToRestore.key)
@@ -846,7 +790,6 @@
                         const tempTabWidth = tempTab.offsetWidth
                         filterTabsRef.value.removeChild(tempTab)
                         
-                        // Проверяем, влезет ли таб обратно
                         const newTotalWidth = totalTabsWidth + tempTabWidth
                         if (newTotalWidth <= availableWidth) {
                             filter.state.hiddenTabs = filter.state.hiddenTabs.filter((tab) => tab.key != fieldToRestore.key)
@@ -864,7 +807,6 @@
             }, 50) // Debounce 50ms
         }
 
-        // MutationObserver для отслеживания изменений DOM
         if (classObserver.value) {
             classObserver.value.disconnect()
         }
@@ -876,7 +818,6 @@
             attributeFilter: ['class', 'style']
         })
 
-        // ResizeObserver для отслеживания изменений размера
         if (resizeObserver.value) {
             resizeObserver.value.disconnect()
         }
@@ -890,7 +831,6 @@
         initObservers()
     })
 
-    // Отслеживание появления filterTabsRef
     watch(() => filterTabsRef.value, (newVal) => {
         if (newVal) {
             nextTick(() => {
@@ -899,7 +839,6 @@
         }
     })
 
-    // Отслеживание изменений activeTabs для переинициализации обсервера
     watch(() => filter.state.activeTabs.length, () => {
         nextTick(() => {
             initObservers()

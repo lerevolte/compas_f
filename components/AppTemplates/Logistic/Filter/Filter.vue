@@ -16,7 +16,7 @@
     
                     <div class="logistic-filter__tabs">
                         <div class="logistic-filter__tab" v-for="tab in filter.tabs" @click="() => filter.update(tab)">
-                            {{ tab.title }}: {{ tab.label ?? tab.value }}
+                            <span class="logistic-filter__tab-text">{{ tab.title }}: {{ tab.label ?? tab.value }}</span>
                             <IconClose />
                         </div>
                     </div>
@@ -45,7 +45,6 @@
             this.search = null
             this.tabs = null
         }
-        // Получение табов
         get() {
             this.tabs = computed({
                 get() {
@@ -59,8 +58,6 @@
                                 if (tab.labels && Array.isArray(tab.labels)) {
                                     label = tab.labels[index] ?? null;
                                 }
-                                // Если бэкенд прислал точные заголовки границ (titles) —
-                                // используем их как есть, без дописывания «(от)»/«(до)».
                                 let title;
                                 if (tab.titles && Array.isArray(tab.titles) && tab.titles[index]) {
                                     title = tab.titles[index];
@@ -88,7 +85,6 @@
                 if (Array.isArray(item.value) && item.key == tab.key) {
                     const idx = item.value.indexOf(tab.value)
                     item.value.splice(idx, 1, null)
-                    // Also remove corresponding label
                     if (item.labels && Array.isArray(item.labels) && idx >= 0) {
                         item.labels.splice(idx, 1, null)
                     }

@@ -42,10 +42,8 @@
     top: 5px;
     margin-top: 20px;
     left: 5px;
-    // width: max-content;
     gap: 5px;
     cursor: pointer;
-    // pointer-events: none;
     display: flex;
     flex-wrap: wrap;
     overflow: hidden;
@@ -67,12 +65,19 @@
     padding: 4px 10px;
     border-radius: 5px;
     cursor: pointer;
-    // pointer-events: auto;
-    white-space: nowrap;
+    max-width: 100%;
+    box-sizing: border-box;
     background-color: variables.$color-hover-option;
+
+    .logistic-filter__tab-text {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 
     .icon__close {
         display: flex;
+        flex-shrink: 0;
         aspect-ratio: 1 / 1;
         width: 9px;
 

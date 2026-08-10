@@ -34,14 +34,14 @@
     
                 <div class="select__values" ref="selectValuesRef" v-if="props.options.multiple">
                     <div class="select__value" v-for="option in activeOption" @click="select.changeValue(option)">
-                        <span class="select__dot" v-if="option?.color" :style="`background: ${option.color}`"></span>
+                        <span class="select__dot" v-if="props.options.isShowDot && option?.color" :style="`background: ${option.color}`"></span>
                         {{ option?.label }}
 
                         <IconClose />
                     </div>
                 </div>
-                <div class="select__value select__value_single" :class="{ 'select__value_typing': select.state.search.length > 0 }" v-else>
-                    <span class="select__dot" v-if="activeOption?.color" :style="`background: ${activeOption.color}`"></span>
+                <div class="select__value select__value_single" :class="{ 'select__value_typing': select.state.search.length > 0 }" :style="!props.options.isShowDot && activeOption?.color ? `color: ${activeOption.color}` : null" v-else>
+                    <span class="select__dot" v-if="props.options.isShowDot && activeOption?.color" :style="`background: ${activeOption.color}`"></span>
                     {{ props.options.type == 'relation' ? activeOption?.label.text : activeOption?.label }}
                 </div>
 
@@ -61,8 +61,8 @@
                     :value="option.value"
                     @click="select.changeValue(option)"
                 >
-                    <span class="value__text" :class="{'value__text_dot': option.color}">
-                        <span class="select__dot" v-if="option.color" :style="`background: ${option.color}`"></span>
+                    <span class="value__text" :class="{'value__text_dot': props.options.isShowDot && option.color}" :style="!props.options.isShowDot && option.color ? `color: ${option.color}` : null">
+                        <span class="select__dot" v-if="props.options.isShowDot && option.color" :style="`background: ${option.color}`"></span>
                         {{ (option.label && typeof option.label === 'object') ? (option.label.text ?? '') : (option.label ?? '') }}
                     </span>
                 </div>
@@ -87,11 +87,6 @@
     import isEqual from 'lodash/isEqual'
     import AppError from '@AppComponents/Error/Error.vue'
 
-    // Распознаёт введённую строку координат "lat, lng" (разделитель — запятая
-    // и/или пробел). Возвращает {text, coords:[lat,lng]} с text = сама строка
-    // координат, либо null. Используется, чтобы при вводе координат в поле
-    // адреса в text сохранялись именно координаты, а не обратно-геокодированный
-    // адрес (по всем путям: выбор из списка, blur, Enter).
     const COORD_CAPTURE = /^(-?\d+(?:\.\d+)?)[,\s]+(-?\d+(?:\.\d+)?)$/
     const parseCoords = (str) => {
         if (typeof str !== 'string') return null
@@ -128,15 +123,11 @@
 
             this.closeOptions = (event) => {
                 if (!this.state.isOpen) return;
-                // Если mousedown был внутри селекта (пользователь начал выделять текст),
-                // то возникающий click — это «продолжение» этого жеста, и закрывать
-                // селект не нужно, иначе сбрасывается выделение.
                 if (this._mousedownInside) {
                     this._mousedownInside = false
                     return
                 }
                 if (selectRef.value && !selectRef.value.contains(event.target)) {
-                    // For address type - save typed text as value
                     if (props.options.type == 'address' && this.state.search && this.state.search.trim()) {
                         const typed = this.state.search.trim();
                         const coords = parseCoords(typed);
@@ -149,7 +140,6 @@
                         this.state.isOpen = false;
                         this.state.search = '';
                         this.state.isTop = false;
-                        // Update list with new value so activeOption can find it
                         this.state.list = [{ label: typed, value: newValue }];
                         this.state.visibleList = this.state.list;
                         document.removeEventListener('click', this.closeOptions);
@@ -164,14 +154,9 @@
                 }
             };
 
-            // Объявляем `throttle` один раз
             this.throttledFilter = throttle(async (value) => {
                 let response = null
                 if (props.options.type == 'address') {
-                    // Если введены координаты (lat, lng) — обратно-геокодированные
-                    // подсказки не запрашиваем. В список кладём саму строку
-                    // координат как единственную опцию, чтобы при выборе/blur в
-                    // text сохранились координаты, а не адрес.
                     const coords = parseCoords(value)
                     if (coords) {
                         const opt = { label: coords.text, value: coords }
@@ -209,7 +194,6 @@
             }
         }
 
-        // Фильтрация опций
         async filterOptions(value) {
             if (props.options.searchable) {
                 this.throttledFilter(value)
@@ -218,7 +202,6 @@
             }
         }
 
-        // Изменение значения
         changeValue(option) {
             if (props.options.multiple) {
                 if (props.modelValue == null) {
@@ -244,9 +227,6 @@
             }
         }
 
-        // Для поля адреса: если в поиске введены координаты — сохраняем их как
-        // значение (text = координаты) и закрываем список. Возвращает true, если
-        // координаты распознаны и сохранены (вызывается по Enter).
         commitAddressCoords(value) {
             if (props.options.type != 'address') return false
             const coords = parseCoords(value)
@@ -260,7 +240,6 @@
             return true
         }
 
-        // Открытие/закрытие опций
         toggleOptions(event) {
             if (props.options.edit == false) return
             if (props.options.multiple && this.state.isOpen && selectValuesRef.value.contains(event.target)) return
@@ -271,9 +250,6 @@
 
             if (this.state.isOpen) {
                 document.addEventListener('click', this.closeOptions);
-                // Запоминаем где начался mousedown — если внутри селекта (пользователь
-                // выделяет текст и тянет мышь), последующий click на document не должен
-                // закрывать селект (иначе выделение сбрасывается).
                 this._mousedownHandler = (e) => {
                     this._mousedownInside = !!(selectRef.value && selectRef.value.contains(e.target))
                 }
@@ -308,9 +284,6 @@
                 this.state.visibleList = props.options.list ?? []
 
                 if (props.modelValue && Array.isArray(this.state.list) && !this.state.list.find(p => isEqual(p.value, props.modelValue))) {
-                    // Legacy: значение могло прийти строкой (например, "Москва" для
-                    // Главного города). Приводим к {text, coords}, чтобы дальше
-                    // работала единая схема и не падал option.label.text.
                     let option = clonePrevValue(props.modelValue)
                     if (typeof option === 'string') {
                         option = { text: option, coords: null }
@@ -331,8 +304,6 @@
             if (props.parentContainer) {
                 bottomBound = props.parentContainer.getBoundingClientRect().bottom;
             } else {
-                // Учитываем плавающую панель массовых действий внизу страницы —
-                // иначе выпадающий список перекрывается ею.
                 bottomBound = window.innerHeight;
                 if (typeof document !== 'undefined') {
                     const massAction = document.querySelector('.mass-action');

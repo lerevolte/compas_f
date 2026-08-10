@@ -128,7 +128,7 @@ export default {
         updateSection: '/logistic/sections/${id}',
         createRoute: '/objects/routes/batch',
         changeRouteTasks: '/objects/routes/batch',
-        getModalCompanies: '/objects/search?field_id=1888&q=',
+        getModalCompanies: '/objects/search?field_id=1888&carrier_only=1&q=',
         getModalCars: '/objects/search?field_id=2064&q=',
         getModalEmployees: '/objects/search?field_id=1887&q=',
         getStatistics: '/analytics/logistics-all',

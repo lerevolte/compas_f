@@ -21,7 +21,6 @@ export function isImageSrc(file) {
 export class Common {
     constructor() {}
 
-    // Преобразование цены
     transformPrice(price, fixed) {
         return parseFloat(price).toFixed(fixed).replace(/\B(?=(\d{3})+(?!\d))/g, " ")
     }
@@ -44,7 +43,6 @@ export class Common {
         }
     }
 
-    // Преобразование номера
     transformPhone(phone, type = 'number') {
         if (type == 'link') {
             return phone
@@ -61,7 +59,6 @@ export class Common {
         }
     }
 
-    // Преобразование имени
     transformName(name, length) {
         const dotIndex = name.lastIndexOf('.');
         if (dotIndex === -1) return name;
@@ -74,7 +71,6 @@ export class Common {
           : `${response.slice(0, length)}...${response.slice(-3)}${ext}`;
       };
 
-    // Валидация полей
     validate(field, type) {
         const checkText = (text) => {
             return text != null && text != undefined && text.length > 0
@@ -131,7 +127,6 @@ export class Common {
         }
     }
 
-    // Показать уведомление
     showNotification(message, type = 'default', options = {}) {
         const formatedMessage = `
             <h4 class="Toastify__toast-title">${message.title}</h4>
@@ -152,7 +147,6 @@ export class Common {
     }
 
 
-    // Чистый URL без параметров
     cleanUrl() {
         if (window.location.search) {
             const cleanUrl = window.location.origin + window.location.pathname;
@@ -160,13 +154,11 @@ export class Common {
         }
     };
 
-    // Установка параметров в URL
     setQueryUrl(query) {
         const cleanUrl = window.location.origin + window.location.pathname + query;
         window.history.replaceState({}, document.title, cleanUrl);
     }
 
-    // Получение параметров из URL
     getQueryUrl() {
         const urlParams = new URLSearchParams(window.location.search);
         const params = {};
@@ -206,7 +198,6 @@ export class Common {
         }
     }
 
-    // Сортируем первый массив в порядке второго массива
     reorderArrayByKey(firstArray, secondArray, key) {
         const orderMap = new Map();
         secondArray.forEach((item, index) => {
@@ -220,14 +211,11 @@ export class Common {
         });
     }
 
-    // Копирование текста
     async copyText(text) {
         try {
-            // Проверяем поддержку современного API
             if (navigator.clipboard && window.isSecureContext) {
                 await navigator.clipboard.writeText(text)
             } else {
-                // Fallback для старых браузеров
                 const textArea = document.createElement('textarea')
                 textArea.value = text
                 textArea.style.position = 'fixed'
@@ -252,7 +240,6 @@ export class Common {
         }
     }
 
-    // Трансформация дат
     transformDate = (field, formatType = 'dd.MM.yyyy') => {
         if (Array.isArray(field)) {
             return `${format(field[0], formatType)} - ${format(field[1], formatType)}`
@@ -261,7 +248,6 @@ export class Common {
         }
     }
 
-    // Нахождение секции в колонках
     findColumnSection(columns, id) {
         for (let column in columns) {
             for (let section of columns[column]) {
@@ -279,7 +265,6 @@ export class Common {
         return null
     }
 
-    // Нахождение секции в колонках
     findColumnSectionByField(columns, id) {
         let group_field = null
         for (let column in columns) {
@@ -295,7 +280,6 @@ export class Common {
         return null
     }
 
-    // Нахождение поля в колонках
     findColumnField(columns, key) {
         for (let column in columns) {
             for (let section of columns[column]) {
@@ -309,16 +293,11 @@ export class Common {
         return null
     }
 
-    // Копирование ссылки
     copyLink(link) {
         this.copyText(link)
     }
 
-    // Копирование внешней ссылки
     async copyExternalLink({slug, id}) {
-        // Safari: после await user gesture теряется, и navigator.clipboard.writeText бросает
-        // NotAllowedError. Передаём ClipboardItem с Promise<Blob> — Safari принимает такую
-        // отложенную запись в рамках исходного клика.
         const buildBlob = async () => {
             const response = await api.callMethod('POST', routes.external_link.create, {
                 model_slug: slug,
@@ -344,7 +323,6 @@ export class Common {
         this.copyLink(`${window.location.origin}/external/${response.data.token}`)
     }
 
-    // Обновление названия файла
     async updateFileName({slug, id, field}) {
         await api.callMethod('POST', routes.detail.edit_fields.replaceAll('${slug}', slug), {
             rows: [
@@ -370,7 +348,6 @@ export class Auth {
         this.userStore = useUserStore()
     }
 
-    // Авторизация
     async logIn() {
         try {
             this.loading = true
@@ -420,7 +397,6 @@ export class Auth {
         }
     }
 
-    // Выход из системы
     async logOut() {
         this.userStore.token = null
         navigateTo('/auth')
@@ -481,7 +457,6 @@ export class Table {
         }
     }
 
-    // Получение данных для таблицы
     async get() {
         try {
             this.loading = true
@@ -504,9 +479,6 @@ export class Table {
             
             this.getHeader(response.data.table)
             await this.initVirtualizer()
-            // initVirtualizer() пересоздаёт виртуализатор после set(); без повторного
-            // measure() для таблицы из одной строки notify не приходит (размер тела не
-            // меняется = ResizeObserver молчит) и единственная строка не отрисовывается.
             if (this.rowVirtualizer) {
                 this.rowVirtualizer.scrollToIndex(0)
                 this.rowVirtualizer.measure()
@@ -548,7 +520,6 @@ export class Table {
         }
     }
 
-    // Получение данных для таблицы с параметрами
     async getWithQuery(query) {
         try {
             this.loading = true
@@ -569,7 +540,6 @@ export class Table {
         }
     }
 
-    // Инициализация виртуализации
     async initVirtualizer() {
         if (this._virtScope) {
             try {
@@ -579,7 +549,6 @@ export class Table {
         }
         await nextTick()
 
-        // Проверяем что tableRef доступен
         if (!this.tableRef) {
             console.warn('TableRef not available for virtualizer initialization')
             return
@@ -597,7 +566,6 @@ export class Table {
         })
     }
 
-    // Установка таблицы
     async set(response) {
         if (response.permissions) this.permissions = response.permissions
         this.getBody(response.list.data ?? response.list)
@@ -619,18 +587,9 @@ export class Table {
         this.clear()
     }
 
-    // Получнеие шапки
     getHeader(data, force = false) {
         if (!force && this.isChanged && Array.isArray(this.header) && this.header.length) return
-        // Служебные колонки `clicked` и `iconDrag` добавляются ниже на основе
-        // опций таблицы (isCheckClicked / isHaveOrder), а НЕ приходят с бэка.
-        // Но saveSettings раньше сохранял this.header целиком (вместе с ними),
-        // поэтому при перезагрузке они приходили в data и задваивались, а так
-        // же «протекали» на обычные страницы с тем же slug (например objects
-        // для logistic_tasks). Поэтому всегда вычищаем их из входных данных —
-        // источником истины для них являются опции таблицы.
         data = (data ?? []).filter(p => p.key !== 'clicked' && p.key !== 'iconDrag')
-        // Во внешней ссылке скрываем колонку действий (open/edit/delete и т.п.).
         if (this.options?.isExternal) {
             data = data.filter(p => p.key !== 'actions' && p.key !== 'isChoose')
         }
@@ -645,10 +604,6 @@ export class Table {
             if (typeof window !== 'undefined') {
                 const stored = window.localStorage.getItem(`table_clicked_fixed_${this.slug}`)
                 if (stored !== null) clickedFixed = stored === '1'
-                // Колонка `clicked` не сохраняется на бэкенд (служебная), поэтому
-                // её видимость (вкл/выкл в настройках отображения) запоминаем
-                // в localStorage — иначе после перезагрузки она снова включалась
-                // (8462).
                 const storedEnabled = window.localStorage.getItem(`table_clicked_enabled_${this.slug}`)
                 if (storedEnabled !== null) clickedEnabled = storedEnabled === '1'
             }
@@ -669,9 +624,6 @@ export class Table {
                 "value": false
             }, ...header]
         }
-        // Колонка-порядок: используется, например, в «Задачах в машине» —
-        // чтобы видеть номер задачи в маршруте (1, 2, 3 …). Рендерится в
-        // Body.vue по column.key == 'iconDrag' и выводит index + 1.
         if (this.options.isHaveOrder) {
             header = [{
                 "id": -1,
@@ -693,12 +645,7 @@ export class Table {
         this.header = header
     }
 
-    // Получение контента
     getBody(data) {
-        // Сохраняем id строки, которая была отмечена .table__row_clicked
-        // (флаг row.clicked), и переносим на свежие данные. Без этого после
-        // socket-loader/updatingCount таблица обновляется и пользователь
-        // теряет визуально активную строку (выбранный маршрут / задачу).
         const clickedId = this.body?.find?.(r => r && r.clicked)?.id ?? null
         if (clickedId != null && Array.isArray(data)) {
             this.body = data.map(row => ({
@@ -710,12 +657,10 @@ export class Table {
         }
     }
 
-    // Сортировка
     async setSortItem(item) {
         this.sortItem = item
     }
 
-    // Вернуть настройки по умолчанию
     async reset() {
         try {
             this.loading = true
@@ -737,7 +682,6 @@ export class Table {
         }
     }
 
-    // Пустое ли значение ячейки (формы значений — как в useCellModel)
     isEmptyCell(cell, column) {
         if (cell == null) return true
         if (column.type == 'address') return !(cell.text ?? cell.value ?? null)
@@ -751,8 +695,6 @@ export class Table {
         return String(cell).trim() === ''
     }
 
-    // Проверка обязательных полей у редактируемых строк перед массовым
-    // сохранением — как в деталке (Section.save → validator.check)
     validateRequired(rows) {
         const serviceKeys = ['isChoose', 'actions', 'clicked', 'iconDrag', 'iconDelete']
         const requiredColumns = this.header.filter(column => column.required && !serviceKeys.includes(column.key))
@@ -764,8 +706,6 @@ export class Table {
             if (emptyFields.length > 0) {
                 errors.push({
                     id: row.id,
-                    // колонки целиком — модалка валидации рендерит по ним
-                    // редактируемые поля (как в деталке)
                     columns: emptyFields,
                     fields: emptyFields.map(column => column.title)
                 })
@@ -774,10 +714,7 @@ export class Table {
         return errors
     }
 
-    // Сохранение
     async save() {
-        // На каждый объект с пустыми обязательными полями — предупреждение,
-        // сохранение блокируем, режим редактирования не сбрасываем.
         if (this.slug != 'products') {
             const errors = this.validateRequired(this.body.filter(row => row.edit))
             if (errors.length > 0) {
@@ -797,7 +734,7 @@ export class Table {
             let column = null
 
             if (this.slug == 'products') {
-                this.body = this.body.filter(row => row.id)
+                this.body = this.body.filter(row => row.id || (row.product_name && String(row.product_name).trim() !== ''))
                 request = JSON.parse(JSON.stringify(this.body))
                 request = request.map(row => {
                     return ({
@@ -848,9 +785,6 @@ export class Table {
             }
             
 
-            // Для products пустой request — валидный кейс: пользователь удалил
-            // все товары и хочет сохранить задачу без товаров (8551). Поэтому
-            // ранний выход только для остальных таблиц.
             if (request.length == 0 && this.slug != 'products') return
 
             if (this.slug) {
@@ -877,7 +811,6 @@ export class Table {
         }
     }
 
-    // Создание
     create(slug) {
         this.emit('openModal', {
             type: 'create',
@@ -886,10 +819,6 @@ export class Table {
         })
     }
 
-    // Создание задачи логистики из строки «Библиотеки задач» (addresses):
-    // открываем деталку создания logistic_tasks с полями по умолчанию из адреса.
-    // Поля addresses клонированы из logistic_tasks, поэтому их значения уже в той
-    // же форме, что ожидает форма создания задачи.
     createTaskFromAddress(row) {
         const keys = ['name', 'address', 'phone', 'time', 'car_requirements', 'employee_requirements', 'service_time', 'comment', 'contact', 'photo', 'client_id', 'weight', 'delivery_price']
         const defaults = {}
@@ -906,7 +835,6 @@ export class Table {
         })
     }
 
-    // Отмена редактирования
     cancel() {
         if (this.slug == 'products') {
             this.body = this.backup.body
@@ -925,7 +853,6 @@ export class Table {
         this.clear()
     }
 
-    // Очистка строк
     clear() {
         for (let i = 0; i < this.body.length; i++) {
             this.body[i].isChoose = false
@@ -940,15 +867,12 @@ export class Table {
         this.backup.body = []
     }
 
-    // Инициализация скачивания Excel
     async initDownloadExcel() {
         let response = null
         try {
             this.downloadExcelBuffer.state = true
             this.downloadExcelBuffer.loading = true
 
-            // База — та же query-строка, что у текущей выдачи таблицы
-            // (фильтры, поиск q, trashed, dependences), без пагинации.
             let request = (this.filter?.query ?? '')
                 .split('&')
                 .filter(p => p && !p.startsWith('per_page=') && !p.startsWith('page='))
@@ -986,7 +910,6 @@ export class Table {
         }
     }
 
-    // Скачать Excel
     downloadExcel() {
         window.open(this.downloadExcelBuffer.link, '_blank')
         this.downloadExcelBuffer = {
@@ -996,7 +919,6 @@ export class Table {
         }
     }
 
-    // Выбрать все строки
     chooseAll(state) {
         if (state) {
             this.body.forEach(row => {
@@ -1009,7 +931,6 @@ export class Table {
         }
     }
 
-    // Открыть строку
     open(row, slug = null) {
         this.emit('openModal', {
             ...row, 
@@ -1018,12 +939,10 @@ export class Table {
         })
     }
 
-    // Инициализация редактирования
     initEdit() {
         this.edit(this.body.filter(item => item.isChoose))
     }
 
-    // Редактировать строку (батчами для избежания зависаний)
     async edit(rows = []) {
         if (this.permissions?.update_p === 'N') return
         rows = Array.isArray(rows) ? rows : [rows]
@@ -1038,7 +957,6 @@ export class Table {
                 rows[i].edit = true
                 rows[i].isChoose = true
             }
-            // отдаём управление главному потоку между пачками
             await new Promise(requestAnimationFrame)
         }
     }
@@ -1087,7 +1005,6 @@ export class Table {
         return true
     }
 
-    // Инициализация удаления
     initDelete(rows = []) {
         if (this.permissions?.delete_p === 'N') return
         rows = typeof rows == 'boolean' || rows.length == 0 ? this.body.filter(item => item.isChoose) : rows
@@ -1100,7 +1017,6 @@ export class Table {
         
     }
 
-    // Удалить строку 
     async delete() {
         try {
             this.deleteBuffer.loading = true
@@ -1130,7 +1046,6 @@ export class Table {
         }
     }
 
-    // Локальное удаление строк
     localDelete(deletedRow) {
         this.backupLocalBody()
         this.state = 'edit'
@@ -1148,7 +1063,6 @@ export class Table {
         })
     }
 
-    // Бэкап локальных строк
     backupLocalBody(localBody = null) {{
         if (this.backup.body.length == 0) {
             this.backup.body = JSON.parse(JSON.stringify(localBody ?? this.body))
@@ -1175,7 +1089,6 @@ export class Table {
         }
     }}
 
-    // Инициализация удаления
     initRestore(rows = []) {
         rows = typeof rows == 'boolean' || rows.length == 0 ? this.body.filter(item => item.isChoose) : rows 
 
@@ -1186,7 +1099,6 @@ export class Table {
         }
     }
 
-    // Удалить строку 
     async restore() {
         try {
             this.deleteBuffer.loading = true
@@ -1228,7 +1140,6 @@ export class Table {
         }
     }
 
-    // Обновление таблицы при перетаскивании строки
     changeDrag(event) {
         if (event.added) {
             this.emit('getData', this.body)
@@ -1249,11 +1160,8 @@ export class Table {
         }
     }
 
-    // Конец перетаскивания
     async dragEnd(event) {
         document.body.classList.remove('body_unselected')
-        // Сохраняем скролл ДО сброса isDragging: смена режима позиционирования
-        // строк (relative → absolute) может сбросить scrollTop в 0 в Safari.
         const scrollEl = this.tableRef
         const savedTop = scrollEl?.scrollTop ?? 0
         const savedLeft = scrollEl?.scrollLeft ?? 0
@@ -1269,18 +1177,9 @@ export class Table {
             })
         }
 
-        // Обновляем виртуализатор после завершения перетаскивания.
-        // isShort-таблицы («Задачи в машине», «Задачи логистики» и т.п.) НЕ
-        // используют scroll-виртуализацию — их строки рендерятся напрямую из
-        // body.map (см. Body.vue rows). Пересоздание виртуализатора на каждый
-        // reorder только лишний раз перетряхивало DOM, который Sortable уже
-        // расставил, из-за чего нижние строки «скакали»/мерцали (задача 8453).
-        // Для коротких таблиц пропускаем — порядок и так уже в body.
         await nextTick()
         if (!this.options?.isShort) {
             this.initVirtualizer()
-            // setTimeout (макрозадача) запускается после всех nextTick виртуализатора —
-            // к этому моменту virtualizer уже пересоздан и scrollTop мог обнулиться.
             setTimeout(() => {
                 if (scrollEl && scrollEl.scrollTop === 0 && savedTop > 0) scrollEl.scrollTop = savedTop
                 if (scrollEl && scrollEl.scrollLeft === 0 && savedLeft > 0) scrollEl.scrollLeft = savedLeft
@@ -1290,7 +1189,6 @@ export class Table {
         this.emit('getData', this.body)
     }
 
-    // Пагинация
     async changePage(page) {
         try {
             this.loading = true
@@ -1303,7 +1201,6 @@ export class Table {
         }
     }
 
-    // Сортировка таблицы
     async sort(column) {
         try {
             this.loading = true
@@ -1367,7 +1264,6 @@ export class Table {
         })
     }
 
-    // Сохранение настроек
     async saveSettings(role) {
         let method = this.slug == 'products' && this.options?.isLocalTable ? routes.table.update_products : routes.table.save_settings.replace('${slug}', this.slug)
 
@@ -1375,10 +1271,6 @@ export class Table {
             await api.callMethod('POST', role ? `${method}/${role}` : method, {
                 sort_field: this.sortItem.sort_field,
                 sort_order: this.sortItem.sort_order,
-                // Не сохраняем служебные колонки, добавляемые на фронте по опциям
-                // таблицы (clicked/iconDrag). Иначе они попадают в настройки slug,
-                // задваиваются при перезагрузке и протекают на другие страницы
-                // с тем же slug (например objects для logistic_tasks).
                 fields: this.header.filter(p => p.key !== 'clicked' && p.key !== 'iconDrag')
             })
             if (typeof window !== 'undefined') {
@@ -1397,14 +1289,11 @@ export class Table {
 
         this.isChanged = false
 
-        // Столбцы связанных сущностей (задача 14) резолвит бэкенд по сохранённому
-        // заголовку, поэтому после сохранения настроек перезагружаем данные.
         if (this.header.some(p => typeof p.key === 'string' && p.key.startsWith('rel__'))) {
             await this.filter.get()
         }
     }
 
-    // Изменение количества страниц
     async setCountPage() {
         try {
             this.loading = true
@@ -1418,7 +1307,6 @@ export class Table {
         }
     }
 
-    // Добавление локальной строки
     addLocalRow() {
         if (!this.state) {
             this.backupLocalBody()
@@ -1436,23 +1324,8 @@ export class Table {
             acc[item.key] = item.type == 'number' ? 0 : null
             return acc;
         }, {});
-        // Новая строка ДОЛЖНА иметь edit:true и isChoose:true. Map выше
-        // эти флаги ставит только существующим строкам — новая (push) шла
-        // без них и получала ТОЛЬКО class table__row, без table__row_edit /
-        // table__row_choose. Из-за этого CSS-стили активной/редактируемой
-        // строки не применялись и кнопка меню действий у неё не открывалась
-        // (попап ShowMore рендерился, но click перехватывался MassAction'ом
-        // / её родительский table__row не получал pointer-events: auto
-        // нужного для edit-режима).
         newObj.edit = true
         newObj.isChoose = true
-        // local_id раньше считался как body.length+1. Если пользователь
-        // удалял строки в середине, индекс мог совпасть с уже существующим
-        // local_id — тогда у row.key (getItemKey использует local_id)
-        // случались коллизии, и Vue/virtualizer считал «новую» строку той же,
-        // что и существующую. ShowMore popup у такой строки не открывался,
-        // потому что DOM-инстанс попапа уже был привязан к другой строке.
-        // Берём max существующих + 1 — это всегда уникально.
         const maxLocalId = this.body.reduce((max, r) => {
             const lid = Number(r?.local_id)
             return Number.isFinite(lid) && lid > max ? lid : max
@@ -1464,7 +1337,6 @@ export class Table {
         })
     }
 
-    // Инициализаия создания маршрута
     initCreateRoute() {
         this.emit('initCreateRoute', true)
     }
@@ -1509,7 +1381,6 @@ export class Filter {
         this.appliedFields = []
     }
 
-    // Фильтрация
     async get(fields = null, saved_query = {}) {
         if (fields === null) {
             fields = this.appliedFields ?? []
@@ -1519,7 +1390,6 @@ export class Filter {
                 this.setter.pages.current = 1
             }
         }
-        // Установка фильтра
         const setFilter = (fields, saved_query) => {
             let response = []
 
@@ -1528,12 +1398,6 @@ export class Filter {
                 const perPage = [12, 25, 50, 100].includes(rawPerPage) ? rawPerPage : 25
                 response.push(`per_page=${perPage}`)
                 response.push(`page=${saved_query.page ?? this.setter.pages.current}`)
-                // sort_field/sort_order пушим только если реально заданы. Иначе в
-                // запрос уходила строка "sort_field=null" (sortItem пуст при первой
-                // загрузке) — бэк трактовал "null" как имя колонки и игнорировал
-                // СОХРАНЁННУЮ сортировку настроек таблицы. Из-за этого на логистике
-                // (таблицы грузятся через getWithQuery, URL не персистится) после
-                // сохранения настроек сортировка слетала при перезагрузке.
                 const sortField = saved_query.sort_field ?? this.setter.sortItem.sort_field
                 const sortOrder = saved_query.sort_order ?? this.setter.sortItem.sort_order
                 if (sortField != null && sortField !== 'null') response.push(`sort_field=${sortField}`)
@@ -1542,10 +1406,6 @@ export class Filter {
                     .filter(c => c && c.enabled && typeof c.key === 'string' && c.key.startsWith('rel__'))
                     .map(c => c.key)
                 if (relKeys.length) response.push(`rel_fields=${encodeURIComponent(relKeys.join(','))}`)
-                // Пропускаем filter[...] из URL прямо в запрос. Без этого
-                // прямые ссылки вида /objects/<slug>?filter[id]=N не применяли
-                // фильтр — saved_query содержал ключ «filter[id]» как
-                // плоскую строку и setFilter его игнорировал.
                 for (const key in saved_query) {
                     if (key.startsWith('filter[') && saved_query[key] != null && saved_query[key] !== '') {
                         response.push(`${key}=${saved_query[key]}`)
@@ -1561,9 +1421,6 @@ export class Filter {
                     } else if (key == 'trash_tab') {
                         continue
                     } else if (key == 'search') {
-                        // encodeURIComponent обязателен: без него '#' в запросе (напр. "#112")
-                        // трактуется как начало URL-фрагмента, q приходит пустым и таблица
-                        // отдаёт все строки без фильтрации.
                         response.push(`q=${encodeURIComponent(this.setter.dependences.query[key])}`)
                     } else if (Array.isArray(this.setter.dependences.query[key])) {
                         for (let value of this.setter.dependences.query[key]) {
@@ -1597,9 +1454,6 @@ export class Filter {
             this.setter.loading = true
             this.query = setFilter(fields, saved_query)
             
-            // Во внешней ссылке таблица привязанной сущности грузится через
-            // token-эндпоинт без авторизации; scoping (только связанные строки)
-            // обеспечивает сервер.
             const tableRoute = this.setter.options?.isExternal
                 ? routes.external_link.table.replace('${token}', this.setter.pageId).replace('${slug}', this.setter.slug)
                 : routes.table.get.replace('${slug}', this.setter.slug)
@@ -1625,7 +1479,6 @@ export class Filter {
         }
     }
 
-    // Установка полей для активного фильтра
     set(fields) {
         let response = []
         for (let key in fields) {
@@ -1649,25 +1502,21 @@ export class Filter {
         })
     }
 
-    // Установка сохраненных фильтров
     setSaves(saves) {
         this.saves = saves
     }
 
-    // Удаление сохраненного фильтра
     async deleteSavedFilter(id) {
         this.saves = this.saves.filter(f => f.id != id)
         await api.callMethod('DELETE', routes.filter.delete.replace('${slug}', this.setter.slug) + `/${id}`)
     }
 
-    // Перемещение сохраненного фильтра
     async moveSavedFilters(list) {
         await api.callMethod('POST', routes.filter.move.replace('${slug}', this.setter.slug), {
             items: list
         })
     }
 
-    // Обновление сохраненного фильтра
     async updateSavedFilter(filter) {
         await api.callMethod('PUT', routes.filter.edit.replace('${slug}', this.setter.slug) + `/${filter.id}`, {
             fields: filter.fields,
@@ -1678,7 +1527,6 @@ export class Filter {
         this.saves[this.saves.findIndex(p => p.id == filter.id)] = filter
     }
 
-    // Создание сохраненного фильтра
     async createSavedFilter(filter) {
         const response = await api.callMethod('POST', routes.filter.create.replace('${slug}', this.setter.slug), {
             fields: filter.fields,
@@ -1703,7 +1551,6 @@ export class Validator {
         this.common = new Common()
     }
 
-    // Установка значения для поля
     setFieldValue(field, slug = 'value') {
         if (!field.value) return null 
 
@@ -1718,9 +1565,7 @@ export class Validator {
         }
     }
 
-    // Получение значений для выпадающих списков
     getSelectValue(field) {
-        // Проверяем что строка существует
         if (!field.value) return null
         
         let response = null
@@ -1734,7 +1579,6 @@ export class Validator {
         return response
     }
 
-    // Валидация
     validate(field) {
         const value = this.setFieldValue(field)
         if (field.type == 'select_dropdown' && field.subtype != 'map_suggest') {
@@ -1758,7 +1602,6 @@ export class Validator {
         }
     }
 
-    // Проверка полей
     check(fields) {
         this.fields = fields.filter(field => field.required)
         this.state = false
@@ -1797,13 +1640,11 @@ export class History {
         this.loading = false
     }
 
-    // Получение истории
     get(response) {
         this.events = {...this.events, ...response.history_events}
         this.fields = {...this.events, ...response.history_fields}
     }
 
-    // Обновление истории
     async update(page, tab, options = {}) {
         try {
             this.loading = true
@@ -1847,17 +1688,14 @@ export class HeaderEditable {
         }
     }
 
-    // Копирование ссылки
     copyLink() {
         this.common.copyLink(window.location.href)
     }
 
-    // Копирование внешней ссылки
     copyExternalLink({slug, id}) {
         this.common.copyExternalLink({slug: slug, id: id})
     }
 
-    // Редактирование заголовка
     initEditTitle({textarea, columns, slug, id}) {
         this.columns = columns
         this.id = id
@@ -1872,7 +1710,6 @@ export class HeaderEditable {
         })
     }
 
-    // Установка заголовка
     async setTitle() {
         this.name = this.name.replaceAll('\n', '')
         if (this.boundCheckClick) {
@@ -1892,7 +1729,6 @@ export class HeaderEditable {
         })
     }
 
-    // Проверка клика вне заголовка при его редактировании
     checkClick(e) {
         const target = e.target.closest('.textarea_title') ?? e.target.closest('.icon_edit')
 
@@ -1926,7 +1762,6 @@ export class HeaderEditable {
         })
     }
 
-    // Инициализация удаления объекта
     initDelete({id, slug, is_modal}) {
         this.modal = {
             state: true,
@@ -1943,7 +1778,6 @@ export class HeaderEditable {
         }
     }
 
-    // Удаление объекта
     async delete() {
         try {
             this.modal.loading = true
@@ -1963,12 +1797,10 @@ export class HeaderEditable {
         }
     }
 
-    // Инициализация редактирования
     edit({isGlobalEdit}) {
         isGlobalEdit = true
     }
 
-    // Инициализация удаления объекта
     initRestore({id, slug, is_modal}) {
         this.modal = {
             state: true,
@@ -1985,7 +1817,6 @@ export class HeaderEditable {
         }
     }
 
-    // Удаление объекта
     async restore() {
         try {
             this.modal.loading = true
@@ -2006,21 +1837,18 @@ export class HeaderEditable {
     }
 }
 
-// Колонки
 export class Columns {
     constructor() {
         this.list = {}
         this.hidden = []
     }
 
-    // Получение колонок
     get(response) {
         this.list = response.columns
         this.hidden = response.hidden_fields
     }
 }
 
-// Секции
 export class Section {
     constructor(slug) {
         this.list = []
@@ -2047,7 +1875,6 @@ export class Section {
         this.validator = new Validator()
     }
 
-    // Инициализация создания
     initCreate(column_id) {
         this.modal = {
             state: true,
@@ -2064,7 +1891,6 @@ export class Section {
         }
     }
 
-    // Создание секции
     async create(columns, slug) {
         try {
             this.modal.loading = true
@@ -2092,7 +1918,6 @@ export class Section {
         }
     }
 
-    // Инициализация удаления секции
     initDelete(section, column_id) {
         this.modal = {
             state: true,
@@ -2110,7 +1935,6 @@ export class Section {
         }
     }
 
-    // Удаление секции
     async delete(columns) {
         try {
             this.modal.loading = true
@@ -2126,7 +1950,6 @@ export class Section {
         }
     }
 
-    // Обновление настроек секции
     async update(section, column, slug, columns) {
         try {
             await api.callMethod('PUT', routes.detail.update_section.replace('${id}', section.id), {
@@ -2144,17 +1967,14 @@ export class Section {
         }
     }
 
-    // Установка скрытых полей
     async updateHidden() {
         await api.callMethod('POST', routes.detail.hidden_fields, {ids: this.hidden.map(p => p.id)})
     }
 
-    // Изменение порядка секций
     async changeOrder(request) {
         await api.callMethod('POST', routes.detail.change_order_section, request)
     }
 
-    // Редактирование полей в секции
     editAll(section) {
         for (let field of section.fields) {
             if (field.type == 'text_group') {
@@ -2178,7 +1998,6 @@ export class Section {
         this.buffer.backup = []
     }
 
-    // Отмена редактирования полей в секции
     cancelEditAll(section) {
         let findedField = null
 
@@ -2206,7 +2025,6 @@ export class Section {
         }
     }
 
-    // Массовое отменение изменения значений во всех секциях
     cancel(value, columns, pageId, slug, emit, options) {
         for (let column in columns) {
             for (let section of columns[column]) {
@@ -2214,12 +2032,13 @@ export class Section {
             }
         }
 
+        this.buffer.backup = []
+
         if (options?.isGlobalEdit) {
             emit('closeDetail', true)
         }
     }
 
-    // Сохранение изменений
     async save(value, columns, pageId, slug, emit, options) {
         let isError = false
         let fields = []
@@ -2253,13 +2072,6 @@ export class Section {
                     }
                 }
 
-                // Обязательные поля НЕ в режиме редактирования тоже проверяем —
-                // иначе пустое required-поле проходило без ошибки, если его не трогали.
-                // Исключение — пароль (8480): его значение никогда не приходит на
-                // клиент (хранится только на сервере), поэтому нетронутое поле
-                // пароля здесь всегда «пустое». Требовать его при правке других
-                // полей нельзя — пароль уже задан. Если пароль реально меняют,
-                // он попадает в edit-ветку выше и там валидируется как обычно.
                 const requiredReadOnly = section.fields.reduce((arr, f) => {
                     if (f.type === 'text_group') {
                         f.fields.forEach(sf => { if (!sf.edit && sf.required && sf.type !== 'password') arr.push(sf) })
@@ -2395,12 +2207,6 @@ export class Section {
         })
     }
 
-    // Чистка subfields всех групп после cross-container drop в outer-секцию.
-    // Вызывается из Field.dragChange (событие added на outer). Сканируем
-    // ВСЕ группы во всех колонках: если movedFieldId всё ещё лежит в
-    // subfields какой-то группы (nested-sortable не убрал) — splice + PUT
-    // update_field с новым списком. Безопасно вызывать даже когда поле
-    // не было в группе (просто ничего не найдёт).
     async dragCleanupAfterAdd(item, column_key, slug, columns) {
         const fieldId = item?.fieldId
         if (!fieldId) return
@@ -2424,11 +2230,6 @@ export class Section {
         if (calls.length) await Promise.all(calls)
     }
 
-    // Принудительное удаление поля из subfields группы. Используется когда
-    // nested sortable (vuedraggable) уронил поле в outer-секцию того же
-    // column, но не убрал его из source-группы (известный квирк sortable.js
-    // на вложенных листах с одинаковым group-name). Дёргаем то же backend-API,
-    // что и dragGroupField, но с уже-уменьшенным списком subfields.
     async dragRemoveFromGroup(item, column_key, slug, columns) {
         const sourceGroupId = item?.sourceGroupId
         const movedFieldId = item?.movedFieldId
@@ -2449,11 +2250,6 @@ export class Section {
         }
         if (!groupField) return
 
-        // splice in-place: гарантированно мутирует тот же массив, на который
-        // ссылается props.section.fields у inner TileSection. Раньше делали
-        // reassign (groupField.fields = filter(...)) — это создавало новый
-        // массив, и до следующего ре-рендера inner draggable продолжал
-        // показывать поле в группе.
         const idx = groupField.fields.findIndex(p => Number(p.id) === Number(movedFieldId))
         if (idx === -1) return
         groupField.fields.splice(idx, 1)
@@ -2465,7 +2261,6 @@ export class Section {
     }
 }
 
-// Поля
 export class Field {
     constructor(section, emit) {
         this.modal = {
@@ -2486,12 +2281,10 @@ export class Field {
         this.dragger = null
     }
 
-    // Закрытие модального окна
     close() {
         this.modal.state = false
     }
 
-    // Инициализация редактирования
     initCreate({section}) {
         this.modal = {
             state: true,
@@ -2506,7 +2299,6 @@ export class Field {
         }
     }
 
-    // Создание
     async create({field, slug, columns, emit}) {
         try {
             this.modal.loading = true
@@ -2530,14 +2322,11 @@ export class Field {
         }
     }
 
-    // Инициализация обновления
     initUpdate({field, hidden, section}) {
         const content = JSON.parse(JSON.stringify({
             ...field,
             section_id: section.id
         }))
-        // Для text_group переписываем subfields из live-массива field.fields,
-        // чтобы только что добавленные/удалённые поля сразу отражались в настройках.
         if (field.type === 'text_group' && Array.isArray(field.fields)) {
             content.subfields = field.fields.map(f => f.id)
         }
@@ -2551,7 +2340,6 @@ export class Field {
         }
     }
 
-    // Обновление
     async update({field, columns, slug, emit}) {
         try {
             this.modal.loading = true
@@ -2566,9 +2354,6 @@ export class Field {
                 }
             } else {
                 group_field = this.common.findColumnSectionByField(columns, field.id)
-                // group_id в снимке поля обычно null/undefined (фронтенд его не проставляет).
-                // Удаляем из группы только если group_id явно задан и указывает на ДРУГУЮ группу.
-                // Управление членством в группе — через drag, не через форму настроек.
                 if (group_field && field.group_id != null &&
                     String(field.group_id) !== String(group_field.id)) {
                     await api.callMethod('PUT', routes.detail.update_field.replace('${id}', group_field.id), {
@@ -2591,8 +2376,6 @@ export class Field {
                 }
             }
 
-            // group_id исключаем: членство в группе управляется drag-системой,
-            // отправка group_id: null из формы настроек сбрасывает привязку на бэкенде.
             const { fields, group_id, ...request } = field;
             await api.callMethod('PUT', routes.detail.update_field.replace('${id}', field.id), request)
             if (field.type == 'text_group' || group_field) {
@@ -2609,7 +2392,6 @@ export class Field {
         }
     }
 
-    // Инициализация удаления
     initDelete({field, section}) {
         this.modal = {
             state: true,
@@ -2625,7 +2407,6 @@ export class Field {
         }
     }
 
-    // Удаление поля
     async delete({columns, emit}) {
         try {
             this.modal.loading = true
@@ -2635,7 +2416,6 @@ export class Field {
             if (index !== -1) {
                 findedSection.fields.splice(index, 1)
             } else {
-                // Поле может быть вложено в text_group — ищем там
                 for (const gf of findedSection.fields) {
                     if (gf.type === 'text_group') {
                         const gi = gf.fields.findIndex(p => p.id == this.modal.content.id)
@@ -2658,12 +2438,10 @@ export class Field {
         }
     }
 
-    // Изменение видимости поля
     async changeVisibleAlways({field}) {
         await api.callMethod('PUT', routes.detail.update_field.replace('${id}', field.id), field)
     }
 
-    // Показать поле
     async show({field, section, hidden}) {
         field.is_hidden = false
         section.fields.push(field)
@@ -2677,9 +2455,12 @@ export class Field {
         })
     }
 
-    // Скрыть поле
     async hide({field, section, hidden}) {
         field.is_hidden = true
+        field.edit = false
+        if (this.section?.buffer) {
+            this.section.buffer.backup = this.section.buffer.backup.filter(f => f.id != field.id)
+        }
         hidden.push(field)
         let index = null
 
@@ -2705,7 +2486,6 @@ export class Field {
         await api.callMethod('POST', routes.detail.hidden_fields, {ids: hidden.map(p => p.id)})
     }
 
-    // Проверка видимости
     checkVisible(field, state) {
         if ((state && field.visible_always) || field.type == 'text_group') {
             return false
@@ -2733,7 +2513,6 @@ export class Field {
         }
     }
 
-    // Установка значения для поля
     setFieldValue(field, slug = 'value') {
         const response = computed({
             get() {
@@ -2822,11 +2601,9 @@ export class Field {
         return response
     }
     
-    // Получение значений для выпадающих списков (с кэшем)
     getSelectValue(field) {
         const response = computed({
             get() {
-                // Проверяем что строка существует
                 if (!field.value) return null
                 
                 let response = null
@@ -2843,19 +2620,11 @@ export class Field {
         return response
     }
     
-    // Инициализация изменения поля
     initChangeField(field, target, type = 'target') {
         if (!field.can_edit || field.type == 'text_group') return
 
-        // Если только что был драг — не открываем редактирование. Например,
-        // пользователь начал тянуть поле и вернул на исходное место: click
-        // долетает и без этого флага мы переходили бы в edit-режим.
         if (this._isDraggingField && type == 'target') return
 
-        // Выделение текста (название/значение поля) не должно переводить поле в
-        // редактирование: при drag-select в конце прилетает click по .field, и
-        // без этой проверки поле открывалось на редактирование вместо копирования
-        // выделенного текста.
         if (type == 'target' && typeof window !== 'undefined' && window.getSelection) {
             const sel = window.getSelection()
             if (sel && !sel.isCollapsed && sel.toString().trim().length > 0) return
@@ -2864,9 +2633,6 @@ export class Field {
         if (type == 'target') {
             if (target.closest('.icon_drag') || target.closest('.field__settings') || target.closest('.blank__title')) return
 
-            // Кнопки с data-action (например «посмотреть все» в relation-поле) не
-            // должны переводить поле в режим редактирования — они выполняют свои
-            // действия и не означают намерение редактировать само поле.
             if (target.closest('[data-action]')) return
 
             if (['text', 'number', 'date', 'select_dropdown'].includes(field.type)) {
@@ -2886,20 +2652,10 @@ export class Field {
             } else if (field.type == 'deal_stages') {
                 return
             } else if (field.type == 'redactor') {
-                // Редактор всегда активен и сам отмечает поле как изменённое через
-                // обработчик update:model-value, поэтому клик по нему не должен
-                // переводить поле в edit и плодить резервные копии в буфере.
                 return
             } else if (field.type == 'file') {
                 if (field.edit || (!target.classList.contains('file') && !target.classList.contains('file__values'))) return
             } else if (field.type == 'address') {
-                // Для address клик по тексту значения раньше блокировал переход в edit —
-                // в настройках Логистики из-за этого нельзя было поправить «Главный город»,
-                // потому что весь видимый блок поля был либо .blank__text, либо картой.
-                // Оставляем блокировку для копировать-кнопки и для любых кликов
-                // внутри карты (Yandex отрисовывает внутри .map__frame-map свою
-                // DOM-структуру, и target обычно — её внутренние ноды, поэтому
-                // нужен closest, а не classList.contains).
                 if (
                     field.edit ||
                     target.classList.contains('button_copy') ||
@@ -2915,40 +2671,25 @@ export class Field {
         field.edit = true
     }
 
-    // Начало перетаскивания поля
     dragStart(event) {
         this.dragger = event.target.closest('.column-fields')
 
         if (this.dragger) {
             this.dragger.classList.add('column-fields_dragging-field')
         }
-        // Запоминаем, что это был именно драг — в setTimeout пока непонятно, но к
-        // моменту dragEnd флаг будет выставлен. Используется в initChangeField,
-        // чтобы возврат на исходное место не приводил к переходу в редактирование.
         this._isDraggingField = true
         this._dragStartedAt = Date.now()
     }
 
-    // Конец перетаскивания поля.
-    // Раньше тут лежали ВСЕ backend-вызовы. Но для случая inner-group →
-    // outer-секция, которая является родителем этой группы, nested Sortable
-    // нестабилен: event.to/event.from могут указывать в один и тот же
-    // контейнер (либо inner, либо outer) — и тогда мы ничего не вызывали,
-    // а поле визуально оставалось в группе. Поэтому cross-container moves
-    // переехали в dragChange (там есть надёжное {added|removed} на каждой
-    // стороне). Здесь оставлен ТОЛЬКО sort внутри одной outer-секции.
     async dragEnd(event, options = {type: 'section'}) {
         if (this.dragger) {
             this.dragger.classList.remove('column-fields_dragging-field')
             this.dragger = null
         }
-        // Чуть откладываем сброс флага, чтобы успел сработать click на исходном
-        // поле (его HTML-event приходит ПОСЛЕ end в большинстве браузеров).
         setTimeout(() => { this._isDraggingField = false }, 250)
 
         const sameContainer = event?.to && event?.from && event.to === event.from
         const toIsOuter = event?.to?.dataset?.tileType === 'section'
-        // Sort внутри одной outer-секции.
         if (sameContainer && toIsOuter && event?.to?.__draggable_component__) {
             await api.callMethod('POST', routes.detail.change_order_field, {
                 id: event.item._underlying_vm_.id,
@@ -2961,29 +2702,17 @@ export class Field {
         }
     }
 
-    // dragChange срабатывает на каждое изменение модели после v-model'ной
-    // мутации vuedraggable (added/removed/moved). У @change есть критичное
-    // преимущество перед @end: он стреляет НА КАЖДОЙ из сторон nested
-    // drag-операции независимо — и на inner-группе, и на outer-секции, —
-    // даже когда @end путается с event.to/from.
-    //
-    // Поэтому:
-    // - cross-section/inner→outer добавление обрабатываем тут (added на outer);
-    // - любое изменение subfields группы обрабатываем тут (через dragGroupField).
     async dragChange(event, options = {type: 'section'}, groupField) {
         if (this.dragger) {
             this.dragger.classList.remove('column-fields_dragging-field')
             this.dragger = null
         }
 
-        // Inner группа — пересобираем её subfields на каждое изменение.
         if (options && options.type == 'field') {
             this.emit('actionSection', {action: 'dragGroupField', value: {groupField, event}})
             return
         }
 
-        // Outer секция получила поле (cross-section ИЛИ inner→outer).
-        // groupField тут — это сама секция (props.section из TileSection).
         if (event?.added && groupField) {
             const fieldId = event.added.element?.id
             if (!fieldId) return
@@ -2996,16 +2725,10 @@ export class Field {
                     sort: index
                 }))
             })
-            // Страховка: если nested Sortable не убрал поле из source-группы
-            // (квирк, когда inner находится внутри той же outer-секции, в
-            // которую мы дропнули), — чистим явно и пересохраняем subfields
-            // той группы.
             this.emit('actionSection', {action: 'dragCleanupAfterAdd', value: {fieldId}})
         }
     }
 
-    // Сообщает initChangeField, что только что был драг — чтобы клик по
-    // исходному полю не открывал редактор. Возвращает true ~250 мс после end.
     isJustDragged() {
         return Boolean(this._isDraggingField)
     }
@@ -3031,13 +2754,10 @@ export class Settings {
         this.validator = new Validator()
     }
 
-    // Получение данных
     async get() {
         try {
             this.loading = true
             if (this.category == 'common') {
-                // Поле «Город» скрыто из общих настроек портала — его значение
-                // продолжает храниться на бэке, но в UI больше не показываем.
                 this.section.fields = [
                     {
                         id: 0,
@@ -3096,8 +2816,6 @@ export class Settings {
                 ]
             } else {
                 const response = await api.callMethod('GET', routes.settings.modules[this.category].get)
-                // У части тенантов в БД лежит старый конфиг с can_edit=0/read_only=1.
-                // Бэкенд тоже это нормализует, но для случая до деплоя страхуемся на фронте.
                 this.section.fields = (response.data || []).map(field => ({
                     ...field,
                     can_edit: 1,
@@ -3111,7 +2829,6 @@ export class Settings {
         }
     }
 
-    // Сохранение изменений
     async save() {
         let isError = false
         let fields = []
@@ -3191,7 +2908,6 @@ export class Settings {
         }
     }
 
-    // Отмена
     cancel() {
         let findedField = null
 
@@ -3270,7 +2986,6 @@ export class Tariffs {
         this.balance.actions.total_sum = response.data.total_sum
     }
 
-    // Фильтрация расхода диапазона
     async filterBalance() {
         const response = await api.callMethod('GET', `${routes.tariffs.get_balance}?date_start=${this.balance.actions.date[0]}&date_end=${this.balance.actions.date[1]}`)
         this.balance.actions.total_sum = response.data.total_sum
@@ -3362,7 +3077,6 @@ export class Logistic {
         this.filterFields = []
     }
 
-    // Получение колонок
     async getSections() {
         const response = await api.callMethod('GET', routes.logistic.getSections)
 
@@ -3423,17 +3137,14 @@ export class Logistic {
         try { window.localStorage.setItem(this._layoutStorageKey(), JSON.stringify(map)) } catch (e) {}
     }
 
-    // Получение выбранных точек
     getSelectedPoints(data) {
         this.machine_tasks.selectedAddresses = data
     }
 
-    // Получение точек маршрута для карты
     getRoutes(data) {
         this.map = data.map(row => row.address?.coords ?? [])
     }
 
-    // Обновление активной даты
     updateActiveDate(activeDate) {
         this.activeDate = format(activeDate, 'yyyy-MM-dd')
         this.machine_tasks.updatingCount++
@@ -3441,7 +3152,6 @@ export class Logistic {
         this.routes.updatingCount++
     }
 
-    // Обновление активного маршрута
     updateActiveRoute(activeRoute) {
         this.routes.id = activeRoute?.value[0]
         this.machine_tasks.route_id = activeRoute?.value[0]
@@ -3449,7 +3159,6 @@ export class Logistic {
         this.machine_tasks.updatingCount++
     }
 
-    // Выбор маршрута из таблицы
     choseRoute(row) {
         this.machine_tasks.route_id = row.id
         this.machine_tasks.updatingCount++
@@ -3467,18 +3176,15 @@ export class Logistic {
         this.logistic_tasks.updatingCount++
     }
 
-    // Конец ресайза
     endResize({section, height}) {
         section.height = height
         this.updateSections()
     }
 
-    // Начало перетаскивания 
     dragStart() {
         this.isDragging = true
     }
 
-    // Конец перетаскивания
     dragEnd() {
         this.isDragging = false
         this.updateSections()
@@ -3488,12 +3194,10 @@ export class Logistic {
         this._saveDeviceLayout()
     }
 
-    // Инициализация создания маршрута
     initCreateRoute() {
         this.modal.state = true
     }
 
-    // Создание маршрута
     async createRoute(content) {
         try {
             this.modal.loading = true
@@ -3501,11 +3205,6 @@ export class Logistic {
                 ...content,
                 date: this.activeDate
             }]})
-            // Авто-выбор созданного маршрута (8458): batch возвращает id новой
-            // записи. Делаем его активным (choseRoute → машина/карта/фильтры) и
-            // перезагружаем таблицу маршрутов, чтобы он появился и подсветился
-            // (restoreRoutesSelection по machine_tasks.route_id). Раньше тут
-            // всегда сбрасывали активный маршрут в null — авто-выбор не работал.
             const newId = response?.data?.id ?? null
             if (newId) {
                 this.choseRoute({ id: newId })
@@ -3543,7 +3242,6 @@ export class Logistic {
         }
     }
 
-    // Изменение порядка задач
     async changeRouteTasks(list) {
         await api.callMethod('POST', routes.logistic.changeRouteTasks, {rows: [{id: this.machine_tasks.route_id, task_id: list.map(item => item.id)}]})
     }
@@ -3568,7 +3266,6 @@ export class Socket {
             forceTLS: true,
             disableStats: true,
             encrypted: false,
-            //enabledTransports: ['ws', 'wss'],
             cluster: 'eu',
             auth: {
                 headers: {
@@ -3582,7 +3279,6 @@ export class Socket {
         this.emit = null
     }
 
-    // Инициализация
     init(emit) {
         this.userStore = useUserStore()
         this.options.auth = {
@@ -3595,19 +3291,12 @@ export class Socket {
         window.Pusher = Pusher
         window.Echo = new Echo(this.options);
 
-        // Обновление строк в таблице и объектов
         window.Echo.private(`tenant.${routes.tenant.split('.')[0]}`).listen('ObjectUpdated', (data) => this.ObjectUpdated(data))
-        // Обновление настроек поля
         window.Echo.private(`tenant.${routes.tenant.split('.')[0]}`).listen('FieldUpdated', (data) => this.ObjectUpdated(data))
     }
 
 
     set({slug, id}) {
-        // Если несколько таблиц с одним slug (например, в логистике
-        // 'logistic_tasks' рендерится дважды — Задачи логистики и Задачи в
-        // машине), не пересоздаём socketObject: иначе у первой таблицы
-        // table.socket остаётся указывать на УСТАРЕВШИЙ объект, и socket-
-        // события до неё не доходят. Создаём только если ещё нет.
         if (!this.entities[slug]) {
             this.entities[slug] = new socketObject()
         }
@@ -3620,15 +3309,12 @@ export class Socket {
                 }
             }
         }
-        // console.log(this.entities);
     }
 
     remove({slug, id}) {
         delete this.entities[slug].details[id]
     }
 
-    // Сброс собственных правок, отложенных пока была открыта модалка.
-    // Вызывается app.vue в watcher'е entity.modal, когда модалок не осталось.
     flushPendingOwn() {
         for (const slug in this.entities) {
             const ent = this.entities[slug]
@@ -3638,11 +3324,9 @@ export class Socket {
         }
     }
 
-    // Обновление строк в таблице и объектов
     ObjectUpdated(data) {
         console.log(data);
 
-        // Проверяем, существует ли объект для данного slug
         if (!data.data || !data.data.slug || !this.entities[data.data.slug]) return
 
         switch (data.action) {
@@ -3666,7 +3350,6 @@ export class Socket {
         }
     }
 
-    // Обновление настроек поля
     FieldUpdated(data) {
         console.log('FieldUpdated', data);
     }
@@ -3676,17 +3359,10 @@ class socketObject {
     constructor() {
         this.table = []
         this.details = {}
-        // Очередь собственных правок, прилетевших во время открытой модалки.
-        // Пока модалка открыта, мы НЕ добавляем их в socket.table (иначе
-        // плашка «X изменений» появится прямо за модалкой, на её же объекте).
-        // После закрытия модалки Socket.flushPendingOwn() переносит их в
-        // table, чтобы родительская таблица показала «Загрузить».
         this.pendingOwn = []
     }
 
-    // Обновление строки
     ObjectUpdated({data, isModal, userId}) {
-        // Своя правка В модалке — откладываем до её закрытия (см. flushPendingOwn).
         if (userId == data.changed_by && isModal) {
             this._enqueueOwn('update', data)
             return
@@ -3709,7 +3385,6 @@ class socketObject {
     }
 
     _enqueueOwn(kind, data) {
-        // Если уже есть такая же отложенная правка — обновляем, не плодим.
         const idx = this.pendingOwn.findIndex(p => p.data.id == data.id)
         if (idx >= 0) this.pendingOwn[idx] = { kind, data }
         else this.pendingOwn.push({ kind, data })
@@ -3733,10 +3408,6 @@ class socketObject {
     }
 
     ObjectCreated({data, isModal, userId}) {
-        // Своё создание В модалке (например, «Скопировать» → сохранение нового
-        // объекта) — откладываем до закрытия модалки, чтобы плашка не
-        // появлялась прямо за модалкой. После закрытия flushPendingOwn
-        // перенесёт правку в table и родительская таблица покажет «Загрузить».
         if (userId == data.changed_by && isModal) {
             this._enqueueOwn('create', data)
             return
@@ -3770,6 +3441,5 @@ class socketObject {
             }
         }
         console.log(this.details);
-        // this.details.history
     }
 }

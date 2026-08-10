@@ -32,7 +32,7 @@
                 {{ props.options.mask ? common.formatByMask(item, props.options.mask) : item }}
             </p>
             <p class="multi-text__value multi-text__value_empty" v-if="filled.length === 0">
-                Не заполнено
+                не заполнено
             </p>
         </div>
     </div>

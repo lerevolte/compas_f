@@ -12,9 +12,9 @@
             :data-id="index"
             :class="{
                 'select_hidden': isCompactReadonly || index >= ((props.options?.visibleCount ?? 5) + 1),
-                'select_open': selectInstances[index]?.state.isOpen, 
-                'select_disabled': props.options.edit == false, 
-                'select_empty': getActiveOption(index) == undefined || !getActiveOption(index).value
+                'select_open': selectInstances[index]?.state.isOpen,
+                'select_disabled': props.options.edit == false,
+                'select_empty': !getActiveOption(index) || (!getActiveOption(index).value && !getActiveOption(index).label?.text)
             }"
         >
             <div class="select__content" @click="event => selectInstances[index]?.toggleOptions(event)">
@@ -26,24 +26,24 @@
                     }"
                 >
                     <figure class='select__value-icon' v-if="getActiveOption(index)">
-                        <img 
+                        <img
                             class="select__value-img"
                             v-if="isImageSrc(getActiveOption(index).label?.file)" :src='getActiveOption(index).label?.file' alt=''
-                            @click="() => clickLink(index)" 
+                            @click="() => clickLink(index)"
                         >
-                        <div 
-                            v-else 
-                            class="img-text" 
-                            :style="{ 
-                                '--bgColor': getActiveOption(index).label?.color == '' || !getActiveOption(index).label?.color? '#a6b7d4' : getActiveOption(index).label?.color 
+                        <div
+                            v-else
+                            class="img-text"
+                            :style="{
+                                '--bgColor': getActiveOption(index).label?.color == '' || !getActiveOption(index).label?.color? '#a6b7d4' : getActiveOption(index).label?.color
                             }"
-                            @click="() => clickLink(index)" 
+                            @click="() => clickLink(index)"
                         >
-                            {{ getActiveOption(index).value ? getActiveOption(index).label?.text?.slice(0, 1) : 'Н' }}
+                            {{ getActiveOption(index).value || getActiveOption(index).label?.text ? getActiveOption(index).label?.text?.slice(0, 1) : 'Н' }}
                         </div>
                         <figcaption>
                             <span class="value__text value__text_link" @click="() => clickLink(index)">
-                                {{ getActiveOption(index)?.value ? getActiveOption(index).label?.text : 'Не выбрано' }}  
+                                {{ getActiveOption(index)?.value || getActiveOption(index)?.label?.text ? getActiveOption(index).label?.text : 'Не выбрано' }}
                             </span>
                         </figcaption>
                     </figure>
@@ -64,7 +64,7 @@
                 </div>
     
                 <div class="select__content-container">
-                    <AppInput 
+                    <AppInput
                         :options="{
                             id: `${props.options.id}_search_${index}`,
                             title: '',
@@ -77,18 +77,19 @@
                         @update:modelValue="(value) => selectInstances[index]?.filterOptions(value)"
                         :model-value="selectInstances[index]?.state?.search || ''"
                         @update:model-value="(value) => selectInstances[index]?.state && (selectInstances[index].state.search = value)"
+                        @keyup.enter="() => props.options.relation_type == 'products' && selectInstances[index]?.commitCustom()"
                     />
     
                     <div class="select__content-abs">
                         <span class="select__content-plate">
-                            <span class="value__text value__text_id">
+                            <span class="value__text value__text_id" v-if="getActiveOption(index)?.value">
                                 ID: {{ getActiveOption(index)?.label?.id }}
                             </span>
 
                             <IconSelectArrow />
                         </span>
 
-                        <figure class='relation__arrow' v-if="props.options.slug != 'roles'" @click="() => clickLink(index)" >
+                        <figure class='relation__arrow' v-if="props.options.slug != 'roles' && (getActiveOption(index)?.value || !getActiveOption(index))" @click="() => clickLink(index)" >
                             <svg xmlns="http://www.w3.org/2000/svg" width="4" height="3" fill="none" viewBox="0 0 4 3"><path fill="#888" d="M0 0h4L2 3z"/></svg>
                         </figure>
                     </div>
@@ -117,6 +118,15 @@
                     <span class="value__text value__text_subtext" v-if="option.label?.delivery_date">
                         {{ formatDeliveryDate(option.label.delivery_date) }}
                     </span>
+                </div>
+
+                <div
+                    class="select__option select__option_create"
+                    v-if="props.options.relation_type == 'products' && (selectInstances[index]?.state?.search || '').trim().length > 0"
+                    :value="null"
+                    @click="selectInstances[index]?.commitCustom()"
+                >
+                    Добавить «{{ selectInstances[index].state.search.trim() }}»
                 </div>
 
                 <div class="select__option select__option_create" v-if="props.options.slug != 'roles'" :value="null" @click="emit('create', {related_table: props.options.relation})">
@@ -282,6 +292,16 @@
         changeValue(option, selectIndex) {
             this.toggleOptions()
             updateModelValue(option.value, option, selectIndex);
+        }
+
+        commitCustom() {
+            const text = (this.state.search || '').trim()
+            if (!text) return
+            this.state.search = ''
+            if (this.state.isOpen) {
+                this.toggleOptions()
+            }
+            updateModelValue(null, { value: null, label: { id: null, text } }, this.index);
         }
 
         toggleOptions(event) {
@@ -646,7 +666,9 @@
     })
 
     const clickLink = (index) => {
-        props.options.slug != 'roles' && emit('clickLink', getActiveOption(index).value)
+        const value = getActiveOption(index)?.value
+        if (!value) return
+        props.options.slug != 'roles' && emit('clickLink', value)
     }
     onBeforeUnmount(() => {
         selectInstances.value.forEach(instance => {
