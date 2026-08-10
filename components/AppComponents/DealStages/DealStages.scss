@@ -41,6 +41,10 @@
     max-width: 100%;
     overflow: hidden;
 
+    &:has(.deal-stages__bar) {
+        min-height: 22px;
+    }
+
     @media (max-width: 990px) {
         display: none;
     }

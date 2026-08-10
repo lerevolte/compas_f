@@ -5,12 +5,6 @@
         </template>
         <template #content>
             <div class="settings__menu">
-                <!--
-                    Прячем общую кнопку возврата, когда мы внутри столбцов
-                    выбранной сущности (Отображение → Сущность) — там своя
-                    кнопка «Назад» (ниже). Иначе показывались две кнопки
-                    возврата сразу (8576).
-                -->
                 <div
                     class="settings__item popup__option settings__item_back"
                     v-show="settings.nest.active && !(settings.nest.active.value == 'isCheck' && isRelatedTable && relGroup != null)"
@@ -20,7 +14,6 @@
                     <SelectArrowSubmenu />
                 </div>
 
-                <!-- Common -->
                 <div class="settings__list" v-if="settings.nest.active == null">
                     <div class="settings__item settings__item_submenu popup__option" v-for="item in settings.nest.list" @click="settings.nest.set(item)" :key="item.value">
                         {{ item.label ?? item.title }}
@@ -28,7 +21,6 @@
                     </div>
                 </div>
 
-                <!-- Enable: вложенные группы связанных сущностей (Маршруты, задача 14) -->
                 <div class="settings__list" v-else-if="settings.nest.active.value == 'isCheck' && isRelatedTable && relGroup == null">
                     <div
                         class="settings__item popup__option settings__item_submenu"
@@ -41,13 +33,11 @@
                     </div>
                 </div>
 
-                <!-- Enable: столбцы выбранной группы -->
                 <div class="settings__list" v-else-if="settings.nest.active.value == 'isCheck' && isRelatedTable && relGroup != null">
                     <div class="settings__item popup__option settings__item_back" @click="relGroup = null">
                         Назад
                         <SelectArrowSubmenu />
                     </div>
-                    <!-- Логистика: собственные столбцы маршрута -->
                     <template v-if="relGroup == 'logistic'">
                         <div
                             class="settings__item popup__option popup__option_checkbox"
@@ -61,7 +51,6 @@
                             />
                         </div>
                     </template>
-                    <!-- Компания / Автопарк / Сотрудники: столбцы связанной сущности -->
                     <template v-else>
                         <div class="settings__item popup__option popup__option_disable" v-if="(relatedColumns[relGroup] || []).length == 0">
                             Загрузка…
@@ -80,7 +69,6 @@
                     </template>
                 </div>
 
-                <!-- Enable -->
                 <div class="settings__list" v-else-if="settings.nest.active.value == 'isCheck'">
                     <div
                         class="settings__item popup__option popup__option_checkbox"
@@ -94,7 +82,6 @@
                             }"
                             @update:modelValue="() => {
                                 if (isInitGroup) {
-                                    // Update group children immediately
                                     const enabledItems = settings.nest.templateField.list.filter(p => p.enabled)
                                     let findedLink = visible.find(item => item.id == settings.nest.templateField.id) ?? hidden.find(item => item.id == settings.nest.templateField.id)
                                     if (findedLink) {
@@ -110,7 +97,6 @@
                     </div>
                 </div>
 
-                <!-- Fixed -->
                 <div class="settings__list" v-else-if="settings.nest.active.value == 'isFixed'">
                     <div class="settings__item popup__option popup__option_checkbox" v-for="field in (isInitGroup ? settings.nest.templateField.list : list).filter(f => f.enabled !== false)" :key="field.id">
                         <AppCheckbox 
@@ -123,7 +109,6 @@
                     </div>
                 </div>
 
-                <!-- Drag -->
                 <div class="settings__list settings__list_drag"  v-else-if="settings.nest.active.value == 'isDrag'">
                     <draggable
                         tag="div"
@@ -176,7 +161,6 @@
                     </draggable> 
                 </div>
 
-                <!-- Groups -->
                 <div class="settings__list settings__list_group" v-else-if="settings.nest.active.value == 'isNest'">
                     <div class="settings__item popup__option settings__item_submenu" @click="settings.nest.initCreate()">
                         Создать новую
@@ -192,7 +176,6 @@
 
 
 
-                <!-- Set Update Group -->
                 <div class="settings__list settings__list_group" v-if="settings.nest.active != null && settings.nest.active.value == 'updateGroup'">
                     <div
                         class="settings__item popup__option settings__item_submenu"
@@ -212,7 +195,6 @@
 
 
 
-                <!-- Update Group -->
                 <div class="settings__list settings__list_group" v-if="settings.nest.active != null && settings.nest.active.value == 'initGroup'">
                     <div class="settings__item popup__option popup__option_stay" @click="settings.nest.initName(settings.nest.templateField.name)">
                         Название: {{ settings.nest.templateField.name }}
@@ -344,9 +326,7 @@
             
         }
 
-        // Вернуть настройки по умолчанию
         reset() {
-            // Popup закроется сам по клику на .popup__option (см. Popup.vue).
             emit('reset', true)
         }
     }
@@ -396,7 +376,6 @@
             }
         }
 
-        // Установка активной вкладки
         set(tab) {
             if (this.active) {
                 this.history.push(this.active)
@@ -405,18 +384,15 @@
             this.active = tab
         }
 
-        // Возврат обратно
         back() {
             this.active = this.history.pop()
         }
 
-        // Закрытие попапа
         close() {
             this.active = null,
             this.history = []
         }
 
-        // Открытие модального окна для ввода названия
         initName(name) {
             this.modal = {
                 state: true,
@@ -425,13 +401,11 @@
             }
         }
 
-        // Сохранение имени
         saveName() {
             this.modal.state = false
             this.templateField.name = this.modal.name
         }
 
-        // Инициализация создания
         initCreate() {
             this.set({label: 'Создать новую', value: 'initGroup'})
             this.templateField = {
@@ -443,13 +417,10 @@
             disabledFields.value.forEach(item => item.enabled = false)
         }
 
-        // Инициализация обновления
         initUpdate(field) {
             this.set({label: field.name, value: 'initGroup'})
             this.statusTemplate = 'update'
 
-            // Сохраняем порядок enabled-сущностей из field.children (так как было сохранено),
-            // а disabled — добавляем после в общем порядке props.list.
             const childIds = (field.children || []).map(c => c.id)
             const enabledItems = (field.children || [])
                 .filter(c => c.enabled)
@@ -468,7 +439,6 @@
             }
         }
 
-        // Сохранение группы
         async save() {
             this.templateField.list = this.templateField.list.filter(item => item.enabled)
             closePopup()
@@ -499,13 +469,11 @@
             emit('update:modelList', [...visible.value, ...hidden.value])
         }
 
-        // Инициализация удаления
         initDelete() {
             this.modal.state = true
             this.modal.type = 'delete'
         }
 
-        // Удаление группы
         async delete() {
             this.modal.state = false
             visible.value = visible.value.filter(item => item.id != this.templateField.id)
@@ -520,13 +488,11 @@
             emit('update:modelList', [...visible.value, ...hidden.value])
         }
 
-        // Начало перетаскивания
         dragStart() {
             this.isDragging = true
             emit('dragEvent', true)
         }
 
-        // Конец перетаскивания
         dragEnd(event) {
             this.isDragging = false
             emit('isChanged', true); 
@@ -547,9 +513,6 @@
     const popupRef = ref(null)
 
     const closePopup = () => {
-        // Через публичный API Popup, а не через ручную манипуляцию class'ом
-        // (тот ломался после markRaw — popup.popupRef стал ref'ом, у него
-        // нет .classList).
         popupRef.value?.popup?._close?.()
         settings.value.nest.close()
     }
@@ -578,12 +541,10 @@
             if (isInitGroup.value) {
                 return settings.value.nest.templateField.list.filter(p => p.enabled)
             }
-            // Если visible/hidden не передан (как в Tabs) — берём общий list.
             return props.options.isHaveHidden ? visible.value : list.value
         },
         set: (val) => {
             if (isInitGroup.value) {
-                // Update order in templateField.list for enabled items
                 const enabledIds = val.map(v => v.id)
                 const disabled = settings.value.nest.templateField.list.filter(p => !p.enabled)
                 settings.value.nest.templateField.list = [...val, ...disabled]
@@ -614,8 +575,6 @@
         }
     })
 
-    // ── Задача 14: вложенные группы связанных сущностей для таблицы Маршрутов ──
-    // Ключ столбца связанной сущности: rel__{slug}__{field}.
     const isRelatedTable = computed(() => props.slug === 'routes')
     const relatedGroups = [
         { key: 'logistic', label: 'Маршруты', slug: null },
@@ -628,11 +587,7 @@
 
     const SYSTEM_KEYS = ['isChoose', 'actions', 'iconDrag', 'iconDelete']
 
-    // Собственные столбцы маршрута. «Выделение» (isChoose) и «Действие»
-    // (actions) — стандартные столбцы любой таблицы, поэтому их оставляем
-    // в списке отображения (8); прячем только служебные iconDrag/iconDelete
-    // и связанные (rel__).
-    const OWN_HIDDEN_KEYS = ['iconDrag', 'iconDelete', 'clicked']
+    const OWN_HIDDEN_KEYS = ['iconDrag', 'iconDelete']
     const ownColumns = computed(() => {
         return (props.list || []).filter(c =>
             c && !c.is_group && !OWN_HIDDEN_KEYS.includes(c.key) && !(typeof c.key === 'string' && c.key.startsWith('rel__'))
@@ -718,7 +673,6 @@
         nextTick(() => emit('reload'))
     }
 
-    // Сбрасываем выбранную подгруппу при выходе из «Отображение».
     watch(() => settings.value.nest.active, (active) => {
         if (!active || active.value !== 'isCheck') relGroup.value = null
         nextTick(() => popupRef.value?.popup?.applyPosition())
