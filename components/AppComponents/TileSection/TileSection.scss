@@ -150,6 +150,7 @@
     .button_text {
         color: variables.$color-icon;
         text-decoration: none;
+        font-family: PT Sans;
 
         &:hover {
             color: variables.$color-icon-active;
@@ -325,7 +326,6 @@
     padding: 0 15px;
     min-height: 40px;
     position: relative;
-    // flex-child секции: не давать контенту распирать колонку по ширине
     min-width: 0;
     max-width: 100%;
 
@@ -382,12 +382,6 @@
     .blank {
         .blank__text,
         .blank__link {
-            // Ширина — по содержимому, но не шире поля: длинная строка без
-            // пробелов переносится, а не растягивает секцию и страницу.
-            // fit-content важен для клика: initChangeField блокирует переход
-            // в редактирование по клику на сам текст (.blank__text/.blank__link),
-            // и если элемент растянут на всю ширину поля, клик «вне текста»
-            // тоже попадает в него и редактирование не открывается.
             width: fit-content;
             max-width: 100%;
             overflow-wrap: anywhere;

@@ -110,7 +110,21 @@
                                 @update:list="options => field.options = options"
                                 @update:modelList="options => field.options = options"
                             />
-                            <AppDate 
+                            <AppSelect
+                                v-else-if="field.type == 'json'"
+                                :isPreventBottom="true"
+                                :options="{
+                                    ...field,
+                                    list: field.options ?? [],
+                                    multiple: true,
+                                    searchable: true,
+                                    entity: 'products'
+                                }"
+                                v-model="filter.state.tabsValues[field.key]"
+                                @update:modelList="options => filter.mergeOptions(field, options)"
+                                @searchEnter="text => filter.addCustomOption(field, text)"
+                            />
+                            <AppDate
                                 v-else-if="field.type == 'date'"
                                 :options="{
                                     id: field.id,
@@ -388,6 +402,20 @@
                         }
                         return transformSelect(value, key, type)
                     }
+                    case 'json': {
+                        const value = this.state.tabsValues[key]
+                        const field = this.state.fields.find(p => p.key == key)
+                        const toLabel = item => {
+                            const option = field?.options?.find(p => p.value == item)
+                            const label = option?.label
+                            return label && typeof label === 'object' ? (label.text ?? item) : (label ?? item)
+                        }
+                        if (Array.isArray(value)) {
+                            const items = value.filter(v => v != null && v !== '')
+                            return type == 'request' ? items : items.map(toLabel).join(', ')
+                        }
+                        return type == 'request' ? value : toLabel(value)
+                    }
                     default:
                         return this.state.tabsValues[key]
                 }
@@ -500,6 +528,33 @@
                     findedField.value = field.value
                     findedField.enabled = true
                 }
+            }
+        }
+
+        mergeOptions(field, options) {
+            const selected = this.state.tabsValues[field.key] ?? []
+            const merged = (field.options ?? []).filter(p => Array.isArray(selected) && selected.includes(p.value))
+            options.forEach(option => {
+                if (!merged.find(p => p.value == option.value)) {
+                    merged.push(option)
+                }
+            })
+            field.options = merged
+        }
+
+        addCustomOption(field, text) {
+            const value = (text ?? '').trim()
+            if (!value) return
+            if (!(field.options ?? []).find(p => p.value == value)) {
+                field.options = [...(field.options ?? []), { value: value, label: value }]
+            }
+            const current = this.state.tabsValues[field.key]
+            if (Array.isArray(current)) {
+                if (!current.includes(value)) {
+                    this.state.tabsValues[field.key] = [...current, value]
+                }
+            } else {
+                this.state.tabsValues[field.key] = [value]
             }
         }
 

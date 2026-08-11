@@ -18,7 +18,7 @@
                     v-model="detail.header.name"
                 />
             </AppH1>
-            <div class="detail-page__actions" v-if="!props.is_external && !detail.forbidden" v-show="!detail.header.editTitle && !props.isGlobalEdit">
+            <div class="detail-page__actions" v-if="!props.is_external && !detail.forbidden" v-show="!detail.header.editTitle && !detail.isGlobalEdit">
                 <IconEdit v-if="!detail.readonly && canEditTitle" @click="() => detail.header.initEditTitle({
                     textarea: textareaRef.textareaRef.querySelector('textarea'),
                     columns: detail.columns,
@@ -158,7 +158,6 @@
         }
     })
 
-    // Табы
     class Tabs {
         constructor() {
             this.active = {
@@ -169,7 +168,6 @@
             this.list = []
         }
 
-        // Установка активного таба
         set({tab, is_module}) {
             if (is_module) {
                 this.active = tab  
@@ -196,8 +194,6 @@
                     is_slug: true,
                     id: request
                 }
-                // Деталка удалённого объекта: во вкладках связанных сущностей
-                // показываем и удалённые записи (detail вернул их ID в value).
                 if (detail.value.isTrash) {
                     this.queryTab.with_trashed = 1
                 }
@@ -288,7 +284,6 @@
             return actions
         }
 
-        // Получение данных
         get() {
             this.id = props.id ?? router.params.id ?? router.params.token
             this.isGlobalEdit = props.isGlobalEdit
@@ -297,7 +292,6 @@
             this.updateComponent++
         }
 
-        // Получение табов
         getTabs(list) {
             tabs.value.list = list
 
@@ -318,17 +312,14 @@
             }
         }
 
-        // Установка активного таба
         setTab(tab) {
             tabs.value.set(tab)
         }
 
-        // Обновление заголовка
         getTitle(title) {
             this.header.name = title
         }
 
-        // Получение колонок
         getColumns(columns) {
             this.columns = columns
         }
@@ -337,7 +328,6 @@
             this.isTrash = isTrash
         }
 
-        // Открытие модального окна
         openModal(item) {
             emit('openModal', item)
         }
@@ -366,7 +356,6 @@
 
         }
         
-        // Обновление метаданных страницы
         updateMetaHeader(meta) {
             emit('updateMetaHeader', meta)
         }

@@ -1441,6 +1441,12 @@ export class Filter {
                     response.push(`q=${field.value}`)
                 } else if (typeof field.value == 'boolean') {
                     response.push(`filter[${field.key}]=${field.value ? 1 : 0}`)
+                } else if (Array.isArray(field.value)) {
+                    field.value.forEach(value => {
+                        if (value === 0 || (value != null && value !== '')) {
+                            response.push(`filter[${field.key}][]=${encodeURIComponent(value)}`)
+                        }
+                    })
                 } else if (field.value == 0 || (field.value != null && field.value != '')) {
                     response.push(`filter[${field.key}]=${field.value}`)
                 }

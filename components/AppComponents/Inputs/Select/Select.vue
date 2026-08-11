@@ -35,7 +35,7 @@
                 <div class="select__values" ref="selectValuesRef" v-if="props.options.multiple">
                     <div class="select__value" v-for="option in activeOption" @click="select.changeValue(option)">
                         <span class="select__dot" v-if="props.options.isShowDot && option?.color" :style="`background: ${option.color}`"></span>
-                        {{ option?.label }}
+                        {{ (option?.label && typeof option.label === 'object') ? (option.label.text ?? '') : option?.label }}
 
                         <IconClose />
                     </div>
@@ -173,6 +173,10 @@
                         response = await api.callMethod("GET", `/map/suggest?restrict=city&address=${value}`)
                         this.state.list = response.data.map(p => ({ label: p, value: p }))
                         this.state.visibleList = response.data.map(p => ({ label: p, value: p }))
+                    } else if (props.options.entity) {
+                        response = await api.callMethod("GET", `/objects/search?entity=${props.options.entity}&q=${encodeURIComponent(value)}`)
+                        this.state.list = response.data.map(p => ({ label: p.label, value: p.value }))
+                        this.state.visibleList = this.state.list
                     } else {
                         response = await api.callMethod("GET", `/objects/search?per_page=12&field_id=${props.options.relation}&q=${encodeURIComponent(value)}`)
                         this.state.list = response.data.map(p => ({ label: p.label, value: p.value }))
@@ -185,7 +189,7 @@
 
         getActiveOptions(value) {
             if (props.options.multiple) {
-                return value == null || value == '' ? [] : value.map(option => this.state.list.find(p => p.value == option)).filter(Boolean);
+                return value == null || value == '' ? [] : value.map(option => this.state.list.find(p => p.value == option) ?? (props.options.list ?? []).find(p => p.value == option)).filter(Boolean);
             } else if (props.options.type == 'address') {
                 return this.state.list ? this.state.list.find(p => isEqual(p.value, value)) : null
             } else {
@@ -261,6 +265,9 @@
                 }
                 if (searchRef.value.inputRef) {
                     searchRef.value.inputRef.focus();
+                }
+                if (props.options.searchable && props.options.entity && !this.state.visibleList.length) {
+                    this.filterOptions('')
                 }
             } else {
                 this.state.search = ''
