@@ -132,7 +132,10 @@ export default {
         getModalCars: '/objects/search?field_id=2064&q=',
         getModalEmployees: '/objects/search?field_id=1887&q=',
         getStatistics: '/analytics/logistics-all',
-        tasksViewFields: '/route-tasks-view/fields'
+        tasksViewFields: '/route-tasks-view/fields',
+        waybills: '/routes/${id}/saby-waybills',
+        waybillsCheck: '/routes/${id}/saby-waybills/check',
+        waybillRefresh: '/saby-waybills/${id}/refresh'
     },
     chart: {
         get: '/analytics',

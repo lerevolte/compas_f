@@ -214,6 +214,13 @@
                         :isExternal="props.options?.isExternal"
                     />
 
+                    <AppWaybills
+                        v-else-if="field.type == 'waybills'"
+                        :options="{ ...field }"
+                        :routeId="props.pageId"
+                        :isExternal="props.options?.isExternal"
+                    />
+
                     <AppRedactor
                         v-else-if="field.type == 'redactor'"
                         :options="{
@@ -514,6 +521,7 @@
     import AppRedactor from '@AppComponents/Inputs/Redactor/Redactor.vue'
     import AppRouteStatuses from '@AppComponents/RouteStatuses/RouteStatuses.vue'
     import AppRouteMap from '@AppComponents/RouteMap/RouteMap.vue'
+    import AppWaybills from '@AppComponents/Waybills/Waybills.vue'
     import AppDealStages from '@AppComponents/DealStages/DealStages.vue'
     import AppMultiText from '@AppComponents/Inputs/MultiText/MultiText.vue'
     import { useUserStore } from '@/stores/userStore.js'
