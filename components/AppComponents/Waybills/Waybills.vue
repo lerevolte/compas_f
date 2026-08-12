@@ -1,8 +1,8 @@
 <template>
     <div class="form__item form__item_waybills" v-if="enabled">
-        <span class="blank__title" v-if="props.options?.title && props.options.title != ''">
-            {{ props.options.title }}
-        </span>
+        <label class="blank__title" v-if="props.options?.title && props.options.title != ''">
+            <span>{{ props.options.title }}</span>
+        </label>
 
         <div class="waybills">
             <div class="waybills__list" v-if="list.length">

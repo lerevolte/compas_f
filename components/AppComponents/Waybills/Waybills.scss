@@ -1,5 +1,12 @@
+@use '@/assets/variables.scss' as variables;
+
 .form__item_waybills {
     display: none;
+
+    .blank__title {
+        display: block;
+        font-size: variables.$font-size-label;
+    }
 }
 
 .waybills {
