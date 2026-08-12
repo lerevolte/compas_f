@@ -118,7 +118,8 @@
                                     list: field.options ?? [],
                                     multiple: true,
                                     searchable: true,
-                                    entity: 'products'
+                                    entity: 'products',
+                                    isCommitSearch: true
                                 }"
                                 v-model="filter.state.tabsValues[field.key]"
                                 @update:modelList="options => filter.mergeOptions(field, options)"

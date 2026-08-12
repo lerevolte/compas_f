@@ -146,12 +146,19 @@
                         return;
                     }
                     
+                    this.commitSearch();
                     this.state.isOpen = false;
                     this.state.search = '';
                     this.state.isTop = false;
                     this.setOptions();
                     document.removeEventListener('click', this.closeOptions);
                 }
+            };
+
+            this.commitSearch = () => {
+                if (!props.options.isCommitSearch) return;
+                const typed = this.state.search.trim();
+                if (typed) emit('searchEnter', typed);
             };
 
             this.throttledFilter = throttle(async (value) => {
@@ -270,6 +277,7 @@
                     this.filterOptions('')
                 }
             } else {
+                this.commitSearch()
                 this.state.search = ''
                 this.state.isTop = false
                 if (!props.options.searchable) {
