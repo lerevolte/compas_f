@@ -27,6 +27,19 @@
                             target="_blank"
                             rel="noopener"
                         >Открыть в Saby</a>
+                        <a
+                            class="waybills__link"
+                            v-if="item.qr_url"
+                            :href="item.qr_url"
+                            target="_blank"
+                            rel="noopener"
+                        >QR для ГИБДД</a>
+                        <button
+                            class="waybills__link waybills__link_button"
+                            type="button"
+                            :disabled="refreshing === item.id"
+                            @click="refresh(item)"
+                        >{{ refreshing === item.id ? 'Обновляется…' : 'Обновить' }}</button>
                     </div>
                 </div>
             </div>
@@ -79,6 +92,7 @@
     const enabled = ref(false)
     const loading = ref(false)
     const creating = ref(false)
+    const refreshing = ref(null)
 
     const load = async () => {
         if (!props.routeId || props.isExternal) return
@@ -117,6 +131,25 @@
             errors.value = ['Не удалось сформировать накладную']
         } finally {
             creating.value = false
+        }
+    }
+
+    const refresh = async (item) => {
+        if (refreshing.value) return
+        refreshing.value = item.id
+        errors.value = []
+        try {
+            const url = routes.logistic.waybillRefresh.replace('${id}', item.id)
+            const response = await api.callMethod('POST', url, {})
+            if (response.status == 200 && response.data?.data) {
+                list.value = list.value.map(row => row.id === item.id ? response.data.data : row)
+            } else if (response.data?.message) {
+                errors.value = [response.data.message]
+            }
+        } catch (e) {
+            errors.value = ['Не удалось обновить статус накладной']
+        } finally {
+            refreshing.value = null
         }
     }
 

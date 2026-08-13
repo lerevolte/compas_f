@@ -60,6 +60,18 @@
         &:hover {
             text-decoration: underline;
         }
+
+        &_button {
+            padding: 0;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+
+            &:disabled {
+                opacity: 0.6;
+                cursor: default;
+            }
+        }
     }
 
     &__empty {
