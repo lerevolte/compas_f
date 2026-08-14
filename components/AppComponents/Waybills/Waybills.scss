@@ -1,8 +1,6 @@
 @use '@/assets/variables.scss' as variables;
 
 .form__item_waybills {
-    display: none;
-
     .blank__title {
         display: block;
         font-size: variables.$font-size-label;
@@ -88,11 +86,6 @@
             width: 160px;
             height: 160px;
         }
-    }
-
-    &__empty {
-        color: #8b8b8b;
-        font-size: 13px;
     }
 
     &__errors {

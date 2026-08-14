@@ -47,9 +47,6 @@
                     </div>
                 </div>
             </div>
-            <div class="waybills__empty" v-else-if="!loading">
-                Накладные ещё не формировались
-            </div>
 
             <ul class="waybills__errors" v-if="errors.length">
                 <li v-for="(error, index) in errors" :key="index">{{ error }}</li>
