@@ -27,19 +27,23 @@
                             target="_blank"
                             rel="noopener"
                         >Открыть в Saby</a>
-                        <a
-                            class="waybills__link"
+                        <button
+                            class="waybills__link waybills__link_button"
+                            type="button"
                             v-if="item.qr_url"
-                            :href="item.qr_url"
-                            target="_blank"
-                            rel="noopener"
-                        >QR для ГИБДД</a>
+                            @click="toggleQr(item)"
+                        >{{ openedQr === item.id ? 'Скрыть QR' : 'QR для ГИБДД' }}</button>
                         <button
                             class="waybills__link waybills__link_button"
                             type="button"
                             :disabled="refreshing === item.id"
                             @click="refresh(item)"
                         >{{ refreshing === item.id ? 'Обновляется…' : 'Обновить' }}</button>
+                    </div>
+
+                    <div class="waybills__qr" v-if="openedQr === item.id && qrImages[item.id]">
+                        <div class="waybills__qr-image" v-html="qrImages[item.id]"></div>
+                        <a class="waybills__link" :href="item.qr_url" target="_blank" rel="noopener">Ссылка для проверки</a>
                     </div>
                 </div>
             </div>
@@ -93,6 +97,25 @@
     const loading = ref(false)
     const creating = ref(false)
     const refreshing = ref(null)
+    const openedQr = ref(null)
+    const qrImages = ref({})
+
+    const toggleQr = async (item) => {
+        if (openedQr.value === item.id) {
+            openedQr.value = null
+            return
+        }
+        if (!qrImages.value[item.id]) {
+            try {
+                const { renderSVG } = await import('uqr')
+                qrImages.value[item.id] = renderSVG(item.qr_url, { pixelSize: 5, border: 2 })
+            } catch (e) {
+                errors.value = ['Не удалось построить QR-код']
+                return
+            }
+        }
+        openedQr.value = item.id
+    }
 
     const load = async () => {
         if (!props.routeId || props.isExternal) return
