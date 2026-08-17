@@ -671,9 +671,10 @@
                     let response = null
                     
                     if (cell == null) return null
-                    if (Array.isArray(cell)) response = column.options.filter(option => cell.includes(option.value)).map(option => option.label)
-                    else if (typeof cell == 'object' && cell !== null) response = column.options.filter(option => option.value == cell.value).map(option => option.label)
-                    else response = column.options.filter(option => option.value == cell).map(option => option.label)
+                    const options = column.options || []
+                    if (Array.isArray(cell)) response = options.filter(option => cell.includes(option.value)).map(option => option.label)
+                    else if (typeof cell == 'object' && cell !== null) response = options.filter(option => option.value == cell.value).map(option => option.label)
+                    else response = options.filter(option => option.value == cell).map(option => option.label)
                 
                     if (column.type == 'select_dropdown') {
                         return response.join(', ')
