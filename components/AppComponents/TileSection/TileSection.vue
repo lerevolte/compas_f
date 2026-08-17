@@ -143,6 +143,7 @@
                             edit: field.edit ?? false,
                             type: field.type,
                             slug: field.related_table,
+                            pageId: props.pageId,
                             list: field.options ? field.options.filter(p => p) : [],
                             name: field.key,
                             relation: field.id,
@@ -217,7 +218,7 @@
                     <AppWaybills
                         v-else-if="field.type == 'waybills'"
                         :options="{ ...field }"
-                        :routeId="props.pageId"
+                        :pageId="props.pageId"
                         :isExternal="props.options?.isExternal"
                     />
 

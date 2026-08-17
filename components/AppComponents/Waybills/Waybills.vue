@@ -74,7 +74,7 @@
     const common = new Common()
 
     const props = defineProps({
-        routeId: {
+        pageId: {
             default: null,
             type: [Number, String]
         },
@@ -115,10 +115,10 @@
     }
 
     const load = async () => {
-        if (!props.routeId || props.isExternal) return
+        if (!props.pageId || props.isExternal) return
         loading.value = true
         try {
-            const url = routes.logistic.waybills.replace('${id}', props.routeId)
+            const url = routes.logistic.waybills.replace('${id}', props.pageId)
             const response = await api.callMethod('GET', url)
             if (response.status == 200) {
                 enabled.value = response.data?.enabled !== false
@@ -132,11 +132,11 @@
     }
 
     const create = async () => {
-        if (creating.value || !props.routeId) return
+        if (creating.value || !props.pageId) return
         creating.value = true
         errors.value = []
         try {
-            const url = routes.logistic.waybills.replace('${id}', props.routeId)
+            const url = routes.logistic.waybills.replace('${id}', props.pageId)
             const response = await api.callMethod('POST', url, {})
             if (response.status == 200 && response.data?.data) {
                 list.value = [response.data.data, ...list.value]
@@ -174,5 +174,5 @@
     }
 
     onMounted(load)
-    watch(() => props.routeId, load)
+    watch(() => props.pageId, load)
 </script>

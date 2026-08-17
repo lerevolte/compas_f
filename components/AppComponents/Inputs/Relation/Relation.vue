@@ -104,10 +104,10 @@
                     v-for="option in selectInstances[index]?.getList(index)" 
                     :class="{ 
                         'select__option_active': normalizedModelValue.value[index] == option.value,
-                        'select__option_disabled': option.disabled
+                        'select__option_disabled': isOptionDisabled(option)
                     }" 
                     :value="option.value" 
-                    @click="!option.disabled && selectInstances[index]?.changeValue(option, index)"
+                    @click="!isOptionDisabled(option) && selectInstances[index]?.changeValue(option, index)"
                 >
                     <span class="value__text">
                         {{ option.label.text || option.label.text == null ? option.label.text : option.label }}
@@ -455,6 +455,13 @@
         setOptions() {
             this.state.list = dropEmptyForProducts(props.options.list, props.options)
         }
+    }
+
+    const isOptionDisabled = (option) => {
+        if (option.disabled) return true
+        const owner = option.label?.occupied_by
+        if (!owner) return false
+        return String(owner) !== String(props.options.pageId ?? '')
     }
 
     const props = defineProps({
