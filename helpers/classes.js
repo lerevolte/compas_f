@@ -820,7 +820,7 @@ export class Table {
     }
 
     createTaskFromAddress(row) {
-        const keys = ['name', 'address', 'phone', 'time', 'car_requirements', 'employee_requirements', 'service_time', 'comment', 'contact', 'photo', 'client_id', 'weight', 'delivery_price']
+        const keys = ['name', 'address', 'phone', 'time', 'car_requirements', 'employee_requirements', 'service_time', 'comment', 'contact', 'photo', 'client_id', 'weight', 'delivery_price', 'volume', 'products', 'company_id']
         const defaults = {}
         for (const key of keys) {
             if (row[key] !== undefined && row[key] !== null) {
@@ -831,7 +831,11 @@ export class Table {
             type: 'create',
             slug: 'logistic_tasks',
             id: 0,
-            defaults
+            defaults,
+            source: {
+                slug: this.slug,
+                id: row.id
+            }
         })
     }
 
@@ -1751,8 +1755,8 @@ export class HeaderEditable {
         })
     }
 
-    createTaskFromAddress({columns}) {
-        const keys = ['name', 'address', 'phone', 'time', 'car_requirements', 'employee_requirements', 'service_time', 'comment', 'contact', 'photo', 'client_id', 'weight', 'delivery_price']
+    createTaskFromAddress({columns, slug, id}) {
+        const keys = ['name', 'address', 'phone', 'time', 'car_requirements', 'employee_requirements', 'service_time', 'comment', 'contact', 'photo', 'client_id', 'weight', 'delivery_price', 'volume', 'products', 'company_id']
         const defaults = {}
         for (const key of keys) {
             const field = this.common.findColumnField(columns, key)
@@ -1764,7 +1768,8 @@ export class HeaderEditable {
             type: 'create',
             slug: 'logistic_tasks',
             id: 0,
-            defaults
+            defaults,
+            source: slug && id ? { slug, id } : null
         })
     }
 

@@ -75,7 +75,12 @@
 }
 
 .detail-page__header {
-    max-width: max-content;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    max-width: none;
+    width: 100%;
     margin-bottom: 25px;
     
     h1 {
@@ -107,7 +112,7 @@
 .detail-page__actions {
     display: flex;
     gap: 5px;
-    order: -1;
+    order: 0;
     align-items: center;
 
     .icon-action,
@@ -144,9 +149,34 @@
     z-index: 50;
 }
 
-// Внешняя публичная ссылка: сайдбара нет, поэтому таблицы связанных сущностей
-// не должны резервировать под него место (дефолтный max-width .section-table
-// в VirtualTable.scss — calc(100vw - 264px), где 230px — ширина меню).
+.tabs__item[data-tab="relations"],
+.detail-page__header .create-based {
+    display: none;
+}
+
+.detail-page__header .create-based {
+    margin-left: auto;
+    order: 5;
+    align-self: center;
+
+    .popup__header {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border-radius: 6px;
+        background: #2f8cff;
+        color: #ffffff;
+        font-size: 14px;
+        white-space: nowrap;
+        cursor: pointer;
+
+        svg path {
+            fill: #ffffff;
+        }
+    }
+}
+
 .external-page {
     .section-table {
         max-width: calc(100vw - 34px);

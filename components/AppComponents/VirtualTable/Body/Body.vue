@@ -509,7 +509,7 @@
                 if (a.action === 'copyExternalLink') return table.value.permissions?.external_link_read_p !== 'N'
                 return true
             })
-            if (table.value.slug == 'addresses' && !row.edit && table.value.permissions?.create_task_p !== 'N') {
+            if (['addresses', 'deals'].includes(table.value.slug) && !row.edit && table.value.permissions?.create_task_p !== 'N') {
                 result = [{ name: 'Создать задачу', action: 'createTaskFromAddress', enabled: true }, ...result]
             }
             return result

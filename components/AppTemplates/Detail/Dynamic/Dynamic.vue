@@ -53,6 +53,13 @@
             })"
         />
     
+        <AppRelatedObjects
+            v-else-if="props.tabs.active?.tab == 'relations'"
+            :id="props.id"
+            :slug="props.slug"
+            @openModal="item => emit('action', { action: 'openModal', value: { ...item, type: 'detail' } })"
+        />
+
         <div class="dynamin__group" v-else-if="props.tabs.active?.tab == 'products'">
             <AppVirtualTable
                 :pageId="props.id"
@@ -137,6 +144,7 @@
     import ColumnFields from '@AppComponents/ColumnFields/ColumnFields.vue';
     import AppVirtualTable from '@AppComponents/VirtualTable/VirtualTable.vue';
     import RouteTasksView from '@AppTemplates/Detail/RouteTasksView/RouteTasksView.vue';
+    import AppRelatedObjects from '@AppComponents/RelatedObjects/RelatedObjects.vue';
 
     const isRouteTasksTab = computed(() => {
         // В external-режиме slug не передаётся (null) — разрешаем проверку по title.

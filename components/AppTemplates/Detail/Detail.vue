@@ -37,6 +37,30 @@
                     })"
                 />
             </div>
+            <AppPopup
+                class="create-based"
+                :isPreventBottom="true"
+                v-if="basedEntities.length && detail.id && !props.is_external && !detail.forbidden"
+                v-show="!detail.header.editTitle && !detail.isGlobalEdit"
+            >
+                <template #header>
+                    <IconTriangle />
+                    Создать на основании
+                </template>
+                <template #content>
+                    <div
+                        class="popup__option"
+                        v-for="entity in basedEntities"
+                        :key="entity.slug"
+                        @click="e => {
+                            e.target?.closest('.popup')?.classList.remove('popup_open')
+                            detail.createBased(entity)
+                        }"
+                    >
+                        {{ entity.title }}
+                    </div>
+                </template>
+            </AppPopup>
         </header>
         <AppDealStages
             v-if="stageField && detail.id && !detail.isGlobalEdit && !detail.forbidden && !props.is_external"
@@ -108,6 +132,10 @@
     import IconArrowBack from '@AppIcons/ArrowBack.vue';
     import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'
     import AppDealStages from '@AppComponents/DealStages/DealStages.vue'
+    import AppPopup from '@AppComponents/Popup/Popup.vue'
+    import IconTriangle from '@AppIcons/Triangle.vue'
+    import api from '@/helpers/api.js'
+    import routes from '@/helpers/routes.js'
 
     const textareaRef = ref(null)
     const router = useRoute()
@@ -155,8 +183,19 @@
         defaults: {
             default: null,
             type: Object
+        },
+        source: {
+            default: null,
+            type: Object
         }
     })
+
+    const SKIP_BASED_KEYS = ['id', 'created_at', 'updated_at', 'deleted_at', 'user_id', 'route_id', 'sort', 'point_status']
+
+    const BASED_ENTITIES = {
+        deals: [{ slug: 'logistic_tasks', title: 'Задача логистики' }],
+        addresses: [{ slug: 'logistic_tasks', title: 'Задача логистики' }]
+    }
 
     class Tabs {
         constructor() {
@@ -164,18 +203,22 @@
                 tab: "order"
             }
             this.is_module = false
+            this.moduleLoaded = false
             this.queryTab = {}
             this.list = []
         }
 
         set({tab, is_module}) {
+            if (!is_module && this.moduleLoaded) {
+                this.moduleLoaded = false
+                detail.value.updateComponent++
+            }
+
             if (is_module) {
-                this.active = tab  
+                this.active = tab
+                this.moduleLoaded = true
                 detail.value.updateComponent++
             } else if (['order', 'history', 'module'].includes(tab.tab)) {
-                if (this.is_module && tab.tab == 'order') {
-                    detail.value.updateComponent++
-                }
                 this.queryTab = {}
                 this.active = tab
             } else {
@@ -332,6 +375,33 @@
             emit('openModal', item)
         }
 
+        createBased(entity) {
+            const defaults = {}
+            for (const columnKey in this.columns) {
+                for (const section of this.columns[columnKey] ?? []) {
+                    for (const field of section.fields ?? []) {
+                        const fields = field.type === 'text_group' && Array.isArray(field.fields) ? field.fields : [field]
+                        for (const item of fields) {
+                            if (!item.key || SKIP_BASED_KEYS.includes(item.key)) continue
+                            if (item.value === undefined || item.value === null) continue
+                            defaults[item.key] = JSON.parse(JSON.stringify(item.value))
+                        }
+                    }
+                }
+            }
+
+            emit('openModal', {
+                type: 'create',
+                slug: entity.slug,
+                id: 0,
+                defaults,
+                source: {
+                    slug: this.slug,
+                    id: this.id
+                }
+            })
+        }
+
         closeDetail() {
             emit('close', true)
             emit('closeDetail', true)
@@ -341,10 +411,22 @@
             const item = response.data
 
             if (this.isGlobalEdit) {
+                const wasCreate = !this.id
                 this.isGlobalEdit = false
                 this.updateComponent++
                 this.isCopy = false
                 this.id = item.id
+
+                if (wasCreate && props.source?.slug && props.source?.id && item.id) {
+                    api.callMethod('POST', routes.relations.create, {
+                        source_slug: props.source.slug,
+                        source_id: props.source.id,
+                        target_slug: props.slug ?? router.params.slug,
+                        target_id: item.id
+                    }).then(() => {
+                        relationsVersion.value++
+                    }).catch(() => {})
+                }
                 emit('updateMetaHeader', {
                     title: item.header_title || '',
                     href: {
@@ -362,6 +444,10 @@
     }
 
     const detail = ref(new Detail())
+
+    const relationsVersion = useState('object-relations-version', () => 0)
+
+    const basedEntities = computed(() => BASED_ENTITIES[props.slug ?? router.params.slug] ?? [])
 
     const canEditTitle = computed(() => {
         const field = common.findColumnField(detail.value.columns, 'name')

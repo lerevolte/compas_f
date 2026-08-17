@@ -137,6 +137,10 @@ export default {
         waybillsCheck: '/routes/${id}/saby-waybills/check',
         waybillRefresh: '/saby-waybills/${id}/refresh'
     },
+    relations: {
+        tree: '/object-relations/${slug}/${id}',
+        create: '/object-relations'
+    },
     chart: {
         get: '/analytics',
         update: '/analytics/settings',

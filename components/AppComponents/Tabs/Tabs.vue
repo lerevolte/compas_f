@@ -5,6 +5,7 @@
                 <li
                     v-if="!hideInExternal(tab)"
                     class="tabs__item"
+                    :data-tab="tab.tab"
                     :class="{'tabs__item_hidden': !tab.enabled, 'tabs__item_active': tab.tab == props.activeTab || (tab.tab == 'modules' && props.isModule)}"
                 >
                     <AppPopup class="tabs__module" v-if="tab.childs && tab.childs.length > 0" ref="popupRef" :isPreventBottom="true">
