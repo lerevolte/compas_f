@@ -222,7 +222,10 @@
                 this.queryTab = {}
                 this.active = tab
             } else {
-                const findedField = common.findColumnField(detail.value.columns, tab.tab)
+                let findedField = common.findColumnField(detail.value.columns, tab.tab)
+                if (!findedField) {
+                    findedField = (detail.value.hiddenFields || []).find(f => f.key == tab.tab) ?? null
+                }
                 let request = null
 
                 if (findedField && findedField.value) {
@@ -253,6 +256,7 @@
             this.header = new HeaderEditable({columns: this.columns, emit: emit, reload: () => detail.value.updateComponent++})
             this.updateComponent = 0
             this.columns = {}
+            this.hiddenFields = []
             this.isGlobalEdit = false
             this.isCopy = false
             this.isTrash = false
@@ -365,6 +369,10 @@
 
         getColumns(columns) {
             this.columns = columns
+        }
+
+        getHiddenFields(fields) {
+            this.hiddenFields = Array.isArray(fields) ? fields : []
         }
 
         checkIsTrash(isTrash) {

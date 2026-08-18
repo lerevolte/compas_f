@@ -114,7 +114,7 @@
         modal: {
             default: {
                 state: false,
-                title: 'Создание раздела',
+                title: 'Создание маршрута',
                 actionTitle: 'Создать маршрут',
                 action: 'create',
                 text: null,

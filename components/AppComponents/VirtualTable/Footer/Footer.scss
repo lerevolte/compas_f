@@ -100,7 +100,9 @@
 }
 
 .pagination__item {
-    width: 37px;
+    min-width: 37px;
+    width: auto;
+    padding: 0 10px;
     height: 31px;
     display: grid;
     place-items: center;

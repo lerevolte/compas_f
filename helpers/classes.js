@@ -3057,7 +3057,7 @@ export class Logistic {
         this.isDragging = false
         this.modal = {
             state: false,
-            title: 'Создание раздела',
+            title: 'Создание маршрута',
             actionTitle: 'Создать маршрут',
             action: 'create',
             text: null,

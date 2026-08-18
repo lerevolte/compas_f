@@ -14,8 +14,6 @@
                 'select_multiple': props.options.multiple
             }">
             <div class="select__content" @click="event => select.toggleOptions(event)">
-                <IconWarning v-if="props.options.required && !activeOption"/>
-
                 <AppInput
                     ref="searchRef"
                     :options="{
@@ -54,6 +52,10 @@
                     Не выбрано
                 </div>
 
+                <div class="select__option select__option_empty" v-if="props.options.type == 'address' && select.state.search && !select.state.visibleList.length">
+                    Не найдено
+                </div>
+
                 <div
                     class="select__option"
                     v-for="option in select.state.visibleList"
@@ -81,7 +83,6 @@
     import AppInput from '@AppComponents/Inputs/Input/Input.vue';
     import IconSelectArrow from '@AppIcons/Input/SelectArrow.vue';
     import IconClose from '@AppIcons/Close.vue';
-    import IconWarning from '@AppIcons/Warning.vue';
     import api from '@/helpers/api.js'
     import throttle from 'lodash/throttle'
     import isEqual from 'lodash/isEqual'

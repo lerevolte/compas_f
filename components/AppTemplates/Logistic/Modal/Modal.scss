@@ -200,6 +200,15 @@
 .logistic-modal__filter {
     .select__values {
         max-width: max-content;
+
+        .select__value {
+            padding: 2px 10px;
+            font-size: 14px;
+            line-height: 1.2;
+            max-height: calc(100% - 6px);
+            white-space: nowrap;
+            box-sizing: border-box;
+        }
     }
 
     .form__item_input {

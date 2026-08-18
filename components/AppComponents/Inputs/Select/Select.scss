@@ -248,6 +248,11 @@
         background: variables.$color-hover-option;
     }
 
+    &.select__option_empty {
+        pointer-events: none;
+        color: variables.$color-border;
+    }
+
     &.select__option_active {
         color: variables.$color-border;
         position: relative;
