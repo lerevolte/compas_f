@@ -144,11 +144,6 @@
     z-index: 50;
 }
 
-.tabs__item[data-tab="relations"],
-.detail-page__header .create-based {
-    display: none;
-}
-
 @media (min-width: 991px) {
     #mobile-menu-target.detail-page__header {
         flex-direction: row;
