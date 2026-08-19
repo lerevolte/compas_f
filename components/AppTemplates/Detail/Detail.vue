@@ -433,8 +433,11 @@
                         source_id: props.source.id,
                         target_slug: props.slug ?? router.params.slug,
                         target_id: item.id
-                    }).then(() => {
+                    }).then(response => {
                         relationsVersion.value++
+                        if (response?.data?.products_copied) {
+                            this.updateComponent++
+                        }
                     }).catch(() => {})
                 }
                 emit('updateMetaHeader', {
