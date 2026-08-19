@@ -7,10 +7,10 @@
             ref="inputRef"
             :id="props.options.id" 
             :name="props.options.name" 
-            :type="props.options.type" 
+            :type="isNumber ? 'text' : props.options.type" 
+            :inputmode="isNumber ? 'decimal' : null"
             :placeholder="props.options.placeholder"
             :value="modelValue"
-            :min="props.options.type == 'number' ? 1 : null"
             :autocomplete="props.options.autocomplete"
             v-maska="maskaOptions"
             @input="onInput"
@@ -62,17 +62,24 @@
         modelValue: [String, Number]
     })
 
-    // Режимы маски (8476/8477):
-    //  - 'email' — спец-маркер: фиксированная maska невозможна, фильтруем символы
-    //    и нормализуем на blur;
-    //  - маска со ':' — время (одиночное '##:##' или диапазон '##:## - ##:##'),
-    //    структуру задаёт maska, диапазоны (часы 00–23, минуты 00–59) доводим на blur.
     const isEmailMask = computed(() => props.options.mask === 'email')
+    const isNumber = computed(() => props.options.type == 'number')
+    const isPlainNumber = computed(() => isNumber.value && !props.options.mask)
+
+    function sanitizeNumber(value) {
+        let res = String(value ?? '').replace(',', '.').replace(/[^\d.\-]/g, '')
+        const negative = res.startsWith('-')
+        res = res.replace(/-/g, '')
+        const dot = res.indexOf('.')
+        if (dot !== -1) {
+            res = res.slice(0, dot + 1) + res.slice(dot + 1).replace(/\./g, '')
+        }
+        return (negative ? '-' : '') + res
+    }
     const isTimeMask = computed(() => typeof props.options.mask === 'string' && props.options.mask.includes(':'))
     const isRangeTime = computed(() => isTimeMask.value && props.options.mask.includes('-'))
 
     const maskaOptions = computed(() => ({
-        // для email maska-литерал не применяем
         mask: isEmailMask.value ? null : (props.options.mask ?? null),
         tokens: {
             A: { pattern: /[a-zA-Zа-яА-Я]/ },
@@ -84,8 +91,6 @@
 
     const pad2 = n => String(n).padStart(2, '0')
 
-    // Доводим время до валидного формата. Если введено меньше цифр, чем нужно,
-    // значение не насилуем (пользователь ещё печатает / стёр часть).
     function normalizeTime(value, isRange) {
         const digits = (value ?? '').replace(/\D/g, '')
         const need = isRange ? 8 : 4
@@ -103,14 +108,15 @@
         return res
     }
 
-    // Коалесцируем несколько input-событий (сырое + от v-maska) в один emit
     let emitRafId = null
 
     function onInput(event) {
         const target = event.target
-        // e-mail: оставляем только допустимые в адресе символы
         if (isEmailMask.value) {
             const filtered = target.value.replace(/[^a-zA-Z0-9@._%+\-]/g, '')
+            if (filtered !== target.value) target.value = filtered
+        } else if (isPlainNumber.value) {
+            const filtered = sanitizeNumber(target.value)
             if (filtered !== target.value) target.value = filtered
         }
         if (emitRafId !== null) {

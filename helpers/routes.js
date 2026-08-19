@@ -135,7 +135,8 @@ export default {
         tasksViewFields: '/route-tasks-view/fields',
         waybills: '/logistic_tasks/${id}/saby-waybills',
         waybillsCheck: '/logistic_tasks/${id}/saby-waybills/check',
-        waybillRefresh: '/saby-waybills/${id}/refresh'
+        waybillRefresh: '/saby-waybills/${id}/refresh',
+        waybillDelete: '/saby-waybills/${id}'
     },
     relations: {
         tree: '/object-relations/${slug}/${id}',

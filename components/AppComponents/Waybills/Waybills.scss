@@ -46,7 +46,14 @@
 
     &__actions {
         display: flex;
+        align-items: center;
         gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    &__confirm {
+        color: #8b8b8b;
+        font-size: 13px;
     }
 
     &__link {
@@ -55,6 +62,10 @@
 
         &:hover {
             text-decoration: underline;
+        }
+
+        &_danger {
+            color: #e23918;
         }
 
         &_button {

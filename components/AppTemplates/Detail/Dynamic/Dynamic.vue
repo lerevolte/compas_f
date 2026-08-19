@@ -88,13 +88,6 @@
             />
         </div>
 
-        <!--
-            Список «Маршрут»: вкладка с title='Маршрут' / 'Маршрут списком' /
-            'Маршрут списокм' (опечатка) в деталке маршрута. НЕ 'Маршруты' и
-            не вкладка «Задачи» — там оставляем стандартную таблицу.
-            \b в JS-регексах не работает с кириллицей, поэтому используем
-            startsWith + явное исключение «Маршруты».
-        -->
         <RouteTasksView
             v-else-if="isRouteTasksTab"
             :routeId="props.id"
@@ -119,7 +112,7 @@
                 isPermanentEdit: false,
                 isTrash: false,
                 isHaveTopHeader: false,
-                isHaveFooter: false,
+                isHaveFooter: true,
                 isHaveLocalFilter: false,
                 isExternal: props.options.isExternal,
                 localFilter: []
@@ -147,25 +140,16 @@
     import AppRelatedObjects from '@AppComponents/RelatedObjects/RelatedObjects.vue';
 
     const isRouteTasksTab = computed(() => {
-        // В external-режиме slug не передаётся (null) — разрешаем проверку по title.
         if (props.slug !== 'routes' && !(props.options?.isExternal && props.slug == null)) return false
         const active = props.tabs?.active
         if (!active) return false
         if (['order', 'history', 'products'].includes(active.tab)) return false
         const title = (typeof active.title === 'string' ? active.title : '').trim()
         if (!title) return false
-        // Исключаем стандартные «Маршруты»/«Задачи».
         if (title === 'Маршруты' || /Задач/i.test(title)) return false
-        // Подходят: 'Маршрут', 'Маршрут списком', 'Маршрут списокм' и др.
         return title === 'Маршрут' || title.startsWith('Маршрут ')
     })
 
-    // Для деталки маршрута: вкладки, ссылающиеся на logistic_tasks (Задачи),
-    // не имеют автогенерируемого relation-поля на стороне Route (связь обратная
-    // через task.route_id). Стандартный queryTab из Detail.Tabs.set() в этом
-    // случае получается пустой («?is_slug=true») и не возвращает задач.
-    // Filter.get сам оборачивает ключи в filter[...], поэтому передаём
-    // имя поля без префикса — иначе получится filter[filter[route_id]]=...
     const tabQuery = computed(() => {
         const base = props.tabs?.queryTab || {}
         if (props.slug === 'routes' && props.tabs?.active?.slug === 'logistic_tasks') {
@@ -184,10 +168,6 @@
         return base
     })
 
-    // Вкладка «Задачи» (logistic_tasks) внутри деталки маршрута: включаем сокеты,
-    // чтобы после редактирования задачи (в т.ч. во вложенной модалке) таблица
-    // показывала плашку обновления, как и обычные таблицы. У остальных вкладок
-    // сокеты остаются выключенными.
     const isTasksTab = computed(() => props.tabs?.active?.slug === 'logistic_tasks')
 
     const emit = defineEmits([
@@ -259,7 +239,6 @@
             }
         }
 
-        // Получение данных
         async get() {
             try {
                 let response = null
@@ -309,10 +288,6 @@
                     })
                 }
 
-                // При копировании бэкенд отдаёт title.name (имя источника), но в самих
-                // колонках поле name приходит пустым — модалка создания показывает
-                // пустое «Название». Подкладываем имя источника, чтобы пользователь
-                // мог сразу отредактировать его.
                 if (props.options.isCopy && response.data.detail?.title?.name && response.data.detail?.columns) {
                     const sourceName = response.data.detail.title.name
                     for (const colKey in response.data.detail.columns) {
@@ -332,14 +307,20 @@
                     }
                 }
 
-                // Префилл формы создания значениями по умолчанию (например, при
-                // «Создать задачу» из «Библиотеки задач» — поля берутся из адреса).
                 if (props.defaults && props.options.isGlobalEdit && response.data.detail?.columns) {
                     const applyDefault = (field) => {
                         if (!(field.key in props.defaults)) return
                         const def = props.defaults[field.key]
                         if (field.value && typeof field.value === 'object' && !Array.isArray(field.value) && 'value' in field.value) {
-                            field.value.value = (def && typeof def === 'object' && 'value' in def) ? def.value : def
+                            const defIsObject = def && typeof def === 'object' && !Array.isArray(def) && 'value' in def
+                            let value = defIsObject ? def.value : def
+                            if (Array.isArray(field.value.value) && !Array.isArray(value)) {
+                                value = value === null || value === undefined || value === '' ? [] : [value]
+                            }
+                            field.value.value = value
+                            if (defIsObject && Array.isArray(def.localOptions)) {
+                                field.value.localOptions = def.localOptions
+                            }
                         } else {
                             field.value = def
                         }

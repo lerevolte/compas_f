@@ -385,18 +385,20 @@
 
         createBased(entity) {
             const defaults = {}
-            for (const columnKey in this.columns) {
-                for (const section of this.columns[columnKey] ?? []) {
-                    for (const field of section.fields ?? []) {
-                        const fields = field.type === 'text_group' && Array.isArray(field.fields) ? field.fields : [field]
-                        for (const item of fields) {
-                            if (!item.key || SKIP_BASED_KEYS.includes(item.key)) continue
-                            if (item.value === undefined || item.value === null) continue
-                            defaults[item.key] = JSON.parse(JSON.stringify(item.value))
-                        }
-                    }
+            const collect = (field) => {
+                const fields = field.type === 'text_group' && Array.isArray(field.fields) ? field.fields : [field]
+                for (const item of fields) {
+                    if (!item.key || SKIP_BASED_KEYS.includes(item.key)) continue
+                    if (item.value === undefined || item.value === null) continue
+                    defaults[item.key] = JSON.parse(JSON.stringify(item.value))
                 }
             }
+            for (const columnKey in this.columns) {
+                for (const section of this.columns[columnKey] ?? []) {
+                    for (const field of section.fields ?? []) collect(field)
+                }
+            }
+            for (const field of this.hiddenFields ?? []) collect(field)
 
             emit('openModal', {
                 type: 'create',

@@ -39,6 +39,27 @@
                             :disabled="refreshing === item.id"
                             @click="refresh(item)"
                         >{{ refreshing === item.id ? 'Обновляется…' : 'Обновить' }}</button>
+                        <template v-if="confirmDelete === item.id">
+                            <span class="waybills__confirm">Удалить накладную?</span>
+                            <button
+                                class="waybills__link waybills__link_button waybills__link_danger"
+                                type="button"
+                                :disabled="deleting === item.id"
+                                @click="remove(item)"
+                            >{{ deleting === item.id ? 'Удаляется…' : 'Да, удалить' }}</button>
+                            <button
+                                class="waybills__link waybills__link_button"
+                                type="button"
+                                :disabled="deleting === item.id"
+                                @click="confirmDelete = null"
+                            >Отмена</button>
+                        </template>
+                        <button
+                            v-else
+                            class="waybills__link waybills__link_button waybills__link_danger"
+                            type="button"
+                            @click="confirmDelete = item.id"
+                        >Удалить</button>
                     </div>
 
                     <div class="waybills__qr" v-if="openedQr === item.id && qrImages[item.id]">
@@ -55,6 +76,7 @@
             <button
                 class="waybills__button"
                 type="button"
+                v-if="!list.length"
                 :disabled="loading || creating"
                 @click="create"
             >
@@ -94,6 +116,8 @@
     const loading = ref(false)
     const creating = ref(false)
     const refreshing = ref(null)
+    const confirmDelete = ref(null)
+    const deleting = ref(null)
     const openedQr = ref(null)
     const qrImages = ref({})
 
@@ -170,6 +194,28 @@
             errors.value = ['Не удалось обновить статус накладной']
         } finally {
             refreshing.value = null
+        }
+    }
+
+    const remove = async (item) => {
+        if (deleting.value) return
+        deleting.value = item.id
+        errors.value = []
+        try {
+            const url = routes.logistic.waybillDelete.replace('${id}', item.id)
+            const response = await api.callMethod('DELETE', url)
+            if (response.status == 200) {
+                list.value = list.value.filter(row => row.id !== item.id)
+                if (openedQr.value === item.id) openedQr.value = null
+                common.showNotification({ title: 'Транспортная накладная', description: `№ ${item.number} удалена` }, 'success')
+            } else if (response.data?.message) {
+                errors.value = [response.data.message]
+            }
+        } catch (e) {
+            errors.value = ['Не удалось удалить накладную']
+        } finally {
+            deleting.value = null
+            confirmDelete.value = null
         }
     }
 
