@@ -435,7 +435,7 @@
                         target_id: item.id
                     }).then(response => {
                         relationsVersion.value++
-                        if (response?.data?.products_copied) {
+                        if (response?.data?.products_copied || response?.data?.b24_copied) {
                             this.updateComponent++
                         }
                     }).catch(() => {})
