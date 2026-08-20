@@ -281,11 +281,30 @@ export class Common {
     }
 
     findColumnField(columns, key) {
+        const findIn = fields => {
+            for (let field of fields || []) {
+                if (field.key == key) {
+                    return field
+                }
+                if (field.type == 'text_group' && field.fields) {
+                    const sub = field.fields.find(item => item.key == key)
+                    if (sub) {
+                        return sub
+                    }
+                }
+            }
+            return null
+        }
         for (let column in columns) {
             for (let section of columns[column]) {
-                for (let field of section.fields) {
-                    if (field.key == key) {
-                        return field
+                let found = findIn(section.fields)
+                if (found) {
+                    return found
+                }
+                for (let child of section.children || []) {
+                    found = findIn(child.fields)
+                    if (found) {
+                        return found
                     }
                 }
             }

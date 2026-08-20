@@ -35,7 +35,7 @@
                 <IconEdit v-if="!props.options?.isModule && userStore.user?.is_admin" v-show="!section.editTitle" @click="section.initEditTitle()"/>
             </div>
 
-            <div class="tile-section__actions" v-if="!props.options.isGlobalEdit && props.options.type != 'field' && !props.options.isModule">
+            <div class="tile-section__actions" v-if="!props.options.isGlobalEdit && props.options.type != 'field' && !props.options.isExternal">
                 <AppButton class="button_text" v-if="section.fields.find(item => item.edit || (item.type == 'text_group' && item.fields.find(item => item.edit)))" @click="fieldObject.section.cancelEditAll(props.section)">
                     Отмена
                 </AppButton>
