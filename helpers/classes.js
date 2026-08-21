@@ -734,7 +734,7 @@ export class Table {
     }
 
     async save() {
-        if (this.slug != 'products') {
+        if (!(this.slug == 'products' && this.options?.isLocalTable)) {
             const errors = this.validateRequired(this.body.filter(row => row.edit))
             if (errors.length > 0) {
                 this.validateBuffer = {
@@ -752,7 +752,7 @@ export class Table {
             let isEdit = false
             let column = null
 
-            if (this.slug == 'products') {
+            if (this.slug == 'products' && this.options?.isLocalTable) {
                 this.body = this.body.filter(row => row.id || (row.product_name && String(row.product_name).trim() !== ''))
                 request = JSON.parse(JSON.stringify(this.body))
                 request = request.map(row => {
@@ -804,10 +804,10 @@ export class Table {
             }
             
 
-            if (request.length == 0 && this.slug != 'products') return
+            if (request.length == 0 && !(this.slug == 'products' && this.options?.isLocalTable)) return
 
             if (this.slug) {
-                if (this.slug == 'products') {
+                if (this.slug == 'products' && this.options?.isLocalTable) {
                     await api.callMethod('PUT', routes.table.set_products.replace('${parent_slug}', this.options?.parentSlug ?? 'logistic_tasks').replace('${page_id}', this.pageId), {
                         products: request
                     })
@@ -859,7 +859,7 @@ export class Table {
     }
 
     cancel() {
-        if (this.slug == 'products') {
+        if (this.slug == 'products' && this.options?.isLocalTable) {
             this.body = this.backup.body
             nextTick(() => {
                 this.initVirtualizer()
@@ -1154,7 +1154,7 @@ export class Table {
     dragStart(event) {
         this.isDragging = true
         document.body.classList.add('body_unselected')
-        if (this.slug == 'products' && !this.state) {
+        if (this.slug == 'products' && this.options?.isLocalTable && !this.state) {
             this.backupLocalBody(event.from.__draggable_component__.modelValue.map(row => {
                 return {
                     ...row.original
@@ -1189,7 +1189,7 @@ export class Table {
         const savedTop = scrollEl?.scrollTop ?? 0
         const savedLeft = scrollEl?.scrollLeft ?? 0
         this.isDragging = false
-        if (this.slug == 'products') {
+        if (this.slug == 'products' && this.options?.isLocalTable) {
             this.state = 'edit'
             this.body = this.body.map(row => {
                 return {

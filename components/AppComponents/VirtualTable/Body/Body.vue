@@ -9,7 +9,7 @@
             }"
             :sort="!props.options?.isDisableSort"
             v-model="rows" 
-            :handle="table.options?.isDraggable && table.state != 'edit' && !isMobile ? table.options?.draggableTarget ?? '.table__row' : 'null'"
+            :handle="table.options?.isDraggable && (table.state != 'edit' || (table.options?.isLocalTable && table.options?.isHaveOrder)) && !isMobile ? table.options?.draggableTarget ?? '.table__row' : 'null'"
             :forceFallback="true"
             :fallbackOnBody="true"
             :delay="props.options?.dragDelay ?? 120"
@@ -786,7 +786,9 @@
     const getItemKey = (item) => {
         // Используем original если доступен (реальные данные строки), иначе сам item
         const rowData = item.original || item
-        // Используем id, local_id или комбинацию slug + index как уникальный ключ
+        if (table.value?.options?.isLocalTable) {
+            return rowData.local_id ?? rowData.id ?? `${table.value.slug}_${item.index ?? item.key}`
+        }
         return rowData.id ?? rowData.local_id ?? `${table.value.slug}_${item.index ?? item.key}`
     }
 

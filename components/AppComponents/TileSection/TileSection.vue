@@ -158,7 +158,7 @@
                             placeholder: '' 
                         }"
                         v-model="field.value"
-                        @showAll="() => props.tabs.set({tab: props.tabs.list.find(p => p.slug == field.related_table), is_module: false})"
+                        @showAll="() => onShowAll(field)"
                         @create="item =>  emit('action', {
                             action: 'openModal', 
                             value: {
@@ -252,6 +252,7 @@
                         :listSection="props.listSection"
                         :pageId="props.pageId"
                         :hidden="props.hidden"
+                        :tabs="props.tabs"
                         @action="action => emit('action', action)"
                         @actionField="action => emit('actionField', action)"
                         @update:hidden="fields => emit('update:hidden', fields)"
@@ -680,6 +681,17 @@
             document.removeEventListener('click', checkClick);
             section.value.setTitle(e)
         } 
+    }
+
+    const onShowAll = field => {
+        if (typeof props.tabs?.set !== 'function' || !Array.isArray(props.tabs.list)) {
+            return
+        }
+        const tab = props.tabs.list.find(p => p.slug == field.related_table)
+        if (!tab) {
+            return
+        }
+        props.tabs.set({tab, is_module: false})
     }
 
     const editAll = () => {

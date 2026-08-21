@@ -64,8 +64,10 @@
             <AppVirtualTable
                 :pageId="props.id"
                 :options="{
-                    draggableTarget: '.icon_drag',
+                    draggableTarget: '.table__icon-drag',
                     isDraggable: canEditProducts,
+                    isHaveOrder: canEditProducts,
+                    group: 'order_products',
                     isLocalTable: true,
                     isHaveQuery: false,
                     query: {},
