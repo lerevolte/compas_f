@@ -93,7 +93,8 @@
                         'field_hidden': !props.options.isModule && !field.edit && fieldObject.checkVisible(field, true),
                         'field_empty': !field.edit && fieldObject.checkVisible(field, false),
                         'field_static': !field.can_edit,
-                        'blank_required': field.required
+                        'blank_required': field.required,
+                        'field_geoposition': field.type == 'geoposition'
                     }"
                     @click="e => fieldObject.initChangeField(field, e.target)"
                 >
