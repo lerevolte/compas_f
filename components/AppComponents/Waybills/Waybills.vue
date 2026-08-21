@@ -110,10 +110,7 @@
                                 @click="selectLoadingTask(row)"
                             >
                                 <td>{{ index + 1 }}</td>
-                                <td>
-                                    {{ row.name || ('Задача #' + row.id) }}
-                                    <span class="waybills__picker-note" v-if="row.is_current">накладная для этой задачи</span>
-                                </td>
+                                <td>{{ row.name || ('Задача #' + row.id) }}</td>
                                 <td>{{ row.address }}</td>
                                 <td>{{ row.plan_time }}</td>
                             </tr>
