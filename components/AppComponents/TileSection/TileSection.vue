@@ -186,6 +186,11 @@
                         v-model="field.value"
                     />
 
+                    <AppGeoposition
+                        v-else-if="field.type == 'geoposition'"
+                        :options="{ ...field }"
+                    />
+
                     <AppRouteStatuses
                         v-else-if="field.type == 'route_statuses'"
                         :options="{ ...field }"
@@ -520,6 +525,7 @@
     import AppSelect from '@AppComponents/Inputs/Select/Select.vue';
     import AppRelation from '@AppComponents/Inputs/Relation/Relation.vue'
     import AppMap from '@AppComponents/Inputs/Map/Map.vue'
+    import AppGeoposition from '@AppComponents/Geoposition/Geoposition.vue'
     import AppRedactor from '@AppComponents/Inputs/Redactor/Redactor.vue'
     import AppRouteStatuses from '@AppComponents/RouteStatuses/RouteStatuses.vue'
     import AppRouteMap from '@AppComponents/RouteMap/RouteMap.vue'

@@ -1,0 +1,40 @@
+.form__item_geoposition {
+    display: none;
+}
+
+.geoposition {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+
+    &__status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    &__indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+        flex-shrink: 0;
+
+        &_online {
+            background: #27AE60;
+        }
+
+        &_offline {
+            background: #B3B3B3;
+        }
+    }
+
+    &__text {
+        font-size: 14px;
+        color: var(--text-color, #333);
+    }
+
+    .map__frame {
+        min-height: 220px;
+    }
+}
