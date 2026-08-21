@@ -4,38 +4,57 @@
 }
 
 .geoposition {
-    display: flex;
     flex-direction: column;
     gap: 8px;
     width: 100%;
 
-    &__status {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    &__indicator {
-        width: 12px;
-        height: 12px;
-        border-radius: 3px;
-        flex-shrink: 0;
-
-        &_online {
-            background: #27AE60;
-        }
-
-        &_offline {
-            background: #B3B3B3;
-        }
-    }
-
-    &__text {
-        font-size: 14px;
-        color: var(--text-color, #333);
+    &__label {
+        display: block;
     }
 
     .map__frame {
         min-height: 220px;
     }
+}
+
+.geo-popup {
+    position: relative;
+    display: inline-block;
+    height: 18px;
+}
+
+.geo-popup__main {
+    display: inline-flex;
+    align-items: center;
+    height: 18px;
+    padding: 0 14px 0 0;
+    border-radius: 7px;
+    border: solid 1px #e22213;
+    background-color: #fff;
+    font-family: Helvetica, sans-serif;
+    font-size: 12px;
+    color: #000;
+    width: max-content;
+}
+
+.geo-popup__counter {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    margin: 0 10px 0 0;
+    border-radius: 7px;
+    background: #e22213;
+}
+
+.geo-popup__status {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin: 0 6px 0 0;
+    flex-shrink: 0;
+}
+
+.geo-popup__time {
+    white-space: nowrap;
 }

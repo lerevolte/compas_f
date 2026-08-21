@@ -40,6 +40,10 @@
             }),
             type: Object
         },
+        markerContent: {
+            default: '',
+            type: String
+        },
         defaultCenter: {
             default: () => [55.755864, 37.617698],
             type: Array
@@ -104,6 +108,11 @@
 
     const placemarkOptions = computed(() => {
         const opts = { hideIconOnBalloonOpen: false };
+        if (props.markerContent && window.ymaps?.templateLayoutFactory) {
+            opts.iconLayout = window.ymaps.templateLayoutFactory.createClass(props.markerContent);
+            opts.iconOffset = [-9, -9];
+            return opts;
+        }
         if (props.markerOptions?.imageHref) {
             const size = props.markerOptions.imageSize ?? [32, 32];
             const offset = props.markerOptions.imageOffset ?? [-16, -32];

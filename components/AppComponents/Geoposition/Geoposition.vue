@@ -1,13 +1,10 @@
 <template>
     <div class="form__item form__item_geoposition geoposition">
-        <div class="geoposition__status">
-            <span class="geoposition__indicator" :class="isOnline ? 'geoposition__indicator_online' : 'geoposition__indicator_offline'"></span>
-            <span class="geoposition__text">{{ statusText }}</span>
-        </div>
+        <span class="blank__title geoposition__label">Геопозиция</span>
 
         <MapFrame
-            v-if="coords"
-            :points="[coords]"
+            :points="coords ? [coords] : []"
+            :markerContent="markerHtml"
             :options="{ defaultZoom: 14 }"
         />
     </div>
@@ -61,16 +58,21 @@
 
     const isOnline = computed(() => lastTime.value != null && now.value - lastTime.value <= 5 * 60 * 1000)
 
-    const statusText = computed(() => {
-        if (!value.value) {
-            return 'Геопозиция не передавалась'
-        }
+    const timeText = computed(() => {
         if (!lastTime.value) {
-            return 'Последняя геопозиция получена'
+            return ''
         }
         const date = new Date(lastTime.value)
         const pad = n => String(n).padStart(2, '0')
-        const text = `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`
-        return `Последняя геопозиция: ${text}`
+        return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+    })
+
+    const markerHtml = computed(() => {
+        if (!coords.value) {
+            return ''
+        }
+        const color = isOnline.value ? '#27AE60' : '#B3B3B3'
+        const time = timeText.value ? `<span class="geo-popup__time">${timeText.value}</span>` : ''
+        return `<div class="geo-popup"><div class="geo-popup__main"><span class="geo-popup__counter"></span><span class="geo-popup__status" style="background: ${color}"></span>${time}</div></div>`
     })
 </script>
