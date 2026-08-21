@@ -633,7 +633,7 @@
             newInstance.setOptions();
         }
 
-        if (props.options.isSetDefault && (props.modelValue.value == null || props.modelValue.value.length == 0)) {
+        if (props.options.isSetDefault && (normalizedModelValue.value?.value?.length ?? 0) === 0) {
             addNewSelect()
         }
     };
