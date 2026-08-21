@@ -12,6 +12,10 @@
                         <span class="waybills__date" v-if="item.date">от {{ item.date }}</span>
                         <span class="waybills__status" v-if="item.status">{{ item.status }}</span>
                     </div>
+                    <div class="waybills__loading-task" v-if="item.loading_task">
+                        <span>Склад погрузки:</span>
+                        <a class="waybills__link" :href="'/objects/logistic_tasks/' + item.loading_task.id" target="_blank" rel="noopener">{{ item.loading_task.name || ('Задача #' + item.loading_task.id) }}</a>
+                    </div>
                     <div class="waybills__actions">
                         <a
                             class="waybills__link"
@@ -76,12 +80,61 @@
             <button
                 class="waybills__button"
                 type="button"
-                v-if="!list.length"
-                :disabled="loading || creating"
+                v-if="!list.length && !picker.open"
+                :disabled="loading || creating || pickerLoading"
                 @click="create"
             >
-                {{ creating ? 'Формируется…' : 'Сформировать накладную' }}
+                {{ pickerLoading ? 'Загрузка маршрута…' : (creating ? 'Формируется…' : 'Сформировать накладную') }}
             </button>
+
+            <div class="waybills__picker" v-if="picker.open">
+                <div class="waybills__picker-title">Выберите точку погрузки — её адрес и план. время уйдут в накладную</div>
+                <div class="waybills__picker-scroll">
+                    <table class="waybills__picker-table">
+                        <thead>
+                            <tr>
+                                <th>№</th>
+                                <th>Задача</th>
+                                <th>Адрес</th>
+                                <th>План. время</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr
+                                v-for="(row, index) in picker.tasks"
+                                :key="row.id"
+                                :class="{
+                                    'waybills__picker-row_current': row.is_current,
+                                    'waybills__picker-row_selected': picker.selected === row.id
+                                }"
+                                @click="selectLoadingTask(row)"
+                            >
+                                <td>{{ index + 1 }}</td>
+                                <td>
+                                    {{ row.name || ('Задача #' + row.id) }}
+                                    <span class="waybills__picker-note" v-if="row.is_current">накладная для этой задачи</span>
+                                </td>
+                                <td>{{ row.address }}</td>
+                                <td>{{ row.plan_time }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="waybills__picker-actions">
+                    <button
+                        class="waybills__button"
+                        type="button"
+                        :disabled="!picker.selected || creating"
+                        @click="createWithLoading"
+                    >{{ creating ? 'Формируется…' : 'Сформировать' }}</button>
+                    <button
+                        class="waybills__link waybills__link_button"
+                        type="button"
+                        :disabled="creating"
+                        @click="picker.open = false"
+                    >Отмена</button>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -120,6 +173,12 @@
     const deleting = ref(null)
     const openedQr = ref(null)
     const qrImages = ref({})
+    const pickerLoading = ref(false)
+    const picker = ref({
+        open: false,
+        tasks: [],
+        selected: null
+    })
 
     const toggleQr = async (item) => {
         if (openedQr.value === item.id) {
@@ -156,12 +215,49 @@
     }
 
     const create = async () => {
+        if (creating.value || pickerLoading.value || !props.pageId) return
+        errors.value = []
+        pickerLoading.value = true
+        try {
+            const url = routes.logistic.waybillRouteTasks.replace('${id}', props.pageId)
+            const response = await api.callMethod('GET', url)
+            const tasks = response.status == 200 ? (response.data?.data || []) : []
+            if (tasks.length > 1) {
+                picker.value = {
+                    open: true,
+                    tasks,
+                    selected: null
+                }
+                return
+            }
+        } catch (e) {
+            console.log('waybill route tasks', e)
+        } finally {
+            pickerLoading.value = false
+        }
+        await send(null)
+    }
+
+    const selectLoadingTask = (row) => {
+        if (row.is_current) return
+        picker.value.selected = picker.value.selected === row.id ? null : row.id
+    }
+
+    const createWithLoading = async () => {
+        if (!picker.value.selected) return
+        await send(picker.value.selected)
+        if (!errors.value.length) {
+            picker.value.open = false
+        }
+    }
+
+    const send = async (loadingTaskId) => {
         if (creating.value || !props.pageId) return
         creating.value = true
         errors.value = []
         try {
             const url = routes.logistic.waybills.replace('${id}', props.pageId)
-            const response = await api.callMethod('POST', url, {})
+            const response = await api.callMethod('POST', url, loadingTaskId ? { loading_task_id: loadingTaskId } : {})
             if (response.status == 200 && response.data?.data) {
                 list.value = [response.data.data, ...list.value]
                 common.showNotification({ title: 'Транспортная накладная', description: `№ ${response.data.data.number} сформирована` }, 'success')
