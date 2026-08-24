@@ -190,5 +190,11 @@
         "title_singular": "Контакт",
         "title_plural": "Контакты",
         "color": "#4A90D9"
+    },
+    "bank_requisites": {
+        "slug": "bank_requisites",
+        "title_singular": "Банковские реквизиты",
+        "title_plural": "Банковские реквизиты",
+        "color": "#2E7D6B"
     }
 }

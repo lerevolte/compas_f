@@ -45,7 +45,7 @@
             >
                 <template #header>
                     <IconTriangle />
-                    Создать на основании
+                    <span class="create-based__text">Создать на основании</span>
                 </template>
                 <template #content>
                     <div

@@ -293,6 +293,7 @@
                                 }"
                                 :error="field.error"
                                 v-model="fieldObject.setFieldValue(field, 'value').value"
+                                @suggest="data => emit('actionSection', { action: 'fillFields', value: data })"
                             />
                             <AppInput 
                                 v-if="field.is_external_link"

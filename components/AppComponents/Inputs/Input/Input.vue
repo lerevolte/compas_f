@@ -17,6 +17,17 @@
             @blur="onBlur"
         >
         <span class="form-item__substring" v-if="props.options.unit">{{ props.options.unit }}</span>
+        <div class="input__suggest" v-if="suggest.list.length">
+            <div
+                class="input__suggest-item"
+                v-for="(item, i) in suggest.list"
+                :key="i"
+                @mousedown.prevent="pickSuggest(item)"
+            >
+                <span class="input__suggest-label">{{ item.label }}</span>
+                <span class="input__suggest-hint" v-if="item.hint">{{ item.hint }}</span>
+            </div>
+        </div>
         <AppError v-show="props.error.state">
             {{ props.error.text }}
         </AppError>
@@ -30,11 +41,13 @@
     const inputRef = ref(null)
     import { vMaska } from "maska/vue"
     import AppError from '@AppComponents/Error/Error.vue'
+    import api from '@/helpers/api.js'
 
     const emit = defineEmits([
         'update:prevValue',
         'update:modelValue',
-        'blur'
+        'blur',
+        'suggest'
     ])
     
     const props = defineProps({
@@ -110,8 +123,42 @@
 
     let emitRafId = null
 
+    const suggest = reactive({ list: [], timer: null, seq: 0 })
+
+    function fetchSuggest(value) {
+        if (!props.options.suggest) return
+        clearTimeout(suggest.timer)
+        const q = String(value ?? '').trim()
+        if (q.length < 2) {
+            suggest.list = []
+            return
+        }
+        suggest.timer = setTimeout(async () => {
+            const seq = ++suggest.seq
+            try {
+                const response = await api.callMethod('GET', `/suggest/${props.options.suggest}?q=${encodeURIComponent(q)}`)
+                if (seq !== suggest.seq) return
+                suggest.list = Array.isArray(response.data) ? response.data : []
+            } catch (error) {
+                suggest.list = []
+            }
+        }, 250)
+    }
+
+    function pickSuggest(item) {
+        suggest.list = []
+        clearTimeout(suggest.timer)
+        const own = item.value?.[props.options.key]
+        const val = own !== undefined && own !== null && own !== '' ? own : item.label
+        if (inputRef.value) inputRef.value.value = val
+        emit('update:prevValue', props.modelValue ? JSON.parse(JSON.stringify(props.modelValue)) : null)
+        emit('update:modelValue', val)
+        emit('suggest', item.value)
+    }
+
     function onInput(event) {
         const target = event.target
+        fetchSuggest(target.value)
         if (isEmailMask.value) {
             const filtered = target.value.replace(/[^a-zA-Z0-9@._%+\-]/g, '')
             if (filtered !== target.value) target.value = filtered
@@ -132,6 +179,8 @@
 
     function onBlur(event) {
         const target = event.target
+        clearTimeout(suggest.timer)
+        suggest.list = []
         let normalized = null
         if (isTimeMask.value) {
             normalized = normalizeTime(target.value, isRangeTime.value)

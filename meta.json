@@ -198,5 +198,10 @@
         "title": "Контакты",
         "desc": "",
         "template": null
+    },
+    "bank_requisites": {
+        "title": "Банковские реквизиты",
+        "desc": "",
+        "template": null
     }
 }

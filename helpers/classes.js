@@ -2005,6 +2005,33 @@ export class Section {
         await api.callMethod('POST', routes.detail.change_order_section, request)
     }
 
+    fillFields(values, columnIndex, slug, columns) {
+        if (!values || typeof values !== 'object') return
+        const apply = field => {
+            if (field.type != 'text' || !(field.key in values) || !field.can_edit) return
+            if (!field.edit) {
+                this.buffer.backup.push(JSON.parse(JSON.stringify(field)))
+                field.edit = true
+            }
+            if (typeof field.value === 'object' && field.value !== null && !Array.isArray(field.value)) {
+                field.value.value = values[field.key]
+            } else {
+                field.value = values[field.key]
+            }
+        }
+        for (let column in columns) {
+            for (let section of columns[column]) {
+                for (let field of section.fields) {
+                    if (field.type == 'text_group') {
+                        (field.fields ?? []).forEach(apply)
+                    } else {
+                        apply(field)
+                    }
+                }
+            }
+        }
+    }
+
     editAll(section) {
         for (let field of section.fields) {
             if (field.type == 'text_group') {

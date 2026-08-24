@@ -93,6 +93,7 @@
     @media (max-width: 990px) {
         align-items: center;
         margin-top: 5px;
+        max-width: none;
 
         .arrow-back {
             margin-right: -5px;
@@ -179,6 +180,24 @@
 
         svg path {
             fill: #ffffff;
+        }
+    }
+
+    @media (max-width: 990px) {
+        order: -2;
+        margin-left: auto;
+
+        .popup__header {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            gap: 0;
+            justify-content: center;
+            border-radius: 8px;
+        }
+
+        .create-based__text {
+            display: none;
         }
     }
 }
