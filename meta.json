@@ -190,7 +190,7 @@
         "template": null
     },
     "deals": {
-        "title": "Сделки",
+        "title": "Заказы покупателей",
         "desc": "",
         "template": null
     },
@@ -201,6 +201,16 @@
     },
     "bank_requisites": {
         "title": "Банковские реквизиты",
+        "desc": "",
+        "template": null
+    },
+    "payment_invoices": {
+        "title": "Счета на оплату",
+        "desc": "",
+        "template": null
+    },
+    "expense_invoices": {
+        "title": "Расходные накладные",
         "desc": "",
         "template": null
     }

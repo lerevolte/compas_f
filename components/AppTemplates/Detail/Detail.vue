@@ -193,7 +193,11 @@
     const SKIP_BASED_KEYS = ['id', 'created_at', 'updated_at', 'deleted_at', 'user_id', 'route_id', 'sort', 'point_status']
 
     const BASED_ENTITIES = {
-        deals: [{ slug: 'logistic_tasks', title: 'Задача логистики' }],
+        deals: [
+            { slug: 'logistic_tasks', title: 'Задача логистики' },
+            { slug: 'payment_invoices', title: 'Счет на оплату' },
+            { slug: 'expense_invoices', title: 'Расходная накладная' }
+        ],
         addresses: [{ slug: 'logistic_tasks', title: 'Задача логистики' }]
     }
 

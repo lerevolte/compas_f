@@ -181,8 +181,8 @@
     },
     "deals": {
         "slug": "deals",
-        "title_singular": "Сделка",
-        "title_plural": "Сделки",
+        "title_singular": "Заказ покупателя",
+        "title_plural": "Заказы покупателей",
         "color": "#E8A33D"
     },
     "contacts": {
@@ -196,5 +196,17 @@
         "title_singular": "Банковские реквизиты",
         "title_plural": "Банковские реквизиты",
         "color": "#2E7D6B"
+    },
+    "payment_invoices": {
+        "slug": "payment_invoices",
+        "title_singular": "Счет на оплату",
+        "title_plural": "Счета на оплату",
+        "color": "#B8860B"
+    },
+    "expense_invoices": {
+        "slug": "expense_invoices",
+        "title_singular": "Расходная накладная",
+        "title_plural": "Расходные накладные",
+        "color": "#8E5AA8"
     }
 }

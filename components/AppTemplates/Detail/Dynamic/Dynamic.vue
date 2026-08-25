@@ -60,6 +60,13 @@
             @openModal="item => emit('action', { action: 'openModal', value: { ...item, type: 'detail' } })"
         />
 
+        <AppPrintDocuments
+            v-else-if="props.tabs.active?.tab == 'print_docs'"
+            :id="props.id"
+            :slug="props.slug"
+            @openModal="item => emit('action', { action: 'openModal', value: { ...item, type: 'detail' } })"
+        />
+
         <div class="dynamin__group" v-else-if="props.tabs.active?.tab == 'products'">
             <AppVirtualTable
                 :pageId="props.id"
@@ -140,6 +147,7 @@
     import AppVirtualTable from '@AppComponents/VirtualTable/VirtualTable.vue';
     import RouteTasksView from '@AppTemplates/Detail/RouteTasksView/RouteTasksView.vue';
     import AppRelatedObjects from '@AppComponents/RelatedObjects/RelatedObjects.vue';
+    import AppPrintDocuments from '@AppComponents/PrintDocuments/PrintDocuments.vue'
 
     const isRouteTasksTab = computed(() => {
         if (props.slug !== 'routes' && !(props.options?.isExternal && props.slug == null)) return false

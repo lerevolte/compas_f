@@ -1,0 +1,101 @@
+.print-docs {
+    padding: 20px 0;
+
+    &__loader {
+        margin: 20px auto;
+    }
+
+    &__empty {
+        color: #8b8b8b;
+        font-size: 14px;
+    }
+
+    &__card {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 12px;
+        padding: 14px 18px;
+        border-radius: 10px;
+        background: #ffffff;
+        box-shadow: 0 2px 10px rgba(31, 51, 92, 0.08);
+        cursor: pointer;
+        transition: box-shadow 0.15s ease;
+
+        &:hover {
+            box-shadow: 0 4px 14px rgba(31, 51, 92, 0.16);
+        }
+
+        &_checked {
+            box-shadow: 0 0 0 2px #2f8cff inset, 0 2px 10px rgba(31, 51, 92, 0.08);
+        }
+    }
+
+    &__checkbox {
+        margin-top: 2px;
+        flex-shrink: 0;
+    }
+
+    &__info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+    }
+
+    &__row {
+        display: flex;
+        gap: 10px;
+        align-items: baseline;
+    }
+
+    &__entity {
+        font-weight: 600;
+        font-size: 13px;
+    }
+
+    &__date {
+        color: #8b8b8b;
+        font-size: 12px;
+    }
+
+    &__name {
+        color: #1253a2;
+        font-size: 14px;
+        text-decoration: none;
+        width: fit-content;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+
+    &__sum {
+        font-size: 13px;
+    }
+
+    &__files {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    &__file {
+        color: #1253a2;
+        font-size: 13px;
+        width: fit-content;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+
+    &__nofile {
+        color: #b7791f;
+        font-size: 13px;
+    }
+
+    &__actions {
+        margin-top: 16px;
+    }
+}
