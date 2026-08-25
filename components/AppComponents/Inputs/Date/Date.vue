@@ -19,6 +19,7 @@
 			position="left"
 			hide-offset-dates
 			format="dd.MM.yyyy"
+			:text-input="textInput"
 			:placeholder="'__.__.____'"
 			:teleport="true"
 			:menu-class-name="props.options.multiple ? 'datepicker__menu datepicker__menu_range' : 'datepicker__menu'"
@@ -146,6 +147,14 @@
 
     const datepicker = ref(null)
     const isMobileViewport = ref(false)
+    const textInput = computed(() => ({
+        format: 'dd.MM.yyyy',
+        enterSubmit: true,
+        tabSubmit: true,
+        openMenu: 'open',
+        escClose: true,
+        rangeSeparator: ' - '
+    }))
 
     onMounted(() => {
         const media = window.matchMedia('(max-width: 700px)')

@@ -12,6 +12,9 @@
                         <span class="waybills__date" v-if="item.date">от {{ item.date }}</span>
                         <span class="waybills__status" v-if="item.status">{{ item.status }}</span>
                     </div>
+                    <div class="waybills__loading-task" v-if="item.mass_method_label">
+                        Метод определения массы: {{ item.mass_method_label }}
+                    </div>
                     <div class="waybills__loading-task" v-if="item.loading_task">
                         <span>Склад погрузки:</span>
                         <a class="waybills__link" :href="'/objects/logistic_tasks/' + item.loading_task.id" target="_blank" rel="noopener">{{ item.loading_task.name || ('Задача #' + item.loading_task.id) }}</a>
@@ -88,8 +91,8 @@
             </button>
 
             <div class="waybills__picker" v-if="picker.open">
-                <div class="waybills__picker-title">Выберите точку погрузки — её адрес и план. время уйдут в накладную</div>
-                <div class="waybills__picker-scroll">
+                <div class="waybills__picker-title" v-if="picker.tasks.length > 1">Выберите точку погрузки — её адрес и план. время уйдут в накладную</div>
+                <div class="waybills__picker-scroll" v-if="picker.tasks.length > 1">
                     <table class="waybills__picker-table">
                         <thead>
                             <tr>
@@ -117,11 +120,23 @@
                         </tbody>
                     </table>
                 </div>
+                <div class="waybills__picker-field">
+                    <AppSelect
+                        :isPreventBottom="true"
+                        :options="{
+                            id: 'waybill_mass_method',
+                            title: 'Метод определения массы',
+                            list: picker.massMethods,
+                            isHaveNull: true
+                        }"
+                        v-model="picker.massMethod"
+                    />
+                </div>
                 <div class="waybills__picker-actions">
                     <button
                         class="waybills__button"
                         type="button"
-                        :disabled="!picker.selected || creating"
+                        :disabled="(picker.tasks.length > 1 && !picker.selected) || creating"
                         @click="createWithLoading"
                     >{{ creating ? 'Формируется…' : 'Сформировать' }}</button>
                     <button
@@ -142,6 +157,7 @@
     import api from '@/helpers/api.js'
     import routes from '@/helpers/routes.js'
     import { Common } from '@/helpers/classes.js'
+    import AppSelect from '@AppComponents/Inputs/Select/Select.vue'
 
     const common = new Common()
 
@@ -173,6 +189,8 @@
     const pickerLoading = ref(false)
     const picker = ref({
         open: false,
+        massMethod: null,
+        massMethods: [],
         tasks: [],
         selected: null
     })
@@ -219,20 +237,19 @@
             const url = routes.logistic.waybillRouteTasks.replace('${id}', props.pageId)
             const response = await api.callMethod('GET', url)
             const tasks = response.status == 200 ? (response.data?.data || []) : []
-            if (tasks.length > 1) {
-                picker.value = {
-                    open: true,
-                    tasks,
-                    selected: null
-                }
-                return
+            picker.value = {
+                open: true,
+                tasks,
+                selected: null,
+                massMethod: null,
+                massMethods: response.data?.mass_methods || []
             }
         } catch (e) {
             console.log('waybill route tasks', e)
+            errors.value = ['Не удалось загрузить данные для накладной']
         } finally {
             pickerLoading.value = false
         }
-        await send(null)
     }
 
     const selectLoadingTask = (row) => {
@@ -241,20 +258,23 @@
     }
 
     const createWithLoading = async () => {
-        if (!picker.value.selected) return
-        await send(picker.value.selected)
+        if (picker.value.tasks.length > 1 && !picker.value.selected) return
+        await send(picker.value.selected, picker.value.massMethod)
         if (!errors.value.length) {
             picker.value.open = false
         }
     }
 
-    const send = async (loadingTaskId) => {
+    const send = async (loadingTaskId, massMethod) => {
         if (creating.value || !props.pageId) return
         creating.value = true
         errors.value = []
         try {
             const url = routes.logistic.waybills.replace('${id}', props.pageId)
-            const response = await api.callMethod('POST', url, loadingTaskId ? { loading_task_id: loadingTaskId } : {})
+            const body = {}
+            if (loadingTaskId) body.loading_task_id = loadingTaskId
+            if (massMethod) body.mass_method = massMethod
+            const response = await api.callMethod('POST', url, body)
             if (response.status == 200 && response.data?.data) {
                 list.value = [response.data.data, ...list.value]
                 common.showNotification({ title: 'Транспортная накладная', description: `№ ${response.data.data.number} сформирована` }, 'success')
