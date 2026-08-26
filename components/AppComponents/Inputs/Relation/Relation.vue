@@ -405,7 +405,7 @@
             const contentRect = contentRef.getBoundingClientRect();
             this.state.isTop = props.isPreventBottom ? false : contentRect.bottom > bottomBound;
 
-            if (popupRef.closest('.table')) {
+            if (popupRef.closest('.table, .table-validate')) {
                 this.applyFixedPosition()
 
                 if (!this._scrollHandler) {
