@@ -95,6 +95,7 @@
     import './Date.scss';
     
     import isEqual from 'lodash/isEqual'
+    import { MaskInput } from 'maska'
     import VueDatePicker from '@vuepic/vue-datepicker';
     import '@vuepic/vue-datepicker/dist/main.css'
     import { 
@@ -156,7 +157,18 @@
         rangeSeparator: ' - '
     }))
 
+    let maskInput = null
+    const attachMask = () => {
+        const input = dateRef.value?.querySelector('input.dp__input')
+        if (!input) return
+        maskInput?.destroy()
+        maskInput = new MaskInput(input, {
+            mask: props.options.multiple ? '##.##.#### - ##.##.####' : '##.##.####'
+        })
+    }
+
     onMounted(() => {
+        nextTick(attachMask)
         const media = window.matchMedia('(max-width: 700px)')
         isMobileViewport.value = media.matches
         media.addEventListener?.('change', (e) => {
@@ -341,5 +353,12 @@
 
     watch(() => props.modelValue, () => {
         datepickerField.value.getInputsValue(props.modelValue)
+    })
+
+    watch(() => props.options.multiple, () => nextTick(attachMask))
+
+    onUnmounted(() => {
+        maskInput?.destroy()
+        maskInput = null
     })
 </script>

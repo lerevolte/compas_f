@@ -196,7 +196,8 @@
         deals: [
             { slug: 'logistic_tasks', title: 'Задача логистики' },
             { slug: 'payment_invoices', title: 'Счет на оплату' },
-            { slug: 'expense_invoices', title: 'Расходная накладная' }
+            { slug: 'expense_invoices', title: 'Расходная накладная' },
+            { slug: 'product_returns', title: 'Возврат' }
         ],
         addresses: [{ slug: 'logistic_tasks', title: 'Задача логистики' }]
     }

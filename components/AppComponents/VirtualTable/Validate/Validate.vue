@@ -122,6 +122,7 @@
                         isHaveNull: true,
                         multiple: column.is_plural,
                         visibleCount: 5,
+                        refreshOnOpen: true,
                         placeholder: ''
                     }"
                     v-model="cellModel(error.id, column).value"
@@ -147,9 +148,6 @@
 
     const table = inject('table')
 
-    // Модель ячейки по id строки: пишет значение прямо в table.body, поэтому
-    // после «Сохранить» обычный table.save() видит заполненные поля.
-    // Формы значений — те же, что в Body.vue useCellModel.
     const _cache = new Map()
     const cellModel = (rowId, column) => {
         const cacheKey = `${rowId}__${column.key}`

@@ -213,5 +213,10 @@
         "title": "Расходные накладные",
         "desc": "",
         "template": null
+    },
+    "product_returns": {
+        "title": "Возвраты",
+        "desc": "",
+        "template": null
     }
 }

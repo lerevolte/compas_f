@@ -208,5 +208,11 @@
         "title_singular": "Расходная накладная",
         "title_plural": "Расходные накладные",
         "color": "#8E5AA8"
+    },
+    "product_returns": {
+        "slug": "product_returns",
+        "title_singular": "Возврат",
+        "title_plural": "Возвраты",
+        "color": "#C0392B"
     }
 }
