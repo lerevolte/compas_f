@@ -334,6 +334,9 @@
                 nextTick(() => this.checkPosition(event));
 
                 if (props.options?.relation_type || props.options?.refreshOnOpen) {
+                    if (props.options?.refreshOnOpen) {
+                        this.state.list = []
+                    }
                     this.throttledFilter('')
                 }
 
