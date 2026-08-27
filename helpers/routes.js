@@ -112,6 +112,10 @@ export default {
             logistics: {
                 get: '/modules/logistic/settings',
                 save: '/modules/logistic'
+            },
+            saby: {
+                get: '/saby/settings',
+                save: '/saby/settings'
             }
         }
     },

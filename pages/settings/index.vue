@@ -31,6 +31,13 @@
 			:options="moduleLogistics.options"
 			:sectionClass="moduleLogistics"
 		/>
+		<AppTileSection 
+			class="page__section"
+			v-else-if="categories.active == 'saby'"
+			:section="moduleSaby.section"
+			:options="moduleSaby.options"
+			:sectionClass="moduleSaby"
+		/>
 
 		<AppVirtualTable 
 			v-else-if="categories.active == 'entities'"
@@ -75,6 +82,18 @@
 			:loading="moduleLogistics.buffer.loading"
 			@action="action => moduleLogistics[action.action](action.value)"
 		/>
+		<MassAction 
+			v-else-if="categories.active == 'saby'"
+			:isChoosed="moduleSaby.buffer.backup.length > 0"
+			:actions="{
+				save: moduleSaby.buffer.backup.length > 0,
+				edit: false,
+				cancel: true,
+				delete: false
+			}"
+			:loading="moduleSaby.buffer.loading"
+			@action="action => moduleSaby[action.action](action.value)"
+		/>
 	</div>
 </template>
 
@@ -86,6 +105,8 @@
 	import AppCategories from '@AppComponents/Categories/Categories.vue';
 	import AppTileSection from '@AppComponents/TileSection/TileSection.vue';
 	import { Settings } from '@/helpers/classes.js'
+	import api from '@/helpers/api.js'
+	import routes from '@/helpers/routes.js'
 
 	const emit = defineEmits([
 		'openModal'
@@ -129,6 +150,10 @@
 					moduleLogistics.value.get()
 					break;
 
+				case 'saby':
+					moduleSaby.value.get()
+					break;
+
 				default:
 					break;
 			}
@@ -149,6 +174,24 @@
 		category: 'logistics',
 		title: 'Настройка модуля Логистика'
 	}))
+	const moduleSaby = ref(new Settings({
+		category: 'saby',
+		title: 'Настройка модуля Транспортные накладные'
+	}))
+
+	const detectModules = async () => {
+		try {
+			await api.callMethod('GET', routes.settings.modules.saby.get)
+			const modules = categories.value.list.find(c => c.value == 'modules')
+			if (modules && !modules.children.some(c => c.id == 'saby')) {
+				modules.children.push({
+					label: 'Транспортные накладные',
+					value: 'saby',
+					id: 'saby'
+				})
+			}
+		} catch (error) {}
+	}
 
 	const props = defineProps({
 		entity: {
@@ -171,6 +214,7 @@
 		})
 
 		categories.value.set(categories.value.list[0])
+		detectModules()
 	})
 
 </script>

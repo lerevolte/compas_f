@@ -2875,8 +2875,8 @@ export class Settings {
                 const response = await api.callMethod('GET', routes.settings.modules[this.category].get)
                 this.section.fields = (response.data || []).map(field => ({
                     ...field,
-                    can_edit: 1,
-                    read_only: 0,
+                    can_edit: field.only_read ? 0 : 1,
+                    read_only: field.only_read ? 1 : 0,
                 }))
             }
         } catch (error) {
