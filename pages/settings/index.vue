@@ -176,7 +176,7 @@
 	}))
 	const moduleSaby = ref(new Settings({
 		category: 'saby',
-		title: 'Настройка модуля Транспортные накладные'
+		title: 'Настройка модуля Заказы в Саби'
 	}))
 
 	const detectModules = async () => {
@@ -185,7 +185,7 @@
 			const modules = categories.value.list.find(c => c.value == 'modules')
 			if (modules && !modules.children.some(c => c.id == 'saby')) {
 				modules.children.push({
-					label: 'Транспортные накладные',
+					label: 'Заказы в Саби',
 					value: 'saby',
 					id: 'saby'
 				})
