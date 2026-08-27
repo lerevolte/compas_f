@@ -122,7 +122,6 @@
                         isHaveNull: true,
                         multiple: column.is_plural,
                         visibleCount: 5,
-                        refreshOnOpen: true,
                         placeholder: ''
                     }"
                     v-model="cellModel(error.id, column).value"

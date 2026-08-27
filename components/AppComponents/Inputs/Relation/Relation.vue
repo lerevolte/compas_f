@@ -333,10 +333,7 @@
                 document.addEventListener('mousedown', this._mousedownHandler)
                 nextTick(() => this.checkPosition(event));
 
-                if (props.options?.relation_type || props.options?.refreshOnOpen) {
-                    if (props.options?.refreshOnOpen) {
-                        this.state.list = []
-                    }
+                if (props.options?.relation_type) {
                     this.throttledFilter('')
                 }
 
