@@ -257,7 +257,7 @@
 
     &::-webkit-scrollbar-thumb {
         background-color: variables.$color-orange;
-        border: 2px solid variables.$color-orange;
+        border: 2px solid transparent;
     }
 }
 
