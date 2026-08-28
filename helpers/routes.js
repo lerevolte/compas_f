@@ -141,7 +141,10 @@ export default {
         waybillsCheck: '/logistic_tasks/${id}/saby-waybills/check',
         waybillRouteTasks: '/logistic_tasks/${id}/saby-waybills/route-tasks',
         waybillRefresh: '/saby-waybills/${id}/refresh',
-        waybillDelete: '/saby-waybills/${id}'
+        waybillDelete: '/saby-waybills/${id}',
+        sabyOrders: '/logistic_tasks/${id}/saby-orders',
+        sabyOrderRefresh: '/saby-orders/${id}/refresh',
+        sabyOrderDelete: '/saby-orders/${id}'
     },
     relations: {
         tree: '/object-relations/${slug}/${id}',

@@ -5,72 +5,77 @@
         </label>
 
         <div class="waybills">
-            <div class="waybills__list" v-if="list.length">
-                <div class="waybills__item" v-for="item in list" :key="item.id">
+            <div class="waybills__list" v-if="orders.length">
+                <div class="waybills__item waybills__item_order" v-for="item in orders" :key="'order_' + item.id">
                     <div class="waybills__info">
-                        <span class="waybills__number">№ {{ item.number }}</span>
+                        <span class="waybills__number">Заказ № {{ item.number }}</span>
                         <span class="waybills__date" v-if="item.date">от {{ item.date }}</span>
-                        <span class="waybills__status" v-if="item.status">{{ item.status }}</span>
+                        <span class="waybills__state" :class="'waybills__state_' + item.state_code">{{ item.state_label }}</span>
                     </div>
-                    <div class="waybills__loading-task" v-if="item.mass_method_label">
-                        Метод определения массы: {{ item.mass_method_label }}
-                    </div>
+                    <div class="waybills__loading-task" v-if="item.last_event">Последнее событие: {{ item.last_event }}</div>
+                    <div class="waybills__loading-task" v-if="item.mass_method_label">Метод определения массы: {{ item.mass_method_label }}</div>
                     <div class="waybills__loading-task" v-if="item.loading_task">
                         <span>Склад погрузки:</span>
                         <a class="waybills__link" :href="'/objects/logistic_tasks/' + item.loading_task.id" target="_blank" rel="noopener">{{ item.loading_task.name || ('Задача #' + item.loading_task.id) }}</a>
                     </div>
                     <div class="waybills__actions">
-                        <a
-                            class="waybills__link"
-                            v-if="item.pdf_url"
-                            :href="item.pdf_url"
-                            target="_blank"
-                            rel="noopener"
-                        >Печать</a>
-                        <a
-                            class="waybills__link"
-                            v-if="item.cabinet_url"
-                            :href="item.cabinet_url"
-                            target="_blank"
-                            rel="noopener"
-                        >Открыть в Saby</a>
-                        <button
-                            class="waybills__link waybills__link_button"
-                            type="button"
-                            v-if="item.qr_url"
-                            @click="toggleQr(item)"
-                        >{{ openedQr === item.id ? 'Скрыть QR' : 'QR для ГИБДД' }}</button>
-                        <button
-                            class="waybills__link waybills__link_button"
-                            type="button"
-                            :disabled="refreshing === item.id"
-                            @click="refresh(item)"
-                        >{{ refreshing === item.id ? 'Обновляется…' : 'Обновить' }}</button>
-                        <template v-if="confirmDelete === item.id">
-                            <span class="waybills__confirm">Удалить накладную?</span>
-                            <button
-                                class="waybills__link waybills__link_button waybills__link_danger"
-                                type="button"
-                                :disabled="deleting === item.id"
-                                @click="remove(item)"
-                            >{{ deleting === item.id ? 'Удаляется…' : 'Да, удалить' }}</button>
-                            <button
-                                class="waybills__link waybills__link_button"
-                                type="button"
-                                :disabled="deleting === item.id"
-                                @click="confirmDelete = null"
-                            >Отмена</button>
+                        <a class="waybills__link" v-if="item.cabinet_url" :href="item.cabinet_url" target="_blank" rel="noopener">Открыть в Saby</a>
+                        <a class="waybills__link" v-if="item.pdf_url" :href="item.pdf_url" target="_blank" rel="noopener">PDF заказа</a>
+                        <button class="waybills__link waybills__link_button" type="button" :disabled="refreshing === 'order_' + item.id" @click="refreshOrder(item)">{{ refreshing === 'order_' + item.id ? 'Обновляется…' : 'Обновить' }}</button>
+                        <template v-if="confirmDelete === 'order_' + item.id">
+                            <span class="waybills__confirm">Удалить заказ?</span>
+                            <button class="waybills__link waybills__link_button waybills__link_danger" type="button" :disabled="deleting === 'order_' + item.id" @click="removeOrder(item)">{{ deleting === 'order_' + item.id ? 'Удаляется…' : 'Да, удалить' }}</button>
+                            <button class="waybills__link waybills__link_button" type="button" :disabled="deleting === 'order_' + item.id" @click="confirmDelete = null">Отмена</button>
                         </template>
-                        <button
-                            v-else
-                            class="waybills__link waybills__link_button waybills__link_danger"
-                            type="button"
-                            @click="confirmDelete = item.id"
-                        >Удалить</button>
+                        <button v-else class="waybills__link waybills__link_button waybills__link_danger" type="button" @click="confirmDelete = 'order_' + item.id">Удалить</button>
                     </div>
 
-                    <div class="waybills__qr" v-if="openedQr === item.id && qrImages[item.id]">
-                        <div class="waybills__qr-image" v-html="qrImages[item.id]"></div>
+                    <div class="waybills__sub" v-if="item.waybill">
+                        <div class="waybills__info">
+                            <span class="waybills__number">Транспортная накладная № {{ item.waybill.number || '—' }}</span>
+                            <span class="waybills__date" v-if="item.waybill.date">от {{ item.waybill.date }}</span>
+                            <span class="waybills__status" v-if="item.waybill.state">{{ item.waybill.state }}</span>
+                            <span class="waybills__status" v-if="item.waybill.stage">· {{ item.waybill.stage }}</span>
+                        </div>
+                        <div class="waybills__actions">
+                            <a class="waybills__link" v-if="item.waybill.pdf_url" :href="item.waybill.pdf_url" target="_blank" rel="noopener">Печать</a>
+                            <a class="waybills__link" v-if="item.waybill.archive_url" :href="item.waybill.archive_url" target="_blank" rel="noopener">Архив</a>
+                            <a class="waybills__link" v-if="item.waybill.cabinet_url" :href="item.waybill.cabinet_url" target="_blank" rel="noopener">Открыть в Saby</a>
+                            <button class="waybills__link waybills__link_button" type="button" v-if="item.waybill.qr_url" @click="toggleQr('order_' + item.id, item.waybill.qr_url)">{{ openedQr === 'order_' + item.id ? 'Скрыть QR' : 'QR для ГИБДД' }}</button>
+                        </div>
+                        <div class="waybills__qr" v-if="openedQr === 'order_' + item.id && qrImages['order_' + item.id]">
+                            <div class="waybills__qr-image" v-html="qrImages['order_' + item.id]"></div>
+                            <a class="waybills__link" :href="item.waybill.qr_url" target="_blank" rel="noopener">Ссылка для проверки</a>
+                        </div>
+                    </div>
+                    <div class="waybills__sub waybills__sub_empty" v-else>
+                        {{ item.state_code == '7' ? 'Заказ утверждён — транспортная накладная появится здесь, как только перевозчик оформит её в Saby' : 'Транспортная накладная появится после утверждения заказа перевозчиком' }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="waybills__list" v-if="waybills.length">
+                <div class="waybills__legacy-title">Накладные, созданные напрямую</div>
+                <div class="waybills__item" v-for="item in waybills" :key="'wb_' + item.id">
+                    <div class="waybills__info">
+                        <span class="waybills__number">№ {{ item.number }}</span>
+                        <span class="waybills__date" v-if="item.date">от {{ item.date }}</span>
+                        <span class="waybills__status" v-if="item.status">{{ item.status }}</span>
+                    </div>
+                    <div class="waybills__actions">
+                        <a class="waybills__link" v-if="item.pdf_url" :href="item.pdf_url" target="_blank" rel="noopener">Печать</a>
+                        <a class="waybills__link" v-if="item.cabinet_url" :href="item.cabinet_url" target="_blank" rel="noopener">Открыть в Saby</a>
+                        <button class="waybills__link waybills__link_button" type="button" v-if="item.qr_url" @click="toggleQr('wb_' + item.id, item.qr_url)">{{ openedQr === 'wb_' + item.id ? 'Скрыть QR' : 'QR для ГИБДД' }}</button>
+                        <button class="waybills__link waybills__link_button" type="button" :disabled="refreshing === 'wb_' + item.id" @click="refreshWaybill(item)">{{ refreshing === 'wb_' + item.id ? 'Обновляется…' : 'Обновить' }}</button>
+                        <template v-if="confirmDelete === 'wb_' + item.id">
+                            <span class="waybills__confirm">Удалить накладную?</span>
+                            <button class="waybills__link waybills__link_button waybills__link_danger" type="button" :disabled="deleting === 'wb_' + item.id" @click="removeWaybill(item)">{{ deleting === 'wb_' + item.id ? 'Удаляется…' : 'Да, удалить' }}</button>
+                            <button class="waybills__link waybills__link_button" type="button" :disabled="deleting === 'wb_' + item.id" @click="confirmDelete = null">Отмена</button>
+                        </template>
+                        <button v-else class="waybills__link waybills__link_button waybills__link_danger" type="button" @click="confirmDelete = 'wb_' + item.id">Удалить</button>
+                    </div>
+                    <div class="waybills__qr" v-if="openedQr === 'wb_' + item.id && qrImages['wb_' + item.id]">
+                        <div class="waybills__qr-image" v-html="qrImages['wb_' + item.id]"></div>
                         <a class="waybills__link" :href="item.qr_url" target="_blank" rel="noopener">Ссылка для проверки</a>
                     </div>
                 </div>
@@ -83,15 +88,15 @@
             <button
                 class="waybills__button"
                 type="button"
-                v-if="!list.length && !picker.open"
+                v-if="!orders.length && !picker.open"
                 :disabled="loading || creating || pickerLoading"
-                @click="create"
+                @click="openPicker"
             >
-                {{ pickerLoading ? 'Загрузка маршрута…' : (creating ? 'Формируется…' : 'Сформировать накладную') }}
+                {{ pickerLoading ? 'Загрузка маршрута…' : (creating ? 'Создаётся…' : 'Создать заказ в Саби') }}
             </button>
 
             <div class="waybills__picker" v-if="picker.open">
-                <div class="waybills__picker-title" v-if="picker.tasks.length > 1">Выберите точку погрузки — её адрес и план. время уйдут в накладную</div>
+                <div class="waybills__picker-title" v-if="picker.tasks.length > 1">Выберите точку погрузки — её адрес и план. время уйдут в заказ</div>
                 <div class="waybills__picker-scroll" v-if="picker.tasks.length > 1">
                     <table class="waybills__picker-table">
                         <thead>
@@ -124,7 +129,7 @@
                     <AppSelect
                         :isPreventBottom="true"
                         :options="{
-                            id: 'waybill_mass_method',
+                            id: 'saby_order_mass_method',
                             title: 'Метод определения массы',
                             list: picker.massMethods,
                             isHaveNull: true
@@ -137,14 +142,9 @@
                         class="waybills__button"
                         type="button"
                         :disabled="(picker.tasks.length > 1 && !picker.selected) || creating"
-                        @click="createWithLoading"
-                    >{{ creating ? 'Формируется…' : 'Сформировать' }}</button>
-                    <button
-                        class="waybills__link waybills__link_button"
-                        type="button"
-                        :disabled="creating"
-                        @click="picker.open = false"
-                    >Отмена</button>
+                        @click="createOrder"
+                    >{{ creating ? 'Создаётся…' : 'Создать заказ' }}</button>
+                    <button class="waybills__link waybills__link_button" type="button" :disabled="creating" @click="picker.open = false">Отмена</button>
                 </div>
             </div>
         </div>
@@ -176,7 +176,8 @@
         }
     })
 
-    const list = ref([])
+    const orders = ref([])
+    const waybills = ref([])
     const errors = ref([])
     const enabled = ref(false)
     const loading = ref(false)
@@ -195,41 +196,42 @@
         selected: null
     })
 
-    const toggleQr = async (item) => {
-        if (openedQr.value === item.id) {
+    const toggleQr = async (key, url) => {
+        if (openedQr.value === key) {
             openedQr.value = null
             return
         }
-        if (!qrImages.value[item.id]) {
+        if (!qrImages.value[key]) {
             try {
                 const { renderSVG } = await import('uqr')
-                qrImages.value[item.id] = renderSVG(item.qr_url, { pixelSize: 5, border: 2 })
+                qrImages.value[key] = renderSVG(url, { pixelSize: 5, border: 2 })
             } catch (e) {
                 errors.value = ['Не удалось построить QR-код']
                 return
             }
         }
-        openedQr.value = item.id
+        openedQr.value = key
     }
 
     const load = async () => {
         if (!props.pageId || props.isExternal) return
         loading.value = true
         try {
-            const url = routes.logistic.waybills.replace('${id}', props.pageId)
+            const url = routes.logistic.sabyOrders.replace('${id}', props.pageId)
             const response = await api.callMethod('GET', url)
             if (response.status == 200) {
                 enabled.value = response.data?.enabled !== false
-                list.value = response.data?.data || []
+                orders.value = response.data?.data || []
+                waybills.value = response.data?.waybills || []
             }
         } catch (e) {
-            console.log('waybills', e)
+            console.log('saby orders', e)
         } finally {
             loading.value = false
         }
     }
 
-    const create = async () => {
+    const openPicker = async () => {
         if (creating.value || pickerLoading.value || !props.pageId) return
         errors.value = []
         pickerLoading.value = true
@@ -245,8 +247,7 @@
                 massMethods: response.data?.mass_methods || []
             }
         } catch (e) {
-            console.log('waybill route tasks', e)
-            errors.value = ['Не удалось загрузить данные для накладной']
+            errors.value = ['Не удалось загрузить данные маршрута']
         } finally {
             pickerLoading.value = false
         }
@@ -257,27 +258,21 @@
         picker.value.selected = picker.value.selected === row.id ? null : row.id
     }
 
-    const createWithLoading = async () => {
+    const createOrder = async () => {
         if (picker.value.tasks.length > 1 && !picker.value.selected) return
-        await send(picker.value.selected, picker.value.massMethod)
-        if (!errors.value.length) {
-            picker.value.open = false
-        }
-    }
-
-    const send = async (loadingTaskId, massMethod) => {
         if (creating.value || !props.pageId) return
         creating.value = true
         errors.value = []
         try {
-            const url = routes.logistic.waybills.replace('${id}', props.pageId)
+            const url = routes.logistic.sabyOrders.replace('${id}', props.pageId)
             const body = {}
-            if (loadingTaskId) body.loading_task_id = loadingTaskId
-            if (massMethod) body.mass_method = massMethod
+            if (picker.value.selected) body.loading_task_id = picker.value.selected
+            if (picker.value.massMethod) body.mass_method = picker.value.massMethod
             const response = await api.callMethod('POST', url, body)
             if (response.status == 200 && response.data?.data) {
-                list.value = [response.data.data, ...list.value]
-                common.showNotification({ title: 'Транспортная накладная', description: `№ ${response.data.data.number} сформирована` }, 'success')
+                orders.value = [response.data.data, ...orders.value]
+                picker.value.open = false
+                common.showNotification({ title: 'Заказ в Саби', description: `Заказ № ${response.data.data.number} создан. Отправьте его перевозчику в Saby` }, 'success')
             } else {
                 errors.value = response.data?.errors || []
                 if (!errors.value.length && response.data?.message) {
@@ -285,21 +280,62 @@
                 }
             }
         } catch (e) {
-            errors.value = ['Не удалось сформировать накладную']
+            errors.value = ['Не удалось создать заказ']
         } finally {
             creating.value = false
         }
     }
 
-    const refresh = async (item) => {
+    const refreshOrder = async (item) => {
         if (refreshing.value) return
-        refreshing.value = item.id
+        refreshing.value = 'order_' + item.id
+        errors.value = []
+        try {
+            const url = routes.logistic.sabyOrderRefresh.replace('${id}', item.id)
+            const response = await api.callMethod('POST', url, {})
+            if (response.status == 200 && response.data?.data) {
+                orders.value = orders.value.map(row => row.id === item.id ? response.data.data : row)
+            } else if (response.data?.message) {
+                errors.value = [response.data.message]
+            }
+        } catch (e) {
+            errors.value = ['Не удалось обновить состояние заказа']
+        } finally {
+            refreshing.value = null
+        }
+    }
+
+    const removeOrder = async (item) => {
+        if (deleting.value) return
+        deleting.value = 'order_' + item.id
+        errors.value = []
+        try {
+            const url = routes.logistic.sabyOrderDelete.replace('${id}', item.id)
+            const response = await api.callMethod('DELETE', url)
+            if (response.status == 200) {
+                orders.value = orders.value.filter(row => row.id !== item.id)
+                if (openedQr.value === 'order_' + item.id) openedQr.value = null
+                common.showNotification({ title: 'Заказ в Саби', description: `Заказ № ${item.number} удалён` }, 'success')
+            } else if (response.data?.message) {
+                errors.value = [response.data.message]
+            }
+        } catch (e) {
+            errors.value = ['Не удалось удалить заказ']
+        } finally {
+            deleting.value = null
+            confirmDelete.value = null
+        }
+    }
+
+    const refreshWaybill = async (item) => {
+        if (refreshing.value) return
+        refreshing.value = 'wb_' + item.id
         errors.value = []
         try {
             const url = routes.logistic.waybillRefresh.replace('${id}', item.id)
             const response = await api.callMethod('POST', url, {})
             if (response.status == 200 && response.data?.data) {
-                list.value = list.value.map(row => row.id === item.id ? response.data.data : row)
+                waybills.value = waybills.value.map(row => row.id === item.id ? response.data.data : row)
             } else if (response.data?.message) {
                 errors.value = [response.data.message]
             }
@@ -310,17 +346,16 @@
         }
     }
 
-    const remove = async (item) => {
+    const removeWaybill = async (item) => {
         if (deleting.value) return
-        deleting.value = item.id
+        deleting.value = 'wb_' + item.id
         errors.value = []
         try {
             const url = routes.logistic.waybillDelete.replace('${id}', item.id)
             const response = await api.callMethod('DELETE', url)
             if (response.status == 200) {
-                list.value = list.value.filter(row => row.id !== item.id)
-                if (openedQr.value === item.id) openedQr.value = null
-                common.showNotification({ title: 'Транспортная накладная', description: `№ ${item.number} удалена` }, 'success')
+                waybills.value = waybills.value.filter(row => row.id !== item.id)
+                if (openedQr.value === 'wb_' + item.id) openedQr.value = null
             } else if (response.data?.message) {
                 errors.value = [response.data.message]
             }

@@ -216,3 +216,51 @@
     gap: 12px;
     margin-top: 10px;
 }
+
+.waybills {
+    &__item_order {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
+
+    &__state {
+        font-size: 13px;
+        color: #8b8b8b;
+
+        &_4 {
+            color: #d98e04;
+        }
+
+        &_7 {
+            color: #2e9e4f;
+        }
+
+        &_9 {
+            color: #e23918;
+        }
+    }
+
+    &__sub {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 4px;
+        padding: 8px 10px;
+        border-left: 3px solid #2f8cff;
+        background: #f6f9ff;
+        border-radius: 4px;
+
+        &_empty {
+            color: #8b8b8b;
+            font-size: 13px;
+            border-left-color: #d9d9d9;
+            background: #fafafa;
+        }
+    }
+
+    &__legacy-title {
+        color: #8b8b8b;
+        font-size: 13px;
+    }
+}
