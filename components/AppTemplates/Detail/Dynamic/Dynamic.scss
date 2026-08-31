@@ -1,6 +1,13 @@
 @use '@/assets/variables.scss' as variables;
 @use '@/assets/mixins.scss' as mixins;
 
+.dynamic__hint {
+    margin: 10px 0 0;
+    font-size: variables.$font-size-default;
+    line-height: 1.4;
+    color: variables.$color-scroll;
+}
+
 .dynamic__forbidden {
     display: flex;
     flex-direction: column;

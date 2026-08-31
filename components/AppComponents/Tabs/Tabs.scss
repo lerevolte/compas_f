@@ -19,9 +19,18 @@
     &.tabs_disabled {
         .tabs__item {
             pointer-events: none;
-            
+
             &:not(.tabs__item_active) {
                 opacity: 0.5;
+            }
+
+            &.tabs__item_unlocked {
+                pointer-events: auto;
+                opacity: 1;
+
+                .tab_settings {
+                    pointer-events: none;
+                }
             }
         }
     }

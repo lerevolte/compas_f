@@ -27,6 +27,12 @@
                     <span class="related__label">ID:</span>
                     <span class="related__value">{{ node.id }}</span>
                 </div>
+                <div class="related__row related__products" v-if="node.products && node.products.length">
+                    <span class="related__label">Состав:</span>
+                    <span class="related__value">
+                        <template v-for="(product, index) in node.products" :key="index">{{ index ? ', ' : '' }}{{ product.name }} <b>{{ product.count }} шт.</b></template>
+                    </span>
+                </div>
             </div>
         </template>
     </div>

@@ -8,8 +8,9 @@
     </div>
 
     <template v-else>
-        <ColumnFields 
-            v-if="props.tabs.active?.tab == 'order' || props.options.isModule"
+        <ColumnFields
+            v-if="isOrderTab || props.options.isModule || keepOrderMounted"
+            v-show="isOrderTab || props.options.isModule"
             :columns="detail.columns.list"
             :slug="props.slug"
             :hidden="detail.columns.hidden"
@@ -41,7 +42,42 @@
             })"
         />
     
-        <AppHistory 
+        <div class="dynamin__group" v-if="props.tabs.active?.tab == 'products'">
+            <AppVirtualTable
+                ref="productsTableRef"
+                :pageId="props.id"
+                :options="{
+                    draggableTarget: '.table__icon-drag',
+                    isDraggable: canEditProducts,
+                    isHaveOrder: canEditProducts,
+                    group: 'order_products',
+                    isLocalTable: true,
+                    isHaveQuery: false,
+                    query: {},
+                    isHaveFilter: false,
+                    isPermanentEdit: canEditProducts,
+                    isTrash: false,
+                    isHaveTopHeader: true,
+                    isHaveFooter: false,
+                    isDisableSockets: true,
+                    isDisableMassAction: props.options.isGlobalEdit,
+                    updatingCount: 0,
+                    parentSlug: props.slug ?? 'logistic_tasks'
+                }"
+                :table="detail.products"
+                :slug="'products'"
+                @saveTable="detail.productsSaved()"
+                @openModal="item => emit('action', {
+                    action: 'openModal',
+                    value: item
+                })"
+            />
+            <p class="dynamic__hint" v-if="props.options.isGlobalEdit">
+                Состав сохранится вместе с документом: вернитесь на вкладку «Общие» и нажмите «Сохранить».
+            </p>
+        </div>
+
+        <AppHistory
             v-else-if="props.tabs.active?.tab == 'history'"
             :title="'История изменений'"
             :history="detail.history.fields"
@@ -67,36 +103,6 @@
             @openModal="item => emit('action', { action: 'openModal', value: { ...item, type: 'detail' } })"
         />
 
-        <div class="dynamin__group" v-else-if="props.tabs.active?.tab == 'products'">
-            <AppVirtualTable
-                :pageId="props.id"
-                :options="{
-                    draggableTarget: '.table__icon-drag',
-                    isDraggable: canEditProducts,
-                    isHaveOrder: canEditProducts,
-                    group: 'order_products',
-                    isLocalTable: true,
-                    isHaveQuery: false,
-                    query: {},
-                    isHaveFilter: false,
-                    isPermanentEdit: canEditProducts,
-                    isTrash: false,
-                    isHaveTopHeader: true,
-                    isHaveFooter: false,
-                    isDisableSockets: true,
-                    updatingCount: 0,
-                    parentSlug: props.slug ?? 'logistic_tasks'
-                }"
-                :table="detail.products"
-                :slug="'products'"
-                @saveTable="detail.get()"
-                @openModal="item => emit('action', {
-                    action: 'openModal',
-                    value: item
-                })"
-            />
-        </div>
-
         <RouteTasksView
             v-else-if="isRouteTasksTab"
             :routeId="props.id"
@@ -104,7 +110,7 @@
         />
 
         <AppVirtualTable
-            v-else
+            v-else-if="!isOrderTab && !props.options.isModule"
             :pageId="props.id"
             :key="props.tabs.active?.tab"
             :options="{
@@ -148,6 +154,10 @@
     import RouteTasksView from '@AppTemplates/Detail/RouteTasksView/RouteTasksView.vue';
     import AppRelatedObjects from '@AppComponents/RelatedObjects/RelatedObjects.vue';
     import AppPrintDocuments from '@AppComponents/PrintDocuments/PrintDocuments.vue'
+
+    const isOrderTab = computed(() => props.tabs.active?.tab == 'order')
+    const keepOrderMounted = computed(() => props.options.isGlobalEdit && !props.options.isModule)
+    const productsTableRef = ref(null)
 
     const isRouteTasksTab = computed(() => {
         if (props.slug !== 'routes' && !(props.options?.isExternal && props.slug == null)) return false
@@ -239,6 +249,7 @@
                 table: [],
                 list: []
             }
+            this.productsDraft = null
             this.socket = null
             this.history = new History()
             this.columns = new Columns()
@@ -350,6 +361,16 @@
 
                 this.products.table = response.data.table.tableKeys
                 this.products.list = response.data.table.tableBody
+                emit('action', { action: 'getProducts', value: response.data.table.tableBody?.data ?? [] })
+                if (props.options.isGlobalEdit) {
+                    if (!this.productsDraft && Array.isArray(props.defaults?.__products)) {
+                        this.productsDraft = JSON.parse(JSON.stringify(props.defaults.__products))
+                        emit('action', { action: 'setProductsDraft', value: this.productsDraft })
+                    }
+                    if (this.productsDraft) {
+                        this.products.list = this.localProductsList(this.productsDraft)
+                    }
+                }
                 this.history.get(response.data)
                 this.eventsVisibility = response.data.events_visibility ?? {
                     visible: true,
@@ -369,9 +390,42 @@
         openModal(item) {
             emit('openModal', item)
         }
+
+        localProductsList(rows) {
+            const data = JSON.parse(JSON.stringify(rows))
+            return {
+                data,
+                total: data.length,
+                per_page: data.length,
+                current_page: 1,
+                last_page: 1
+            }
+        }
+
+        snapshotProducts() {
+            const body = productsTableRef.value?.table?.body
+            if (!Array.isArray(body)) return
+            this.productsDraft = JSON.parse(JSON.stringify(body)).map(({ isChoose, edit, ...row }) => row)
+            this.products.list = this.localProductsList(this.productsDraft)
+            emit('action', { action: 'setProductsDraft', value: this.productsDraft })
+        }
+
+        productsSaved() {
+            if (props.options.isGlobalEdit) {
+                this.snapshotProducts()
+                return
+            }
+            this.get()
+        }
     }
 
     const detail = ref(new Detail())
+
+    watch(() => props.tabs.active?.tab, (next, prev) => {
+        if (prev == 'products' && props.options.isGlobalEdit) {
+            detail.value.snapshotProducts()
+        }
+    })
     const canEditProducts = computed(() => {
         const keys = detail.value?.products?.table || []
         if (!keys.length) return true

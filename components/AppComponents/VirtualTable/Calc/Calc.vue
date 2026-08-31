@@ -37,6 +37,14 @@
                     {{ common.transformPrice(calculateContent.sum, 0) }}
                 </strong>
             </div>
+            <div class="table-calc__item" v-if="hasShipped">
+                <span class="table-calc__label">
+                    Отгружено:
+                </span>
+                <strong class="table-calc__value">
+                    {{ common.transformPrice(calculateContent.shipped, 0) }}
+                </strong>
+            </div>
         </div>
     </div>
 </template>
@@ -51,6 +59,8 @@
     const table = inject('table')
     const common = new Common()
 
+    const hasShipped = computed(() => (table.value.header || []).some(c => c.key === 'product_shipped'))
+
     const canEdit = computed(() => {
         const cols = (table.value.header || []).filter(c => !['actions', 'isChoose', 'clicked', 'iconDrag', 'iconDelete'].includes(c.key))
         return cols.length == 0 || cols.some(c => !c.read_only)
@@ -63,6 +73,7 @@
             // суммировался без умножения на product_count.
             return {
                 count: table.value.body.reduce((count, row) => count + Number(row.product_count || 0), 0),
+                shipped: table.value.body.reduce((shipped, row) => shipped + Number(row.product_shipped || 0), 0),
                 weight: table.value.body.reduce((weight, row) => weight + (Number(row.product_count || 0) * Number(row.product_weight || 0)), 0),
                 volume: table.value.body.reduce((volume, row) => volume + (Number(row.product_count || 0) * Number(row.product_volume || 0)), 0),
                 sum: table.value.body.reduce((sum, row) => sum + (Number(row.product_count || 0) * Number(row.product_price || 0)), 0)

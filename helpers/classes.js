@@ -808,6 +808,10 @@ export class Table {
 
             if (this.slug) {
                 if (this.slug == 'products' && this.options?.isLocalTable) {
+                    if (!this.pageId || this.pageId == 0) {
+                        this.emit('saveTable', request)
+                        return
+                    }
                     await api.callMethod('PUT', routes.table.set_products.replace('${parent_slug}', this.options?.parentSlug ?? 'logistic_tasks').replace('${page_id}', this.pageId), {
                         products: request
                     })

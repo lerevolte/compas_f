@@ -263,6 +263,8 @@
             this.updateComponent = 0
             this.columns = {}
             this.hiddenFields = []
+            this.productsList = []
+            this.productsDraft = null
             this.isGlobalEdit = false
             this.isCopy = false
             this.isTrash = false
@@ -390,6 +392,34 @@
             this.hiddenFields = Array.isArray(fields) ? fields : []
         }
 
+        getProducts(list) {
+            this.productsList = Array.isArray(list) ? list : []
+        }
+
+        setProductsDraft(rows) {
+            this.productsDraft = Array.isArray(rows) ? rows : null
+        }
+
+        basedProducts(entity) {
+            let products = JSON.parse(JSON.stringify(this.productsList || [])).map(({ isChoose, edit, local_id, ...row }) => row)
+            if (entity.slug === 'expense_invoices' && this.slug === 'deals') {
+                products = products
+                    .map(row => {
+                        const remaining = Math.max(0, Number(row.product_count || 0) - Number(row.product_shipped || 0))
+                        return {
+                            ...row,
+                            product_count: remaining,
+                            product_sum: remaining * Number(row.product_price || 0),
+                            product_shipped: 0
+                        }
+                    })
+                    .filter(row => Number(row.product_count) > 0)
+            } else {
+                products = products.map(row => ({ ...row, product_shipped: 0 }))
+            }
+            return products
+        }
+
         checkIsTrash(isTrash) {
             this.isTrash = isTrash
         }
@@ -415,6 +445,10 @@
             }
             for (const field of this.hiddenFields ?? []) collect(field)
 
+            if ((this.productsList || []).length) {
+                defaults.__products = this.basedProducts(entity)
+            }
+
             emit('openModal', {
                 type: 'create',
                 slug: entity.slug,
@@ -432,22 +466,53 @@
             emit('closeDetail', true)
         }
 
-        savePage(response) {
+        async saveDraftProducts(slug, id) {
+            if (!Array.isArray(this.productsDraft)) return false
+            const products = this.productsDraft
+                .filter(row => row.id || (row.product_name && String(row.product_name).trim() !== ''))
+                .map(row => ({
+                    id: row.id,
+                    name: row.name,
+                    product_id: row.product_id,
+                    product_name: row.product_name,
+                    product_price: row.product_price,
+                    product_count: row.product_count,
+                    product_weight: row.product_weight,
+                    product_volume: row.product_volume,
+                    product_sum: row.product_sum
+                }))
+            this.productsDraft = null
+            try {
+                const response = await api.callMethod('PUT', routes.table.set_products.replace('${parent_slug}', slug).replace('${page_id}', id), { products })
+                return response?.status == 200
+            } catch (e) {
+                return false
+            }
+        }
+
+        async savePage(response) {
             const item = response.data
 
             if (this.isGlobalEdit) {
                 const wasCreate = !this.id
+                const slug = props.slug ?? router.params.slug
                 this.isGlobalEdit = false
-                this.updateComponent++
                 this.isCopy = false
                 this.id = item.id
+
+                let productsSaved = false
+                if (wasCreate && item.id) {
+                    productsSaved = await this.saveDraftProducts(slug, item.id)
+                }
+                this.updateComponent++
 
                 if (wasCreate && props.source?.slug && props.source?.id && item.id) {
                     api.callMethod('POST', routes.relations.create, {
                         source_slug: props.source.slug,
                         source_id: props.source.id,
-                        target_slug: props.slug ?? router.params.slug,
-                        target_id: item.id
+                        target_slug: slug,
+                        target_id: item.id,
+                        copy_products: !productsSaved
                     }).then(response => {
                         relationsVersion.value++
                         if (response?.data?.products_copied || response?.data?.b24_copied) {

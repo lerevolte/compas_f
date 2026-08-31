@@ -63,4 +63,12 @@
         color: #23232a;
         font-size: 14px;
     }
+
+    &__products {
+        flex-wrap: wrap;
+
+        .related__value {
+            line-height: 1.5;
+        }
+    }
 }
