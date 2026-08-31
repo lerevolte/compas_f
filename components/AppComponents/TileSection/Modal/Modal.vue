@@ -227,7 +227,7 @@
                 />
                 <div
                     class="form__item form__item_default-value default-value-picker"
-                    v-if="!FIELDS_WITHOUT_DEFAULT_VALUE.includes(modal.field.key) && !['relation','file','text_group','status','select_dropdown','redactor'].includes(modal.field.type)"
+                    v-if="!FIELDS_WITHOUT_DEFAULT_VALUE.includes(modal.field.key) && !['relation','file','text_group','status','select_dropdown','redactor','json','waybills','route_map','deal_stages','geoposition'].includes(modal.field.type)"
                 >
                     <AppPopup class="default-value-picker__popup" :isPreventBottom="true" :ignoreSelectors="['default-value-picker', '.dp__menu']">
                         <template #header>

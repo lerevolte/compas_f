@@ -729,7 +729,18 @@
     }
 
     .table__body .table__cell[data-column-key="product_id"] .select.select_icon figcaption {
+      padding-left: 10px;
+    }
+
+    .table__body .table__cell[data-column-key="product_id"] .select.select_icon.select_disabled figcaption {
       padding-left: 0;
+    }
+
+    .table__cell[data-column-key="iconDrag"] {
+      flex-direction: row;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 5px;
     }
 
     .table__cell[data-column-key="product_id"] .select.select_disabled {

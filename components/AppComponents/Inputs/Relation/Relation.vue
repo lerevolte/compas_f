@@ -435,7 +435,10 @@
             contentRef.style.left = (rect.left - base.left) + 'px'
             contentRef.style.width = rect.width + 'px'
             if (this.state.isTop) {
-                contentRef.style.top = (rect.top - 5 - base.height - base.top) + 'px'
+                contentRef.style.top = 'auto'
+                contentRef.style.bottom = '0px'
+                const baseBottom = contentRef.getBoundingClientRect().bottom
+                contentRef.style.bottom = (baseBottom - rect.top + 5) + 'px'
             } else {
                 contentRef.style.top = (rect.bottom + 5 - base.top) + 'px'
             }
