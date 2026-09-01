@@ -76,6 +76,12 @@
             <p class="dynamic__hint" v-if="props.options.isGlobalEdit">
                 Состав сохранится вместе с документом: вернитесь на вкладку «Общие» и нажмите «Сохранить».
             </p>
+            <AppProductsCheck
+                v-if="!props.options.isGlobalEdit && !props.options.isExternal && CHECKED_SLUGS.includes(props.slug)"
+                :slug="props.slug"
+                :id="props.id"
+                :rows="productsRows"
+            />
         </div>
 
         <AppHistory
@@ -155,10 +161,17 @@
     import RouteTasksView from '@AppTemplates/Detail/RouteTasksView/RouteTasksView.vue';
     import AppRelatedObjects from '@AppComponents/RelatedObjects/RelatedObjects.vue';
     import AppPrintDocuments from '@AppComponents/PrintDocuments/PrintDocuments.vue'
+    import AppProductsCheck from '@AppComponents/ProductsCheck/ProductsCheck.vue'
+
+    const CHECKED_SLUGS = ['logistic_tasks', 'pickups', 'expense_invoices']
 
     const isOrderTab = computed(() => props.tabs.active?.tab == 'order')
     const keepOrderMounted = computed(() => props.options.isGlobalEdit && !props.options.isModule)
     const productsTableRef = ref(null)
+    const productsRows = computed(() => {
+        const body = productsTableRef.value?.table?.body
+        return Array.isArray(body) ? body : (detail.value?.products?.list?.data ?? [])
+    })
 
     const isRouteTasksTab = computed(() => {
         if (props.slug !== 'routes' && !(props.options?.isExternal && props.slug == null)) return false

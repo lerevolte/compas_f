@@ -149,7 +149,8 @@ export default {
     relations: {
         tree: '/object-relations/${slug}/${id}',
         create: '/object-relations',
-        printDocs: '/object-relations/${slug}/${id}/print-documents'
+        printDocs: '/object-relations/${slug}/${id}/print-documents',
+        productsCheck: '/object-relations/${slug}/${id}/products-check'
     },
     chart: {
         get: '/analytics',

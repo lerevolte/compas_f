@@ -192,10 +192,19 @@
 
     const SKIP_BASED_KEYS = ['id', 'created_at', 'updated_at', 'deleted_at', 'user_id', 'route_id', 'sort', 'point_status']
 
+    const SHIPMENT_SOURCES = ['logistic_tasks', 'pickups']
+
     const BASED_ENTITIES = {
         deals: [
             { slug: 'logistic_tasks', title: 'Задача логистики' },
-            { slug: 'payment_invoices', title: 'Счет на оплату' },
+            { slug: 'pickups', title: 'Самовывоз' },
+            { slug: 'payment_invoices', title: 'Счет на оплату' }
+        ],
+        logistic_tasks: [
+            { slug: 'expense_invoices', title: 'Расходная накладная' },
+            { slug: 'product_returns', title: 'Возврат' }
+        ],
+        pickups: [
             { slug: 'expense_invoices', title: 'Расходная накладная' },
             { slug: 'product_returns', title: 'Возврат' }
         ],
@@ -400,24 +409,45 @@
             this.productsDraft = Array.isArray(rows) ? rows : null
         }
 
-        basedProducts(entity) {
+        async basedProducts(entity) {
             let products = JSON.parse(JSON.stringify(this.productsList || [])).map(({ isChoose, edit, local_id, ...row }) => row)
-            if (entity.slug === 'expense_invoices' && this.slug === 'deals') {
-                products = products
+            const withRemaining = (row, remaining) => ({
+                ...row,
+                product_count: remaining,
+                product_sum: remaining * Number(row.product_price || 0),
+                product_shipped: 0
+            })
+
+            if (entity.slug === 'expense_invoices' && SHIPMENT_SOURCES.includes(this.slug)) {
+                return products
+                    .map(row => withRemaining(row, Math.max(0, Number(row.product_count || 0) - Number(row.product_shipped || 0))))
+                    .filter(row => Number(row.product_count) > 0)
+            }
+
+            if (this.slug === 'deals' && SHIPMENT_SOURCES.includes(entity.slug)) {
+                let usage = []
+                try {
+                    const url = routes.relations.productsCheck.replace('${slug}', this.slug).replace('${id}', this.id)
+                    const response = await api.callMethod('GET', url)
+                    usage = response?.status == 200 ? (response.data?.usage ?? []) : []
+                } catch (e) {
+                    usage = []
+                }
+                const find = (row) => {
+                    const id = Number(row.id || row.product_id?.value?.[0] || 0)
+                    const name = String(row.product_name ?? '').trim().toLowerCase()
+                    return usage.find(u => (id && u.id === id) || (!id && name && String(u.name).trim().toLowerCase() === name))
+                }
+                return products
                     .map(row => {
-                        const remaining = Math.max(0, Number(row.product_count || 0) - Number(row.product_shipped || 0))
-                        return {
-                            ...row,
-                            product_count: remaining,
-                            product_sum: remaining * Number(row.product_price || 0),
-                            product_shipped: 0
-                        }
+                        const used = find(row)
+                        if (!used || used.is_service) return { ...row, product_shipped: 0 }
+                        return withRemaining(row, Math.max(0, Number(row.product_count || 0) - Number(used.used || 0)))
                     })
                     .filter(row => Number(row.product_count) > 0)
-            } else {
-                products = products.map(row => ({ ...row, product_shipped: 0 }))
             }
-            return products
+
+            return products.map(row => ({ ...row, product_shipped: 0 }))
         }
 
         checkIsTrash(isTrash) {
@@ -428,7 +458,7 @@
             emit('openModal', item)
         }
 
-        createBased(entity) {
+        async createBased(entity) {
             const defaults = {}
             const collect = (field) => {
                 const fields = field.type === 'text_group' && Array.isArray(field.fields) ? field.fields : [field]
@@ -446,7 +476,7 @@
             for (const field of this.hiddenFields ?? []) collect(field)
 
             if ((this.productsList || []).length) {
-                defaults.__products = this.basedProducts(entity)
+                defaults.__products = await this.basedProducts(entity)
             }
 
             emit('openModal', {
