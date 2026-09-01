@@ -738,9 +738,15 @@
 
     .table__cell[data-column-key="iconDrag"] {
       flex-direction: row;
+      flex-wrap: wrap;
       justify-content: flex-start;
       align-items: center;
       gap: 5px;
+
+      .table__label {
+        flex: 0 0 100%;
+        margin-bottom: 0;
+      }
     }
 
     .table__cell[data-column-key="product_id"] .select.select_disabled {

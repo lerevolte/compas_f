@@ -67,6 +67,7 @@
                 :table="detail.products"
                 :slug="'products'"
                 @saveTable="detail.productsSaved()"
+                @getData="detail.productsLoaded()"
                 @openModal="item => emit('action', {
                     action: 'openModal',
                     value: item
@@ -250,6 +251,7 @@
                 list: []
             }
             this.productsDraft = null
+            this.productsBackup = null
             this.socket = null
             this.history = new History()
             this.columns = new Columns()
@@ -370,6 +372,9 @@
                     if (this.productsDraft) {
                         this.products.list = this.localProductsList(this.productsDraft)
                     }
+                } else if (this.productsDraft) {
+                    this.productsBackup = JSON.parse(JSON.stringify(response.data.table.tableBody?.data ?? []))
+                    this.products.list = this.localProductsList(this.productsDraft)
                 }
                 this.history.get(response.data)
                 this.eventsVisibility = response.data.events_visibility ?? {
@@ -410,11 +415,45 @@
             emit('action', { action: 'setProductsDraft', value: this.productsDraft })
         }
 
+        leaveProductsTab() {
+            const table = productsTableRef.value?.table
+            if (props.options.isGlobalEdit) {
+                this.snapshotProducts()
+                return
+            }
+            if (table?.state == 'edit') {
+                const backup = Array.isArray(table.backup?.body) && table.backup.body.length ? table.backup.body : table.body
+                this.productsBackup = JSON.parse(JSON.stringify(backup)).map(({ isChoose, edit, ...row }) => row)
+                this.snapshotProducts()
+            } else {
+                this.clearProductsDraft()
+            }
+        }
+
+        productsLoaded() {
+            nextTick(() => this.restoreProductsEdit())
+        }
+
+        restoreProductsEdit() {
+            const table = productsTableRef.value?.table
+            if (props.options.isGlobalEdit || !this.productsDraft || !table) return
+            table.backup.body = JSON.parse(JSON.stringify(this.productsBackup ?? []))
+            table.body = table.body.map(row => ({ ...row, edit: true }))
+            table.state = 'edit'
+        }
+
+        clearProductsDraft() {
+            this.productsDraft = null
+            this.productsBackup = null
+            emit('action', { action: 'setProductsDraft', value: null })
+        }
+
         productsSaved() {
             if (props.options.isGlobalEdit) {
                 this.snapshotProducts()
                 return
             }
+            this.clearProductsDraft()
             this.get()
         }
     }
@@ -422,8 +461,15 @@
     const detail = ref(new Detail())
 
     watch(() => props.tabs.active?.tab, (next, prev) => {
-        if (prev == 'products' && props.options.isGlobalEdit) {
-            detail.value.snapshotProducts()
+        if (prev == 'products') {
+            detail.value.leaveProductsTab()
+        }
+    })
+
+    watch(() => productsTableRef.value?.table?.state, (state, prevState) => {
+        const table = productsTableRef.value?.table
+        if (prevState === 'edit' && state === null && table && !table.saving && !props.options.isGlobalEdit && detail.value.productsDraft) {
+            detail.value.clearProductsDraft()
         }
     })
     const canEditProducts = computed(() => {
