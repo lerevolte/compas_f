@@ -150,6 +150,7 @@ export default {
     relations: {
         tree: '/object-relations/${slug}/${id}',
         create: '/object-relations',
+        validateProducts: '/object-relations/validate-products',
         printDocs: '/object-relations/${slug}/${id}/print-documents',
         productsCheck: '/object-relations/${slug}/${id}/products-check'
     },

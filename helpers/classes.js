@@ -859,7 +859,7 @@ export class Table {
                         this.common.showNotification({
                             title: data.message ?? 'Не удалось сохранить состав',
                             description: Array.isArray(data.errors) ? data.errors.join('; ') : ''
-                        }, 'error')
+                        }, 'error', { toastId: 'products-mismatch' })
                         this.blockedSave = true
                         return
                     }
@@ -2262,6 +2262,11 @@ export class Section {
 
             if (this.modal.state && this.modal.type == 'validate') {
                 this.modal.loading = true
+            }
+
+            if (typeof options?.beforeSave === 'function') {
+                const allowed = await options.beforeSave()
+                if (!allowed) return
             }
 
             const request = {

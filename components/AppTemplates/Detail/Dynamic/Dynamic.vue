@@ -22,6 +22,7 @@
                 isGlobalEdit: props.options.isGlobalEdit,
                 isCopy: props.options.isCopy,
                 isExternal: props.options.isExternal,
+                beforeSave: props.options.beforeSave,
             }"
             :history="{
                 fields: detail.history.events,

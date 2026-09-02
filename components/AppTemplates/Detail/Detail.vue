@@ -90,7 +90,8 @@
                 isExternal: props.is_external,
                 isModule: tabs.is_module,
                 isCopy: detail.isCopy,
-                isGlobalEdit: detail.isGlobalEdit
+                isGlobalEdit: detail.isGlobalEdit,
+                beforeSave: () => detail.validateDraftBeforeCreate()
             }"
             :updateComponent="detail.updateComponent"
             :headerName="detail.header.name"
@@ -548,6 +549,39 @@
             emit('closeDetail', true)
         }
 
+        async validateDraftBeforeCreate() {
+            if (!this.isGlobalEdit || !props.source?.slug || !props.source?.id) return true
+            const target = props.slug ?? router.params.slug
+            const isChain = (props.source.slug === 'deals' && SHIPMENT_SOURCES.includes(target))
+                || (SHIPMENT_SOURCES.includes(props.source.slug) && target === 'expense_invoices')
+            if (!isChain) return true
+            const rows = (Array.isArray(this.productsDraft) ? this.productsDraft : [])
+                .filter(row => row.id || (row.product_name && String(row.product_name).trim() !== ''))
+            if (!rows.length) return true
+            try {
+                const response = await api.callMethod('POST', routes.relations.validateProducts, {
+                    source_slug: props.source.slug,
+                    source_id: props.source.id,
+                    target_slug: target,
+                    products: rows.map(row => ({
+                        id: row.id,
+                        product_name: row.product_name,
+                        product_price: row.product_price,
+                        product_count: row.product_count
+                    }))
+                })
+                const errors = response?.status == 200 ? (response.data?.errors ?? []) : []
+                if (errors.length) {
+                    common.showNotification({
+                        title: 'Расхождение по составу с документом-основанием — сохранение запрещено',
+                        description: errors.join('; ')
+                    }, 'error', { toastId: 'products-mismatch' })
+                    return false
+                }
+            } catch (e) {}
+            return true
+        }
+
         async saveDraftProducts(slug, id) {
             if (!Array.isArray(this.productsDraft)) return false
             const products = this.productsDraft
@@ -571,7 +605,7 @@
                     common.showNotification({
                         title: response?.data?.message ?? 'Состав не сохранён',
                         description: Array.isArray(response?.data?.errors) ? response.data.errors.join('; ') : ''
-                    }, 'error')
+                    }, 'error', { toastId: 'products-mismatch' })
                     return 'blocked'
                 }
                 return false
