@@ -590,26 +590,25 @@
                 this.isCopy = false
                 this.id = item.id
 
-                let productsSaved = false
-                if (wasCreate && item.id) {
-                    productsSaved = await this.saveDraftProducts(slug, item.id)
+                if (wasCreate && props.source?.slug && props.source?.id && item.id) {
+                    const hasDraft = Array.isArray(this.productsDraft)
+                    try {
+                        await api.callMethod('POST', routes.relations.create, {
+                            source_slug: props.source.slug,
+                            source_id: props.source.id,
+                            target_slug: slug,
+                            target_id: item.id,
+                            copy_products: !hasDraft
+                        })
+                        relationsVersion.value++
+                    } catch (e) {}
+                    if (hasDraft) {
+                        await this.saveDraftProducts(slug, item.id)
+                    }
+                } else if (wasCreate && item.id) {
+                    await this.saveDraftProducts(slug, item.id)
                 }
                 this.updateComponent++
-
-                if (wasCreate && props.source?.slug && props.source?.id && item.id) {
-                    api.callMethod('POST', routes.relations.create, {
-                        source_slug: props.source.slug,
-                        source_id: props.source.id,
-                        target_slug: slug,
-                        target_id: item.id,
-                        copy_products: !productsSaved
-                    }).then(response => {
-                        relationsVersion.value++
-                        if (response?.data?.products_copied || response?.data?.b24_copied) {
-                            this.updateComponent++
-                        }
-                    }).catch(() => {})
-                }
                 emit('updateMetaHeader', {
                     title: item.header_title || '',
                     href: {
