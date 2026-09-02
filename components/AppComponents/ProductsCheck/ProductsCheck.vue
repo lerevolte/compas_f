@@ -75,7 +75,19 @@
             }
             const count = Number(row.product_count || 0)
             const price = Number(row.product_price || 0)
-            if (!limit.is_service) {
+            if (limit.is_service) {
+                if (Number(limit.price) > 0) {
+                    const lineTotal = price * (count > 0 ? count : 1)
+                    const limitTotal = Number(limit.price) * (Number(limit.count) > 0 ? Number(limit.count) : 1)
+                    const othersPrice = Number(limit.used_others_price || 0)
+                    if (lineTotal + othersPrice > limitTotal + 0.0001) {
+                        result.push({
+                            name,
+                            text: `стоимость услуги ${format(lineTotal)}${othersPrice ? ` + в других документах ${format(othersPrice)}` : ''} — превышает ${format(limitTotal)} в основании`
+                        })
+                    }
+                }
+            } else {
                 const total = count + Number(limit.used_others || 0)
                 if (total > Number(limit.count) + 0.0001) {
                     const others = Number(limit.used_others || 0)
@@ -84,9 +96,9 @@
                         text: `в основании ${format(limit.count)} шт, здесь ${format(count)} шт${others ? ` + в других документах ${format(others)} шт` : ''} — превышение на ${format(total - Number(limit.count))} шт`
                     })
                 }
-            }
-            if (Number(limit.price) > 0 && price > Number(limit.price) + 0.0001) {
-                result.push({ name, text: `цена ${format(price)} выше цены в основании ${format(limit.price)}` })
+                if (Number(limit.price) > 0 && price > Number(limit.price) + 0.0001) {
+                    result.push({ name, text: `цена ${format(price)} выше цены в основании ${format(limit.price)}` })
+                }
             }
         }
         return result
