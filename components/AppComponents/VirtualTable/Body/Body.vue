@@ -25,8 +25,9 @@
             ghost-class="draggable-ghost"
             fallback-class="draggable-fallback"
             :class="{
-                'table__body_edit': table.state == 'edit', 
-                'table__body_choose': table.body.filter(row => row.isChoose).length > 0, 
+                'table__body_edit': table.state == 'edit',
+                'table__body_local': table.options?.isLocalTable,
+                'table__body_choose': table.body.filter(row => row.isChoose).length > 0,
                 'table__body_saving': table.saving,
                 'table__body_dragging': table.isDragging
             }"

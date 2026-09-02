@@ -80,6 +80,7 @@ export default {
         edit_fields: '/objects/${slug}/batch',
         external: '/external/${token}',
         update_field: '/field/${id}',
+        attach_employee: '/objects/${slug}/${id}/attach-employee',
     },
     trash: {
         get_tabs: '/tabs/trash',

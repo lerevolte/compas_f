@@ -18,6 +18,45 @@ export function isImageSrc(file) {
     return src != '' && src != '[]' && src != '{}' && src != 'null' && src != 'undefined'
 }
 
+function draftProductsFromJson(raw) {
+    let products = raw
+    if (typeof products === 'string') {
+        try {
+            products = JSON.parse(products)
+        } catch (e) {
+            return []
+        }
+    }
+    if (!Array.isArray(products)) return []
+    return products
+        .filter(product => product && typeof product === 'object')
+        .map((product, index) => {
+            const nameText = product.name && typeof product.name === 'object'
+                ? (product.name.value ?? Object.values(product.name)[0] ?? '')
+                : (product.name ?? '')
+            const id = product.id ?? null
+            return {
+                id,
+                name: nameText,
+                product_id: {
+                    value: [id],
+                    localOptions: [{
+                        value: id,
+                        label: { id, sort: 0, file: '', is_hidden: 0, field_id: 0, color: '', text: nameText }
+                    }]
+                },
+                product_name: nameText,
+                product_price: product.price ?? null,
+                product_count: product.count ?? null,
+                product_weight: product.weight ?? null,
+                product_volume: product.volume ?? 0,
+                product_sum: product.sum ?? null,
+                product_shipped: 0,
+                sort: index
+            }
+        })
+}
+
 export class Common {
     constructor() {}
 
@@ -812,9 +851,18 @@ export class Table {
                         this.emit('saveTable', request)
                         return
                     }
-                    await api.callMethod('PUT', routes.table.set_products.replace('${parent_slug}', this.options?.parentSlug ?? 'logistic_tasks').replace('${page_id}', this.pageId), {
+                    const response = await api.callMethod('PUT', routes.table.set_products.replace('${parent_slug}', this.options?.parentSlug ?? 'logistic_tasks').replace('${page_id}', this.pageId), {
                         products: request
                     })
+                    if (response?.status && response.status != 200) {
+                        const data = response.data ?? {}
+                        this.common.showNotification({
+                            title: data.message ?? 'Не удалось сохранить состав',
+                            description: Array.isArray(data.errors) ? data.errors.join('; ') : ''
+                        }, 'error')
+                        this.blockedSave = true
+                        return
+                    }
                 } else {
                     await api.callMethod('POST', routes.table.save.replace('${slug}', this.slug), {
                         rows: request
@@ -829,7 +877,11 @@ export class Table {
         } catch (error) {
             console.log('get_table', error);
         } finally {
-            this.clear()
+            if (this.blockedSave) {
+                this.blockedSave = false
+            } else {
+                this.clear()
+            }
             this.saving = false
         }
     }
@@ -843,11 +895,17 @@ export class Table {
     }
 
     createTaskFromAddress(row) {
-        const keys = ['name', 'address', 'phone', 'time', 'car_requirements', 'employee_requirements', 'service_time', 'comment', 'contact', 'photo', 'client_id', 'weight', 'delivery_price', 'volume', 'products', 'company_id']
+        const keys = ['name', 'address', 'phone', 'time', 'car_requirements', 'employee_requirements', 'service_time', 'comment', 'contact', 'photo', 'client_id', 'weight', 'delivery_price', 'volume', 'company_id', 'shipment_company_id']
         const defaults = {}
         for (const key of keys) {
             if (row[key] !== undefined && row[key] !== null) {
                 defaults[key] = JSON.parse(JSON.stringify(row[key]))
+            }
+        }
+        if (this.slug === 'addresses') {
+            const draft = draftProductsFromJson(row.products)
+            if (draft.length) {
+                defaults.__products = draft
             }
         }
         this.emit('openModal', {
@@ -1719,6 +1777,22 @@ export class HeaderEditable {
             },
             loading: false
         }
+        this.qr = {
+            state: false,
+            url: '',
+            svg: ''
+        }
+    }
+
+    async showQr({slug, id}) {
+        const url = `${window.location.origin}/objects/${slug}/${id}?attach_employee=1`
+        this.qr = { state: true, url, svg: '' }
+        try {
+            const { renderSVG } = await import('uqr')
+            this.qr.svg = renderSVG(url, { pixelSize: 5, border: 2 })
+        } catch (e) {
+            console.log('qr', e)
+        }
     }
 
     copyLink() {
@@ -1779,12 +1853,19 @@ export class HeaderEditable {
     }
 
     createTaskFromAddress({columns, slug, id}) {
-        const keys = ['name', 'address', 'phone', 'time', 'car_requirements', 'employee_requirements', 'service_time', 'comment', 'contact', 'photo', 'client_id', 'weight', 'delivery_price', 'volume', 'products', 'company_id']
+        const keys = ['name', 'address', 'phone', 'time', 'car_requirements', 'employee_requirements', 'service_time', 'comment', 'contact', 'photo', 'client_id', 'weight', 'delivery_price', 'volume', 'company_id', 'shipment_company_id']
         const defaults = {}
         for (const key of keys) {
             const field = this.common.findColumnField(columns, key)
             if (field && field.value !== undefined && field.value !== null) {
                 defaults[key] = JSON.parse(JSON.stringify(field.value))
+            }
+        }
+        const productsField = this.common.findColumnField(columns, 'products')
+        if (productsField && productsField.value) {
+            const draft = draftProductsFromJson(productsField.value)
+            if (draft.length) {
+                defaults.__products = draft
             }
         }
         this.emit('openModal', {

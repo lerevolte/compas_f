@@ -27,7 +27,7 @@
                     @click="emit(props.options.action, props.options.value)">
                     {{ props.options.actionTitle }}
                 </AppButton>
-                <AppButton @click="emit('close', true)">
+                <AppButton v-if="props.options.action != 'close'" @click="emit('close', true)">
                     Отмена
                 </AppButton>
             </div>

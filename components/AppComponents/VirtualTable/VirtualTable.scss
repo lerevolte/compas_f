@@ -413,7 +413,7 @@
   position: relative;
   min-height: 50px; // Минимальная высота для пустой таблицы, чтобы vuedraggable мог определить зону drop
 
-  &.table__body_edit {
+  &.table__body_edit:not(.table__body_local) {
     .table__row:not(.table__row_choose) {
       .table__cell {
         &[data-column-key="clicked"],

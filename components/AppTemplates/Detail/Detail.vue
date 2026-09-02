@@ -117,6 +117,23 @@
             </template>
             </AppModalWarning>
         </teleport>
+
+        <teleport to="#menu__overlay" v-if="detail.header.qr?.state">
+            <AppModalWarning
+                :options="{
+                    title: 'QR-код',
+                    action: 'close',
+                    actionTitle: 'Закрыть',
+                    template: 'slot'
+                }"
+                @close="detail.header.qr.state = false"
+            >
+                <div class="detail__qr" v-html="detail.header.qr.svg"></div>
+                <p class="detail__qr-hint">
+                    Отсканируйте код, чтобы открыть карточку объекта. Залогиненный пользователь будет добавлен в поле «Сотрудник», если его там ещё нет.
+                </p>
+            </AppModalWarning>
+        </teleport>
     </div>
 </template>
 
@@ -327,6 +344,21 @@
             this.forbidden = !!value
         }
 
+        hasEmployeesField() {
+            const isEmployees = (field) => {
+                if (!field) return false
+                if (field.type === 'text_group' && Array.isArray(field.fields)) return field.fields.some(isEmployees)
+                return field.type === 'relation' && !!field.is_plural && (field.related_table === 'employees' || field.key === 'employee_id')
+            }
+            const scanSection = (section) => (section.fields ?? []).some(isEmployees) || (section.children ?? []).some(scanSection)
+            for (const columnKey in this.columns) {
+                for (const section of this.columns[columnKey] ?? []) {
+                    if (scanSection(section)) return true
+                }
+            }
+            return (this.hiddenFields ?? []).some(isEmployees)
+        }
+
         headerActions() {
             if (this.isTrash) return this.actions.trash
             const actions = this.actions.default.filter(a => {
@@ -338,6 +370,13 @@
                 if (a.action === 'copyExternalLink') return this.permissions?.external_link_read_p !== 'N'
                 return true
             })
+            if (this.id && this.id != 0 && this.hasEmployeesField()) {
+                actions.unshift({
+                    name: 'QR-код',
+                    action: 'showQr',
+                    enabled: true
+                })
+            }
             if (this.slug === 'addresses' && this.permissions?.create_task_p !== 'N') {
                 actions.unshift({
                     name: 'Создать задачу',
@@ -418,13 +457,16 @@
                 product_shipped: 0
             })
 
-            if (entity.slug === 'expense_invoices' && SHIPMENT_SOURCES.includes(this.slug)) {
-                return products
-                    .map(row => withRemaining(row, Math.max(0, Number(row.product_count || 0) - Number(row.product_shipped || 0))))
-                    .filter(row => Number(row.product_count) > 0)
-            }
+            const withServicePrice = (row, price) => ({
+                ...row,
+                product_price: price,
+                product_sum: price * Number(row.product_count || 0),
+                product_shipped: 0
+            })
+            const isChain = (entity.slug === 'expense_invoices' && SHIPMENT_SOURCES.includes(this.slug))
+                || (this.slug === 'deals' && SHIPMENT_SOURCES.includes(entity.slug))
 
-            if (this.slug === 'deals' && SHIPMENT_SOURCES.includes(entity.slug)) {
+            if (isChain) {
                 let usage = []
                 try {
                     const url = routes.relations.productsCheck.replace('${slug}', this.slug).replace('${id}', this.id)
@@ -438,13 +480,23 @@
                     const name = String(row.product_name ?? '').trim().toLowerCase()
                     return usage.find(u => (id && u.id === id) || (!id && name && String(u.name).trim().toLowerCase() === name))
                 }
-                return products
-                    .map(row => {
-                        const used = find(row)
-                        if (!used || used.is_service) return { ...row, product_shipped: 0 }
-                        return withRemaining(row, Math.max(0, Number(row.product_count || 0) - Number(used.used || 0)))
-                    })
-                    .filter(row => Number(row.product_count) > 0)
+                const result = []
+                for (const row of products) {
+                    const used = find(row)
+                    if (!used) {
+                        result.push({ ...row, product_shipped: 0 })
+                        continue
+                    }
+                    if (used.is_service) {
+                        result.push(withServicePrice(row, Math.max(0, Number(row.product_price || 0) - Number(used.used_price || 0))))
+                        continue
+                    }
+                    const remaining = Math.max(0, Number(row.product_count || 0) - Number(used.used || 0))
+                    if (remaining > 0) {
+                        result.push(withRemaining(row, remaining))
+                    }
+                }
+                return result
             }
 
             return products.map(row => ({ ...row, product_shipped: 0 }))
@@ -514,7 +566,15 @@
             this.productsDraft = null
             try {
                 const response = await api.callMethod('PUT', routes.table.set_products.replace('${parent_slug}', slug).replace('${page_id}', id), { products })
-                return response?.status == 200
+                if (response?.status == 200) return true
+                if (response?.status == 422) {
+                    common.showNotification({
+                        title: response?.data?.message ?? 'Состав не сохранён',
+                        description: Array.isArray(response?.data?.errors) ? response.data.errors.join('; ') : ''
+                    }, 'error')
+                    return 'blocked'
+                }
+                return false
             } catch (e) {
                 return false
             }
