@@ -7,24 +7,26 @@
 
 			<div id="filter-container"></div>
 
-			<AppQrScanner />
+			<div class="page__header-actions">
+				<AppQrScanner />
 
-			<AppButton v-if="canCreate" class="button_fill" @click="emit('openModal', {
-				type: 'create',
-				slug: pageSlug,
-				id: '0'
-			})">
-				<AppIconPlus />
-				<span class="text">
-					Создать
-				</span>
-			</AppButton>
-			<AppButton v-else class="button_fill page__header__create-placeholder" aria-hidden="true" tabindex="-1">
-				<AppIconPlus />
-				<span class="text">
-					Создать
-				</span>
-			</AppButton>
+				<AppButton v-if="canCreate" class="button_fill" @click="emit('openModal', {
+					type: 'create',
+					slug: pageSlug,
+					id: '0'
+				})">
+					<AppIconPlus />
+					<span class="text">
+						Создать
+					</span>
+				</AppButton>
+				<AppButton v-else class="button_fill page__header__create-placeholder" aria-hidden="true" tabindex="-1">
+					<AppIconPlus />
+					<span class="text">
+						Создать
+					</span>
+				</AppButton>
+			</div>
 		</div>
 
 		<AppCategories

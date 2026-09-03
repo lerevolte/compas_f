@@ -1,5 +1,5 @@
 .qr-scan__button {
-    display: none !important;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 40px;
@@ -76,10 +76,3 @@
     text-align: center;
 }
 
-@media (max-width: 990px) {
-    .qr-scan__button {
-        width: 36px;
-        height: 36px;
-        flex: 0 0 36px;
-    }
-}

@@ -214,6 +214,12 @@ html {
     &.page__header_table {
         position: relative;
 
+        .page__header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .page__header__create-placeholder {
             visibility: hidden;
             pointer-events: none;
@@ -238,7 +244,8 @@ html {
                 max-width: none;
             }
 
-            & > button {
+            & > button,
+            .page__header-actions button {
                 .text {
                     display: none;
                 }
@@ -246,12 +253,15 @@ html {
 
             .filter__mobile-search {
                 top: -50px;
-                right: 70px;
+                right: 118px;
                 background: none;
                 border: none;
                 height: 40px;
                 aspect-ratio: 1;
                 padding: 0px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
 
                 svg {
                     width: 22px;
@@ -266,7 +276,7 @@ html {
 
             &:has(.page__header__create-placeholder) {
                 .filter__mobile-search {
-                    right: -10px;
+                    right: 38px;
                 }
             }
         }

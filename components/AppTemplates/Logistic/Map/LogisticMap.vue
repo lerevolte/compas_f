@@ -1401,7 +1401,7 @@
         if (!position || position.lat == null || position.lon == null) return;
         const html = `<div class="current-geo-marker"><div class="current-geo-marker__pulse"></div><div class="current-geo-marker__dot"></div><span class="current-geo-marker__time">${position.time || ''}</span></div>`;
         const marker = L.marker([position.lat, position.lon], {
-            icon: L.divIcon({ className: 'custom-div-icon current-geo-icon', html, iconSize: [24, 24], iconAnchor: [12, 12] }),
+            icon: L.divIcon({ className: 'custom-div-icon current-geo-icon', html, iconSize: [44, 44], iconAnchor: [22, 22] }),
             zIndexOffset: 1000
         }).addTo(mapInstance.value);
         actualPathLayers.push(marker);
