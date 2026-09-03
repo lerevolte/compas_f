@@ -233,6 +233,7 @@ export class LogisticWithMap extends Logistic {
 
             // Load additional map data (actual path, route meta)
             let actualPath = [];
+            let currentPosition = null;
             let routeName = `Маршрут ${routeId}`;
             let loadingTime = '07:00';
             let routeColor = '#b6b6b6';
@@ -241,6 +242,7 @@ export class LogisticWithMap extends Logistic {
                 const mapDataResponse = await api.callMethod('GET', `/routes/${routeId}/map_data`);
                 const mapData = mapDataResponse.data || mapDataResponse;
                 actualPath = mapData.actual_path || [];
+                currentPosition = mapData.current_position || null;
                 routeName = mapData.name || routeName;
                 loadingTime = mapData.loading_time || loadingTime;
                 // Color might be hex (#b6b6b6) or an ID (1484) — only use if it looks like a color
@@ -261,6 +263,7 @@ export class LogisticWithMap extends Logistic {
                 color: routeColor,
                 tasks: tasks,
                 actual_path: actualPath,
+                current_position: currentPosition,
                 service_stops: [],
                 parking_stops: [],
                 signal_loss_events: []

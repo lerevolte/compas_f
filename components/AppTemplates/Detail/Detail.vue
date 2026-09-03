@@ -219,12 +219,12 @@
             { slug: 'payment_invoices', title: 'Счет на оплату' }
         ],
         logistic_tasks: [
-            { slug: 'expense_invoices', title: 'Расходная накладная' },
-            { slug: 'product_returns', title: 'Возврат' }
+            { slug: 'expense_invoices', title: 'Отгрузка' },
+            { slug: 'product_returns', title: 'Оприходование' }
         ],
         pickups: [
-            { slug: 'expense_invoices', title: 'Расходная накладная' },
-            { slug: 'product_returns', title: 'Возврат' }
+            { slug: 'expense_invoices', title: 'Отгрузка' },
+            { slug: 'product_returns', title: 'Оприходование' }
         ],
         addresses: [{ slug: 'logistic_tasks', title: 'Задача логистики' }]
     }
@@ -582,9 +582,10 @@
             return true
         }
 
-        async saveDraftProducts(slug, id) {
-            if (!Array.isArray(this.productsDraft)) return false
-            const products = this.productsDraft
+        async saveDraftProducts(slug, id, rows = null) {
+            const draft = Array.isArray(rows) ? rows : this.productsDraft
+            if (!Array.isArray(draft)) return false
+            const products = draft
                 .filter(row => row.id || (row.product_name && String(row.product_name).trim() !== ''))
                 .map(row => ({
                     id: row.id,
@@ -624,23 +625,23 @@
                 this.isCopy = false
                 this.id = item.id
 
+                const draftRows = Array.isArray(this.productsDraft) ? this.productsDraft : null
                 if (wasCreate && props.source?.slug && props.source?.id && item.id) {
-                    const hasDraft = Array.isArray(this.productsDraft)
                     try {
                         await api.callMethod('POST', routes.relations.create, {
                             source_slug: props.source.slug,
                             source_id: props.source.id,
                             target_slug: slug,
                             target_id: item.id,
-                            copy_products: !hasDraft
+                            copy_products: !draftRows
                         })
                         relationsVersion.value++
                     } catch (e) {}
-                    if (hasDraft) {
-                        await this.saveDraftProducts(slug, item.id)
+                    if (draftRows) {
+                        await this.saveDraftProducts(slug, item.id, draftRows)
                     }
                 } else if (wasCreate && item.id) {
-                    await this.saveDraftProducts(slug, item.id)
+                    await this.saveDraftProducts(slug, item.id, draftRows)
                 }
                 this.updateComponent++
                 emit('updateMetaHeader', {

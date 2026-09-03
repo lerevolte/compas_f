@@ -7,6 +7,8 @@
 
 			<div id="filter-container"></div>
 
+			<AppQrScanner />
+
 			<AppButton v-if="canCreate" class="button_fill" @click="emit('openModal', {
 				type: 'create',
 				slug: pageSlug,
@@ -145,6 +147,7 @@
     import AppVirtualTable from '@AppComponents/VirtualTable/VirtualTable.vue';
 	import AppButton from '@AppComponents/Button/Button.vue'
 	import AppIconPlus from '@AppIcons/Plus.vue'
+	import AppQrScanner from '@AppComponents/QrScanner/QrScanner.vue'
 	import AppCategories from '@AppComponents/Categories/Categories.vue';
 	import CategoriesTreeItem from '@AppComponents/Categories/TreeItem.vue';
 	import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'

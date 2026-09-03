@@ -480,6 +480,12 @@
         }
     })
 
+    watch(() => props.options.isGlobalEdit, (next, prev) => {
+        if (prev && !next) {
+            detail.value.clearProductsDraft()
+        }
+    })
+
     watch(() => productsTableRef.value?.table?.state, (state, prevState) => {
         const table = productsTableRef.value?.table
         if (prevState === 'edit' && state === null && table && !table.saving && !props.options.isGlobalEdit && detail.value.productsDraft) {

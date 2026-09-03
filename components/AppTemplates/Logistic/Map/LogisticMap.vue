@@ -1231,6 +1231,7 @@
         // Draw analytics layers (regardless of routing success)
         drawActualPath(routeData);
         showActualPathMarkers(routeData);
+        drawCurrentPosition(routeData);
         showStopMarkers(routeData);
         showSignalLossMarkers(routeData);
 
@@ -1391,8 +1392,19 @@
     const drawActualPath = (routeData) => {
         if (!routeData.actual_path || routeData.actual_path.length < 2 || !settings.analytics.actual_path) return;
         const coords = routeData.actual_path.map(p => [p.lat, p.lon]);
-        const polyline = L.polyline(coords, { color: '#0000FF', weight: 4, opacity: 0.7, dashArray: '10, 10' }).addTo(mapInstance.value);
+        const polyline = L.polyline(coords, { color: '#0000FF', weight: 4, opacity: 0.7, dashArray: '10, 10', className: 'actual-path-line' }).addTo(mapInstance.value);
         actualPathLayers.push(polyline);
+    };
+
+    const drawCurrentPosition = (routeData) => {
+        const position = routeData.current_position;
+        if (!position || position.lat == null || position.lon == null) return;
+        const html = `<div class="current-geo-marker"><div class="current-geo-marker__pulse"></div><div class="current-geo-marker__dot"></div><span class="current-geo-marker__time">${position.time || ''}</span></div>`;
+        const marker = L.marker([position.lat, position.lon], {
+            icon: L.divIcon({ className: 'custom-div-icon current-geo-icon', html, iconSize: [24, 24], iconAnchor: [12, 12] }),
+            zIndexOffset: 1000
+        }).addTo(mapInstance.value);
+        actualPathLayers.push(marker);
     };
 
     const showActualPathMarkers = (routeData) => {
