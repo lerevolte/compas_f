@@ -164,7 +164,7 @@
     import AppPrintDocuments from '@AppComponents/PrintDocuments/PrintDocuments.vue'
     import AppProductsCheck from '@AppComponents/ProductsCheck/ProductsCheck.vue'
 
-    const CHECKED_SLUGS = ['logistic_tasks', 'pickups', 'expense_invoices']
+    const CHECKED_SLUGS = ['logistic_tasks', 'pickups', 'expense_invoices', 'product_returns']
 
     const isOrderTab = computed(() => props.tabs.active?.tab == 'order')
     const keepOrderMounted = computed(() => props.options.isGlobalEdit && !props.options.isModule)

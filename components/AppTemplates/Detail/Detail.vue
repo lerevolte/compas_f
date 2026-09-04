@@ -371,6 +371,13 @@
                 if (a.action === 'copyExternalLink') return this.permissions?.external_link_read_p !== 'N'
                 return true
             })
+            if (this.id && this.id != 0 && ['logistic_tasks', 'pickups'].includes(this.slug)) {
+                actions.unshift({
+                    name: 'Распечатать УПД',
+                    action: 'printUpd',
+                    enabled: true
+                })
+            }
             if (this.id && this.id != 0 && this.hasEmployeesField()) {
                 actions.unshift({
                     name: 'QR-код',
@@ -464,8 +471,34 @@
                 product_sum: price * Number(row.product_count || 0),
                 product_shipped: 0
             })
+            const isReturn = entity.slug === 'product_returns' && SHIPMENT_SOURCES.includes(this.slug)
             const isChain = (entity.slug === 'expense_invoices' && SHIPMENT_SOURCES.includes(this.slug))
                 || (this.slug === 'deals' && SHIPMENT_SOURCES.includes(entity.slug))
+
+            if (isReturn) {
+                let usage = []
+                try {
+                    const url = routes.relations.productsCheck.replace('${slug}', this.slug).replace('${id}', this.id)
+                    const response = await api.callMethod('GET', url)
+                    usage = response?.status == 200 ? (response.data?.usage ?? []) : []
+                } catch (e) {
+                    usage = []
+                }
+                const find = (row) => {
+                    const id = Number(row.id || row.product_id?.value?.[0] || 0)
+                    const name = String(row.product_name ?? '').trim().toLowerCase()
+                    return usage.find(u => (id && u.id === id) || (!id && name && String(u.name).trim().toLowerCase() === name))
+                }
+                const result = []
+                for (const row of products) {
+                    const used = find(row)
+                    const available = used ? Math.max(0, Number(used.used || 0) - Number(used.returned || 0)) : 0
+                    if (available > 0) {
+                        result.push(withRemaining(row, available))
+                    }
+                }
+                return result
+            }
 
             if (isChain) {
                 let usage = []
@@ -553,7 +586,7 @@
             if (!this.isGlobalEdit || !props.source?.slug || !props.source?.id) return true
             const target = props.slug ?? router.params.slug
             const isChain = (props.source.slug === 'deals' && SHIPMENT_SOURCES.includes(target))
-                || (SHIPMENT_SOURCES.includes(props.source.slug) && target === 'expense_invoices')
+                || (SHIPMENT_SOURCES.includes(props.source.slug) && ['expense_invoices', 'product_returns'].includes(target))
             if (!isChain) return true
             const rows = (Array.isArray(this.productsDraft) ? this.productsDraft : [])
                 .filter(row => row.id || (row.product_name && String(row.product_name).trim() !== ''))
@@ -596,7 +629,9 @@
                     product_count: row.product_count,
                     product_weight: row.product_weight,
                     product_volume: row.product_volume,
-                    product_sum: row.product_sum
+                    product_sum: row.product_sum,
+                    product_nds: row.product_nds,
+                    product_nds_included: row.product_nds_included
                 }))
             this.productsDraft = null
             try {
@@ -664,7 +699,12 @@
 
     const relationsVersion = useState('object-relations-version', () => 0)
 
-    const basedEntities = computed(() => BASED_ENTITIES[props.slug ?? router.params.slug] ?? [])
+    const basedEntities = computed(() => {
+        const list = BASED_ENTITIES[props.slug ?? router.params.slug] ?? []
+        const map = detail.value.permissions?.based_create
+        if (!map) return list
+        return list.filter(entity => map[entity.slug] !== false)
+    })
 
     const canEditTitle = computed(() => {
         const field = common.findColumnField(detail.value.columns, 'name')

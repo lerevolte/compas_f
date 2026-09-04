@@ -43,7 +43,8 @@
         edit: !props.options.isTrash && table.state != 'edit' && canUpdate,
         cancel: true,
         restore: props.options.isTrash,
-        delete: !props.options.isTrash && table.state != 'edit' && canDelete
+        delete: !props.options.isTrash && table.state != 'edit' && canDelete,
+        printUpd: !props.options.isTrash && table.state != 'edit' && ['logistic_tasks', 'pickups'].includes(table.slug)
       }"
       :loading="table.saving"
       @action="action => table[action.action](action.value)"

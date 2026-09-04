@@ -411,6 +411,10 @@
                 padding: 10px;
             }
 
+            .table__cell.table__cell_hide-empty {
+                display: flex !important;
+            }
+
             .table__cell_fixed {
                 position: static;
             }

@@ -11,11 +11,41 @@ import { format, startOfMonth, endOfMonth } from 'date-fns'
 import { Mask } from 'maska'
 import { toast } from 'vue3-toastify';
 import { useUserStore } from '@/stores/userStore.js'
+import axios from 'axios'
 
 export function isImageSrc(file) {
     if (typeof file != 'string') return false
     const src = file.trim()
     return src != '' && src != '[]' && src != '{}' && src != 'null' && src != 'undefined'
+}
+
+export async function openUpdPdf(slug, ids) {
+    const common = new Common()
+    ids = (ids || []).filter(id => id)
+    if (!ids.length) return false
+    try {
+        const userStore = useUserStore()
+        const response = await axios.get(`${routes.domain}/api/${slug}/upd?ids=${ids.join(',')}`, {
+            headers: { Authorization: `Bearer ${userStore.token}` },
+            responseType: 'blob',
+            validateStatus: () => true
+        })
+        if (response.status == 200 && response.data?.type === 'application/pdf') {
+            const objectUrl = URL.createObjectURL(response.data)
+            window.open(objectUrl, '_blank')
+            setTimeout(() => URL.revokeObjectURL(objectUrl), 120000)
+            return true
+        }
+        let message = 'Не удалось сформировать УПД'
+        try {
+            const parsed = JSON.parse(await response.data.text())
+            if (parsed?.message) message = parsed.message
+        } catch (e) {}
+        common.showNotification({ title: 'УПД', description: message }, 'error')
+    } catch (e) {
+        common.showNotification({ title: 'УПД', description: 'Не удалось сформировать УПД' }, 'error')
+    }
+    return false
 }
 
 function draftProductsFromJson(raw) {
@@ -51,6 +81,8 @@ function draftProductsFromJson(raw) {
                 product_weight: product.weight ?? null,
                 product_volume: product.volume ?? 0,
                 product_sum: product.sum ?? null,
+                product_nds: product.nds ?? null,
+                product_nds_included: product.nds_included == null || product.nds_included === '' ? '1' : String(product.nds_included),
                 product_shipped: 0,
                 sort: index
             }
@@ -804,7 +836,9 @@ export class Table {
                         product_count: row['product_count'],
                         product_weight: row['product_weight'],
                         product_volume: row['product_volume'],
-                        product_sum: row['product_sum']
+                        product_sum: row['product_sum'],
+                        product_nds: row['product_nds'],
+                        product_nds_included: row['product_nds_included']
                     })
                 })
                 
@@ -892,6 +926,12 @@ export class Table {
             slug: slug ?? this.slug,
             id: 0
         })
+    }
+
+    printUpd() {
+        const ids = this.body.filter(row => row.isChoose).map(row => row.id).filter(id => id)
+        if (!ids.length) return
+        openUpdPdf(this.slug, ids)
     }
 
     createTaskFromAddress(row) {
@@ -1793,6 +1833,10 @@ export class HeaderEditable {
         } catch (e) {
             console.log('qr', e)
         }
+    }
+
+    printUpd({slug, id}) {
+        openUpdPdf(slug, [id])
     }
 
     copyLink() {

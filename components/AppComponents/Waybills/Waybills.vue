@@ -239,12 +239,20 @@
             const url = routes.logistic.waybillRouteTasks.replace('${id}', props.pageId)
             const response = await api.callMethod('GET', url)
             const tasks = response.status == 200 ? (response.data?.data || []) : []
+            let savedMassMethod = null
+            try {
+                savedMassMethod = localStorage.getItem('saby_mass_method') || null
+            } catch (e) {}
+            const methods = response.data?.mass_methods || []
+            if (savedMassMethod && !methods.some(m => String(m.value) === String(savedMassMethod))) {
+                savedMassMethod = null
+            }
             picker.value = {
                 open: true,
                 tasks,
                 selected: null,
-                massMethod: null,
-                massMethods: response.data?.mass_methods || []
+                massMethod: savedMassMethod,
+                massMethods: methods
             }
         } catch (e) {
             errors.value = ['Не удалось загрузить данные маршрута']
@@ -267,7 +275,12 @@
             const url = routes.logistic.sabyOrders.replace('${id}', props.pageId)
             const body = {}
             if (picker.value.selected) body.loading_task_id = picker.value.selected
-            if (picker.value.massMethod) body.mass_method = picker.value.massMethod
+            if (picker.value.massMethod) {
+                body.mass_method = picker.value.massMethod
+                try {
+                    localStorage.setItem('saby_mass_method', String(picker.value.massMethod))
+                } catch (e) {}
+            }
             const response = await api.callMethod('POST', url, body)
             if (response.status == 200 && response.data?.data) {
                 orders.value = [response.data.data, ...orders.value]

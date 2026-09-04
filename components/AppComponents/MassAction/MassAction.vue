@@ -32,6 +32,13 @@
                 >
                     Сохранить
                 </AppButton>
+                <AppButton
+                    class="button_icon"
+                    v-if="props.actions.printUpd && props.checkedCount > 0"
+                    @click="emit('action', {action: 'printUpd', value: true})"
+                >
+                    Распечатать УПД
+                </AppButton>
                 <AppButton @click="emit('action', {action: 'cancel', value: true})">
                     Отмена
                 </AppButton>

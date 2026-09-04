@@ -210,7 +210,20 @@
                                 @update:prevValue="val => cell.checkEditting(table.body[row.index], {value: val, key: column.key})"
                             />
 
-                            <AppDate 
+                            <AppCheckbox
+                                v-else-if="column.type == 'checkbox' && table.body[row.index]"
+                                :modelValue="String(cell.useCellModel(row.index, column).value ?? '1') === '1'"
+                                :options="{
+                                    title: '',
+                                    disabled: !!column.read_only || !(table.body[row.index].edit || table.options?.isPermanentEdit)
+                                }"
+                                @update:modelValue="val => {
+                                    cell.checkEditting(table.body[row.index], {value: String(cell.useCellModel(row.index, column).value ?? '1'), key: column.key})
+                                    cell.useCellModel(row.index, column).value = val ? '1' : '0'
+                                }"
+                            />
+
+                            <AppDate
                                 v-else-if="column.type == 'date'"
                                 :options="{
                                     id: `${uid}_${row.index}_${column.key}`,
@@ -1331,6 +1344,8 @@
         if (activeOption.count !== undefined) row.product_count = activeOption.count
         if (activeOption.weight !== undefined) row.product_weight = activeOption.weight
         if (activeOption.volume !== undefined) row.product_volume = activeOption.volume
+        if (activeOption.nds !== undefined) row.product_nds = activeOption.nds
+        if (activeOption.nds_included !== undefined) row.product_nds_included = activeOption.nds_included == null || activeOption.nds_included === '' ? '1' : String(activeOption.nds_included)
 
         row.name = activeOption.text
         row.product_name = activeOption.text
