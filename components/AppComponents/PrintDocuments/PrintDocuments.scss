@@ -99,3 +99,13 @@
         margin-top: 16px;
     }
 }
+
+.print-docs__card_upd {
+    cursor: default;
+    align-items: center;
+    justify-content: space-between;
+
+    button {
+        flex: 0 0 auto;
+    }
+}

@@ -2,11 +2,24 @@
     <div class="print-docs">
         <IconLoader class="print-docs__loader" v-if="loading" />
 
-        <div class="print-docs__empty" v-else-if="!docs.length">
+        <template v-else>
+        <div class="print-docs__card print-docs__card_upd" v-if="isUpdSlug">
+            <div class="print-docs__info">
+                <div class="print-docs__row">
+                    <span class="print-docs__entity">УПД</span>
+                </div>
+                <div class="print-docs__name">Универсальный передаточный документ</div>
+            </div>
+            <AppButton class="button_fill" :class="{'skeleton': updLoading}" @click="printUpd">
+                Распечатать УПД
+            </AppButton>
+        </div>
+
+        <div class="print-docs__empty" v-if="!docs.length">
             Связанных документов пока нет — создайте счет или накладную через «Создать на основании»
         </div>
 
-        <template v-else>
+        <template v-if="docs.length">
             <div
                 class="print-docs__card"
                 v-for="doc in docs"
@@ -57,6 +70,7 @@
                 </AppButton>
             </div>
         </template>
+        </template>
     </div>
 </template>
 
@@ -68,6 +82,9 @@
     import IconLoader from '@AppIcons/Loader.vue'
     import AppButton from '@AppComponents/Button/Button.vue'
     import AppCheckbox from '@AppComponents/Inputs/Checkbox/Checkbox.vue'
+    import { openUpdPdf } from '@AppHelpers/classes.js'
+
+    const UPD_SLUGS = ['logistic_tasks', 'pickups']
 
     const props = defineProps({
         id: {
@@ -97,6 +114,18 @@
     const checkedFiles = computed(() => docs.value
         .filter(doc => checked.value[key(doc)])
         .flatMap(doc => doc.files))
+
+    const isUpdSlug = computed(() => UPD_SLUGS.includes(props.slug))
+    const updLoading = ref(false)
+    const printUpd = async () => {
+        if (updLoading.value) return
+        updLoading.value = true
+        try {
+            await openUpdPdf(props.slug, [props.id])
+        } finally {
+            updLoading.value = false
+        }
+    }
 
     const print = () => {
         for (const file of checkedFiles.value) {

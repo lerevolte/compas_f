@@ -371,13 +371,6 @@
                 if (a.action === 'copyExternalLink') return this.permissions?.external_link_read_p !== 'N'
                 return true
             })
-            if (this.id && this.id != 0 && ['logistic_tasks', 'pickups'].includes(this.slug)) {
-                actions.unshift({
-                    name: 'Распечатать УПД',
-                    action: 'printUpd',
-                    enabled: true
-                })
-            }
             if (this.id && this.id != 0 && this.hasEmployeesField()) {
                 actions.unshift({
                     name: 'QR-код',
