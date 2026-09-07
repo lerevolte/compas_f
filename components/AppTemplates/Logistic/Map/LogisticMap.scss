@@ -939,9 +939,3 @@
   0% { transform: scale(0.5); opacity: 1; }
   100% { transform: scale(1.6); opacity: 0; }
 }
-
-.actual-path-line,
-.actual-path-marker,
-.current-geo-icon {
-  display: none !important;
-}
