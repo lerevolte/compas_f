@@ -420,7 +420,7 @@
                 }
             }
 
-            .table__cell.table__cell_hide-empty {
+            .table__cell.table__cell_hide-empty:not(.table__cell_hide) {
                 display: flex !important;
             }
 
