@@ -96,11 +96,12 @@
     const handleResult = (text) => {
         let url = null
         try {
-            url = new URL(text)
+            url = new URL(String(text).trim(), window.location.origin)
         } catch (e) {}
-        if (url && url.origin === window.location.origin) {
+        const isPortalPath = url && /^\/(objects|logistic|external)\//.test(url.pathname)
+        if (url && (url.origin === window.location.origin || isPortalPath)) {
             close()
-            window.location.href = url.href
+            window.location.href = window.location.origin + url.pathname + url.search + url.hash
             return true
         }
         const now = Date.now()
