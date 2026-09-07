@@ -14,9 +14,16 @@
                     </div>
                     <div class="waybills__loading-task" v-if="item.last_event">Последнее событие: {{ item.last_event }}</div>
                     <div class="waybills__loading-task" v-if="item.mass_method_label">Метод определения массы: {{ item.mass_method_label }}</div>
+                    <div class="waybills__loading-task" v-if="item.current_is_loading">
+                        <span>Эта задача — точка погрузки</span>
+                    </div>
                     <div class="waybills__loading-task" v-if="item.loading_task">
                         <span>Склад погрузки:</span>
                         <a class="waybills__link" :href="'/objects/logistic_tasks/' + item.loading_task.id" target="_blank" rel="noopener">{{ item.loading_task.name || ('Задача #' + item.loading_task.id) }}</a>
+                    </div>
+                    <div class="waybills__loading-task" v-if="item.unloading_task">
+                        <span>Точка выгрузки:</span>
+                        <a class="waybills__link" :href="'/objects/logistic_tasks/' + item.unloading_task.id" target="_blank" rel="noopener">{{ item.unloading_task.name || ('Задача #' + item.unloading_task.id) }}</a>
                     </div>
                     <div class="waybills__actions">
                         <a class="waybills__link" v-if="item.cabinet_url" :href="item.cabinet_url" target="_blank" rel="noopener">Открыть в Saby</a>
@@ -96,7 +103,19 @@
             </button>
 
             <div class="waybills__picker" v-if="picker.open">
-                <div class="waybills__picker-title" v-if="picker.tasks.length > 1">Выберите точку погрузки — её адрес и план. время уйдут в заказ</div>
+                <div class="waybills__picker-mode">
+                    <AppCheckbox
+                        v-model="picker.currentIsLoading"
+                        :options="{ title: 'Текущая задача — точка погрузки' }"
+                        @update:modelValue="picker.selected = null"
+                    />
+                </div>
+                <div class="waybills__picker-title" v-if="picker.tasks.length > 1">
+                    {{ picker.currentIsLoading ? 'Выберите точку выгрузки — её адрес, план. время и получатель уйдут в заказ' : 'Выберите точку погрузки — её адрес и план. время уйдут в заказ' }}
+                </div>
+                <div class="waybills__picker-title waybills__picker-title_warn" v-else-if="picker.currentIsLoading">
+                    В маршруте нет других задач — выбрать точку выгрузки не из чего
+                </div>
                 <div class="waybills__picker-scroll" v-if="picker.tasks.length > 1">
                     <table class="waybills__picker-table">
                         <thead>
@@ -141,7 +160,7 @@
                     <button
                         class="waybills__button"
                         type="button"
-                        :disabled="(picker.tasks.length > 1 && !picker.selected) || creating"
+                        :disabled="((picker.tasks.length > 1 || picker.currentIsLoading) && !picker.selected) || creating"
                         @click="createOrder"
                     >{{ creating ? 'Создаётся…' : 'Создать заказ' }}</button>
                     <button class="waybills__link waybills__link_button" type="button" :disabled="creating" @click="picker.open = false">Отмена</button>
@@ -157,6 +176,7 @@
     import api from '@/helpers/api.js'
     import routes from '@/helpers/routes.js'
     import { Common } from '@/helpers/classes.js'
+    import AppCheckbox from '@AppComponents/Inputs/Checkbox/Checkbox.vue'
     import AppSelect from '@AppComponents/Inputs/Select/Select.vue'
 
     const common = new Common()
@@ -193,7 +213,8 @@
         massMethod: null,
         massMethods: [],
         tasks: [],
-        selected: null
+        selected: null,
+        currentIsLoading: false
     })
 
     const toggleQr = async (key, url) => {
@@ -251,6 +272,7 @@
                 open: true,
                 tasks,
                 selected: null,
+                currentIsLoading: false,
                 massMethod: savedMassMethod,
                 massMethods: methods
             }
@@ -267,14 +289,19 @@
     }
 
     const createOrder = async () => {
-        if (picker.value.tasks.length > 1 && !picker.value.selected) return
+        if ((picker.value.tasks.length > 1 || picker.value.currentIsLoading) && !picker.value.selected) return
         if (creating.value || !props.pageId) return
         creating.value = true
         errors.value = []
         try {
             const url = routes.logistic.sabyOrders.replace('${id}', props.pageId)
             const body = {}
-            if (picker.value.selected) body.loading_task_id = picker.value.selected
+            if (picker.value.currentIsLoading) {
+                body.current_is_loading = 1
+                body.unloading_task_id = picker.value.selected
+            } else if (picker.value.selected) {
+                body.loading_task_id = picker.value.selected
+            }
             if (picker.value.massMethod) {
                 body.mass_method = picker.value.massMethod
                 try {

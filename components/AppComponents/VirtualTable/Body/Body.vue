@@ -515,7 +515,6 @@
             let result = base.filter(a => {
                 if (a.action === 'edit') return table.value.canEditRow(row)
                 if (a.action === 'initDelete') {
-                    // Пользователя id=1 удалять нельзя — прячем действие (8588).
                     if (table.value.slug == 'users' && String(row.id) === '1') return false
                     return table.value.canDeleteRow(row)
                 }
@@ -525,6 +524,9 @@
             })
             if (['addresses', 'deals'].includes(table.value.slug) && !row.edit && table.value.permissions?.create_task_p !== 'N') {
                 result = [{ name: 'Создать задачу', action: 'createTaskFromAddress', enabled: true }, ...result]
+            }
+            if (!row.edit && !table.value.options?.isLocalTable && table.value.hasEmployeesField()) {
+                result = [{ name: 'QR-код', action: 'showQr', enabled: true }, ...result]
             }
             return result
         }
@@ -592,9 +594,6 @@
                         enabled: true
                     },
                 ],
-                // Колонка действий в order_products — только удалить.
-                // "Посмотреть" убрали по запросу: в контексте задачи
-                // переход на карточку товара не нужен.
                 products: [
                     {
                         name: 'Удалить',

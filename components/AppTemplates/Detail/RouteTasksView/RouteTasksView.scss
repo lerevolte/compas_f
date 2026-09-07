@@ -98,6 +98,32 @@
     background: #fbfcfd;
 }
 
+.route-tasks-view__task-side {
+    flex: 0 0 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.route-tasks-view__qr {
+    display: flex;
+    justify-content: center;
+    margin: 10px 0;
+
+    svg {
+        width: 240px;
+        height: 240px;
+    }
+}
+
+.route-tasks-view__qr-hint {
+    margin: 0 0 10px;
+    font-size: 13px;
+    color: #8f8f8f;
+    text-align: center;
+}
+
 .route-tasks-view__task-index {
     flex: 0 0 28px;
     width: 28px;

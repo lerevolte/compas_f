@@ -210,12 +210,12 @@
         "template": null
     },
     "expense_invoices": {
-        "title": "Расходные накладные",
+        "title": "Отгрузки",
         "desc": "",
         "template": null
     },
     "product_returns": {
-        "title": "Возвраты",
+        "title": "Оприходования",
         "desc": "",
         "template": null
     }

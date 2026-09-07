@@ -175,7 +175,6 @@
                             menu.visible = val.filter(item => !item.is_hidden)
                             menu.hidden = val.filter(item => item.is_hidden)
                             menu.updateSortOrder()
-                            menu.save(null)
                         }"
                     />
                     <AppSave
@@ -411,12 +410,10 @@
             return JSON.stringify({ visible, hidden })
         }
 
-        // Зафиксировать текущее состояние как «сохранённое» (после загрузки/сейва).
         setBaseline() {
             this.baseline = this.serializeList()
         }
 
-        // Сохранение
         save(role) {
             menuStore.save(role, this.list)
             this.isChanged = false

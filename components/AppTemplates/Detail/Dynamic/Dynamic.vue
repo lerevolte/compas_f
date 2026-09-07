@@ -115,6 +115,7 @@
             v-else-if="isRouteTasksTab"
             :routeId="props.id"
             :isExternal="props.options.isExternal"
+            @openModal="item => emit('action', { action: 'openModal', value: item })"
         />
 
         <AppVirtualTable
@@ -376,8 +377,10 @@
                 }
 
                 this.products.table = response.data.table.tableKeys
-                this.products.list = response.data.table.tableBody
-                emit('action', { action: 'getProducts', value: response.data.table.tableBody?.data ?? [] })
+                this.products.list = Array.isArray(response.data.table.tableBody?.data)
+                    ? response.data.table.tableBody
+                    : this.localProductsList(Array.isArray(response.data.table.tableBody) ? response.data.table.tableBody : [])
+                emit('action', { action: 'getProducts', value: this.products.list.data ?? [] })
                 if (props.options.isGlobalEdit) {
                     if (!this.productsDraft && Array.isArray(props.defaults?.__products)) {
                         this.productsDraft = JSON.parse(JSON.stringify(props.defaults.__products))

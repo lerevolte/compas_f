@@ -79,7 +79,9 @@
 }
 
 .detail-page__header {
-    max-width: max-content;
+    width: fit-content;
+    max-width: 100%;
+    min-width: 0;
     margin-bottom: 25px;
     
     h1 {

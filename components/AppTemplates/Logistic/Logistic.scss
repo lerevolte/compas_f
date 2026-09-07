@@ -404,11 +404,20 @@
             .table__cell {
                 flex: 0 0 var(--cell-size);
                 max-width: var(--cell-size);
+                min-width: 0;
                 flex-direction: row;
                 align-items: center;
                 min-height: 50px;
                 width: auto;
                 padding: 10px;
+                box-sizing: border-box;
+
+                .table__text,
+                .text {
+                    max-width: 100%;
+                    white-space: normal;
+                    overflow-wrap: anywhere;
+                }
             }
 
             .table__cell.table__cell_hide-empty {

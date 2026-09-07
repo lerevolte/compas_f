@@ -89,6 +89,20 @@ function draftProductsFromJson(raw) {
         })
 }
 
+export const qrUrl = (slug, id) => `${window.location.origin}/objects/${slug}/${id}?attach_employee=1`
+
+export const buildQr = async (slug, id) => {
+    const url = qrUrl(slug, id)
+    const qr = { state: true, url, svg: '' }
+    try {
+        const { renderSVG } = await import('uqr')
+        qr.svg = renderSVG(url, { pixelSize: 5, border: 2 })
+    } catch (e) {
+        console.log('qr', e)
+    }
+    return qr
+}
+
 export class Common {
     constructor() {}
 
@@ -221,13 +235,13 @@ export class Common {
     cleanUrl() {
         if (window.location.search) {
             const cleanUrl = window.location.origin + window.location.pathname;
-            window.history.replaceState({}, document.title, cleanUrl);
+            window.history.replaceState(window.history.state, document.title, cleanUrl);
         }
     };
 
     setQueryUrl(query) {
         const cleanUrl = window.location.origin + window.location.pathname + query;
-        window.history.replaceState({}, document.title, cleanUrl);
+        window.history.replaceState(window.history.state, document.title, cleanUrl);
     }
 
     getQueryUrl() {
@@ -510,6 +524,7 @@ export class Table {
         this.permissions = {}
         this.header = []
         this.body = []
+        this.qr = { state: false, url: '', svg: '' }
         this.rowVirtualizer = null
         this._virtScope = null
         this.pages = {
@@ -583,6 +598,10 @@ export class Table {
 
     async getLocalTable(response) {
         try {
+            if (!response.list || Array.isArray(response.list) || !Array.isArray(response.list.data)) {
+                const rows = Array.isArray(response.list) ? response.list : (Array.isArray(response.list?.data) ? response.list.data : [])
+                response.list = { data: rows, total: rows.length, per_page: rows.length, current_page: 1, last_page: 1 }
+            }
             if (response.list.data.length > 0) {
                 response.list.data = response.list.data.map((item, index) => {
                     return {
@@ -1096,6 +1115,14 @@ export class Table {
 
     copyLink(row) {
         this.common.copyLink(`${window.location.origin}/objects/${this.slug}/${row.id}`)
+    }
+
+    hasEmployeesField() {
+        return (this.header ?? []).some(c => c && c.type === 'relation' && !!c.is_plural && (c.related_table === 'employees' || c.key === 'employee_id'))
+    }
+
+    async showQr(row) {
+        this.qr = await buildQr(this.slug, row.id)
     }
 
     copyExternalLink(row) {
@@ -1825,14 +1852,8 @@ export class HeaderEditable {
     }
 
     async showQr({slug, id}) {
-        const url = `${window.location.origin}/objects/${slug}/${id}?attach_employee=1`
-        this.qr = { state: true, url, svg: '' }
-        try {
-            const { renderSVG } = await import('uqr')
-            this.qr.svg = renderSVG(url, { pixelSize: 5, border: 2 })
-        } catch (e) {
-            console.log('qr', e)
-        }
+        this.qr = { state: true, url: qrUrl(slug, id), svg: '' }
+        this.qr = await buildQr(slug, id)
     }
 
     printUpd({slug, id}) {

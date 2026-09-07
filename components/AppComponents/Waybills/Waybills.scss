@@ -141,6 +141,18 @@
     font-size: 13px;
     color: #6d7885;
     margin-bottom: 10px;
+
+    &_warn {
+        color: #B7791F;
+    }
+}
+
+.waybills__picker-mode {
+    margin-bottom: 10px;
+
+    .form__item_checkbox {
+        width: auto;
+    }
 }
 
 .waybills__picker-scroll {

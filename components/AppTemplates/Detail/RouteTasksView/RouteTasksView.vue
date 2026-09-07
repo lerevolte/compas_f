@@ -68,7 +68,16 @@
                     :key="task.id"
                     class="route-tasks-view__task"
                 >
-                    <div class="route-tasks-view__task-index">{{ idx + 1 }}</div>
+                    <div class="route-tasks-view__task-side">
+                        <div class="route-tasks-view__task-index">{{ idx + 1 }}</div>
+                        <AppShowMore
+                            v-if="!props.isExternal"
+                            class="route-tasks-view__task-actions"
+                            :isPreventBottom="true"
+                            :options="taskActions"
+                            @initClick="action => runTaskAction(action, task)"
+                        />
+                    </div>
                     <div class="route-tasks-view__task-body">
                         <div
                             v-for="field in fieldsForTask(task)"
@@ -84,6 +93,23 @@
                 </div>
             </div>
         </div>
+
+        <teleport to="#menu__overlay" v-if="qr.state">
+            <AppModalWarning
+                :options="{
+                    title: 'QR-код',
+                    action: 'close',
+                    actionTitle: 'Закрыть',
+                    template: 'slot'
+                }"
+                @close="qr.state = false"
+            >
+                <div class="route-tasks-view__qr" v-html="qr.svg"></div>
+                <p class="route-tasks-view__qr-hint">
+                    Отсканируйте код, чтобы открыть карточку объекта. Залогиненный пользователь будет добавлен в поле «Сотрудник», если его там ещё нет.
+                </p>
+            </AppModalWarning>
+        </teleport>
     </div>
 </template>
 
@@ -96,30 +122,60 @@
     import AppCheckbox from '@AppComponents/Inputs/Checkbox/Checkbox.vue'
     import AppButton from '@AppComponents/Button/Button.vue'
     import AppPopup from '@AppComponents/Popup/Popup.vue'
+    import AppShowMore from '@AppComponents/ShowMore/ShowMore.vue'
+    import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'
     import IconDragDotted from '@AppIcons/Actions/DragDotted.vue'
     import IconLoader from '@AppIcons/Loader.vue'
     import { format } from 'date-fns'
-    import { Common } from '@/helpers/classes.js'
+    import { Common, buildQr } from '@/helpers/classes.js'
     import { useUserStore } from '@/stores/userStore.js'
     const userStore = useUserStore()
     const common = new Common()
 
     const props = defineProps({
         routeId: { default: null, type: [Number, String] },
-        // Во внешней ссылке routeId = токен, а данные грузятся через
-        // неавторизованный token-эндпоинт.
         isExternal: { default: false, type: Boolean }
     })
 
-    const allFields = ref([])    // [{key, title, type, options, enabled, sort}]
+    const emit = defineEmits(['openModal'])
+
+    const TASK_SLUG = 'logistic_tasks'
+    const allFields = ref([])
     const tasks = ref([])
     const loading = ref(false)
+    const permissions = ref({})
+    const qr = ref({ state: false, url: '', svg: '' })
+
+    const hasEmployeesField = computed(() => allFields.value.some(f => f.type === 'relation' && !!f.is_plural && (f.related_table === 'employees' || f.key === 'employee_id')))
+
+    const taskActions = computed(() => {
+        const list = []
+        if (hasEmployeesField.value) list.push({ name: 'QR-код', action: 'showQr', enabled: true })
+        list.push({ name: 'Открыть', action: 'open', enabled: true })
+        if (permissions.value?.create_p !== 'N') list.push({ name: 'Скопировать', action: 'copy', enabled: true })
+        list.push({ name: 'Скопировать ссылку', action: 'copyLink', enabled: true })
+        if (permissions.value?.external_link_read_p !== 'N') list.push({ name: 'Скопировать внешнюю ссылку', action: 'copyExternalLink', enabled: true })
+        return list
+    })
+
+    const runTaskAction = async (action, task) => {
+        if (action === 'open') {
+            emit('openModal', { id: task.id, slug: TASK_SLUG, type: 'open' })
+        } else if (action === 'copy') {
+            emit('openModal', { id: task.id, slug: TASK_SLUG, type: 'copy' })
+        } else if (action === 'copyLink') {
+            common.copyLink(`${window.location.origin}/objects/${TASK_SLUG}/${task.id}`)
+        } else if (action === 'copyExternalLink') {
+            common.copyExternalLink({ slug: TASK_SLUG, id: task.id })
+        } else if (action === 'showQr') {
+            qr.value = await buildQr(TASK_SLUG, task.id)
+        }
+    }
 
     const visibleFields = computed({
         get: () => allFields.value.filter(f => f.enabled).sort((a, b) => a.sort - b.sort),
         set: (newList) => {
-            // Сохраняем новый порядок только для отображаемых полей.
-            newList.forEach((f, i) => {
+                newList.forEach((f, i) => {
                 const original = allFields.value.find(orig => orig.key === f.key)
                 if (original) original.sort = i
             })
@@ -146,10 +202,7 @@
         }, 3000)
     }
 
-    // Конфиг полей хранится на бэке (один общий на портал), чтобы переживал
-    // перезагрузку и показывался идентично во внешней ссылке (8579).
     const persist = async () => {
-        if (props.isExternal) return // внешняя ссылка — только просмотр
         try {
             const data = allFields.value.map(f => ({ key: f.key, enabled: !!f.enabled, sort: f.sort }))
             await api.callMethod('PUT', routes.logistic.tasksViewFields, { fields: data })
@@ -169,7 +222,6 @@
         const target = allFields.value.find(f => f.key === field.key)
         if (!target) return
         target.enabled = true
-        // Помещаем новое поле в конец видимого списка.
         const maxSort = Math.max(0, ...allFields.value.filter(f => f.enabled).map(f => f.sort))
         target.sort = maxSort + 1
         persist()
@@ -180,8 +232,6 @@
         'created_at', 'updated_at', 'deleted_at'
     ])
 
-    // Конфиг колонок logistic_tasks -> список доступных для отображения полей.
-    // savedConfig — общий конфиг с бэка [{key, enabled, sort}].
     const buildFieldsFromTable = (table, savedConfig) => {
         const hasConfig = Array.isArray(savedConfig) && savedConfig.length > 0
         const fields = (table ?? [])
@@ -207,10 +257,9 @@
     }
 
     const loadFields = async (savedConfig) => {
-        // Берём конфиг таблицы logistic_tasks — там есть весь набор колонок,
-        // включая отключённые.
         try {
             const response = await api.callMethod('GET', '/objects/logistic_tasks/compose?per_page=1')
+            permissions.value = response.data?.permissions ?? {}
             buildFieldsFromTable(response.data?.table, savedConfig)
         } catch (e) {
             console.error('Не удалось получить поля logistic_tasks:', e)
@@ -231,8 +280,6 @@
         }
     }
 
-    // Внешняя ссылка: один token-вызов отдаёт и колонки (table), и задачи
-    // маршрута (list.data, scoping по route_id на сервере). routeId = токен.
     const loadExternal = async () => {
         if (!props.routeId) return
         loading.value = true
@@ -241,8 +288,6 @@
                 .replace('${token}', props.routeId)
                 .replace('${slug}', 'logistic_tasks')
             const response = await api.callMethod('GET', route)
-            // Конфиг полей приходит из того же ответа (route_tasks_view) —
-            // тот же набор/порядок колонок, что настроен внутри портала.
             buildFieldsFromTable(response.data?.table, response.data?.route_tasks_view)
             tasks.value = response.data?.list?.data || []
         } catch (e) {
@@ -327,7 +372,6 @@
             if (typeof raw === 'object') {
                 return raw?.label?.text ?? raw?.label ?? raw?.value ?? '—'
             }
-            // По id ищем подпись в опциях.
             const opt = field.options?.find?.(o => String(o.value) === String(raw))
             return opt ? (opt.label?.text ?? opt.label ?? String(raw)) : String(raw)
         }
@@ -342,7 +386,6 @@
             return labels.filter(x => x !== null && x !== undefined && x !== '').join(', ') || '—'
         }
 
-        // Если значение оказалось JSON-строкой массива/объекта — попытаемся раскрыть.
         if (typeof raw === 'string') {
             const trimmed = raw.trim()
             if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
@@ -357,7 +400,7 @@
                     if (parsed && typeof parsed === 'object') {
                         return parsed.value ?? parsed.text ?? parsed.name ?? JSON.stringify(parsed)
                     }
-                } catch (e) { /* not JSON */ }
+                } catch (e) {}
             }
             return raw
         }

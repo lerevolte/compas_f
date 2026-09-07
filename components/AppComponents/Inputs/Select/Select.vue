@@ -332,11 +332,21 @@
                 }
             }
             const contentRect = contentRef.value.getBoundingClientRect();
+            const selectRect = selectRef.value.getBoundingClientRect();
+            const topBound = props.parentContainer ? props.parentContainer.getBoundingClientRect().top : 0;
+            const spaceAbove = selectRect.top - topBound;
+            const spaceBelow = bottomBound - selectRect.bottom;
+            const overflowsBottom = contentRect.bottom > bottomBound;
 
-            this.state.isTop = props.isPreventBottom ? false : contentRect.bottom > bottomBound;
+            this.state.isTop = props.isPreventBottom
+                ? overflowsBottom && spaceAbove > spaceBelow
+                : overflowsBottom;
 
             if (this.state.isTop) {
-                contentRef.value.style.maxHeight = '';
+                const availableAbove = Math.floor(spaceAbove - 10);
+                contentRef.value.style.maxHeight = contentRect.height > availableAbove && availableAbove > 0
+                    ? `${Math.max(availableAbove, 100)}px`
+                    : '';
             } else {
                 const available = Math.floor(bottomBound - contentRect.top - 10);
                 contentRef.value.style.maxHeight = contentRect.bottom > bottomBound && available > 0

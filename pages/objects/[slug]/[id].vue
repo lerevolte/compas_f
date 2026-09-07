@@ -18,6 +18,7 @@
     import { Common } from '@AppHelpers/classes.js'
 
     const router = useRoute()
+    const vueRouter = useRouter()
 
     const ready = ref(!router.query.attach_employee)
 
@@ -39,7 +40,11 @@
         } catch (e) {
             console.log(e)
         } finally {
-            common.cleanUrl()
+            try {
+                await vueRouter.replace({ path: router.path, query: {} })
+            } catch (e) {
+                common.cleanUrl()
+            }
             ready.value = true
         }
     })

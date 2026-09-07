@@ -50,6 +50,22 @@
       @action="action => table[action.action](action.value)"
     />
   </teleport>
+  <teleport to="#menu__overlay" v-if="table.qr?.state">
+      <AppModalWarning
+          :options="{
+              title: 'QR-код',
+              action: 'close',
+              actionTitle: 'Закрыть',
+              template: 'slot'
+          }"
+          @close="table.qr.state = false"
+      >
+          <div class="table__qr" v-html="table.qr.svg"></div>
+          <p class="table__qr-hint">
+              Отсканируйте код, чтобы открыть карточку объекта. Залогиненный пользователь будет добавлен в поле «Сотрудник», если его там ещё нет.
+          </p>
+      </AppModalWarning>
+  </teleport>
   <teleport to="#menu__overlay" v-if="table.deleteBuffer.state && table.deleteBuffer.type == 'delete'">
       <AppModalWarning 
           :options="{
