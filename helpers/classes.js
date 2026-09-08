@@ -19,13 +19,13 @@ export function isImageSrc(file) {
     return src != '' && src != '[]' && src != '{}' && src != 'null' && src != 'undefined'
 }
 
-export async function openUpdPdf(slug, ids) {
+export async function openUpdPdf(slug, ids, withDocs = false) {
     const common = new Common()
     ids = (ids || []).filter(id => id)
     if (!ids.length) return false
     try {
         const userStore = useUserStore()
-        const response = await axios.get(`${routes.domain}/api/${slug}/upd?ids=${ids.join(',')}`, {
+        const response = await axios.get(`${routes.domain}/api/${slug}/upd?ids=${ids.join(',')}${withDocs ? '&docs=1' : ''}`, {
             headers: { Authorization: `Bearer ${userStore.token}` },
             responseType: 'blob',
             validateStatus: () => true
@@ -950,7 +950,7 @@ export class Table {
     printUpd() {
         const ids = this.body.filter(row => row.isChoose).map(row => row.id).filter(id => id)
         if (!ids.length) return
-        openUpdPdf(this.slug, ids)
+        openUpdPdf(this.slug, ids, true)
     }
 
     createTaskFromAddress(row) {
