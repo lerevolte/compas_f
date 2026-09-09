@@ -422,6 +422,7 @@
             }
 
             .table__cell[data-column-key="isChoose"],
+            .table__cell[data-column-key="clicked"],
             .table__cell[data-column-key="actions"] {
                 justify-content: center;
 

@@ -476,8 +476,12 @@
         table.value.sort(table.value.header[event.getAttribute('data-idx')])
     })
  
+    let rowsObserver = null
+
     onBeforeUnmount(() => {
         resizer.clear()
+        rowsObserver?.disconnect()
+        rowsObserver = null
 
         // Очищаем обработчики
         if (tableRef.value) {
@@ -497,18 +501,24 @@
     })
 
     onMounted(() => {
-        // nextTick(() => resizer.normalizeToContainerMinWidth())
-
-        // Обработчик горизонтального скролла
-        // rAF-склейка скролла для снижения дрожи и reflow
         let scheduled = false
+        const isTouch = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(pointer: coarse)').matches
         const handleScrollRaf = () => {
+            if (isTouch) {
+                fixed.checkStickyCells()
+                return
+            }
             if (scheduled) return
             scheduled = true
             requestAnimationFrame(() => {
                 scheduled = false
                 fixed.checkStickyCells()
             })
+        }
+
+        if (isTouch && typeof MutationObserver !== 'undefined') {
+            rowsObserver = new MutationObserver(() => fixed.checkStickyCells())
+            rowsObserver.observe(tableRef.value, { childList: true, subtree: true })
         }
 
         // Добавляем обработчик скролла (passive)
