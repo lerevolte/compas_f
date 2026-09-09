@@ -510,7 +510,7 @@
         rowActions(rowIndex) {
             const row = table.value.body[rowIndex]
             if (table.value.options?.isTrash) return this.actions.trash
-            if (table.value.slug == 'products') return table.value.permissions?.delete_p == 'N' ? [] : this.actions.products
+            if (table.value.slug == 'products' && table.value.options?.isLocalTable) return table.value.permissions?.delete_p == 'N' ? [] : this.actions.products
             const base = row.edit ? this.actions.edit : this.actions.default
             let result = base.filter(a => {
                 if (a.action === 'edit') return table.value.canEditRow(row)
@@ -754,14 +754,11 @@
             if (row.edit) return
             if (table.value.permissions?.update_p === 'N') return
 
-            if (table.value.slug == 'products') {
+            if (table.value.slug == 'products' && table.value.options?.isLocalTable) {
                 table.value.backupLocalBody()
             } else {
                 table.value.backup.body = JSON.parse(JSON.stringify([...table.value.backup.body, row]))
             }
-            // Раньше тут ставили row.isChoose = true, и чекбокс выделения
-            // визуально включался при любой правке поля в строке. Теперь
-            // isChoose отвечает только за явный клик пользователя на чекбокс.
             row.edit = true
             table.value.state = 'edit'
         }

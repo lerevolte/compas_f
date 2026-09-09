@@ -535,8 +535,6 @@
       }
 
       @media (max-width: 990px) {
-        // На мобильном лейбл во всю ширину «ловит» клики из соседних областей карточки
-        // и непреднамеренно тоггалит чекбокс. Сжимаем label до содержимого.
         width: auto;
         height: auto;
 
@@ -697,8 +695,6 @@
       text-align: left;
     }
 
-    // Чекбокс выделения — жёстко к левому краю карточки (8661): сам чекбокс
-    // прижимаем без авто-центрирования и отступов.
     .table__cell[data-column-key="isChoose"] .form__item_checkbox {
       width: auto;
       align-self: flex-start;
@@ -726,6 +722,21 @@
 
     .table__cell .select.select_disabled .select__value {
       left: 0;
+    }
+
+    .table__body .table__cell > .form__item_checkbox {
+      align-self: flex-start;
+    }
+
+    .table__cell .table__file {
+      position: static;
+      height: auto;
+      max-height: none;
+
+      .fancybox__item:first-child .fancybox-item__img {
+        height: 60px;
+        min-height: 60px;
+      }
     }
 
     .table__body .table__cell[data-column-key="product_id"] .select.select_icon figcaption {

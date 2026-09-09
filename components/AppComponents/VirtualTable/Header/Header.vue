@@ -395,9 +395,7 @@
             const scrollLeft = tableRef.value.scrollLeft
             const isScrolledHorizontally = scrollLeft > 0
 
-            // На мобильных ячейки выводятся друг под другом (карточный вид) —
-            // фиксация и transform только мешают. Сбрасываем все позиционные стили.
-            const isMobileLayout = typeof window !== 'undefined' && window.innerWidth <= 990
+            const isMobileLayout = typeof window !== 'undefined' && window.innerWidth <= 990 && !tableRef.value.closest('.logistic')
             if (isMobileLayout) {
                 fixedCells.forEach(cell => {
                     if (cell.style.transform) cell.style.transform = ''

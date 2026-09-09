@@ -82,12 +82,7 @@
                             }"
                             @update:modelValue="() => {
                                 if (isInitGroup) {
-                                    const enabledItems = settings.nest.templateField.list.filter(p => p.enabled)
-                                    let findedLink = visible.find(item => item.id == settings.nest.templateField.id) ?? hidden.find(item => item.id == settings.nest.templateField.id)
-                                    if (findedLink) {
-                                        findedLink.children = JSON.parse(JSON.stringify(enabledItems))
-                                        emit('update:modelList', [...visible, ...hidden])
-                                    }
+                                    settings.nest.apply()
                                 } else {
                                     emit('enableField', field)
                                 }
@@ -206,13 +201,6 @@
                     <div class="settings__item popup__option settings__item_submenu" v-show="settings.nest.templateField.list.filter(p => p.enabled).length > 0" @click="settings.nest.set({label: 'Порядок', value: 'isDrag'})">
                         Порядок
                         <SelectArrowSubmenu />
-                    </div>
-                    <div
-                        v-show="settings.nest.templateField.list.filter(p => p.enabled).length > 0 && settings.nest.templateField.name != ''"
-                        class="settings__item popup__option popup__option_blue"
-                        @click="settings.nest.save()"
-                    >
-                        Сохранить
                     </div>
                     <div class="settings__item popup__option popup__option_red" v-show="settings.nest.statusTemplate == 'update'" @click="settings.nest.initDelete()">
                         Удалить
@@ -404,6 +392,32 @@
         saveName() {
             this.modal.state = false
             this.templateField.name = this.modal.name
+            this.apply()
+        }
+
+        apply() {
+            if (!isInitGroup.value) return
+            const enabledItems = this.templateField.list.filter(item => item.enabled)
+            const children = JSON.parse(JSON.stringify(enabledItems))
+            let findedLink = visible.value.find(item => item.id == this.templateField.id) ?? hidden.value.find(item => item.id == this.templateField.id)
+
+            if (findedLink) {
+                findedLink.name = this.templateField.name
+                findedLink.children = children
+            } else {
+                if (this.templateField.name == '' || enabledItems.length == 0) return
+                visible.value.push({
+                    id: this.templateField.id,
+                    name: this.templateField.name,
+                    enabled: 1,
+                    is_group: 1,
+                    is_hidden: 0,
+                    children
+                })
+                this.statusTemplate = 'update'
+            }
+
+            emit('update:modelList', [...visible.value, ...hidden.value])
         }
 
         initCreate() {
@@ -439,36 +453,6 @@
             }
         }
 
-        async save() {
-            this.templateField.list = this.templateField.list.filter(item => item.enabled)
-            closePopup()
-
-            if (this.statusTemplate == 'create') {
-                visible.value.push({
-                    id: this.templateField.id,
-                    name: this.templateField.name,
-                    enabled: 1,
-                    is_group: 1,
-                    is_hidden: 0,
-                    children: JSON.parse(JSON.stringify(this.templateField.list))
-                })
-            } else if (this.statusTemplate == 'update') {
-                let findedLink = visible.value.find(item => item.id == this.templateField.id) ?? hidden.value.find(item => item.id == this.templateField.id)
-                if (findedLink) {
-                    findedLink.name = this.templateField.name
-                    findedLink.children = JSON.parse(JSON.stringify(this.templateField.list))
-                }
-            }
-
-            for (let field of this.templateField.list) {
-                field.enabled = false
-            }
-
-            this.statusTemplate = null
-            await nextTick();
-            emit('update:modelList', [...visible.value, ...hidden.value])
-        }
-
         initDelete() {
             this.modal.state = true
             this.modal.type = 'delete'
@@ -499,12 +483,7 @@
             emit('dragEvent', false)
 
             if (isInitGroup.value) {
-                const enabledItems = this.templateField.list.filter(p => p.enabled)
-                let findedLink = visible.value.find(item => item.id == this.templateField.id) ?? hidden.value.find(item => item.id == this.templateField.id)
-                if (findedLink) {
-                    findedLink.children = JSON.parse(JSON.stringify(enabledItems))
-                    emit('update:modelList', [...visible.value, ...hidden.value])
-                }
+                this.apply()
             }
         }
     }
