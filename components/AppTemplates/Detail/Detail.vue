@@ -593,6 +593,7 @@
             this.refreshProductsDraft()
             const rows = (Array.isArray(this.productsDraft) ? this.productsDraft : [])
                 .filter(row => row.id || (row.product_name && String(row.product_name).trim() !== ''))
+                .filter(row => row.product_count !== null && row.product_count !== undefined && String(row.product_count).trim() !== '' && Number(row.product_count) > 0)
             if (!rows.length) return true
             try {
                 const response = await api.callMethod('POST', routes.relations.validateProducts, {
@@ -623,6 +624,7 @@
             if (!Array.isArray(draft)) return false
             const products = draft
                 .filter(row => row.id || (row.product_name && String(row.product_name).trim() !== ''))
+                .filter(row => row.product_count !== null && row.product_count !== undefined && String(row.product_count).trim() !== '' && Number(row.product_count) > 0)
                 .map(row => ({
                     id: row.id,
                     name: row.name,
