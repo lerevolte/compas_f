@@ -81,6 +81,7 @@
             @action="item => tabs[item.action](item.value)"
         />
         <DetailDynamic
+            ref="dynamicRef"
             :tabs="tabs"
             :id="detail.id"
             :slug="props.slug ?? router.params.slug"
@@ -156,6 +157,7 @@
     import routes from '@/helpers/routes.js'
 
     const textareaRef = ref(null)
+    const dynamicRef = ref(null)
     const router = useRoute()
     const common = new Common()
 
@@ -449,6 +451,13 @@
             this.productsDraft = Array.isArray(rows) ? rows : null
         }
 
+        refreshProductsDraft() {
+            if (!this.isGlobalEdit) return
+            try {
+                dynamicRef.value?.snapshotProducts?.()
+            } catch (e) {}
+        }
+
         async basedProducts(entity) {
             let products = JSON.parse(JSON.stringify(this.productsList || [])).map(({ isChoose, edit, local_id, ...row }) => row)
             const withRemaining = (row, remaining) => ({
@@ -581,6 +590,7 @@
             const isChain = (props.source.slug === 'deals' && SHIPMENT_SOURCES.includes(target))
                 || (SHIPMENT_SOURCES.includes(props.source.slug) && ['expense_invoices', 'product_returns'].includes(target))
             if (!isChain) return true
+            this.refreshProductsDraft()
             const rows = (Array.isArray(this.productsDraft) ? this.productsDraft : [])
                 .filter(row => row.id || (row.product_name && String(row.product_name).trim() !== ''))
             if (!rows.length) return true
@@ -649,36 +659,40 @@
             if (this.isGlobalEdit) {
                 const wasCreate = !this.id
                 const slug = props.slug ?? router.params.slug
+                if (wasCreate) {
+                    this.refreshProductsDraft()
+                }
+                const draftRows = Array.isArray(this.productsDraft) ? this.productsDraft : null
                 this.isGlobalEdit = false
                 this.isCopy = false
                 this.id = item.id
+                emit('updateMetaHeader', {
+                    title: item.title || item.header_title || '',
+                    href: {
+                        id: item.id,
+                        slug: detail.value.slug
+                    },
+                })
 
-                const draftRows = Array.isArray(this.productsDraft) ? this.productsDraft : null
                 if (wasCreate && props.source?.slug && props.source?.id && item.id) {
+                    let draftSaved = false
+                    if (draftRows) {
+                        draftSaved = (await this.saveDraftProducts(slug, item.id, draftRows)) === true
+                    }
                     try {
                         await api.callMethod('POST', routes.relations.create, {
                             source_slug: props.source.slug,
                             source_id: props.source.id,
                             target_slug: slug,
                             target_id: item.id,
-                            copy_products: !draftRows
+                            copy_products: !draftSaved
                         })
                         relationsVersion.value++
                     } catch (e) {}
-                    if (draftRows) {
-                        await this.saveDraftProducts(slug, item.id, draftRows)
-                    }
                 } else if (wasCreate && item.id) {
                     await this.saveDraftProducts(slug, item.id, draftRows)
                 }
                 this.updateComponent++
-                emit('updateMetaHeader', {
-                    title: item.header_title || '',
-                    href: {
-                        id: item.id,
-                        slug: detail.value.slug
-                    },
-                })
             }
 
         }

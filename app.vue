@@ -151,6 +151,10 @@
     }
 
     updateMetaHeader(item) {
+      const last = this.modal[this.modal.length - 1]
+      if (last && item.href?.id && last.slug === item.href?.slug && !last.id) {
+        last.id = item.href.id
+      }
       window.history.replaceState(window.history.state, document.title, window.location.origin +  `/objects/${item.href?.slug}/${item.href?.id}`);
       useHead({
         title: item.title

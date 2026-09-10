@@ -477,6 +477,10 @@
 
     const detail = ref(new Detail())
 
+    defineExpose({
+        snapshotProducts: () => detail.value.snapshotProducts()
+    })
+
     watch(() => props.tabs.active?.tab, (next, prev) => {
         if (prev == 'products') {
             detail.value.leaveProductsTab()

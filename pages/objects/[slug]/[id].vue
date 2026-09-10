@@ -69,6 +69,9 @@
     })
 
     const updateMetaHeader = (item) => {
+      if (item?.href?.slug && item?.href?.id) {
+        window.history.replaceState(window.history.state, document.title, window.location.origin + `/objects/${item.href.slug}/${item.href.id}`)
+      }
       useHead({
         title: item?.title
       })
