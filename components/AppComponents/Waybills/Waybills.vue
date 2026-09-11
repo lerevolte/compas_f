@@ -148,6 +148,18 @@
                     <AppSelect
                         :isPreventBottom="true"
                         :options="{
+                            id: 'saby_order_vehicle_type',
+                            title: picker.carName ? ('Тип требуемого ТС (' + picker.carName + ')') : 'Тип требуемого ТС',
+                            list: picker.vehicleTypes,
+                            isHaveNull: true
+                        }"
+                        v-model="picker.vehicleType"
+                    />
+                </div>
+                <div class="waybills__picker-field">
+                    <AppSelect
+                        :isPreventBottom="true"
+                        :options="{
                             id: 'saby_order_mass_method',
                             title: 'Метод определения массы',
                             list: picker.massMethods,
@@ -160,7 +172,7 @@
                     <button
                         class="waybills__button"
                         type="button"
-                        :disabled="((picker.tasks.length > 1 || picker.currentIsLoading) && !picker.selected) || creating"
+                        :disabled="((picker.tasks.length > 1 || picker.currentIsLoading) && !picker.selected) || !picker.vehicleType || creating"
                         @click="createOrder"
                     >{{ creating ? 'Создаётся…' : 'Создать заказ' }}</button>
                     <button class="waybills__link waybills__link_button" type="button" :disabled="creating" @click="picker.open = false">Отмена</button>
@@ -212,6 +224,9 @@
         open: false,
         massMethod: null,
         massMethods: [],
+        vehicleType: null,
+        vehicleTypes: [],
+        carName: null,
         tasks: [],
         selected: null,
         currentIsLoading: false
@@ -268,13 +283,26 @@
             if (savedMassMethod && !methods.some(m => String(m.value) === String(savedMassMethod))) {
                 savedMassMethod = null
             }
+            const vehicleTypes = response.data?.vehicle_types || []
+            let vehicleType = response.data?.vehicle_type ? String(response.data.vehicle_type) : null
+            if (!vehicleType) {
+                try {
+                    vehicleType = localStorage.getItem('saby_vehicle_type') || null
+                } catch (e) {}
+            }
+            if (vehicleType && !vehicleTypes.some(v => String(v.value) === String(vehicleType))) {
+                vehicleType = null
+            }
             picker.value = {
                 open: true,
                 tasks,
                 selected: null,
                 currentIsLoading: false,
                 massMethod: savedMassMethod,
-                massMethods: methods
+                massMethods: methods,
+                vehicleType,
+                vehicleTypes,
+                carName: response.data?.car_name || null
             }
         } catch (e) {
             errors.value = ['Не удалось загрузить данные маршрута']
@@ -290,7 +318,7 @@
 
     const createOrder = async () => {
         if ((picker.value.tasks.length > 1 || picker.value.currentIsLoading) && !picker.value.selected) return
-        if (creating.value || !props.pageId) return
+        if (!picker.value.vehicleType || creating.value || !props.pageId) return
         creating.value = true
         errors.value = []
         try {
@@ -301,6 +329,12 @@
                 body.unloading_task_id = picker.value.selected
             } else if (picker.value.selected) {
                 body.loading_task_id = picker.value.selected
+            }
+            if (picker.value.vehicleType) {
+                body.vehicle_type = picker.value.vehicleType
+                try {
+                    localStorage.setItem('saby_vehicle_type', String(picker.value.vehicleType))
+                } catch (e) {}
             }
             if (picker.value.massMethod) {
                 body.mass_method = picker.value.massMethod

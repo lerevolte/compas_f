@@ -2363,32 +2363,31 @@ export class Section {
                 ]
             })
 
-            for (let column in columns) {
-                for (let section of columns[column]) {
-                    for (let field of section.fields) {
-                        if (field.type == 'text_group') {
-                            for (let subfield of field.fields) {
-                                if (subfield.edit) {
-                                    if (subfield.type == 'relation' && subfield.value.value) {
-                                        if (subfield.value.localOptions) {
-                                            subfield.value.localOptions = subfield.value.localOptions.filter(p => p != null && p.value != null)
-                                        }
-                                        subfield.value.value = subfield.value?.value.filter(p => p)
-                                    }
-                                    this.buffer.backup = this.buffer.backup.filter(f => f.id != subfield.id)
-                                    subfield.edit = false
-                                }
+            const finishField = (field) => {
+                if (!field.edit) return
+                if (field.type == 'relation' && field.value?.value) {
+                    if (Array.isArray(field.value.localOptions)) {
+                        field.value.localOptions = field.value.localOptions.filter(p => p != null && p.value != null)
+                    }
+                    field.value.value = Array.isArray(field.value.value) ? field.value.value.filter(p => p) : field.value.value
+                }
+                this.buffer.backup = this.buffer.backup.filter(f => f.id != field.id)
+                field.edit = false
+            }
+            try {
+                for (let column in columns) {
+                    for (let section of columns[column]) {
+                        for (let field of section.fields) {
+                            if (field.type == 'text_group') {
+                                for (let subfield of field.fields) finishField(subfield)
+                            } else {
+                                finishField(field)
                             }
-                        } else if (field.edit) {
-                            if (field.type == 'relation' && field.value.value) {
-                                field.value.localOptions = field.value.localOptions.filter(p => p != null && p.value != null)
-                                field.value.value = field.value?.value.filter(p => p)
-                            }
-                            this.buffer.backup = this.buffer.backup.filter(f => f.id != field.id)
-                            field.edit = false
                         }
                     }
                 }
+            } catch (error) {
+                console.log('save cleanup', error)
             }
             emit('action', { action: 'savePage', value: response })
             this.buffer.backup = []
