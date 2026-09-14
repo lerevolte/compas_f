@@ -8,6 +8,7 @@
           @closeDetail="item => emit('closeDetail', item)"
           @updateMetaHeader="item => updateMetaHeader(item)"
       />
+      <header v-else id="mobile-menu-target" class="detail-page__header"></header>
     </main>
 </template>
 
@@ -18,6 +19,7 @@
     import { Common } from '@AppHelpers/classes.js'
 
     const router = useRoute()
+    const vueRouter = useRouter()
 
     const ATTACH_RESULT_KEY = 'attach_employee_result'
 
@@ -47,6 +49,9 @@
         }
         let result = ''
         try {
+            sessionStorage.removeItem(ATTACH_RESULT_KEY)
+        } catch (e) {}
+        try {
             const url = routes.detail.attach_employee
                 .replace('${slug}', router.params.slug)
                 .replace('${id}', router.params.id)
@@ -62,10 +67,12 @@
         } catch (e) {
             result = 'error:'
         }
-        try {
-            sessionStorage.setItem(ATTACH_RESULT_KEY, result)
-        } catch (e) {}
-        window.location.replace(window.location.origin + window.location.pathname)
+        ready.value = true
+        await nextTick()
+        const query = { ...router.query }
+        delete query.attach_employee
+        await vueRouter.replace({ path: router.path, query })
+        showAttachResult(common, result)
     })
 
     const updateMetaHeader = (item) => {

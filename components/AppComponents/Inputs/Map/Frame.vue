@@ -44,6 +44,10 @@
             default: '',
             type: String
         },
+        markerOffset: {
+            default: () => [-9, -9],
+            type: Array
+        },
         defaultCenter: {
             default: () => [55.755864, 37.617698],
             type: Array
@@ -106,11 +110,20 @@
         });
     };
 
+    let markerLayoutClass = null;
+
+    const markerLayout = () => {
+        if (!markerLayoutClass && window.ymaps?.templateLayoutFactory) {
+            markerLayoutClass = window.ymaps.templateLayoutFactory.createClass('<div>{{ properties.markerContent|raw }}</div>');
+        }
+        return markerLayoutClass;
+    };
+
     const placemarkOptions = computed(() => {
         const opts = { hideIconOnBalloonOpen: false };
-        if (props.markerContent && window.ymaps?.templateLayoutFactory) {
-            opts.iconLayout = window.ymaps.templateLayoutFactory.createClass(props.markerContent);
-            opts.iconOffset = [-9, -9];
+        if (props.markerContent && markerLayout()) {
+            opts.iconLayout = markerLayout();
+            opts.iconOffset = props.markerOffset;
             return opts;
         }
         if (props.markerOptions?.imageHref) {
@@ -138,7 +151,6 @@
         if (!yMap || !window.ymaps) return;
         const points = normalizedPoints.value;
 
-        // Один маркер — простой кейс адресного поля.
         if (points.length === 0) {
             if (placemark) {
                 yMap.geoObjects.remove(placemark);
@@ -150,10 +162,11 @@
         if (points.length === 1) {
             const coords = points[0];
             if (!placemark) {
-                placemark = new window.ymaps.Placemark(coords, {}, placemarkOptions.value);
+                placemark = new window.ymaps.Placemark(coords, { markerContent: props.markerContent }, placemarkOptions.value);
                 yMap.geoObjects.add(placemark);
             } else {
                 placemark.geometry.setCoordinates(coords);
+                placemark.properties.set('markerContent', props.markerContent);
                 placemark.options.set(placemarkOptions.value);
             }
             if (!isPointVisible(coords)) {
@@ -162,12 +175,11 @@
             return;
         }
 
-        // Несколько точек — чистим старое, добавляем по placemark, fit bounds.
         yMap.geoObjects.removeAll();
         placemark = null;
         const collection = new window.ymaps.GeoObjectCollection();
         points.forEach(coords => {
-            collection.add(new window.ymaps.Placemark(coords, {}, placemarkOptions.value));
+            collection.add(new window.ymaps.Placemark(coords, { markerContent: props.markerContent }, placemarkOptions.value));
         });
         yMap.geoObjects.add(collection);
         const bounds = collection.getBounds();
@@ -195,9 +207,6 @@
             yMap = new window.ymaps.Map(mapContainer.value, {
                 center: initialCenter,
                 zoom: initialZoom,
-                // Стандартный zoomControl садится в верхний-левый угол. Нам нужен
-                // зум по центру по вертикали слева — поэтому не добавляем его
-                // здесь, а создаём ниже с вычисленной позицией top.
                 controls: [],
                 behaviors: ['drag', 'scrollZoom', 'multiTouch', 'dblClickZoom']
             }, {
@@ -209,9 +218,6 @@
                 emit('map-click', event.get('coords'));
             });
 
-            // Контрол зума по центру по вертикали (слева). Yandex позиционирует
-            // контролы абсолютным top/left, «центра» у него нет — считаем top
-            // от высоты контейнера карты (примерная высота контрола ~80px).
             try {
                 const containerH = mapContainer.value.offsetHeight || 360;
                 const zoomControl = new window.ymaps.control.ZoomControl({
@@ -222,7 +228,6 @@
                 yMap.controls.add(zoomControl);
             } catch (e) {}
 
-            // Подстраховка на ресайз контейнера (например модалка).
             if (typeof ResizeObserver !== 'undefined') {
                 resizeObserver = new ResizeObserver(() => {
                     if (yMap && yMap.container && typeof yMap.container.fitToViewport === 'function') {
@@ -243,6 +248,12 @@
         if (!yMap) return;
         renderPoints();
     }, { deep: true });
+
+    watch(() => props.markerContent, (content) => {
+        if (placemark) {
+            placemark.properties.set('markerContent', content);
+        }
+    });
 
     onMounted(() => {
         initMap();

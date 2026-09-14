@@ -156,6 +156,18 @@
                         v-model="picker.vehicleType"
                     />
                 </div>
+                <div class="waybills__picker-field" v-if="!picker.carBodyType">
+                    <AppSelect
+                        :isPreventBottom="true"
+                        :options="{
+                            id: 'saby_order_body_type',
+                            title: picker.carName ? ('Кузов (' + picker.carName + ')') : 'Кузов',
+                            list: picker.bodyTypes,
+                            isHaveNull: true
+                        }"
+                        v-model="picker.bodyType"
+                    />
+                </div>
                 <div class="waybills__picker-field">
                     <AppSelect
                         :isPreventBottom="true"
@@ -226,6 +238,9 @@
         massMethods: [],
         vehicleType: null,
         vehicleTypes: [],
+        bodyType: null,
+        bodyTypes: [],
+        carBodyType: null,
         carName: null,
         tasks: [],
         selected: null,
@@ -293,6 +308,17 @@
             if (vehicleType && !vehicleTypes.some(v => String(v.value) === String(vehicleType))) {
                 vehicleType = null
             }
+            const bodyTypes = response.data?.body_types || []
+            const carBodyType = response.data?.body_type ? String(response.data.body_type) : null
+            let bodyType = carBodyType
+            if (!bodyType) {
+                try {
+                    bodyType = localStorage.getItem('saby_body_type') || null
+                } catch (e) {}
+            }
+            if (bodyType && !bodyTypes.some(v => String(v.value) === String(bodyType))) {
+                bodyType = null
+            }
             picker.value = {
                 open: true,
                 tasks,
@@ -302,6 +328,9 @@
                 massMethods: methods,
                 vehicleType,
                 vehicleTypes,
+                bodyType,
+                bodyTypes,
+                carBodyType,
                 carName: response.data?.car_name || null
             }
         } catch (e) {
@@ -334,6 +363,12 @@
                 body.vehicle_type = picker.value.vehicleType
                 try {
                     localStorage.setItem('saby_vehicle_type', String(picker.value.vehicleType))
+                } catch (e) {}
+            }
+            if (!picker.value.carBodyType && picker.value.bodyType) {
+                body.body_type = picker.value.bodyType
+                try {
+                    localStorage.setItem('saby_body_type', String(picker.value.bodyType))
                 } catch (e) {}
             }
             if (picker.value.massMethod) {

@@ -101,7 +101,7 @@
         const isPortalPath = url && /^\/(objects|logistic|external)\//.test(url.pathname)
         if (url && (url.origin === window.location.origin || isPortalPath)) {
             close()
-            window.location.href = window.location.origin + url.pathname + url.search + url.hash
+            navigateTo(url.pathname + url.search + url.hash)
             return true
         }
         const now = Date.now()

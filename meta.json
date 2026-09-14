@@ -218,5 +218,10 @@
         "title": "Оприходования",
         "desc": "",
         "template": null
+    },
+    "pickups": {
+        "title": "Самовывозы",
+        "desc": "",
+        "template": null
     }
 }

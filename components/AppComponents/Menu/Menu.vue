@@ -500,7 +500,7 @@
         }
     })
 
-    watch(() => route.path, () => {
+    watch(() => [route.path, route.query.attach_employee], () => {
         menu.value.isOpen = false
         popupRef.value?.popup?._close?.()
         isClient.value = false

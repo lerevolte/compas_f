@@ -190,6 +190,7 @@
                     <AppGeoposition
                         v-else-if="field.type == 'geoposition'"
                         :options="{ ...field }"
+                        :pageId="props.pageId"
                     />
 
                     <AppRouteStatuses

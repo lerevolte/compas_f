@@ -214,5 +214,11 @@
         "title_singular": "Оприходование",
         "title_plural": "Оприходования",
         "color": "#C0392B"
+    },
+    "pickups": {
+        "slug": "pickups",
+        "title_singular": "Самовывоз",
+        "title_plural": "Самовывозы",
+        "color": "#5DAE8B"
     }
 }
