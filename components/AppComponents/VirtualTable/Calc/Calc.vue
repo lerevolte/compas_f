@@ -39,7 +39,7 @@
             </div>
             <div class="table-calc__item" v-if="hasShipped">
                 <span class="table-calc__label">
-                    Отгружено:
+                    Фактическое кол-во:
                 </span>
                 <strong class="table-calc__value">
                     {{ common.transformPrice(calculateContent.shipped, 0) }}

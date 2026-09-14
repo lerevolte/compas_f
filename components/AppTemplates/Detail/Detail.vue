@@ -474,18 +474,25 @@
                 product_shipped: 0
             })
             const isReturn = entity.slug === 'product_returns' && SHIPMENT_SOURCES.includes(this.slug)
-            const isChain = (entity.slug === 'expense_invoices' && SHIPMENT_SOURCES.includes(this.slug))
+            let isChain = (entity.slug === 'expense_invoices' && SHIPMENT_SOURCES.includes(this.slug))
                 || (this.slug === 'deals' && SHIPMENT_SOURCES.includes(entity.slug))
 
-            if (isReturn) {
-                let usage = []
+            let checkData = null
+            if (isReturn || isChain) {
                 try {
                     const url = routes.relations.productsCheck.replace('${slug}', this.slug).replace('${id}', this.id)
                     const response = await api.callMethod('GET', url)
-                    usage = response?.status == 200 ? (response.data?.usage ?? []) : []
+                    checkData = response?.status == 200 ? (response.data ?? null) : null
                 } catch (e) {
-                    usage = []
+                    checkData = null
                 }
+            }
+            if (isReturn && checkData?.loading) {
+                isChain = true
+            }
+
+            if (isReturn && !isChain) {
+                const usage = checkData?.usage ?? []
                 const find = (row) => {
                     const id = Number(row.id || row.product_id?.value?.[0] || 0)
                     const name = String(row.product_name ?? '').trim().toLowerCase()
@@ -503,14 +510,7 @@
             }
 
             if (isChain) {
-                let usage = []
-                try {
-                    const url = routes.relations.productsCheck.replace('${slug}', this.slug).replace('${id}', this.id)
-                    const response = await api.callMethod('GET', url)
-                    usage = response?.status == 200 ? (response.data?.usage ?? []) : []
-                } catch (e) {
-                    usage = []
-                }
+                const usage = checkData?.usage ?? []
                 const find = (row) => {
                     const id = Number(row.id || row.product_id?.value?.[0] || 0)
                     const name = String(row.product_name ?? '').trim().toLowerCase()
@@ -696,7 +696,7 @@
                 }
                 this.updateComponent++
             }
-
+            relationsVersion.value++
         }
         
         updateMetaHeader(meta) {
