@@ -45,7 +45,7 @@
             })"
         />
     
-        <div class="dynamin__group" v-if="props.tabs.active?.tab == 'products'">
+        <div class="dynamin__group" v-if="!props.options.isModule && props.tabs.active?.tab == 'products'">
             <AppVirtualTable
                 ref="productsTableRef"
                 :pageId="props.id"
@@ -88,7 +88,7 @@
         </div>
 
         <AppHistory
-            v-else-if="props.tabs.active?.tab == 'history'"
+            v-else-if="!props.options.isModule && props.tabs.active?.tab == 'history'"
             :title="'История изменений'"
             :history="detail.history.fields"
             :loading="detail.history.loading"
@@ -100,14 +100,14 @@
         />
     
         <AppRelatedObjects
-            v-else-if="props.tabs.active?.tab == 'relations'"
+            v-else-if="!props.options.isModule && props.tabs.active?.tab == 'relations'"
             :id="props.id"
             :slug="props.slug"
             @openModal="item => emit('action', { action: 'openModal', value: { ...item, type: 'detail' } })"
         />
 
         <AppPrintDocuments
-            v-else-if="props.tabs.active?.tab == 'print_docs'"
+            v-else-if="!props.options.isModule && props.tabs.active?.tab == 'print_docs'"
             :id="props.id"
             :slug="props.slug"
             @openModal="item => emit('action', { action: 'openModal', value: { ...item, type: 'detail' } })"
