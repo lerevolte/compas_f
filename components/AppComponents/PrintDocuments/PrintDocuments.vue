@@ -3,23 +3,32 @@
         <IconLoader class="print-docs__loader" v-if="loading" />
 
         <template v-else>
-        <div class="print-docs__card print-docs__card_upd" v-if="isUpdSlug">
+        <div
+            class="print-docs__card print-docs__card_upd"
+            v-if="isUpdSlug"
+            :class="{ 'print-docs__card_checked': updChecked }"
+            @click="updChecked = !updChecked"
+        >
+            <AppCheckbox
+                class="print-docs__checkbox"
+                :modelValue="updChecked"
+                :options="{ title: '' }"
+                @update:modelValue="updChecked = !updChecked"
+                @click.stop
+            />
             <div class="print-docs__info">
                 <div class="print-docs__row">
                     <span class="print-docs__entity">УПД</span>
                 </div>
                 <div class="print-docs__name">Универсальный передаточный документ</div>
             </div>
-            <AppButton class="button_fill" :class="{'skeleton': updLoading}" @click="printUpd">
-                Распечатать УПД
-            </AppButton>
         </div>
 
-        <div class="print-docs__empty" v-if="!docs.length">
+        <div class="print-docs__empty" v-if="!docs.length && !isUpdSlug">
             Связанных документов пока нет — создайте счет или накладную через «Создать на основании»
         </div>
 
-        <template v-if="docs.length">
+        <template v-if="docs.length || isUpdSlug">
             <div
                 class="print-docs__card"
                 v-for="doc in docs"
@@ -63,10 +72,11 @@
             <div class="print-docs__actions">
                 <AppButton
                     class="button_fill"
-                    :disabled="!checkedFiles.length"
+                    :class="{'skeleton': updLoading}"
+                    :disabled="!checkedCount"
                     @click="print"
                 >
-                    Печатать{{ checkedFiles.length ? ` (${checkedFiles.length})` : '' }}
+                    Печатать{{ checkedCount ? ` (${checkedCount})` : '' }}
                 </AppButton>
             </div>
         </template>
@@ -116,20 +126,21 @@
         .flatMap(doc => doc.files))
 
     const isUpdSlug = computed(() => UPD_SLUGS.includes(props.slug))
+    const updChecked = ref(true)
     const updLoading = ref(false)
-    const printUpd = async () => {
-        if (updLoading.value) return
-        updLoading.value = true
-        try {
-            await openUpdPdf(props.slug, [props.id])
-        } finally {
-            updLoading.value = false
-        }
-    }
+    const checkedCount = computed(() => checkedFiles.value.length + (isUpdSlug.value && updChecked.value ? 1 : 0))
 
-    const print = () => {
+    const print = async () => {
         for (const file of checkedFiles.value) {
             window.open(file.url, '_blank', 'noopener')
+        }
+        if (isUpdSlug.value && updChecked.value && !updLoading.value) {
+            updLoading.value = true
+            try {
+                await openUpdPdf(props.slug, [props.id])
+            } finally {
+                updLoading.value = false
+            }
         }
     }
 
