@@ -22,6 +22,8 @@
                     :section="item"
                     :options="{
                         isModule: props.options.isModule,
+                        module: props.options.module,
+                        canEditLayout: props.options.canEditLayout,
                         isDisableFooter: props.options.isDisableFooter,
                         isGlobalEdit: props.options.isGlobalEdit,
                         isExternal: props.options.isExternal,
@@ -45,7 +47,7 @@
                 />
             </template>
             <template #footer>
-                <AppButon class="button_text column-fields__button" @click="section.initCreate(index)" v-if="!props.options.isDisableFooter && !props.options.isGlobalEdit && !props.options?.isModule && userStore.user?.is_admin">
+                <AppButon class="button_text column-fields__button" @click="section.initCreate(index)" v-if="!props.options.isDisableFooter && !props.options.isGlobalEdit && (!props.options?.isModule || props.options?.canEditLayout) && userStore.user?.is_admin">
                     Создать раздел 
                 </AppButon>
                 <AppHistory
@@ -368,6 +370,9 @@
     const columns = ref(new Columns())
     const section = ref(new Section(props.slug))
     const field = ref(new Field(section.value, emit))
+    watchEffect(() => {
+        section.value.module = props.options?.canEditLayout ? (props.options?.module ?? null) : null
+    })
 
     const eventsModal = ref({
         state: false,

@@ -228,6 +228,7 @@
             { slug: 'expense_invoices', title: 'Отгрузка' },
             { slug: 'product_returns', title: 'Оприходование' }
         ],
+        supplier_orders: [{ slug: 'product_returns', title: 'Оприходование' }],
         addresses: [{ slug: 'logistic_tasks', title: 'Задача логистики' }]
     }
 
@@ -476,6 +477,7 @@
             const isReturn = entity.slug === 'product_returns' && SHIPMENT_SOURCES.includes(this.slug)
             let isChain = (entity.slug === 'expense_invoices' && SHIPMENT_SOURCES.includes(this.slug))
                 || (this.slug === 'deals' && SHIPMENT_SOURCES.includes(entity.slug))
+                || (this.slug === 'supplier_orders' && entity.slug === 'product_returns')
 
             let checkData = null
             if (isReturn || isChain) {
@@ -589,6 +591,7 @@
             const target = props.slug ?? router.params.slug
             const isChain = (props.source.slug === 'deals' && SHIPMENT_SOURCES.includes(target))
                 || (SHIPMENT_SOURCES.includes(props.source.slug) && ['expense_invoices', 'product_returns'].includes(target))
+                || (props.source.slug === 'supplier_orders' && target === 'product_returns')
             if (!isChain) return true
             this.refreshProductsDraft()
             const rows = (Array.isArray(this.productsDraft) ? this.productsDraft : [])

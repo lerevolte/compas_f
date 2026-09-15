@@ -2078,7 +2078,8 @@ export class Section {
             const response = await api.callMethod('POST', routes.detail.create_section, {
                 name: this.modal.content.name, 
                 column_id: this.modal.content.column_id.replace('column_', ''),
-                slug: slug
+                slug: slug,
+                ...(this.module ? { module: this.module } : {})
             })
 
             const createdSection = {
@@ -2118,8 +2119,10 @@ export class Section {
     async delete(columns) {
         try {
             this.modal.loading = true
-            this.hidden = [...this.hidden, ...this.modal.content.fields]
-            await this.updateHidden()
+            if (!this.module) {
+                this.hidden = [...this.hidden, ...this.modal.content.fields]
+                await this.updateHidden()
+            }
             await api.callMethod('DELETE', routes.detail.delete_section.replace('${id}', this.modal.content.id))
             columns[this.modal.content.column_id] = columns[this.modal.content.column_id].filter(item => item.id != this.modal.content.id)
         } catch (error) {
@@ -2653,6 +2656,34 @@ export class Field {
         await api.callMethod('PUT', routes.detail.update_field.replace('${id}', field.id), field)
     }
 
+    async moduleAttach({field, section}) {
+        try {
+            await api.callMethod('POST', routes.detail.module_attach, {
+                id: field.id,
+                section_id: section.id
+            })
+            this.emit('action', {
+                action: 'get',
+                data: null
+            })
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async moduleDetach({field, section}) {
+        try {
+            await api.callMethod('POST', routes.detail.module_detach, {
+                id: field.id,
+                section_id: section.id
+            })
+            const index = section.fields.findIndex(p => p.id == field.id)
+            if (index != -1) section.fields.splice(index, 1)
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     async show({field, section, hidden}) {
         field.is_hidden = false
         section.fields.push(field)
@@ -2908,7 +2939,8 @@ export class Field {
                 fields: event.to.__draggable_component__.modelValue.map((field, index) => ({
                     id: field.id,
                     sort: index
-                }))
+                })),
+                ...(options?.module ? { module: options.module } : {})
             })
         }
     }
@@ -2934,7 +2966,8 @@ export class Field {
                 fields: (groupField.fields || []).map((f, index) => ({
                     id: f.id,
                     sort: index
-                }))
+                })),
+                ...(options?.module ? { module: options.module } : {})
             })
             this.emit('actionSection', {action: 'dragCleanupAfterAdd', value: {fieldId}})
         }

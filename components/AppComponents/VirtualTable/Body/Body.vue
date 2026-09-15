@@ -63,7 +63,7 @@
                             'table__cell_fixed': column.fixed,
                             'table__cell_hide': !column.enabled,
                             'table__cell_readonly': !!column.read_only && !['isChoose', 'clicked', 'actions', 'iconDrag', 'iconDelete'].includes(column.key),
-                            'table__cell_hide-empty': column.visible_always === 0 && !table.body[row.index]?.edit && isCellValueEmpty(table.body[row.index], column),
+                            'table__cell_hide-empty': isMobile && !SERVICE_KEYS.includes(column.key) && !table.body[row.index]?.edit && isCellValueEmpty(table.body[row.index], column),
                         }"
                         :data-column-key="column.key" 
                         :key="`row-${index}_${column.key}`" 
@@ -399,19 +399,27 @@
     const common = new Common()
     const uid = useId()
 
+    const SERVICE_KEYS = ['isChoose', 'clicked', 'actions', 'iconDrag', 'iconDelete']
+
     const isCellValueEmpty = (row, column) => {
         if (!row) return true
         let value = row[column.key]
+        if (column.type == 'address' && value && typeof value === 'object' && !Array.isArray(value)) {
+            const text = value.text ?? value.value ?? null
+            return text === null || text === undefined || String(text).trim() === ''
+        }
         if (value && typeof value === 'object' && !Array.isArray(value) && 'value' in value) {
             value = value.value
         }
-        if (Array.isArray(value)) return value.length === 0
-        return value === null || value === undefined || value === ''
+        if (Array.isArray(value)) {
+            return value.filter(v => v !== null && v !== undefined && String(v).trim() !== '').length === 0
+        }
+        if (column.type == 'json' && typeof value === 'string') {
+            return value.replace(/<[^>]*>/g, '').trim() === ''
+        }
+        return value === null || value === undefined || String(value).trim() === ''
     }
 
-    // Полное значение json-ячейки (напр. «Состав») для title при наведении:
-    // в ячейке текст усечён в одну строку, а в подсказке показываем весь список.
-    // <br> -> перенос строки, остальные теги убираем.
     const jsonTitle = (html) => {
         if (!html || typeof html !== 'string') return null
         const text = html

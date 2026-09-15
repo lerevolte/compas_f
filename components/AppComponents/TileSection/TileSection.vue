@@ -14,7 +14,7 @@
             </span>
 
             <div class="tile-section__title" v-else>
-                <IconDragDotted class="icon_drag-section" v-if="!props.options?.isModule && userStore.user?.is_admin" />
+                <IconDragDotted class="icon_drag-section" v-if="canEditLayout" />
                 <AppH3 class="textarea_title">
                     <p 
                         class="ghost_text" 
@@ -32,7 +32,7 @@
                         v-model="section.name"
                     />
                 </AppH3>
-                <IconEdit v-if="!props.options?.isModule && userStore.user?.is_admin" v-show="!section.editTitle" @click="section.initEditTitle()"/>
+                <IconEdit v-if="canEditLayout" v-show="!section.editTitle" @click="section.initEditTitle()"/>
             </div>
 
             <div class="tile-section__actions" v-if="!props.options.isGlobalEdit && props.options.type != 'field' && !props.options.isExternal">
@@ -42,7 +42,7 @@
                 <AppButton class="button_text" v-else-if="section.fields.some(item => item.can_edit || (item.type == 'text_group' && item.fields && item.fields.some(sf => sf.can_edit)))" @click="editAll()">
                     Изменить
                 </AppButton>
-                <AppPopup v-if="!props.options.isModule && userStore.user?.is_admin" :isPreventBottom="true">
+                <AppPopup v-if="canEditLayout" :isPreventBottom="true">
                     <template #header>
                         <IconSettings />
                     </template>
@@ -82,9 +82,9 @@
             drag-class="draggable-drag"
             ghost-class="draggable-ghost"
             fallback-class="draggable-fallback"
-            @change="event => fieldObject.dragChange(event, {type: props.options.type}, props.section)"
+            @change="event => fieldObject.dragChange(event, {type: props.options.type, module: props.options.canEditLayout ? props.options.module : null}, props.section)"
             @start="event => fieldObject.dragStart(event)"
-            @end="event => fieldObject.dragEnd(event, {type: props.options.type})"
+            @end="event => fieldObject.dragEnd(event, {type: props.options.type, module: props.options.canEditLayout ? props.options.module : null})"
         >
             <template #item="{ element: field }">
                 <div 
@@ -99,7 +99,7 @@
                     @click="e => fieldObject.initChangeField(field, e.target)"
                 >
                     <IconDrag
-                        v-if="!props.options?.isModule && userStore.user?.is_admin"
+                        v-if="canEditLayout"
                         class="icon_drag-field"
                     />
 
@@ -393,7 +393,41 @@
                         </div>
                     </template>
 
-                    <AppPopup class="field__settings" v-if="!props.options?.isModule && userStore.user?.is_admin">
+                    <AppPopup class="field__settings" v-if="canEditLayout && props.options?.isModule">
+                        <template #header>
+                            <IconSettings />
+                        </template>
+                        <template #content>
+                            <div
+                                class="popup__option"
+                                v-show="field.can_edit && !field.edit"
+                                @click="(e) => {
+                                    if (field.type === 'text_group') {
+                                        props.sectionClass.editAll(field);
+                                    } else {
+                                        fieldObject.initChangeField(field, null, 'option');
+                                    }
+                                    e.target?.closest('.popup')?.classList.remove('popup_open');
+                                }"
+                            >
+                                Изменить
+                            </div>
+                            <div
+                                class="popup__option popup__option_red"
+                                @click="(e) => {
+                                    emit('actionField', {
+                                        action: 'moduleDetach',
+                                        value: field
+                                    });
+                                    e.target?.closest('.popup')?.classList.remove('popup_open');
+                                }"
+                            >
+                                Убрать из модуля
+                            </div>
+                        </template>
+                    </AppPopup>
+
+                    <AppPopup class="field__settings" v-else-if="canEditLayout">
                         <template #header>
                             <IconSettings />
                         </template>
@@ -469,7 +503,32 @@
             </template>
         </draggable> 
 
-        <div class="tile-section__footer" v-if="!props.options.isDisableFooter && !props.options?.isModule && userStore.user?.is_admin">
+        <div class="tile-section__footer" v-if="!props.options.isDisableFooter && canEditLayout && props.options?.isModule">
+            <AppPopup :isPreventBottom="true">
+                <template #header>
+                    <AppButton class="button_text" @click="loadModuleCandidates()">
+                        Добавить
+                    </AppButton>
+                </template>
+                <template #content>
+                    <div class="popup__option popup__option_empty" v-if="moduleCandidates.length == 0"></div>
+                    <div 
+                        class="popup__option" 
+                        v-for="candidate in moduleCandidates"
+                        v-else
+                        :key="candidate.id"
+                        @click="emit('actionField', {
+                            action: 'moduleAttach',
+                            value: candidate
+                        })"
+                    >
+                        {{ candidate.title }}
+                    </div>
+                </template>
+            </AppPopup>
+        </div>
+
+        <div class="tile-section__footer" v-else-if="!props.options.isDisableFooter && canEditLayout">
             <AppPopup :isPreventBottom="true">
                 <template #header>
                     <AppButton class="button_text">
@@ -536,9 +595,30 @@
     import AppDealStages from '@AppComponents/DealStages/DealStages.vue'
     import AppMultiText from '@AppComponents/Inputs/MultiText/MultiText.vue'
     import { useUserStore } from '@/stores/userStore.js'
+    import api from '@/helpers/api.js'
+    import routes from '@/helpers/routes.js'
 
     const userStore = useUserStore()
     const common = new Common()
+
+    const canEditLayout = computed(() => (!props.options?.isModule || !!props.options?.canEditLayout) && !!userStore.user?.is_admin)
+    const moduleCandidates = ref([])
+
+    const loadModuleCandidates = async () => {
+        if (!props.options?.module || !props.tabs?.active) {
+            moduleCandidates.value = []
+            return
+        }
+        try {
+            const slug = props.sectionClass?.slug ?? null
+            if (!slug) return
+            const url = routes.detail.module_candidates.replace('${slug}', slug).replace('${module}', props.options.module)
+            const response = await api.callMethod('GET', url)
+            moduleCandidates.value = response?.status == 200 ? (response.data?.data ?? []) : []
+        } catch (e) {
+            moduleCandidates.value = []
+        }
+    }
 
     const emit = defineEmits([
         'update:hidden',

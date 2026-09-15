@@ -220,5 +220,11 @@
         "title_singular": "Самовывоз",
         "title_plural": "Самовывозы",
         "color": "#5DAE8B"
+    },
+    "supplier_orders": {
+        "slug": "supplier_orders",
+        "title_singular": "Заказ поставщику",
+        "title_plural": "Заказы поставщикам",
+        "color": "#3F7FBF"
     }
 }

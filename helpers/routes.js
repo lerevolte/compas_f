@@ -6,6 +6,7 @@ export default {
     tenant: typeof window !== 'undefined' 
         ? (window.location.hostname === 'localhost' ? 'test3.compas.pro' : window.location.host) 
         : '',
+    isSeeds: typeof window !== 'undefined' && window.location.hostname.split('.')[0] === 'seeds',
     auth: {
         login: '/auth',
         reset_password: '/password/reset',
@@ -73,6 +74,9 @@ export default {
         delete_section: '/field_sections/${id}',
         change_order_section: '/field_sections/change-sort',
         change_order_field: '/field/change-sort',
+        module_attach: '/field/module-attach',
+        module_detach: '/field/module-detach',
+        module_candidates: '/field/module-candidates/${slug}/${module}',
         show_field: '/field/${id}',
         module: '/objects/${slug}/${id}/${tab}/compose',
         create_field: '/field',

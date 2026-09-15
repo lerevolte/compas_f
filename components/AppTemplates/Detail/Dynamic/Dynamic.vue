@@ -17,6 +17,8 @@
             :tabs="props.tabs"
             :options="{
                 isModule: props.options.isModule || props.options.isExternal,
+                module: props.options.isModule && !props.options.isExternal ? props.tabs.active?.tab : null,
+                canEditLayout: routes.isSeeds && props.options.isModule && !props.options.isExternal,
                 isDisableFooter: props.options.isGlobalEdit || props.options.isExternal,
                 isHaveHistory: true,
                 isGlobalEdit: props.options.isGlobalEdit,

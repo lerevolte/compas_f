@@ -223,5 +223,10 @@
         "title": "Самовывозы",
         "desc": "",
         "template": null
+    },
+    "supplier_orders": {
+        "title": "Заказы поставщикам",
+        "desc": "",
+        "template": null
     }
 }
