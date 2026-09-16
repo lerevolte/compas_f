@@ -49,6 +49,7 @@
                             <a class="waybills__link" v-if="item.waybill.archive_url" :href="item.waybill.archive_url" target="_blank" rel="noopener">Архив</a>
                             <a class="waybills__link" v-if="item.waybill.cabinet_url" :href="item.waybill.cabinet_url" target="_blank" rel="noopener">Открыть в Saby</a>
                             <button class="waybills__link waybills__link_button" type="button" v-if="item.waybill.qr_url" @click="toggleQr('order_' + item.id, item.waybill.qr_url)">{{ openedQr === 'order_' + item.id ? 'Скрыть QR' : 'QR для ГИБДД' }}</button>
+                            <button class="waybills__link waybills__link_button" type="button" v-if="item.waybill.can_delete" :disabled="creatingWaybill === 'order_' + item.id" @click="createWaybill(item)">{{ creatingWaybill === 'order_' + item.id ? 'Заполняется…' : 'Заполнить грузополучателя' }}</button>
                             <template v-if="item.waybill.id && item.waybill.can_delete">
                                 <template v-if="confirmDelete === 'owb_' + item.id">
                                     <span class="waybills__confirm">Удалить накладную?</span>
@@ -424,18 +425,15 @@
         creatingWaybill.value = 'order_' + item.id
         errors.value = []
         try {
-            const body = {}
-            if (item.current_is_loading && item.unloading_task?.id) {
-                body.unloading_task_id = item.unloading_task.id
-            } else if (item.loading_task?.id && String(item.loading_task.id) !== String(props.pageId)) {
-                body.loading_task_id = item.loading_task.id
-            }
-            if (item.mass_method) body.mass_method = item.mass_method
-            const url = routes.logistic.waybills.replace('${id}', props.pageId)
-            const response = await api.callMethod('POST', url, body)
+            const url = routes.logistic.sabyOrderWaybill.replace('${id}', item.id)
+            const response = await api.callMethod('POST', url, {})
             if (response.status == 200 && response.data?.data) {
+                orders.value = orders.value.map(row => row.id === item.id ? response.data.data : row)
                 await load()
-                common.showNotification({ title: 'ТрН СБИС', description: `Транспортная накладная № ${response.data.data.number || ''} сформирована по заказу № ${item.number}` }, 'success')
+                const number = response.data.waybill_number || ''
+                common.showNotification({ title: 'ТрН СБИС', description: response.data.adopted
+                    ? `Подхвачена накладная № ${number} из Saby по заказу № ${item.number}, грузополучатель проставлен`
+                    : `Транспортная накладная № ${number} сформирована по заказу № ${item.number}` }, 'success')
             } else {
                 errors.value = response.data?.errors || []
                 if (!errors.value.length && response.data?.message) {

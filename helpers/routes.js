@@ -149,7 +149,8 @@ export default {
         waybillDelete: '/saby-waybills/${id}',
         sabyOrders: '/logistic_tasks/${id}/saby-orders',
         sabyOrderRefresh: '/saby-orders/${id}/refresh',
-        sabyOrderDelete: '/saby-orders/${id}'
+        sabyOrderDelete: '/saby-orders/${id}',
+        sabyOrderWaybill: '/saby-orders/${id}/waybill'
     },
     relations: {
         tree: '/object-relations/${slug}/${id}',
