@@ -56,14 +56,23 @@
                         </div>
                     </div>
                     <div class="waybills__sub waybills__sub_empty" v-else>
-                        {{ item.state_code == '7' ? 'Заказ утверждён — транспортная накладная появится здесь, как только перевозчик оформит её в Saby' : 'Транспортная накладная появится после утверждения заказа перевозчиком' }}
+                        <span>{{ item.state_code == '7' ? 'Заказ утверждён — транспортная накладная ещё не сформирована' : 'Транспортная накладная ещё не сформирована' }}</span>
+                        <button
+                            class="waybills__button waybills__button_sub"
+                            type="button"
+                            v-if="item.doc_id"
+                            :disabled="creatingWaybill === 'order_' + item.id"
+                            @click="createWaybill(item)"
+                        >
+                            {{ creatingWaybill === 'order_' + item.id ? 'Формируется…' : 'ТрН СБИС' }}
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <div class="waybills__list" v-if="waybills.length">
+            <div class="waybills__list" v-if="standaloneWaybills.length">
                 <div class="waybills__legacy-title">Накладные, созданные напрямую</div>
-                <div class="waybills__item" v-for="item in waybills" :key="'wb_' + item.id">
+                <div class="waybills__item" v-for="item in standaloneWaybills" :key="'wb_' + item.id">
                     <div class="waybills__info">
                         <span class="waybills__number">№ {{ item.number }}</span>
                         <span class="waybills__date" v-if="item.date">от {{ item.date }}</span>
@@ -226,6 +235,7 @@
     const enabled = ref(false)
     const loading = ref(false)
     const creating = ref(false)
+    const creatingWaybill = ref(null)
     const refreshing = ref(null)
     const confirmDelete = ref(null)
     const deleting = ref(null)
@@ -245,6 +255,11 @@
         tasks: [],
         selected: null,
         currentIsLoading: false
+    })
+
+    const standaloneWaybills = computed(() => {
+        const linked = new Set(orders.value.map(o => o.waybill?.doc_id).filter(Boolean))
+        return waybills.value.filter(w => !w.doc_id || !linked.has(w.doc_id))
     })
 
     const toggleQr = async (key, url) => {
@@ -392,6 +407,36 @@
             errors.value = ['Не удалось создать заказ']
         } finally {
             creating.value = false
+        }
+    }
+
+    const createWaybill = async (item) => {
+        if (creatingWaybill.value || !props.pageId) return
+        creatingWaybill.value = 'order_' + item.id
+        errors.value = []
+        try {
+            const body = {}
+            if (item.current_is_loading && item.unloading_task?.id) {
+                body.unloading_task_id = item.unloading_task.id
+            } else if (item.loading_task?.id && String(item.loading_task.id) !== String(props.pageId)) {
+                body.loading_task_id = item.loading_task.id
+            }
+            if (item.mass_method) body.mass_method = item.mass_method
+            const url = routes.logistic.waybills.replace('${id}', props.pageId)
+            const response = await api.callMethod('POST', url, body)
+            if (response.status == 200 && response.data?.data) {
+                await load()
+                common.showNotification({ title: 'ТрН СБИС', description: `Транспортная накладная № ${response.data.data.number || ''} сформирована по заказу № ${item.number}` }, 'success')
+            } else {
+                errors.value = response.data?.errors || []
+                if (!errors.value.length && response.data?.message) {
+                    errors.value = [response.data.message]
+                }
+            }
+        } catch (e) {
+            errors.value = ['Не удалось сформировать транспортную накладную']
+        } finally {
+            creatingWaybill.value = null
         }
     }
 
