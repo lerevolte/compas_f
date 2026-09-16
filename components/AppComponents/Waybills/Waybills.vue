@@ -44,12 +44,12 @@
                             <span class="waybills__status" v-if="item.waybill.state">{{ item.waybill.state }}</span>
                             <span class="waybills__status" v-if="item.waybill.stage">· {{ item.waybill.stage }}</span>
                         </div>
+                        <div class="waybills__loading-task" v-if="item.waybill.receiver_filled">Грузополучатель проставлен из Компаса</div>
+                        <div class="waybills__loading-task waybills__loading-task_error" v-else-if="item.waybill.receiver_error">Грузополучатель не проставлен: {{ item.waybill.receiver_error }}</div>
                         <div class="waybills__actions">
                             <a class="waybills__link" v-if="item.waybill.pdf_url" :href="item.waybill.pdf_url" target="_blank" rel="noopener">Печать</a>
-                            <a class="waybills__link" v-if="item.waybill.archive_url" :href="item.waybill.archive_url" target="_blank" rel="noopener">Архив</a>
                             <a class="waybills__link" v-if="item.waybill.cabinet_url" :href="item.waybill.cabinet_url" target="_blank" rel="noopener">Открыть в Saby</a>
                             <button class="waybills__link waybills__link_button" type="button" v-if="item.waybill.qr_url" @click="toggleQr('order_' + item.id, item.waybill.qr_url)">{{ openedQr === 'order_' + item.id ? 'Скрыть QR' : 'QR для ГИБДД' }}</button>
-                            <button class="waybills__link waybills__link_button" type="button" v-if="item.waybill.can_delete" :disabled="creatingWaybill === 'order_' + item.id" @click="createWaybill(item)">{{ creatingWaybill === 'order_' + item.id ? 'Заполняется…' : 'Заполнить грузополучателя' }}</button>
                             <template v-if="item.waybill.id && item.waybill.can_delete">
                                 <template v-if="confirmDelete === 'owb_' + item.id">
                                     <span class="waybills__confirm">Удалить накладную?</span>
@@ -63,18 +63,6 @@
                             <div class="waybills__qr-image" v-html="qrImages['order_' + item.id]"></div>
                             <a class="waybills__link" :href="item.waybill.qr_url" target="_blank" rel="noopener">Ссылка для проверки</a>
                         </div>
-                    </div>
-                    <div class="waybills__sub waybills__sub_empty" v-else>
-                        <span>{{ item.state_code == '7' ? 'Заказ утверждён — транспортная накладная ещё не сформирована' : 'Транспортная накладная ещё не сформирована' }}</span>
-                        <button
-                            class="waybills__button waybills__button_sub"
-                            type="button"
-                            v-if="item.doc_id"
-                            :disabled="creatingWaybill === 'order_' + item.id"
-                            @click="createWaybill(item)"
-                        >
-                            {{ creatingWaybill === 'order_' + item.id ? 'Формируется…' : 'ТрН СБИС' }}
-                        </button>
                     </div>
                 </div>
             </div>
@@ -245,7 +233,6 @@
     const enabled = ref(false)
     const loading = ref(false)
     const creating = ref(false)
-    const creatingWaybill = ref(null)
     const refreshing = ref(null)
     const confirmDelete = ref(null)
     const deleting = ref(null)
@@ -417,33 +404,6 @@
             errors.value = ['Не удалось создать заказ']
         } finally {
             creating.value = false
-        }
-    }
-
-    const createWaybill = async (item) => {
-        if (creatingWaybill.value || !props.pageId) return
-        creatingWaybill.value = 'order_' + item.id
-        errors.value = []
-        try {
-            const url = routes.logistic.sabyOrderWaybill.replace('${id}', item.id)
-            const response = await api.callMethod('POST', url, {})
-            if (response.status == 200 && response.data?.data) {
-                orders.value = orders.value.map(row => row.id === item.id ? response.data.data : row)
-                await load()
-                const number = response.data.waybill_number || ''
-                common.showNotification({ title: 'ТрН СБИС', description: response.data.adopted
-                    ? `Подхвачена накладная № ${number} из Saby по заказу № ${item.number}, грузополучатель проставлен`
-                    : `Транспортная накладная № ${number} сформирована по заказу № ${item.number}` }, 'success')
-            } else {
-                errors.value = response.data?.errors || []
-                if (!errors.value.length && response.data?.message) {
-                    errors.value = [response.data.message]
-                }
-            }
-        } catch (e) {
-            errors.value = ['Не удалось сформировать транспортную накладную']
-        } finally {
-            creatingWaybill.value = null
         }
     }
 
