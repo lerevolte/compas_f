@@ -436,7 +436,7 @@
 
         leaveProductsTab() {
             const table = productsTableRef.value?.table
-            if (props.options.isGlobalEdit) {
+            if (props.options.isGlobalEdit || !Number(props.id)) {
                 this.snapshotProducts()
                 return
             }
@@ -468,7 +468,7 @@
         }
 
         productsSaved() {
-            if (props.options.isGlobalEdit) {
+            if (props.options.isGlobalEdit || !Number(props.id)) {
                 this.snapshotProducts()
                 return
             }
@@ -497,7 +497,7 @@
 
     watch(() => productsTableRef.value?.table?.state, (state, prevState) => {
         const table = productsTableRef.value?.table
-        if (prevState === 'edit' && state === null && table && !table.saving && !props.options.isGlobalEdit && detail.value.productsDraft) {
+        if (prevState === 'edit' && state === null && table && !table.saving && !props.options.isGlobalEdit && Number(props.id) && detail.value.productsDraft) {
             detail.value.clearProductsDraft()
         }
     })
