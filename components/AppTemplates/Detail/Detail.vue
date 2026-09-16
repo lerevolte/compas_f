@@ -453,7 +453,7 @@
         }
 
         refreshProductsDraft() {
-            if (!this.isGlobalEdit) return
+            if (!this.isGlobalEdit && this.id && `${this.id}` !== '0') return
             try {
                 dynamicRef.value?.snapshotProducts?.()
             } catch (e) {}
@@ -664,8 +664,8 @@
         async savePage(response) {
             const item = response.data
 
-            if (this.isGlobalEdit) {
-                const wasCreate = !this.id
+            const wasCreate = !this.id || `${this.id}` === '0'
+            if (this.isGlobalEdit || wasCreate) {
                 const slug = props.slug ?? router.params.slug
                 if (wasCreate) {
                     this.refreshProductsDraft()
