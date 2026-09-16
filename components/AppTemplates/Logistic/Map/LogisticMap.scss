@@ -933,6 +933,21 @@
     padding: 2px 6px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   }
+
+  &_offline {
+    .current-geo-marker__dot {
+      background: #b3b3b3;
+    }
+
+    .current-geo-marker__pulse {
+      animation: none;
+      opacity: 0;
+    }
+
+    .current-geo-marker__time {
+      color: #6f6f6f;
+    }
+  }
 }
 
 @keyframes current-geo-pulse {

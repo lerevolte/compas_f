@@ -1399,7 +1399,10 @@
     const drawCurrentPosition = (routeData) => {
         const position = routeData.current_position;
         if (!position || position.lat == null || position.lon == null) return;
-        const html = `<div class="current-geo-marker"><div class="current-geo-marker__pulse"></div><div class="current-geo-marker__dot"></div><span class="current-geo-marker__time">${position.time || ''}</span></div>`;
+        const timestamp = Number(position.timestamp) || 0;
+        const isOnline = timestamp > 0 && Date.now() - timestamp * 1000 <= 5 * 60 * 1000;
+        const state = isOnline ? 'current-geo-marker_online' : 'current-geo-marker_offline';
+        const html = `<div class="current-geo-marker ${state}"><div class="current-geo-marker__pulse"></div><div class="current-geo-marker__dot"></div><span class="current-geo-marker__time">${position.time || ''}</span></div>`;
         const marker = L.marker([position.lat, position.lon], {
             icon: L.divIcon({ className: 'custom-div-icon current-geo-icon', html, iconSize: [44, 44], iconAnchor: [22, 22] }),
             zIndexOffset: 1000

@@ -338,6 +338,10 @@
                                 {{ stageOption(row.index, column)?.label ?? '' }}
                             </span>
 
+                            <span class="table__text text" v-else-if="column.type == 'geoposition'" :title="geopositionValue(row.index, column)">
+                                {{ geopositionValue(row.index, column) }}
+                            </span>
+
                             <span class="table__text text" v-else-if="column.type == 'json'" :title="jsonTitle(cell.useCellModel(row.index, column).value)" v-html="jsonInline(cell.useCellModel(row.index, column).value)"></span>
 
                             <AppRouteStatuses
@@ -773,6 +777,22 @@
     }
 
     const cell = new Cell()
+
+    const geopositionValue = (rowIndex, column) => {
+        let value = table.value.body[rowIndex]?.[column.key]
+        if (typeof value === 'string' && value.length) {
+            try {
+                value = JSON.parse(value)
+            } catch (e) {
+                value = null
+            }
+        }
+        const time = Number(value?.time)
+        if (!Number.isFinite(time) || time <= 0) return ''
+        const date = new Date(time)
+        const pad = n => String(n).padStart(2, '0')
+        return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+    }
 
     const multiTextValue = (rowIndex, column) => {
         let value = table.value.body[rowIndex]?.[column.key]

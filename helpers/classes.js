@@ -23,6 +23,9 @@ export async function openUpdPdf(slug, ids, withDocs = false) {
     const common = new Common()
     ids = (ids || []).filter(id => id)
     if (!ids.length) return false
+    const toastId = toast.loading(ids.length > 1 ? `Формируем документы (${ids.length})…` : 'Формируем документ…', {
+        position: toast.POSITION.TOP_RIGHT
+    })
     try {
         const userStore = useUserStore()
         const response = await axios.get(`${routes.domain}/api/${slug}/upd?ids=${ids.join(',')}${withDocs ? '&docs=1' : ''}`, {
@@ -31,11 +34,13 @@ export async function openUpdPdf(slug, ids, withDocs = false) {
             validateStatus: () => true
         })
         if (response.status == 200 && response.data?.type === 'application/pdf') {
+            toast.remove(toastId)
             const objectUrl = URL.createObjectURL(response.data)
             window.open(objectUrl, '_blank')
             setTimeout(() => URL.revokeObjectURL(objectUrl), 120000)
             return true
         }
+        toast.remove(toastId)
         let message = 'Не удалось сформировать УПД'
         try {
             const parsed = JSON.parse(await response.data.text())
@@ -43,6 +48,7 @@ export async function openUpdPdf(slug, ids, withDocs = false) {
         } catch (e) {}
         common.showNotification({ title: 'УПД', description: message }, 'error')
     } catch (e) {
+        toast.remove(toastId)
         common.showNotification({ title: 'УПД', description: 'Не удалось сформировать УПД' }, 'error')
     }
     return false
@@ -538,6 +544,7 @@ export class Table {
         }
         this.loading = false
         this.saving = false
+        this.printing = false
         this.state = null
         this.backup = {
             header: [],
@@ -947,10 +954,16 @@ export class Table {
         })
     }
 
-    printUpd() {
+    async printUpd() {
+        if (this.printing) return
         const ids = this.body.filter(row => row.isChoose).map(row => row.id).filter(id => id)
         if (!ids.length) return
-        openUpdPdf(this.slug, ids, true)
+        this.printing = true
+        try {
+            await openUpdPdf(this.slug, ids, true)
+        } finally {
+            this.printing = false
+        }
     }
 
     createTaskFromAddress(row) {

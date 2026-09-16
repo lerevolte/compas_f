@@ -34,10 +34,11 @@
                 </AppButton>
                 <AppButton
                     class="button_icon"
+                    :class="{'skeleton' : props.printing}"
                     v-if="props.actions.printUpd && props.checkedCount > 0"
-                    @click="emit('action', {action: 'printUpd', value: true})"
+                    @click="!props.printing && emit('action', {action: 'printUpd', value: true})"
                 >
-                    Распечатать
+                    {{ props.printing ? 'Формируем…' : 'Распечатать' }}
                 </AppButton>
                 <AppButton @click="emit('action', {action: 'cancel', value: true})">
                     Отмена
@@ -84,6 +85,10 @@
             type: Object
         },
         loading: {
+            default: false,
+            type: Boolean
+        },
+        printing: {
             default: false,
             type: Boolean
         }

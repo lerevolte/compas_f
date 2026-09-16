@@ -78,6 +78,7 @@
                         :model-value="selectInstances[index]?.state?.search || ''"
                         @update:model-value="(value) => selectInstances[index]?.state && (selectInstances[index].state.search = value)"
                         @keyup.enter="() => props.options.relation_type == 'products' && selectInstances[index]?.commitCustom()"
+                        @blur="() => props.options.relation_type == 'products' && selectInstances[index]?.commitCustomIfTyped()"
                     />
     
                     <div class="select__content-abs">

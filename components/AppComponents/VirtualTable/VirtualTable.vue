@@ -47,6 +47,7 @@
         printUpd: !props.options.isTrash && table.state != 'edit' && ['logistic_tasks', 'pickups'].includes(table.slug)
       }"
       :loading="table.saving"
+      :printing="table.printing"
       @action="action => table[action.action](action.value)"
     />
   </teleport>
