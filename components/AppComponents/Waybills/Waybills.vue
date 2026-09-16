@@ -49,6 +49,14 @@
                             <a class="waybills__link" v-if="item.waybill.archive_url" :href="item.waybill.archive_url" target="_blank" rel="noopener">Архив</a>
                             <a class="waybills__link" v-if="item.waybill.cabinet_url" :href="item.waybill.cabinet_url" target="_blank" rel="noopener">Открыть в Saby</a>
                             <button class="waybills__link waybills__link_button" type="button" v-if="item.waybill.qr_url" @click="toggleQr('order_' + item.id, item.waybill.qr_url)">{{ openedQr === 'order_' + item.id ? 'Скрыть QR' : 'QR для ГИБДД' }}</button>
+                            <template v-if="item.waybill.id && item.waybill.can_delete">
+                                <template v-if="confirmDelete === 'owb_' + item.id">
+                                    <span class="waybills__confirm">Удалить накладную?</span>
+                                    <button class="waybills__link waybills__link_button waybills__link_danger" type="button" :disabled="deleting === 'owb_' + item.id" @click="removeOrderWaybill(item)">{{ deleting === 'owb_' + item.id ? 'Удаляется…' : 'Да, удалить' }}</button>
+                                    <button class="waybills__link waybills__link_button" type="button" :disabled="deleting === 'owb_' + item.id" @click="confirmDelete = null">Отмена</button>
+                                </template>
+                                <button v-else class="waybills__link waybills__link_button waybills__link_danger" type="button" @click="confirmDelete = 'owb_' + item.id">Удалить</button>
+                            </template>
                         </div>
                         <div class="waybills__qr" v-if="openedQr === 'order_' + item.id && qrImages['order_' + item.id]">
                             <div class="waybills__qr-image" v-html="qrImages['order_' + item.id]"></div>
@@ -83,7 +91,8 @@
                         <a class="waybills__link" v-if="item.cabinet_url" :href="item.cabinet_url" target="_blank" rel="noopener">Открыть в Saby</a>
                         <button class="waybills__link waybills__link_button" type="button" v-if="item.qr_url" @click="toggleQr('wb_' + item.id, item.qr_url)">{{ openedQr === 'wb_' + item.id ? 'Скрыть QR' : 'QR для ГИБДД' }}</button>
                         <button class="waybills__link waybills__link_button" type="button" :disabled="refreshing === 'wb_' + item.id" @click="refreshWaybill(item)">{{ refreshing === 'wb_' + item.id ? 'Обновляется…' : 'Обновить' }}</button>
-                        <template v-if="confirmDelete === 'wb_' + item.id">
+                        <template v-if="item.can_delete === false"></template>
+                        <template v-else-if="confirmDelete === 'wb_' + item.id">
                             <span class="waybills__confirm">Удалить накладную?</span>
                             <button class="waybills__link waybills__link_button waybills__link_danger" type="button" :disabled="deleting === 'wb_' + item.id" @click="removeWaybill(item)">{{ deleting === 'wb_' + item.id ? 'Удаляется…' : 'Да, удалить' }}</button>
                             <button class="waybills__link waybills__link_button" type="button" :disabled="deleting === 'wb_' + item.id" @click="confirmDelete = null">Отмена</button>
@@ -497,6 +506,29 @@
             errors.value = ['Не удалось обновить статус накладной']
         } finally {
             refreshing.value = null
+        }
+    }
+
+    const removeOrderWaybill = async (order) => {
+        if (deleting.value || !order.waybill?.id) return
+        deleting.value = 'owb_' + order.id
+        errors.value = []
+        try {
+            const url = routes.logistic.waybillDelete.replace('${id}', order.waybill.id)
+            const response = await api.callMethod('DELETE', url)
+            if (response.status == 200) {
+                if (openedQr.value === 'order_' + order.id) openedQr.value = null
+                await load()
+                common.showNotification({ title: 'ТрН СБИС', description: `Транспортная накладная № ${order.waybill.number || ''} удалена` }, 'success')
+            } else if (response.data?.message) {
+                errors.value = [response.data.message]
+                await load()
+            }
+        } catch (e) {
+            errors.value = ['Не удалось удалить накладную']
+        } finally {
+            deleting.value = null
+            confirmDelete.value = null
         }
     }
 
