@@ -40,7 +40,7 @@ for dir in auth logistic roles profile settings analytics tariffs trash users ex
 done
 echo ""
 echo "=== 6. Updating ALL index.html to match new build ==="
-ssh $SERVER "find $SERVER_PATH -name 'index.html' -not -path '*/landing/*' -exec cp $SERVER_PATH/index2.html {} \;"
+ssh $SERVER "find $SERVER_PATH -mindepth 2 -name 'index.html' -not -path '*/landing/*' -exec cp $SERVER_PATH/index2.html {} \;"
 echo ""
 echo "✅ Deploy complete!"
 
