@@ -492,6 +492,9 @@
             if (isReturn && checkData?.loading) {
                 isChain = true
             }
+            if (checkData?.neutral) {
+                return products.map(row => ({ ...row, product_shipped: 0 }))
+            }
 
             if (isReturn && !isChain) {
                 const usage = checkData?.usage ?? []
