@@ -4,23 +4,23 @@
             {{ props.options.title }}
         </label>
 
-        <div 
+        <div
             v-for="(selectItem, index) in normalizedModelValue.value"
             :key="index"
-            class="select select_icon select-container" 
+            class="select select_icon select-container"
             :ref="el => setSelectRef(el, index)"
             :data-id="index"
             :class="{
-                'select_hidden': isCompactReadonly || index >= ((props.options?.visibleCount ?? 5) + 1),
+                'select_hidden': isCompactReadonly || !isIndexVisible(index),
                 'select_open': selectInstances[index]?.state.isOpen,
                 'select_disabled': props.options.edit == false,
                 'select_empty': !getActiveOption(index) || (!getActiveOption(index).value && !getActiveOption(index).label?.text)
             }"
         >
             <div class="select__content" @click="event => selectInstances[index]?.toggleOptions(event)">
-                <div 
-                    class="select__value select__value_single" 
-                    :class="{ 
+                <div
+                    class="select__value select__value_single"
+                    :class="{
                         'select__value_typing': (selectInstances[index]?.state?.search?.length || 0) > 0,
                         'select_value_text': props.options.slug == 'roles'
                     }"
@@ -49,9 +49,9 @@
                     </figure>
 
                     <figure class='select__value-icon' v-else>
-                        <div 
-                            class="img-text" 
-                            :style="{ 
+                        <div
+                            class="img-text"
+                            :style="{
                                 '--bgColor': '#a6b7d4'
                             }"
                         >
@@ -62,7 +62,7 @@
                         </figcaption>
                     </figure>
                 </div>
-    
+
                 <div class="select__content-container">
                     <AppInput
                         :options="{
@@ -80,7 +80,7 @@
                         @keyup.enter="() => props.options.relation_type == 'products' && selectInstances[index]?.commitCustom()"
                         @blur="() => props.options.relation_type == 'products' && selectInstances[index]?.commitCustomIfTyped()"
                     />
-    
+
                     <div class="select__content-abs">
                         <span class="select__content-plate">
                             <span class="value__text value__text_id" v-if="getActiveOption(index)?.value">
@@ -100,14 +100,14 @@
                 <div class="select__option" :value="null" @click="selectInstances[index]?.changeValue({ value: null }, index)">
                     Не выбрано
                 </div>
-                <div 
-                    class="select__option" 
-                    v-for="option in selectInstances[index]?.getList(index)" 
-                    :class="{ 
+                <div
+                    class="select__option"
+                    v-for="option in selectInstances[index]?.getList(index)"
+                    :class="{
                         'select__option_active': normalizedModelValue.value[index] == option.value,
                         'select__option_disabled': isOptionDisabled(option)
-                    }" 
-                    :value="option.value" 
+                    }"
+                    :value="option.value"
                     @click="!isOptionDisabled(option) && selectInstances[index]?.changeValue(option, index)"
                 >
                     <span class="value__text">
@@ -126,7 +126,7 @@
                 </div>
             </div>
         </div>
-        
+
         <AppError v-show="props.error.state">
             {{ props.error.text }}
         </AppError>
@@ -140,7 +140,7 @@
             >
                 Всего {{normalizedModelValue.value.length}}, посмотреть все
             </AppButton>
-            <AppButton 
+            <AppButton
                 v-if="props.options.isCanAdd && props.options.multiple"
                 class="button_text"
                 data-action="add"
@@ -154,7 +154,7 @@
 
 <script setup>
     import './Relation.scss';
-    
+
     import AppButton from '@AppComponents/Button/Button.vue';
     import AppInput from '@AppComponents/Inputs/Input/Input.vue';
     import IconSelectArrow from '@AppIcons/Input/SelectArrow.vue';
@@ -309,9 +309,9 @@
         toggleOptions(event) {
             clickedItem.value = event
             if (props.options.edit == false || (event && event.target.closest('.relation__arrow'))) return
-            
+
             if (this.state.isOpen && event?.target?.closest('input')) return
-            
+
             selectInstances.value.forEach((instance, idx) => {
                 if (idx !== this.index && instance.state.isOpen) {
                     instance.commitCustomIfTyped();
@@ -368,7 +368,7 @@
                 }
             }
         }
-        
+
         checkPosition(event) {
             let popupRef = event.target.closest('.select')
             let contentRef = popupRef ? popupRef.querySelector('.select__options') : null
@@ -492,7 +492,7 @@
                 visibleCount: 5,
                 multiple: false,
                 type: 'select',
-                placeholder: '' 
+                placeholder: ''
             },
             type: Object
         },
@@ -535,6 +535,18 @@
 
     const normalizedModelValue = ref({ value: [null], localOptions: [null] });
 
+    const addedRows = ref(0)
+
+    const visibleLimit = computed(() => (props.options?.visibleCount ?? 5) + 1)
+
+    const visibleStart = computed(() => {
+        const total = normalizedModelValue.value?.value?.length || 0
+        if (!addedRows.value || total <= visibleLimit.value) return 0
+        return total - visibleLimit.value
+    })
+
+    const isIndexVisible = (index) => index >= visibleStart.value && index < visibleStart.value + visibleLimit.value
+
     const isCompactReadonly = computed(() =>
         props.options.isCompact === true
         && props.options.edit === false
@@ -548,59 +560,56 @@
 
     const updateModelValue = (newValue, newOption, selectIndex) => {
         const current = normalizedModelValue.value;
-        
-        
+
         const newValueArray = [...current.value];
         const newLocalOptionsArray = [...current.localOptions];
-        
+
         newValueArray[selectIndex] = newValue;
         newLocalOptionsArray[selectIndex] = newOption;
-        
-        
-        normalizedModelValue.value = { value: newValueArray, localOptions: newLocalOptionsArray };      
+
+        normalizedModelValue.value = { value: newValueArray, localOptions: newLocalOptionsArray };
         emit('update:prevValue', JSON.parse(JSON.stringify(props.modelValue)))
-        emit('update:modelValue', { 
-            value: newValueArray, 
-            localOptions: newLocalOptionsArray 
+        emit('update:modelValue', {
+            value: newValueArray,
+            localOptions: newLocalOptionsArray
         });
     };
 
     const addNewSelect = () => {
         const current = normalizedModelValue.value;
-        
-        
+
         const newValueArray = [...current.value];
         const newLocalOptionsArray = [...current.localOptions];
-        
+
         newValueArray.push(null);
         newLocalOptionsArray.push(null);
+        addedRows.value++
 
-        
         normalizedModelValue.value = { value: newValueArray, localOptions: newLocalOptionsArray };
         emit('update:prevValue', JSON.parse(JSON.stringify(props.modelValue)))
-        emit('update:modelValue', { 
-            value: newValueArray, 
-            localOptions: newLocalOptionsArray 
+        emit('update:modelValue', {
+            value: newValueArray,
+            localOptions: newLocalOptionsArray
         });
     };
 
     const getActiveOption = (index) => {
         const currentValue = normalizedModelValue.value.value[index];
         const localOptions = normalizedModelValue.value.localOptions;
-        
+
         if (localOptions && localOptions[index]) {
             return localOptions[index];
         }
-        
+
         if (props.options.list && props.options.list.length > 0) {
             return props.options.list.find(p => p.value == currentValue) || null;
         }
-        
+
         const selectInstance = selectInstances.value[index];
         if (selectInstance && selectInstance.state.list && selectInstance.state.list.length > 0) {
             return selectInstance.state.list.find(p => p.value == currentValue) || null;
         }
-        
+
         return null;
     };
 
@@ -615,25 +624,25 @@
 
     const initializeSelects = () => {
         if (!normalizedModelValue.value || !normalizedModelValue.value.value) return;
-        
+
         const currentValues = normalizedModelValue.value.value;
-        
+
         while (selectInstances.value.length > currentValues.length) {
             const lastInstance = selectInstances.value.pop();
             if (lastInstance && lastInstance.selectRef) {
                 document.removeEventListener('click', lastInstance.closeOptions);
             }
         }
-        
+
         while (selectInstances.value.length < currentValues.length) {
             const index = selectInstances.value.length;
             const newInstance = new Select(index);
             selectInstances.value.push(newInstance);
-            
+
             if (selectRefs.value[index]) {
                 newInstance.setSelectRef(selectRefs.value[index]);
             }
-            
+
             newInstance.setOptions();
         }
 
@@ -674,6 +683,7 @@
                 }, 10);
             }
         } else {
+            addedRows.value = 0
             updateNormalizedData();
             initializeSelects();
         }

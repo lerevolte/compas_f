@@ -1,17 +1,17 @@
 <template>
     <div class="filter" ref="filterRef" :class="{ 'filter_open': filter.state.isOpen }">
         <div class="filter__header" :class="{'filter__header_fill': filter.state.activeTabs.length > 0}">
-            <AppInput 
-                @click="event => filter.toggleOptions(event)" 
-                @keyup.enter="filter.updateInfo()" 
-                v-model="filter.state.search" 
-                :options="{ 
-                    id: 0, 
-                    title: '', 
-                    type: 'text', 
-                    name: 'search', 
-                    placeholder: ' Фильтр + поиск', 
-                    autocomplete: 'off' 
+            <AppInput
+                @click="event => filter.toggleOptions(event)"
+                @keyup.enter="filter.updateInfo()"
+                v-model="filter.state.search"
+                :options="{
+                    id: 0,
+                    title: '',
+                    type: 'text',
+                    name: 'search',
+                    placeholder: ' Фильтр + поиск',
+                    autocomplete: 'off'
                 }"
             />
 
@@ -40,22 +40,22 @@
                 </div>
 
                 <div class="filter__header" :class="{'filter__header_fill': filter.state.activeTabs.length > 0}">
-                    <AppInput 
-                        @keyup.enter="filter.updateInfo()" 
-                        v-model="filter.state.search" 
-                        :options="{ 
-                            id: 0, 
+                    <AppInput
+                        @keyup.enter="filter.updateInfo()"
+                        v-model="filter.state.search"
+                        :options="{
+                            id: 0,
                             title: '',
                             type: 'text',
-                            name: 'search', 
-                            placeholder: ' Фильтр + поиск', 
-                            autocomplete: 'off' 
+                            name: 'search',
+                            placeholder: ' Фильтр + поиск',
+                            autocomplete: 'off'
                         }"
                     />
 
                     <div class="filter__tabs" v-if="filter.state.activeTabs.length > 0">
                         <div class="filter__tab" v-for="tab in filter.state.activeTabs" :data-key="tab.key" :key="tab.key" >
-                            {{ tab.label }}: {{ filter.setTabValue(tab) }}
+                            <span class="filter__tab-text">{{ tab.label }}: {{ filter.setTabValue(tab) }}</span>
                             <IconClose @click="filter.deleteTab(tab)" />
                         </div>
                     </div>
@@ -77,10 +77,10 @@
                 <draggable
                     tag="div"
                     group="filter-fields"
-                    v-model="filter.state.fields" 
+                    v-model="filter.state.fields"
                     :forceFallback="true"
                     :fallbackOnBody="true"
-                    item-key="id" 
+                    item-key="id"
                     handle=".icon_drag-field"
                     class="filter__fields"
                     drag-class="draggable-drag"
@@ -91,7 +91,7 @@
                 >
                     <template #item="{ element: field }">
                         <div class="filter__field" :class="{'filter__field_disabled': !field.enabled}">
-                            <IconDrag 
+                            <IconDrag
                                 class="icon_drag-field"
                             />
                             <AppSelect
@@ -137,7 +137,7 @@
                                 }"
                                 v-model="filter.state.tabsValues[field.key]"
                             />
-                            <AppSelect 
+                            <AppSelect
                                 v-else-if="field.type == 'boolean'"
                                 :isPreventBottom="true"
                                 :options="{
@@ -157,11 +157,11 @@
                                 }"
                                 v-model="filter.state.tabsValues[field.key]"
                             />
-                            <AppInput 
+                            <AppInput
                                 v-else
                                 :options="field"
                                 v-model="filter.state.tabsValues[field.key]"
-                                @keyup.enter="filter.updateInfo()" 
+                                @keyup.enter="filter.updateInfo()"
                             />
                             <AppPopup class="field__settings" :isPreventBottom="true">
                                 <template #header>
@@ -179,7 +179,7 @@
                             </AppPopup>
                         </div>
                     </template>
-                </draggable> 
+                </draggable>
 
                 <AppPopup class="filter__popup" :isPreventBottom="true">
                     <template #header>
@@ -227,20 +227,20 @@
                     Сохраненные
                 </strong>
                 <div class="filter__saves">
-                    <div 
-                        v-for="(save, index) in savedFilters" 
-                        class="filter__save filter-save" 
+                    <div
+                        v-for="(save, index) in savedFilters"
+                        class="filter__save filter-save"
                         :class="{'filter__save_active': save.id == filter.savedFilter.active.id}"
                         @click="!filter.savedFilter.active.state && filter.savedFilter.get(save, index)"
                     >
                         <div class="filter-save__title">
-                            <AppInput 
+                            <AppInput
                                 v-if="filter.savedFilter.active.state && filter.savedFilter.active.id == save.id"
-                                :options="{ 
-                                    id: 0, 
-                                    title: null, 
-                                    type: 'text', 
-                                    name: 'saved-filter-title', 
+                                :options="{
+                                    id: 0,
+                                    title: null,
+                                    type: 'text',
+                                    name: 'saved-filter-title',
                                 }"
                                 v-model="filter.savedFilter.active.title"
                             />
@@ -249,20 +249,20 @@
                             </span>
                         </div>
 
-                        <AppShowMore 
+                        <AppShowMore
                             @click.prevent.stop
                             :options="filter.savedFilter.actions"
                             :isPreventBottom="true"
                             @initClick="action => filter.savedFilter[action](save, index)"
                         />
                     </div>
-                    <AppInput 
+                    <AppInput
                         v-if="filter.savedFilter.active.state && filter.savedFilter.active.id == 'new'"
-                        :options="{ 
-                            id: 0, 
-                            title: null, 
-                            type: 'text', 
-                            name: 'saved-filter-title', 
+                        :options="{
+                            id: 0,
+                            title: null,
+                            type: 'text',
+                            name: 'saved-filter-title',
                         }"
                         v-model="filter.savedFilter.active.title"
                     />
@@ -277,8 +277,8 @@
 
 <script setup>
     import './Filter.scss';
-    
-    import draggable from 'vuedraggable'; 
+
+    import draggable from 'vuedraggable';
     import AppStatus from '@AppComponents/Inputs/Status/Status.vue'
     import AppPopup from '@AppComponents/Popup/Popup.vue'
     import AppCheckbox from '@AppComponents/Inputs/Checkbox/Checkbox.vue'
@@ -524,7 +524,7 @@
 
             for (let field of savedFilterFields) {
                 findedField = this.state.fields.find(f => f.key == field.key)
-                
+
                 if (findedField) {
                     findedField.value = field.value
                     findedField.enabled = true
@@ -576,7 +576,7 @@
                     name: 'Вверх',
                     action: 'moveUp',
                     enabled: true
-                },    
+                },
                 {
                     name: 'Вниз',
                     action: 'moveDown',
@@ -611,7 +611,7 @@
                 return p
             })
         }
- 
+
         get(item, is_update = true) {
             let findedField = null
             let flag = false
@@ -684,7 +684,7 @@
             } else {
                 injectedFilter.updateSavedFilter(request)
             }
-            
+
             this.clear()
         }
 
@@ -718,7 +718,6 @@
                 state: false,
                 fields: hiddenFilter ? hiddenFilter.fields : []
             })
-
 
             filter.state.fields = [
                 ...this.active.fields,
@@ -760,7 +759,7 @@
 
     const savedFilters = computed(() => {
         return injectedFilter.saves?.filter(p => !p.is_hidden).sort((p1, p2) => p1.sort - p2.sort)
-    })  
+    })
 
     const filter = new Filter(filterRef)
 
@@ -775,34 +774,34 @@
         const checkTabsWidth = () => {
             if (isCheckingTabs) return;
             if (!filterTabsRef.value || !filterRef.value) return;
-            
+
             if (checkTabsWidthTimeout) {
                 clearTimeout(checkTabsWidthTimeout)
             }
-            
+
             checkTabsWidthTimeout = setTimeout(() => {
                 isCheckingTabs = true
-                
+
                 const containerWidth = filterRef.value.offsetWidth
                 const availableWidth = containerWidth - 100 // Запас 100px
-                
+
                 const visibleTabs = filterTabsRef.value.querySelectorAll('.filter__tab:not(.filter__tab_other)')
                 const otherTab = filterTabsRef.value.querySelector('.filter__tab_other')
-                
+
                 let totalTabsWidth = 0
                 visibleTabs.forEach(tab => {
                     totalTabsWidth += tab.offsetWidth
                 })
-                
+
                 if (otherTab && filter.state.hiddenTabs.length > 0) {
                     totalTabsWidth += otherTab.offsetWidth
                 }
-                
+
                 while (totalTabsWidth > availableWidth && filter.state.activeTabs.length > 0) {
                     let maxField = null
                     let maxFieldLength = 0
                     let maxFieldElement = null
-                    
+
                     visibleTabs.forEach(tab => {
                         const tabWidth = tab.offsetWidth
                         if (tabWidth > maxFieldLength) {
@@ -810,16 +809,16 @@
                             maxFieldLength = tabWidth
                         }
                     })
-                    
+
                     if (maxFieldElement) {
                         const fieldKey = maxFieldElement.getAttribute('data-key')
                         const field = filter.state.activeTabs.find(p => p.key == fieldKey)
-                        
+
                         if (field) {
                             filter.state.hiddenTabs.push(field)
                             filter.state.activeTabs = filter.state.activeTabs.filter((tab) => tab.key != field.key)
                             totalTabsWidth -= maxFieldLength
-                            
+
                             const newVisibleTabs = filterTabsRef.value.querySelectorAll('.filter__tab:not(.filter__tab_other)')
                             if (newVisibleTabs.length === 0) break
                         } else {
@@ -829,10 +828,10 @@
                         break
                     }
                 }
-                
+
                 while (totalTabsWidth <= availableWidth && filter.state.hiddenTabs.length > 0) {
                     const fieldToRestore = filter.state.hiddenTabs[filter.state.hiddenTabs.length - 1]
-                    
+
                     if (fieldToRestore) {
                         const tempTab = document.createElement('div')
                         tempTab.className = 'filter__tab'
@@ -842,10 +841,10 @@
                         tempTab.style.position = 'absolute'
                         tempTab.style.whiteSpace = 'nowrap'
                         filterTabsRef.value.appendChild(tempTab)
-                        
+
                         const tempTabWidth = tempTab.offsetWidth
                         filterTabsRef.value.removeChild(tempTab)
-                        
+
                         const newTotalWidth = totalTabsWidth + tempTabWidth
                         if (newTotalWidth <= availableWidth) {
                             filter.state.hiddenTabs = filter.state.hiddenTabs.filter((tab) => tab.key != fieldToRestore.key)
@@ -858,7 +857,7 @@
                         break
                     }
                 }
-                
+
                 isCheckingTabs = false
             }, 50) // Debounce 50ms
         }
@@ -867,9 +866,9 @@
             classObserver.value.disconnect()
         }
         classObserver.value = new MutationObserver(checkTabsWidth)
-        classObserver.value.observe(filterTabsRef.value, { 
-            childList: true, 
-            subtree: true, 
+        classObserver.value.observe(filterTabsRef.value, {
+            childList: true,
+            subtree: true,
             attributes: true,
             attributeFilter: ['class', 'style']
         })

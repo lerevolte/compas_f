@@ -1,7 +1,6 @@
 @use '@/assets/variables.scss' as variables;
 @use '@/assets/mixins.scss' as mixins;
 
-/*Обнуление*/
 *,
 b::before,
 *::after {
@@ -87,8 +86,6 @@ html {
         }
     }
 
-    // На мобильном делаем безопасную зону (под нотчем и нижним URL-баром Safari)
-    // белой, чтобы плашки браузерного chrome тонировались под фон страницы.
     @media (max-width: 990px) {
         background-color: variables.$color-white;
         body {
@@ -107,10 +104,6 @@ html {
     min-height: 100dvh;
 }
 
-
-/* ------------------------------------------------------------------------------------ */
-
-/*Класс для того, чтобы не было скролла по иксу */
 .wrapper {
     height: 100%;
 }
@@ -185,8 +178,6 @@ html {
     }
 }
 
-// Внешняя публичная ссылка (/external/{token}): меню-сайдбар не рендерится,
-// поэтому колонку под него (230px) не резервируем — контент на всю ширину.
 .page:has(> main.external-page) {
     grid-template-columns: 1fr;
 
@@ -282,6 +273,41 @@ html {
             }
         }
 
+        @media (max-width: 990px) {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            #mobile-menu-target {
+                flex: 1 1 auto;
+                min-width: 0;
+                overflow-wrap: anywhere;
+            }
+
+            #filter-container {
+                width: auto;
+                max-width: none;
+                flex: 0 0 auto;
+            }
+
+            .filter {
+                width: auto;
+                max-width: none;
+                position: static;
+            }
+
+            .filter__mobile-search {
+                position: static;
+                top: auto;
+                right: auto;
+            }
+
+            .page__header-actions {
+                flex: 0 0 auto;
+                align-items: center;
+            }
+        }
+
         @media (max-width: 390px) {
             #mobile-menu-target {
                 max-width: 200px;
@@ -322,7 +348,6 @@ html {
         }
     }
 
-
     @media (max-width: 990px) {
         gap: 15px;
     }
@@ -343,15 +368,12 @@ html {
 }
 
 .container {
-    /*Пишется max-width*/
     max-width: variables.$container-width;
     margin: 0 auto;
-    /*Избегание прилипания к краю*/
     padding: 20px;
     box-sizing: content-box;
 }
 
-/*фоновое изображение*/
 .ibg {
     position: relative;
 }
@@ -386,9 +408,6 @@ input, textarea {
     border-radius: 5px;
     font-family: inherit;
     caret-color: variables.$color-black;
-    // Явный цвет текста: фон инпута белый, но color НЕ задавался и
-    // наследовался от родителя. В некоторых местах (массовое редактирование
-    // в ячейках таблицы) наследовался белый — текст сливался с фоном (8468).
     color: variables.$color-black;
     font-size: variables.$font-size-default;
     background-color: variables.$color-white;
@@ -436,7 +455,6 @@ input, textarea {
     }
 }
 
-/* Анимация */
 @keyframes loading {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
@@ -456,7 +474,7 @@ input, textarea {
                 display: flex;
                 flex-direction: column;
                 gap: 10px;
-        
+
                 h4 {
                     font-size: 14px;
                 }
@@ -471,11 +489,11 @@ input, textarea {
     .Toastify__toast-theme--light {
         background-color: rgba(27, 39, 52, 75%);
         border-radius: 10px;
-        
+
         &:hover {
             background-color: rgba(27, 39, 52, 75%) !important;
         }
-        
+
         * {
             color:variables.$color-white;
         }
@@ -560,14 +578,8 @@ section {
     }
 }
 
-
 .draggable-ghost {
     background: #fbfcfd;
-    // Раньше использовали outline — на абсолютно позиционированных строках
-    // виртуализированной таблицы нижний край outline иногда обрезался
-    // overflow:hidden у родителя, и dashed-рамка визуально оставалась только
-    // сверху. inset-bordering через box-shadow рисуется ВНУТРИ box и
-    // overflow его не клипает.
     box-shadow:
         inset 0 2px 0 0 #a6b7d4,
         inset 0 -2px 0 0 #a6b7d4,
@@ -581,13 +593,10 @@ section {
     }
 }
 
-
 .menu__overlay {
     position: relative;
     z-index: 1001;
 }
-
-
 
 .detail__overlay {
     position: absolute;
@@ -603,7 +612,6 @@ section {
     }
 }
 
-
 .tariffs__group {
     display: flex;
     flex-direction: column;
@@ -615,7 +623,7 @@ section {
         @media (max-width: 660px) {
             min-height: 1200px;
         }
-    }   
+    }
 
     .loader {
         width: 75vw;
@@ -655,10 +663,9 @@ section {
         grid-template-columns: repeat(2, 1fr) auto;
 
         @media (max-width: 600px) {
-            grid-template-columns: 1fr; 
+            grid-template-columns: 1fr;
         }
     }
-
 
     @media (max-width: 1200px) {
         max-width: none;
@@ -692,10 +699,6 @@ section {
         margin-right: 20px;
     }
 
-    // Поиск по задаче (AppRelation) делаем шире: иначе не помещается название
-    // в поле/результатах, плюс справа выводятся ID и дата доставки (задача 10).
-    // .form__item.form__item_select задаёт width:100% (специфичность 0,2,0) —
-    // повышаем специфичность своего правила, иначе ширина перебивалась.
     .form__item.form__item_select {
         width: 400px;
         max-width: 100%;
@@ -709,7 +712,7 @@ section {
             height: 30px;
             align-items: center;
         }
-    
+
         .form__item_input {
           padding-left: 0px;
         }
@@ -718,7 +721,7 @@ section {
 
           padding-left: 10px;
         }
-        
+
         .select__value-icon {
             img,
             svg,
@@ -770,10 +773,6 @@ section {
 }
 
 .logistic-header {
-    // Унаследованный от .page__header gap:100px при нехватке места приводил к
-    // тому, что вторая группа (статистика + поиск) наезжала на дейтпикер
-    // «Выбрать день» (8557, bug1). Уменьшаем разрыв и разрешаем перенос: при
-    // нехватке ширины группа переносится на новую строку, а не накладывается.
     flex-wrap: wrap;
     column-gap: 30px;
     row-gap: 20px;
@@ -868,15 +867,6 @@ section {
     }
 }
 
-// ── Попап статистики логистики (logistic-header__statistic) ──
-// popup__content телепортируется в <body> с классом logistic-header__statistic
-// прямо на самом элементе (см. Popup.vue → contentClass). Кладём правила в
-// глобальный default.scss (а не в scoped/нескоуп-блок страницы), чтобы они
-// гарантированно грузились и не зависели от data-v и порядка инъекции стилей.
-// Базовый .popup__content ограничен max-width: 200px, поэтому фиксируем ширину
-// и раскладку. Ширину тянем по всей цепочке (popup__content → wrapper →
-// stat-layout), иначе flex-stretch обёртки не срабатывает и stat-body не
-// растягивается.
 .popup__content.logistic-header__statistic {
     width: 470px !important;
     min-width: 470px !important;
@@ -884,12 +874,6 @@ section {
     overflow: visible;
 
     .logistic-header__statistic-content {
-        // Базовое правило .logistic-header__statistic-content делает обёртку
-        // grid'ом с колонками `1fr 150px` (наследие старого чарт-лейаута). Из-за
-        // этого единственный потомок (.stat-layout) садится в 1fr-колонку, а
-        // вторая 150px-колонка остаётся пустой и съедает ширину справа. Отменяем
-        // grid — обёртка обычный блок на всю ширину, а раскладку дальше делает
-        // flex внутри .stat-layout.
         display: block !important;
         grid-template-columns: none !important;
         width: 100%;
@@ -901,15 +885,12 @@ section {
         align-items: stretch;
     }
 
-    // Область данных занимает всё свободное место (flex-basis: 0 → растёт от нуля
-    // и забирает всю ширину, кроме сайдбара).
     .stat-body {
         flex: 1 1 0 !important;
         min-width: 0 !important;
         width: auto !important;
     }
 
-    // Сайдбар фиксированной ширины, прижат к правому краю.
     .stat-sidebar {
         flex: 0 0 150px !important;
         width: 150px !important;

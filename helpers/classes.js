@@ -54,6 +54,15 @@ export async function openUpdPdf(slug, ids, withDocs = false) {
     return false
 }
 
+function actionOptionLabel(options, value) {
+    if (!Array.isArray(options) || value === undefined || value === null) return null
+    let scalar = value && typeof value === 'object' && !Array.isArray(value) && 'value' in value ? value.value : value
+    if (Array.isArray(scalar)) scalar = scalar[0]
+    const option = options.find(opt => String(opt?.value) === String(scalar))
+    const text = option?.label && typeof option.label === 'object' ? option.label.text : option?.label
+    return text || null
+}
+
 function draftProductsFromJson(raw) {
     let products = raw
     if (typeof products === 'string') {
@@ -153,12 +162,12 @@ export class Common {
     transformName(name, length) {
         const dotIndex = name.lastIndexOf('.');
         if (dotIndex === -1) return name;
-        
+
         const response = name.slice(0, dotIndex);
         const ext = name.slice(dotIndex);
-        
-        return response.length <= length + 3 
-          ? name 
+
+        return response.length <= length + 3
+          ? name
           : `${response.slice(0, length)}...${response.slice(-3)}${ext}`;
       };
 
@@ -237,7 +246,6 @@ export class Common {
         });
     }
 
-
     cleanUrl() {
         if (window.location.search) {
             const cleanUrl = window.location.origin + window.location.pathname;
@@ -265,7 +273,6 @@ export class Common {
 
         return Object.keys(params).length === 0 ? null : params;
     }
-
 
     useDoubleClick(callback, alternativeCallBack = null, delay = 300) {
         let lastClickTime = 0
@@ -588,7 +595,7 @@ export class Table {
                 this.filter.setSaves(response.data.filters)
                 this.filter.set(response.data.fields)
             }
-            
+
             this.getHeader(response.data.table)
             await this.initVirtualizer()
             if (this.rowVirtualizer) {
@@ -669,7 +676,7 @@ export class Table {
             console.warn('TableRef not available for virtualizer initialization')
             return
         }
-        
+
         const scope = effectScope()
         this._virtScope = scope
         scope.run(() => {
@@ -867,7 +874,7 @@ export class Table {
                         product_nds_included: row['product_nds_included']
                     })
                 })
-                
+
                 nextTick(() => {
                     this.initVirtualizer()
                 })
@@ -875,25 +882,25 @@ export class Table {
                 for (let backupRow of this.backup.body) {
                     requestRow = {}
                     isEdit = false
-    
+
                     let row = rawRequest.find(item => item.id == backupRow.id)
-    
+
                     if (row) {
                         for (let key in row) {
                             if (!isEqual(row[key], backupRow[key]) && ['isChoose', 'edit'].indexOf(key) == -1) {
                                 column = this.header.find(column => column.key == key)
                                 requestRow[key] = JSON.parse(JSON.stringify(row[key]))
-    
+
                                 if (column.type == 'relation') {
                                     row[key].value = row[key].value.filter(p => p != null)
                                     row[key].localOptions = row[key].localOptions.filter(p => p != null && p.value != null)
                                     requestRow[key] = requestRow[key].value.filter(p => p != null)
                                 }
-    
+
                                 isEdit = true
                             }
                         }
-    
+
                         if (isEdit) {
                             requestRow.id = row.id
                             request.push(requestRow)
@@ -901,7 +908,6 @@ export class Table {
                     }
                 }
             }
-            
 
             if (request.length == 0 && !(this.slug == 'products' && this.options?.isLocalTable)) return
 
@@ -967,12 +973,17 @@ export class Table {
     }
 
     createTaskFromAddress(row) {
-        const keys = ['name', 'address', 'phone', 'time', 'car_requirements', 'employee_requirements', 'service_time', 'comment', 'contact', 'photo', 'client_id', 'weight', 'delivery_price', 'volume', 'company_id', 'shipment_company_id']
+        const keys = ['name', 'address', 'phone', 'time', 'car_requirements', 'employee_requirements', 'service_time', 'comment', 'contact', 'photo', 'client_id', 'weight', 'delivery_price', 'volume', 'company_id', 'shipment_company_id', 'action_type']
         const defaults = {}
         for (const key of keys) {
             if (row[key] !== undefined && row[key] !== null) {
                 defaults[key] = JSON.parse(JSON.stringify(row[key]))
             }
+        }
+        const actionColumn = this.header.find(column => column.key == 'action_type')
+        const actionLabel = actionOptionLabel(actionColumn?.options, row.action_type)
+        if (actionLabel) {
+            defaults.__labels = { action_type: actionLabel }
         }
         if (this.slug === 'addresses') {
             const draft = draftProductsFromJson(row.products)
@@ -1090,7 +1101,7 @@ export class Table {
 
     open(row, slug = null) {
         this.emit('openModal', {
-            ...row, 
+            ...row,
             slug: slug ?? row.related_table,
             type: 'open'
         })
@@ -1179,7 +1190,7 @@ export class Table {
             state: true,
             type: 'delete'
         }
-        
+
     }
 
     async delete() {
@@ -1187,7 +1198,7 @@ export class Table {
             this.deleteBuffer.loading = true
             let request = this.deleteBuffer.list.map(p => p.id)
             this.body = this.body.filter(row => this.deleteBuffer.list.findIndex(item => item.id == row.id) == -1)
-            
+
             await api.callMethod('DELETE', routes.table.delete.replace('${slug}', this.slug), {
                 ids: request
             })
@@ -1255,7 +1266,7 @@ export class Table {
     }}
 
     initRestore(rows = []) {
-        rows = typeof rows == 'boolean' || rows.length == 0 ? this.body.filter(item => item.isChoose) : rows 
+        rows = typeof rows == 'boolean' || rows.length == 0 ? this.body.filter(item => item.isChoose) : rows
 
         this.deleteBuffer = {
             list: Array.isArray(rows) ? rows : [rows],
@@ -1269,7 +1280,7 @@ export class Table {
             this.deleteBuffer.loading = true
             let request = this.deleteBuffer.list.map(p => p.id)
             this.body = this.body.filter(row => this.deleteBuffer.list.findIndex(item => item.id == row.id) == -1)
-            
+
             await api.callMethod('POST', routes.table.restore.replace('${slug}', this.slug), {
                 ids: request
             })
@@ -1476,7 +1487,7 @@ export class Table {
         if (!this.state) {
             this.backupLocalBody()
         }
-        
+
         this.state = 'edit'
         this.body = this.body.map(row => {
             return {
@@ -1619,18 +1630,18 @@ export class Filter {
 
             return response.join('&')
         }
-        
+
         try {
             this.filtering = true
             this.setter.loading = true
             this.query = setFilter(fields, saved_query)
-            
+
             const tableRoute = this.setter.options?.isExternal
                 ? routes.external_link.table.replace('${token}', this.setter.pageId).replace('${slug}', this.setter.slug)
                 : routes.table.get.replace('${slug}', this.setter.slug)
             let response = await api.callMethod("GET", tableRoute + `${this.query ? '?' + this.query : ''}`)
             this.setter.set(response.data)
-            
+
             if (!this.setter.dependences.state) {
                 this.setter.common.setQueryUrl(this.query ? '?' + this.query : '')
             } else if (this.setter.dependences.query.trashed) {
@@ -1723,7 +1734,7 @@ export class Validator {
     }
 
     setFieldValue(field, slug = 'value') {
-        if (!field.value) return null 
+        if (!field.value) return null
 
         if (field.type == 'address') {
             return field.value
@@ -1738,15 +1749,15 @@ export class Validator {
 
     getSelectValue(field) {
         if (!field.value) return null
-        
+
         let response = null
         if (Array.isArray(field.value)) response = field.options.filter(option => field.value.includes(option.value)).map(option => option.label)
         else if (typeof field.value == 'object' && field.value !== null) response = field.options.filter(option => option.value == field.value).map(option => option.label)
         else response = field.options.filter(option => option.value == field.value).map(option => option.label)
-    
+
         if (field.type == 'select_dropdown') {
             return response.join(', ')
-        } 
+        }
         return response
     }
 
@@ -1794,17 +1805,17 @@ export class History {
     constructor() {
         this.events = {
             data: [],
-            count: 1, 
-            current_page: 1, 
-            last_page: 1, 
+            count: 1,
+            current_page: 1,
+            last_page: 1,
             per_page: 1
         }
 
         this.fields = {
             data: [],
-            count: 1, 
-            current_page: 1, 
-            last_page: 1, 
+            count: 1,
+            current_page: 1,
+            last_page: 1,
             per_page: 1
         }
 
@@ -1901,7 +1912,7 @@ export class HeaderEditable {
             document.removeEventListener('click', this.boundCheckClick)
         }
         const findedField = this.common.findColumnField(this.columns, 'name')
-        
+
         if (findedField) {
             typeof findedField.value == 'object' && findedField.value != null ? findedField.value.value = this.name : findedField.value = this.name
         }
@@ -1931,13 +1942,18 @@ export class HeaderEditable {
     }
 
     createTaskFromAddress({columns, slug, id}) {
-        const keys = ['name', 'address', 'phone', 'time', 'car_requirements', 'employee_requirements', 'service_time', 'comment', 'contact', 'photo', 'client_id', 'weight', 'delivery_price', 'volume', 'company_id', 'shipment_company_id']
+        const keys = ['name', 'address', 'phone', 'time', 'car_requirements', 'employee_requirements', 'service_time', 'comment', 'contact', 'photo', 'client_id', 'weight', 'delivery_price', 'volume', 'company_id', 'shipment_company_id', 'action_type']
         const defaults = {}
         for (const key of keys) {
             const field = this.common.findColumnField(columns, key)
             if (field && field.value !== undefined && field.value !== null) {
                 defaults[key] = JSON.parse(JSON.stringify(field.value))
             }
+        }
+        const actionField = this.common.findColumnField(columns, 'action_type')
+        const actionLabel = actionOptionLabel(actionField?.options, actionField?.value)
+        if (actionLabel) {
+            defaults.__labels = { action_type: actionLabel }
         }
         const productsField = this.common.findColumnField(columns, 'products')
         if (productsField && productsField.value) {
@@ -2089,7 +2105,7 @@ export class Section {
             this.modal.loading = true
 
             const response = await api.callMethod('POST', routes.detail.create_section, {
-                name: this.modal.content.name, 
+                name: this.modal.content.name,
                 column_id: this.modal.content.column_id.replace('column_', ''),
                 slug: slug,
                 ...(this.module ? { module: this.module } : {})
@@ -2149,7 +2165,7 @@ export class Section {
     async update(section, column, slug, columns) {
         try {
             await api.callMethod('PUT', routes.detail.update_section.replace('${id}', section.id), {
-                ...section, 
+                ...section,
                 slug: slug
             })
 
@@ -2266,7 +2282,7 @@ export class Section {
         let isError = false
         let fields = []
         this.buffer.edits = []
-        
+
         for (let column in columns) {
             for (let section of columns[column]) {
                 fields = section.fields.reduce((arr, field) => {
@@ -2281,7 +2297,7 @@ export class Section {
                             arr.push(field)
                         }
                     }
-                
+
                     return arr
                 }, [])
                 this.validator.check(fields)
@@ -2593,7 +2609,7 @@ export class Field {
             if (field.section_type != 'field') {
                 const fromSection = this.common.findColumnSection(columns, field.section_id)
                 const toSection = this.common.findColumnSection(columns, field.section_id)
-                
+
                 if (this.modal.content.section_id != field.section_id) {
                     fromSection.fields = fromSection.fields.filter(p => p.id != field.id)
                     toSection.fields.push(field)
@@ -2771,7 +2787,7 @@ export class Field {
     setFieldValue(field, slug = 'value') {
         const response = computed({
             get() {
-                if (!field) return null 
+                if (!field) return null
 
                 if (field.type == 'address') {
                     return field
@@ -2855,26 +2871,26 @@ export class Field {
         })
         return response
     }
-    
+
     getSelectValue(field) {
         const response = computed({
             get() {
                 if (!field.value) return null
-                
+
                 let response = null
                 if (Array.isArray(field.value)) response = field.options.filter(option => field.value.includes(option.value)).map(option => option.label)
                 else if (typeof field.value == 'object' && field.value !== null) response = field.options.filter(option => option.value == field.value).map(option => option.label)
                 else response = field.options.filter(option => option.value == field.value).map(option => option.label)
-            
+
                 if (field.type == 'select_dropdown') {
                     return response.join(', ')
-                } 
+                }
                 return response
             }
         })
         return response
     }
-    
+
     initChangeField(field, target, type = 'target') {
         if (!field.can_edit || field.type == 'text_group') return
 
@@ -2891,10 +2907,10 @@ export class Field {
             if (target.closest('[data-action]')) return
 
             if (['text', 'number', 'date', 'select_dropdown'].includes(field.type)) {
-                if (field.edit || 
-                    target.classList.contains('blank__link') || 
+                if (field.edit ||
+                    target.classList.contains('blank__link') ||
                     (
-                        target.classList.contains('blank__text') && 
+                        target.classList.contains('blank__text') &&
                         !target.classList.contains('blank__text_empty')
                     )
                 ) return
@@ -3090,7 +3106,6 @@ export class Settings {
         let isError = false
         let fields = []
         this.buffer.edits = []
-        
 
         fields = this.section.fields.reduce((arr, field) => {
             if (field.type === 'text_group') {
@@ -3104,14 +3119,14 @@ export class Settings {
                     arr.push(field)
                 }
             }
-        
+
             return arr
         }, [])
 
         this.validator.check(fields)
         isError = isError ? isError : Object.keys(this.validator.errors).length > 0
         this.buffer.edits = [...this.buffer.edits, ...fields]
-        
+
         for (let field of fields) {
             field.error = {
                 state: this.validator.errors[field.key] ?? false,
@@ -3146,7 +3161,7 @@ export class Settings {
                     }
                 } else if (field.edit) {
                     field.edit = false
-                    
+
                     if (field.subtype == 'map_suggest') {
                         field.options = [
                             {
@@ -3551,7 +3566,6 @@ export class Socket {
         window.Echo.private(`tenant.${routes.tenant.split('.')[0]}`).listen('ObjectUpdated', (data) => this.ObjectUpdated(data))
         window.Echo.private(`tenant.${routes.tenant.split('.')[0]}`).listen('FieldUpdated', (data) => this.ObjectUpdated(data))
     }
-
 
     set({slug, id}) {
         if (!this.entities[slug]) {

@@ -8,7 +8,7 @@
 
         .form__item_input {
             cursor: pointer;
-            
+
             label {
                 display: none;
             }
@@ -103,6 +103,10 @@
             display: none;
         }
 
+        &.select_disabled .select__value.select__value_single {
+            max-width: calc(100% - 10px);
+        }
+
         .select__option {
             &.select__option_active,
             &.select__option_disabled {
@@ -121,7 +125,7 @@
 
             &.select__option_disabled {
                 cursor: default;
-                
+
                 .value__text {
                     color: #bcbcbc;
                 }
@@ -170,7 +174,7 @@
                 cursor: pointer;
                 text-decoration: underline;
                 color: variables.$color-link;
-    
+
                 &:hover {
                     text-decoration: none;
                 }
@@ -309,7 +313,7 @@
     width: 100%;
     border-radius: 5px;
     max-height: 300px;
-    min-width: 200px; 
+    min-width: 200px;
     background: variables.$color-white;
     box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.25);
     overflow: auto;
@@ -327,9 +331,6 @@
     justify-content: space-between;
     gap: 8px;
 
-    // Подписи (ID, дата доставки в поиске задач логистики) держим вместе
-    // справа: первый текст (название) забирает свободное место, остальные
-    // прижимаются к правому краю одной группой.
     .value__text:first-child {
         margin-right: auto;
     }
@@ -405,11 +406,7 @@
 }
 
 .select-container {
-    // margin-bottom: 10px;
-    
-    // &:last-child {
-    //     margin-bottom: 0;
-    // }
+
 }
 
 .select__actions {
@@ -434,7 +431,6 @@
         opacity: 0;
     }
 }
-
 
 .select__content-abs {
     top: 1px;

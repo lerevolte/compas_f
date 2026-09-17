@@ -6,7 +6,6 @@
     max-width: 600px;
 }
 
-
 .filter {
     position: relative;
     width: 100%;
@@ -22,10 +21,6 @@
             right: 15px;
         }
 
-        // Когда применены фильтры, визуально чипсы лежат поверх инпута слева.
-        // Раньше инпут «прятался» через font-size:0 и набрать строку поиска было
-        // нельзя. Теперь оставляем шрифт нормальным, а каретку сдвигаем
-        // padding-left'ом, равным ширине чипсов (см. --filter-tabs-width).
         &.filter__header_fill {
             input {
                 padding-left: calc(var(--filter-tabs-width, 0px) + 14px);
@@ -73,11 +68,9 @@
 
         @media (max-width: 1450px) {
             width: 100%;
-        }  
+        }
 
         @media (max-width: 990px) {
-            // viewport-fit=cover расширяет viewport в safe-area —
-            // покрываем всё экранное пространство, контент в безопасной зоне.
             position: fixed;
             inset: 0;
             gap: 0px;
@@ -136,7 +129,6 @@
             width: 100%;
             justify-content: center;
         }
-
 
         @media (max-width: 990px) {
             padding: 0px 25px;
@@ -228,8 +220,6 @@
     padding: 15px 0px;
 
     &:last-child {
-        // Раньше был display: grid с template-rows, который растягивал
-        // средний пустой блок .filter__saves когда родитель тянул высоту.
         gap: 0px;
         display: flex;
         flex-direction: column;
@@ -260,8 +250,6 @@
 }
 
 .filter__save {
-    // Фиксированная высота строки: с вертикальными паддингами высота
-    // «плавала» (в Safari доходила до ~48px) и текст не центрировался.
     box-sizing: border-box;
     height: 40px;
     min-height: 40px;
@@ -316,10 +304,10 @@
         .show-more {
             opacity: 1;
         }
-    
+
         &:hover {
             background: transparent;
-        }   
+        }
     }
 
     &:has(.form__item_input) {
@@ -334,7 +322,6 @@
         padding: 0px 25px 0px 25px;
     }
 }
-
 
 .filter__field {
     position: relative;
@@ -368,7 +355,6 @@
         opacity: 0;
     }
 
-
     &:hover {
         .field__settings,
         .icon_drag {
@@ -377,10 +363,6 @@
     }
 }
 
-// Скоп .popup чтобы стили wrapper'а НЕ применялись к .popup__content,
-// который через Teleport унаследовал тот же class 'filter__popup'.
-// Раньше padding: 0 15px падал и на teleport-content, появлялись лишние
-// отступы по краям списка опций фильтра — это и есть баг #3.
 .popup.filter__popup {
     padding: 0px 15px;
     max-width: max-content;
@@ -410,8 +392,6 @@
     }
 }
 
-// .filter__popup .popup__content уехал в body (Teleport), классы родителя
-// копируются на сам контент — селектор переписан напрямую.
 .popup__content.filter__popup {
     overflow-x: hidden;
 
@@ -461,9 +441,32 @@ button.button_text.filter__add {
 
     .filter__header {
         display: flex;
+        position: relative;
 
         .form__item_input {
             width: 100%;
+        }
+
+        .filter__tabs {
+            max-width: calc(100% - 50px);
+            flex-wrap: nowrap;
+        }
+
+        .filter__tab {
+            min-width: 0;
+            max-width: 100%;
+            flex-shrink: 1;
+
+            .icon__close {
+                flex-shrink: 0;
+            }
+        }
+
+        .filter__tab-text {
+            min-width: 0;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
         }
     }
 

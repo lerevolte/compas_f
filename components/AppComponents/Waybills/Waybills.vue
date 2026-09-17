@@ -153,7 +153,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="waybills__picker-field">
+                <div class="waybills__picker-field" v-if="!picker.carVehicleType">
                     <AppSelect
                         :isPreventBottom="true"
                         :options="{
@@ -193,7 +193,7 @@
                     <button
                         class="waybills__button"
                         type="button"
-                        :disabled="((picker.tasks.length > 1 || picker.currentIsLoading) && !picker.selected) || !picker.vehicleType || creating"
+                        :disabled="((picker.tasks.length > 1 || picker.currentIsLoading) && !picker.selected) || (!picker.vehicleType && !picker.carVehicleType) || creating"
                         @click="createOrder"
                     >{{ creating ? 'Создаётся…' : 'Создать заказ' }}</button>
                     <button class="waybills__link waybills__link_button" type="button" :disabled="creating" @click="picker.open = false">Отмена</button>
@@ -313,7 +313,8 @@
                 savedMassMethod = null
             }
             const vehicleTypes = response.data?.vehicle_types || []
-            let vehicleType = response.data?.vehicle_type ? String(response.data.vehicle_type) : null
+            const carVehicleType = response.data?.vehicle_type ? String(response.data.vehicle_type) : null
+            let vehicleType = carVehicleType
             if (!vehicleType) {
                 try {
                     vehicleType = localStorage.getItem('saby_vehicle_type') || null
@@ -342,6 +343,7 @@
                 massMethods: methods,
                 vehicleType,
                 vehicleTypes,
+                carVehicleType,
                 bodyType,
                 bodyTypes,
                 carBodyType,
@@ -361,7 +363,7 @@
 
     const createOrder = async () => {
         if ((picker.value.tasks.length > 1 || picker.value.currentIsLoading) && !picker.value.selected) return
-        if (!picker.value.vehicleType || creating.value || !props.pageId) return
+        if ((!picker.value.vehicleType && !picker.value.carVehicleType) || creating.value || !props.pageId) return
         creating.value = true
         errors.value = []
         try {

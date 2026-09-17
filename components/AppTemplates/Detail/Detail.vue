@@ -3,12 +3,12 @@
         <header id="mobile-menu-target" class="detail-page__header">
             <IconArrowBack @click="detail.closeDetail"/>
             <AppH1 ref="H1Ref" class="textarea_title">
-                <p 
-                    class="ghost_text" 
+                <p
+                    class="ghost_text"
                     v-html="detail.header.name"
-                    :class="{'ghost_text_show': !detail.header.editTitle}" 
+                    :class="{'ghost_text_show': !detail.header.editTitle}"
                 ></p>
-                <AppTextarea 
+                <AppTextarea
                     ref="textareaRef"
                     :options="{
                         disabled: !detail.header.editTitle,
@@ -100,7 +100,7 @@
         />
 
         <teleport to="#menu__overlay" v-if="detail.header.modal.state">
-            <AppModalWarning 
+            <AppModalWarning
                 :options="{
                     title: detail.header.modal.title,
                     action: detail.header.modal.action,
@@ -271,7 +271,7 @@
                         request = null
                     }
                 }
-                
+
                 this.queryTab = {
                     is_slug: true,
                     id: request
@@ -284,7 +284,7 @@
             this.is_module = is_module
         }
     }
-   
+
     class Detail {
         constructor() {
             this.id = null
@@ -559,6 +559,15 @@
                     if (!item.key || SKIP_BASED_KEYS.includes(item.key)) continue
                     if (item.value === undefined || item.value === null) continue
                     defaults[item.key] = JSON.parse(JSON.stringify(item.value))
+                    if (['status', 'select_dropdown'].includes(item.type) && Array.isArray(item.options)) {
+                        const scalar = item.value && typeof item.value === 'object' && !Array.isArray(item.value) && 'value' in item.value ? item.value.value : item.value
+                        const option = item.options.find(opt => String(opt?.value) === String(Array.isArray(scalar) ? scalar[0] : scalar))
+                        const text = option?.label && typeof option.label === 'object' ? option.label.text : option?.label
+                        if (text) {
+                            defaults.__labels = defaults.__labels || {}
+                            defaults.__labels[item.key] = text
+                        }
+                    }
                 }
             }
             for (const columnKey in this.columns) {
@@ -719,7 +728,7 @@
             }
             relationsVersion.value++
         }
-        
+
         updateMetaHeader(meta) {
             emit('updateMetaHeader', meta)
         }

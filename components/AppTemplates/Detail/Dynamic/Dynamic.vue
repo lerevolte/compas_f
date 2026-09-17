@@ -44,7 +44,7 @@
                 value: item
             })"
         />
-    
+
         <div class="dynamin__group" v-if="!props.options.isModule && props.tabs.active?.tab == 'products'">
             <AppVirtualTable
                 ref="productsTableRef"
@@ -98,7 +98,7 @@
                 value: item
             })"
         />
-    
+
         <AppRelatedObjects
             v-else-if="!props.options.isModule && props.tabs.active?.tab == 'relations'"
             :id="props.id"
@@ -154,7 +154,7 @@
 
 <script setup>
     import './Dynamic.scss';
-    
+
     import api from '@/helpers/api.js'
     import routes from '@/helpers/routes.js'
     import IconLoader from '@AppIcons/Loader.vue'
@@ -286,7 +286,6 @@
                 this.forbidden = false
                 emit('action', { action: 'setForbidden', value: false })
 
-
                 if (props.options.isExternal && props.options.isModule) {
                     const route = routes.external_link.module.replace('${token}', props.id).replace('${tab}', props.tabs.active.tab)
                     response = await api.callMethod('GET', route)
@@ -348,9 +347,22 @@
                 }
 
                 if (props.defaults && props.options.isGlobalEdit && response.data.detail?.columns) {
+                    const optionText = (option) => {
+                        const label = option?.label
+                        return String((label && typeof label === 'object' ? label.text : label) ?? option?.text ?? '').trim().toLowerCase()
+                    }
                     const applyDefault = (field) => {
                         if (!(field.key in props.defaults)) return
-                        const def = props.defaults[field.key]
+                        let def = props.defaults[field.key]
+                        const sourceLabel = props.defaults.__labels?.[field.key]
+                        if (['status', 'select_dropdown'].includes(field.type) && sourceLabel && Array.isArray(field.options)) {
+                            const scalar = def && typeof def === 'object' && !Array.isArray(def) && 'value' in def ? def.value : def
+                            const known = field.options.some(option => String(option?.value) === String(scalar))
+                            if (!known) {
+                                const match = field.options.find(option => optionText(option) === String(sourceLabel).trim().toLowerCase())
+                                if (match) def = match.value
+                            }
+                        }
                         if (field.value && typeof field.value === 'object' && !Array.isArray(field.value) && 'value' in field.value) {
                             const defIsObject = def && typeof def === 'object' && !Array.isArray(def) && 'value' in def
                             let value = defIsObject ? def.value : def
