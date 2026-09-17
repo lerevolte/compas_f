@@ -683,20 +683,25 @@
                 })
 
                 if (wasCreate && props.source?.slug && props.source?.id && item.id) {
-                    let draftSaved = false
-                    if (draftRows) {
-                        draftSaved = (await this.saveDraftProducts(slug, item.id, draftRows)) === true
+                    const relation = {
+                        source_slug: props.source.slug,
+                        source_id: props.source.id,
+                        target_slug: slug,
+                        target_id: item.id
                     }
                     try {
-                        await api.callMethod('POST', routes.relations.create, {
-                            source_slug: props.source.slug,
-                            source_id: props.source.id,
-                            target_slug: slug,
-                            target_id: item.id,
-                            copy_products: !draftSaved
-                        })
+                        await api.callMethod('POST', routes.relations.create, { ...relation, copy_products: !draftRows })
                         relationsVersion.value++
                     } catch (e) {}
+                    if (draftRows) {
+                        const draftResult = await this.saveDraftProducts(slug, item.id, draftRows)
+                        if (draftResult === false) {
+                            try {
+                                await api.callMethod('POST', routes.relations.create, { ...relation, copy_products: true })
+                                relationsVersion.value++
+                            } catch (e) {}
+                        }
+                    }
                 } else if (wasCreate && item.id) {
                     await this.saveDraftProducts(slug, item.id, draftRows)
                 }
