@@ -146,6 +146,7 @@ export default {
         waybillsCheck: '/logistic_tasks/${id}/saby-waybills/check',
         waybillRouteTasks: '/logistic_tasks/${id}/saby-waybills/route-tasks',
         waybillRefresh: '/saby-waybills/${id}/refresh',
+        waybillUpdateData: '/saby-waybills/${id}/update-data',
         waybillDelete: '/saby-waybills/${id}',
         sabyOrders: '/logistic_tasks/${id}/saby-orders',
         sabyOrderRefresh: '/saby-orders/${id}/refresh',

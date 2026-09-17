@@ -50,6 +50,7 @@
                             <a class="waybills__link" v-if="item.waybill.pdf_url" :href="item.waybill.pdf_url" target="_blank" rel="noopener">Печать</a>
                             <a class="waybills__link" v-if="item.waybill.cabinet_url" :href="item.waybill.cabinet_url" target="_blank" rel="noopener">Открыть в Saby</a>
                             <button class="waybills__link waybills__link_button" type="button" v-if="item.waybill.qr_url" @click="toggleQr('order_' + item.id, item.waybill.qr_url)">{{ openedQr === 'order_' + item.id ? 'Скрыть QR' : 'QR для ГИБДД' }}</button>
+                            <button class="waybills__link waybills__link_button" type="button" :disabled="refreshing === 'owbd_' + item.id" @click="updateOrderWaybillData(item)">{{ refreshing === 'owbd_' + item.id ? 'Обновляются…' : 'Обновить данные в ТрН' }}</button>
                             <template v-if="item.waybill.id && item.waybill.can_delete">
                                 <template v-if="confirmDelete === 'owb_' + item.id">
                                     <span class="waybills__confirm">Удалить накладную?</span>
@@ -80,6 +81,7 @@
                         <a class="waybills__link" v-if="item.cabinet_url" :href="item.cabinet_url" target="_blank" rel="noopener">Открыть в Saby</a>
                         <button class="waybills__link waybills__link_button" type="button" v-if="item.qr_url" @click="toggleQr('wb_' + item.id, item.qr_url)">{{ openedQr === 'wb_' + item.id ? 'Скрыть QR' : 'QR для ГИБДД' }}</button>
                         <button class="waybills__link waybills__link_button" type="button" :disabled="refreshing === 'wb_' + item.id" @click="refreshWaybill(item)">{{ refreshing === 'wb_' + item.id ? 'Обновляется…' : 'Обновить' }}</button>
+                        <button class="waybills__link waybills__link_button" type="button" :disabled="refreshing === 'wbd_' + item.id" @click="updateWaybillData(item)">{{ refreshing === 'wbd_' + item.id ? 'Обновляются…' : 'Обновить данные в ТрН' }}</button>
                         <template v-if="item.can_delete === false"></template>
                         <template v-else-if="confirmDelete === 'wb_' + item.id">
                             <span class="waybills__confirm">Удалить накладную?</span>
@@ -445,6 +447,46 @@
         } finally {
             deleting.value = null
             confirmDelete.value = null
+        }
+    }
+
+    const updateWaybillData = async (item) => {
+        if (refreshing.value) return
+        refreshing.value = 'wbd_' + item.id
+        errors.value = []
+        try {
+            const url = routes.logistic.waybillUpdateData.replace('${id}', item.id)
+            const response = await api.callMethod('POST', url, {})
+            if (response.status == 200 && response.data?.data) {
+                waybills.value = waybills.value.map(row => row.id === item.id ? response.data.data : row)
+                common.showNotification({ title: 'ТрН СБИС', description: `Данные накладной № ${response.data.data.number || ''} обновлены` }, 'success')
+            } else if (response.data?.message) {
+                errors.value = [response.data.message, ...(response.data.errors || [])]
+            }
+        } catch (e) {
+            errors.value = ['Не удалось обновить данные накладной']
+        } finally {
+            refreshing.value = null
+        }
+    }
+
+    const updateOrderWaybillData = async (order) => {
+        if (refreshing.value) return
+        refreshing.value = 'owbd_' + order.id
+        errors.value = []
+        try {
+            const url = routes.logistic.sabyOrderWaybill.replace('${id}', order.id)
+            const response = await api.callMethod('POST', url, {})
+            if (response.status == 200 && response.data?.data) {
+                orders.value = orders.value.map(row => row.id === order.id ? response.data.data : row)
+                common.showNotification({ title: 'ТрН СБИС', description: `Данные накладной № ${response.data.waybill_number || ''} обновлены` }, 'success')
+            } else if (response.data?.message) {
+                errors.value = [response.data.message, ...(response.data.errors || [])]
+            }
+        } catch (e) {
+            errors.value = ['Не удалось обновить данные накладной']
+        } finally {
+            refreshing.value = null
         }
     }
 
