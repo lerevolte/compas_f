@@ -568,6 +568,15 @@
             }
             for (const field of this.hiddenFields ?? []) collect(field)
 
+            if (!(this.productsList || []).length && this.id && `${this.id}` !== '0') {
+                try {
+                    const url = routes.detail.get.replace('${slug}', props.slug ?? router.params.slug).replace('${id}', this.id)
+                    const response = await api.callMethod('GET', url)
+                    const body = response?.data?.table?.tableBody
+                    const rows = Array.isArray(body?.data) ? body.data : (Array.isArray(body) ? body : [])
+                    this.productsList = rows
+                } catch (e) {}
+            }
             if ((this.productsList || []).length) {
                 defaults.__products = await this.basedProducts(entity)
             }
@@ -689,11 +698,12 @@
                         target_slug: slug,
                         target_id: item.id
                     }
+                    const hasDraft = !!(draftRows && draftRows.some(row => (row.id || (row.product_name && String(row.product_name).trim() !== '')) && Number(row.product_count) > 0))
                     try {
-                        await api.callMethod('POST', routes.relations.create, { ...relation, copy_products: !draftRows })
+                        await api.callMethod('POST', routes.relations.create, { ...relation, copy_products: !hasDraft })
                         relationsVersion.value++
                     } catch (e) {}
-                    if (draftRows) {
+                    if (hasDraft) {
                         const draftResult = await this.saveDraftProducts(slug, item.id, draftRows)
                         if (draftResult === false) {
                             try {
