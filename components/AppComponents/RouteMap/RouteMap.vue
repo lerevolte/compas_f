@@ -393,7 +393,7 @@
         if (points.length > 1) {
             const geometry = await fetchRouteGeometry(points.map(p => p.coords))
             const lineCoords = geometry ?? points.map(p => p.coords)
-            routeLines.push(L.polyline(lineCoords, { color: toStrokeColor(routeColor), opacity: 0.8, weight: 5 }).addTo(map))
+            routeLines.push(L.polyline(lineCoords, { color: toStrokeColor(routeColor), opacity: 0.8, weight: 2.5 }).addTo(map))
         }
 
         createTaskMarkers(points, routeColor)

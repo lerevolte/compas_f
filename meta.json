@@ -210,17 +210,22 @@
         "template": null
     },
     "expense_invoices": {
-        "title": "Отгрузки",
+        "title": "Расходные накладные",
         "desc": "",
         "template": null
     },
     "product_returns": {
-        "title": "Оприходования",
+        "title": "Возвраты от покупателя",
+        "desc": "",
+        "template": null
+    },
+    "receipt_invoices": {
+        "title": "Приходные накладные",
         "desc": "",
         "template": null
     },
     "pickups": {
-        "title": "Самовывозы",
+        "title": "Записи на самовывоз",
         "desc": "",
         "template": null
     },

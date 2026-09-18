@@ -44,6 +44,14 @@
     }
 }
 
+.column-fields.column-fields_hidden {
+    display: contents;
+
+    .detail__actions {
+        grid-column: auto;
+    }
+}
+
 .column-fields__column {
     display: flex;
     flex-direction: column;

@@ -217,18 +217,19 @@
     const BASED_ENTITIES = {
         deals: [
             { slug: 'logistic_tasks', title: 'Задача логистики' },
-            { slug: 'pickups', title: 'Самовывоз' },
+            { slug: 'pickups', title: 'Запись на самовывоз' },
             { slug: 'payment_invoices', title: 'Счет на оплату' }
         ],
         logistic_tasks: [
-            { slug: 'expense_invoices', title: 'Отгрузка' },
-            { slug: 'product_returns', title: 'Оприходование' }
+            { slug: 'expense_invoices', title: 'Расходная накладная', action: 'unloading' },
+            { slug: 'product_returns', title: 'Возврат от покупателя', action: 'unloading' },
+            { slug: 'receipt_invoices', title: 'Приходная накладная', action: 'loading' }
         ],
         pickups: [
-            { slug: 'expense_invoices', title: 'Отгрузка' },
-            { slug: 'product_returns', title: 'Оприходование' }
+            { slug: 'expense_invoices', title: 'Расходная накладная' },
+            { slug: 'product_returns', title: 'Возврат от покупателя' }
         ],
-        supplier_orders: [{ slug: 'product_returns', title: 'Оприходование' }],
+        supplier_orders: [{ slug: 'receipt_invoices', title: 'Приходная накладная' }],
         addresses: [{ slug: 'logistic_tasks', title: 'Задача логистики' }]
     }
 
@@ -476,8 +477,9 @@
             })
             const isReturn = entity.slug === 'product_returns' && SHIPMENT_SOURCES.includes(this.slug)
             let isChain = (entity.slug === 'expense_invoices' && SHIPMENT_SOURCES.includes(this.slug))
+                || (entity.slug === 'receipt_invoices' && SHIPMENT_SOURCES.includes(this.slug))
                 || (this.slug === 'deals' && SHIPMENT_SOURCES.includes(entity.slug))
-                || (this.slug === 'supplier_orders' && entity.slug === 'product_returns')
+                || (this.slug === 'supplier_orders' && entity.slug === 'receipt_invoices')
 
             let checkData = null
             if (isReturn || isChain) {
@@ -611,8 +613,8 @@
             if (!this.isGlobalEdit || !props.source?.slug || !props.source?.id) return true
             const target = props.slug ?? router.params.slug
             const isChain = (props.source.slug === 'deals' && SHIPMENT_SOURCES.includes(target))
-                || (SHIPMENT_SOURCES.includes(props.source.slug) && ['expense_invoices', 'product_returns'].includes(target))
-                || (props.source.slug === 'supplier_orders' && target === 'product_returns')
+                || (SHIPMENT_SOURCES.includes(props.source.slug) && ['expense_invoices', 'product_returns', 'receipt_invoices'].includes(target))
+                || (props.source.slug === 'supplier_orders' && target === 'receipt_invoices')
             if (!isChain) return true
             this.refreshProductsDraft()
             const rows = (Array.isArray(this.productsDraft) ? this.productsDraft : [])
@@ -738,11 +740,29 @@
 
     const relationsVersion = useState('object-relations-version', () => 0)
 
+    const actionKind = computed(() => {
+        const ids = detail.value.permissions?.based_action
+        if (!ids) return null
+        const field = common.findColumnField(detail.value.columns, 'action_type')
+            ?? (detail.value.hiddenFields ?? []).find(f => f.key == 'action_type')
+        if (!field) return null
+        let value = field.value && typeof field.value === 'object' && !Array.isArray(field.value) && 'value' in field.value
+            ? field.value.value
+            : field.value
+        if (Array.isArray(value)) value = value[0]
+        if (value === null || value === undefined || value === '') return null
+        if (String(value) === String(ids.loading)) return 'loading'
+        if (String(value) === String(ids.unloading)) return 'unloading'
+        return null
+    })
+
     const basedEntities = computed(() => {
         const list = BASED_ENTITIES[props.slug ?? router.params.slug] ?? []
+        const kind = actionKind.value
+        const byAction = kind ? list.filter(entity => !entity.action || entity.action === kind) : list
         const map = detail.value.permissions?.based_create
-        if (!map) return list
-        return list.filter(entity => map[entity.slug] !== false)
+        if (!map) return byAction
+        return byAction.filter(entity => map[entity.slug] !== false)
     })
 
     const canEditTitle = computed(() => {

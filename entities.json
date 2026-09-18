@@ -205,20 +205,26 @@
     },
     "expense_invoices": {
         "slug": "expense_invoices",
-        "title_singular": "Отгрузка",
-        "title_plural": "Отгрузки",
+        "title_singular": "Расходная накладная",
+        "title_plural": "Расходные накладные",
         "color": "#8E5AA8"
     },
     "product_returns": {
         "slug": "product_returns",
-        "title_singular": "Оприходование",
-        "title_plural": "Оприходования",
+        "title_singular": "Возврат от покупателя",
+        "title_plural": "Возвраты от покупателя",
         "color": "#C0392B"
+    },
+    "receipt_invoices": {
+        "slug": "receipt_invoices",
+        "title_singular": "Приходная накладная",
+        "title_plural": "Приходные накладные",
+        "color": "#2E8B57"
     },
     "pickups": {
         "slug": "pickups",
-        "title_singular": "Самовывоз",
-        "title_plural": "Самовывозы",
+        "title_singular": "Запись на самовывоз",
+        "title_plural": "Записи на самовывоз",
         "color": "#5DAE8B"
     },
     "supplier_orders": {

@@ -1284,11 +1284,11 @@
 
         switch (settings.route_display) {
             case 'standard':
-                L.polyline(coords, { color, opacity: 0.8, weight: 5 }).addTo(routeDecoratorsLayer);
+                L.polyline(coords, { color, opacity: 0.8, weight: 2.5 }).addTo(routeDecoratorsLayer);
                 break;
 
             case 'decorated':
-                L.polyline(coords, { color, opacity: 0.7, weight: 5 }).addTo(routeDecoratorsLayer);
+                L.polyline(coords, { color, opacity: 0.7, weight: 2.5 }).addTo(routeDecoratorsLayer);
                 if (L.polylineDecorator) {
                     L.polylineDecorator(coords, {
                         patterns: [{ offset: 25, repeat: 100, symbol: L.Symbol.arrowHead({ pixelSize: 15, pathOptions: { color, fillOpacity: 1, weight: 0 } }) }]
@@ -1300,7 +1300,7 @@
                 if (wpCoords && wpCoords.length > 1) {
                     for (let i = 0; i < wpCoords.length - 1; i++) {
                         const seg = [wpCoords[i], wpCoords[i + 1]];
-                        L.polyline(seg, { color, weight: 5 }).addTo(routeDecoratorsLayer);
+                        L.polyline(seg, { color, weight: 2.5 }).addTo(routeDecoratorsLayer);
                         if (L.polylineDecorator) {
                             L.polylineDecorator(seg, {
                                 patterns: [{ offset: '100%', repeat: 0, symbol: L.Symbol.arrowHead({ pixelSize: 15, polygon: false, pathOptions: { stroke: true, color, fillOpacity: 1, weight: 5 } }) }]
@@ -1309,7 +1309,7 @@
                     }
                 } else {
                     // Fallback for vector when no waypoints
-                    L.polyline(coords, { color, weight: 5 }).addTo(routeDecoratorsLayer);
+                    L.polyline(coords, { color, weight: 2.5 }).addTo(routeDecoratorsLayer);
                 }
                 break;
         }
@@ -1392,7 +1392,7 @@
     const drawActualPath = (routeData) => {
         if (!routeData.actual_path || routeData.actual_path.length < 2 || !settings.analytics.actual_path) return;
         const coords = routeData.actual_path.map(p => [p.lat, p.lon]);
-        const polyline = L.polyline(coords, { color: '#0000FF', weight: 4, opacity: 0.7, dashArray: '10, 10', className: 'actual-path-line' }).addTo(mapInstance.value);
+        const polyline = L.polyline(coords, { color: '#0000FF', weight: 2, opacity: 0.7, dashArray: '10, 10', className: 'actual-path-line' }).addTo(mapInstance.value);
         actualPathLayers.push(polyline);
     };
 

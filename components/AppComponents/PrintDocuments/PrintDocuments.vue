@@ -121,9 +121,9 @@
         checked.value[key(doc)] = !checked.value[key(doc)]
     }
 
-    const checkedFiles = computed(() => docs.value
-        .filter(doc => checked.value[key(doc)])
-        .flatMap(doc => doc.files))
+    const checkedDocs = computed(() => docs.value.filter(doc => checked.value[key(doc)] && doc.files.length))
+
+    const checkedFiles = computed(() => checkedDocs.value.flatMap(doc => doc.files))
 
     const isUpdSlug = computed(() => UPD_SLUGS.includes(props.slug))
     const updChecked = ref(true)
@@ -131,16 +131,21 @@
     const checkedCount = computed(() => checkedFiles.value.length + (isUpdSlug.value && updChecked.value ? 1 : 0))
 
     const print = async () => {
-        for (const file of checkedFiles.value) {
-            window.open(file.url, '_blank', 'noopener')
-        }
-        if (isUpdSlug.value && updChecked.value && !updLoading.value) {
-            updLoading.value = true
-            try {
-                await openUpdPdf(props.slug, [props.id])
-            } finally {
-                updLoading.value = false
+        if (updLoading.value) return
+        const includeUpd = isUpdSlug.value && updChecked.value
+        const docKeys = checkedDocs.value.map(doc => `${doc.slug}#${doc.id}`)
+        if (!includeUpd && !docKeys.length) return
+        if (!isUpdSlug.value) {
+            for (const file of checkedFiles.value) {
+                window.open(file.url, '_blank', 'noopener')
             }
+            return
+        }
+        updLoading.value = true
+        try {
+            await openUpdPdf(props.slug, [props.id], true, { docKeys, includeUpd })
+        } finally {
+            updLoading.value = false
         }
     }
 

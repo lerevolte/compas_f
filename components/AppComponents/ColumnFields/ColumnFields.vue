@@ -1,7 +1,8 @@
 <template>
-    <div class="column-fields" :class="{'column-fields_dragging': columns.dragger.isDragging}">
+    <div class="column-fields" :class="{'column-fields_dragging': columns.dragger.isDragging, 'column-fields_hidden': props.options.isHidden}">
         <draggable
             v-for="(column, index) in columns.list"
+            v-show="!props.options.isHidden"
             tag="div"
             :group="`columns_${props.slug}_${props.pageId}`"
             class="column-fields__column"

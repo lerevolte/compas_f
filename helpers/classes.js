@@ -19,7 +19,7 @@ export function isImageSrc(file) {
     return src != '' && src != '[]' && src != '{}' && src != 'null' && src != 'undefined'
 }
 
-export async function openUpdPdf(slug, ids, withDocs = false) {
+export async function openUpdPdf(slug, ids, withDocs = false, options = {}) {
     const common = new Common()
     ids = (ids || []).filter(id => id)
     if (!ids.length) return false
@@ -28,7 +28,11 @@ export async function openUpdPdf(slug, ids, withDocs = false) {
     })
     try {
         const userStore = useUserStore()
-        const response = await axios.get(`${routes.domain}/api/${slug}/upd?ids=${ids.join(',')}${withDocs ? '&docs=1' : ''}`, {
+        const query = [`ids=${ids.join(',')}`]
+        if (withDocs) query.push('docs=1')
+        if (Array.isArray(options.docKeys)) query.push(`doc_keys=${encodeURIComponent(options.docKeys.join(','))}`)
+        if (options.includeUpd === false) query.push('upd=0')
+        const response = await axios.get(`${routes.domain}/api/${slug}/upd?${query.join('&')}`, {
             headers: { Authorization: `Bearer ${userStore.token}` },
             responseType: 'blob',
             validateStatus: () => true
@@ -41,15 +45,15 @@ export async function openUpdPdf(slug, ids, withDocs = false) {
             return true
         }
         toast.remove(toastId)
-        let message = 'Не удалось сформировать УПД'
+        let message = 'Не удалось сформировать документы для печати'
         try {
             const parsed = JSON.parse(await response.data.text())
             if (parsed?.message) message = parsed.message
         } catch (e) {}
-        common.showNotification({ title: 'УПД', description: message }, 'error')
+        common.showNotification({ title: 'Печать', description: message }, 'error')
     } catch (e) {
         toast.remove(toastId)
-        common.showNotification({ title: 'УПД', description: 'Не удалось сформировать УПД' }, 'error')
+        common.showNotification({ title: 'Печать', description: 'Не удалось сформировать документы для печати' }, 'error')
     }
     return false
 }

@@ -8,43 +8,6 @@
     </div>
 
     <template v-else>
-        <ColumnFields
-            v-if="isOrderTab || props.options.isModule || keepOrderMounted"
-            v-show="isOrderTab || props.options.isModule"
-            :columns="detail.columns.list"
-            :slug="props.slug"
-            :hidden="detail.columns.hidden"
-            :tabs="props.tabs"
-            :options="{
-                isModule: props.options.isModule || props.options.isExternal,
-                module: props.options.isModule && !props.options.isExternal ? props.tabs.active?.tab : null,
-                canEditLayout: routes.isSeeds && props.options.isModule && !props.options.isExternal,
-                isDisableFooter: props.options.isGlobalEdit || props.options.isExternal,
-                isHaveHistory: true,
-                isGlobalEdit: props.options.isGlobalEdit,
-                isCopy: props.options.isCopy,
-                isExternal: props.options.isExternal,
-                beforeSave: props.options.beforeSave,
-            }"
-            :history="{
-                fields: detail.history.events,
-                loading: detail.history.loading
-            }"
-            :eventsVisibility="detail.eventsVisibility"
-            :pageId="props.id"
-            :headerName="props.headerName"
-            @action="action => action.action == 'get' ? detail.get() : emit('action', action)"
-            @showMoreHistory="page => detail.history.update(page, props.tabs.active?.tab)"
-            @closeDetail="() => emit('action', {
-                action: 'closeDetail',
-                value: item
-            })"
-            @openModal="item => emit('action', {
-                action: 'openModal',
-                value: item
-            })"
-        />
-
         <div class="dynamin__group" v-if="!props.options.isModule && props.tabs.active?.tab == 'products'">
             <AppVirtualTable
                 ref="productsTableRef"
@@ -77,7 +40,7 @@
                 })"
             />
             <p class="dynamic__hint" v-if="props.options.isGlobalEdit">
-                Состав сохранится вместе с документом: вернитесь на вкладку «Общие» и нажмите «Сохранить».
+                Состав сохранится вместе с документом — нажмите «Сохранить».
             </p>
             <AppProductsCheck
                 v-if="!props.options.isGlobalEdit && !props.options.isExternal && CHECKED_SLUGS.includes(props.slug)"
@@ -149,6 +112,42 @@
                 value: item
             })"
         />
+        <ColumnFields
+            v-if="isOrderTab || props.options.isModule || keepOrderMounted"
+            :columns="detail.columns.list"
+            :slug="props.slug"
+            :hidden="detail.columns.hidden"
+            :tabs="props.tabs"
+            :options="{
+                isHidden: !isOrderTab && !props.options.isModule,
+                isModule: props.options.isModule || props.options.isExternal,
+                module: props.options.isModule && !props.options.isExternal ? props.tabs.active?.tab : null,
+                canEditLayout: routes.isSeeds && props.options.isModule && !props.options.isExternal,
+                isDisableFooter: props.options.isGlobalEdit || props.options.isExternal,
+                isHaveHistory: true,
+                isGlobalEdit: props.options.isGlobalEdit,
+                isCopy: props.options.isCopy,
+                isExternal: props.options.isExternal,
+                beforeSave: props.options.beforeSave,
+            }"
+            :history="{
+                fields: detail.history.events,
+                loading: detail.history.loading
+            }"
+            :eventsVisibility="detail.eventsVisibility"
+            :pageId="props.id"
+            :headerName="props.headerName"
+            @action="action => action.action == 'get' ? detail.get() : emit('action', action)"
+            @showMoreHistory="page => detail.history.update(page, props.tabs.active?.tab)"
+            @closeDetail="() => emit('action', {
+                action: 'closeDetail',
+                value: item
+            })"
+            @openModal="item => emit('action', {
+                action: 'openModal',
+                value: item
+            })"
+        />
     </template>
 </template>
 
@@ -167,10 +166,11 @@
     import AppPrintDocuments from '@AppComponents/PrintDocuments/PrintDocuments.vue'
     import AppProductsCheck from '@AppComponents/ProductsCheck/ProductsCheck.vue'
 
-    const CHECKED_SLUGS = ['logistic_tasks', 'pickups', 'expense_invoices', 'product_returns']
+    const CHECKED_SLUGS = ['logistic_tasks', 'pickups', 'expense_invoices', 'product_returns', 'receipt_invoices']
 
     const isOrderTab = computed(() => props.tabs.active?.tab == 'order')
-    const keepOrderMounted = computed(() => props.options.isGlobalEdit && !props.options.isModule)
+    const orderWasMounted = ref(false)
+    const keepOrderMounted = computed(() => !props.options.isModule && orderWasMounted.value)
     const productsTableRef = ref(null)
     const productsRows = computed(() => {
         const body = productsTableRef.value?.table?.body
@@ -494,6 +494,14 @@
     defineExpose({
         snapshotProducts: () => detail.value.snapshotProducts()
     })
+
+    watch(() => [isOrderTab.value, props.options.isModule], ([isOrder, isModule]) => {
+        if (isModule) {
+            orderWasMounted.value = false
+        } else if (isOrder) {
+            orderWasMounted.value = true
+        }
+    }, { immediate: true })
 
     watch(() => props.tabs.active?.tab, (next, prev) => {
         if (prev == 'products') {
