@@ -364,6 +364,18 @@
             await import('leaflet.markercluster/dist/MarkerCluster.css');
             await import('leaflet.markercluster/dist/MarkerCluster.Default.css');
         } catch (e) { console.warn('MarkerCluster not available'); }
+        const proto = L?.MarkerClusterGroup?.prototype;
+        if (proto && !proto._mapGuardPatched) {
+            ['_moveEnd', '_zoomEnd', '_animationZoomIn', '_animationZoomOut', '_mergeSplitClusters'].forEach(name => {
+                const orig = proto[name];
+                if (typeof orig !== 'function') return;
+                proto[name] = function (...args) {
+                    if (!this._map) return;
+                    return orig.apply(this, args);
+                };
+            });
+            proto._mapGuardPatched = true;
+        }
     };
 
     const loadPolylineDecorator = async () => {
