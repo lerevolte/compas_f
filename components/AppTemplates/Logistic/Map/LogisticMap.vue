@@ -52,7 +52,7 @@
 
     const mapContainerRef = ref(null);
     const settingsPanelRef = ref(null);
-    const mapInstance = ref(null);
+    const mapInstance = shallowRef(null);
     const mapReady = ref(false);
     const settingsOpen = ref(false);
     const settingsSubmenu = ref(null);
@@ -389,13 +389,13 @@
         const center = preservedView?.center || fetchedCenter.value || props.defaultCenter;
         const zoom = preservedView?.zoom ?? 10;
         const isOsm = mapTypeFamily(settings.map_type) === 'osm';
-        mapInstance.value = L.map(mapContainerRef.value, {
+        mapInstance.value = markRaw(L.map(mapContainerRef.value, {
             center, zoom, zoomControl: true, minZoom: 3, maxZoom: 18, doubleClickZoom: false,
             crs: crsForMapType(settings.map_type),
             zoomAnimation: true, markerZoomAnimation: true,
             zoomSnap: isOsm ? 0.5 : 1, zoomDelta: isOsm ? 0.5 : 1,
             wheelPxPerZoomLevel: 120, wheelDebounceTime: 35
-        });
+        }));
         currentMapFamily = mapTypeFamily(settings.map_type);
         preservedView = null;
 
@@ -1839,9 +1839,12 @@
         const isYandex = settings.map_type.startsWith('Яндекс');
         const layer = baseLayers[settings.map_type];
         if (isYandex && layer) mapInstance.value.removeLayer(layer);
-        mapInstance.value.setView(latlng, zoom, { animate: false });
-        if (isYandex && layer) {
-            setTimeout(() => { if (mapInstance.value) layer.addTo(mapInstance.value); }, 50);
+        try {
+            mapInstance.value.setView(latlng, zoom, { animate: false });
+        } finally {
+            if (isYandex && layer) {
+                setTimeout(() => { if (mapInstance.value) layer.addTo(mapInstance.value); }, 50);
+            }
         }
     };
 
@@ -1850,9 +1853,12 @@
         const isYandex = settings.map_type.startsWith('Яндекс');
         const layer = baseLayers[settings.map_type];
         if (isYandex && layer) mapInstance.value.removeLayer(layer);
-        mapInstance.value.fitBounds(bounds, { ...options, animate: false });
-        if (isYandex && layer) {
-            setTimeout(() => { if (mapInstance.value) layer.addTo(mapInstance.value); }, 50);
+        try {
+            mapInstance.value.fitBounds(bounds, { ...options, animate: false });
+        } finally {
+            if (isYandex && layer) {
+                setTimeout(() => { if (mapInstance.value) layer.addTo(mapInstance.value); }, 50);
+            }
         }
     };
 
