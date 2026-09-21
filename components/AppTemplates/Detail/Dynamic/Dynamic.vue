@@ -39,9 +39,6 @@
                     value: item
                 })"
             />
-            <p class="dynamic__hint" v-if="props.options.isGlobalEdit || productsDirty">
-                Состав сохранится вместе с документом — нажмите «Сохранить».
-            </p>
             <AppProductsCheck
                 v-if="!props.options.isGlobalEdit && !props.options.isExternal && CHECKED_SLUGS.includes(props.slug)"
                 :slug="props.slug"
