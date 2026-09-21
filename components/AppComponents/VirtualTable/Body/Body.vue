@@ -1361,6 +1361,7 @@
             }
         }
         if (activeOption.price !== undefined) row.product_price = activeOption.price
+        if (activeOption.purchase_price !== undefined) row.product_purchase_price = activeOption.purchase_price
         if (activeOption.count !== undefined) row.product_count = activeOption.count
         if (!(Number(row.product_count) > 0)) row.product_count = 1
         if (activeOption.weight !== undefined) row.product_weight = activeOption.weight

@@ -96,6 +96,7 @@ function draftProductsFromJson(raw) {
                 },
                 product_name: nameText,
                 product_price: product.price ?? null,
+                product_purchase_price: product.purchase_price ?? null,
                 product_count: product.count ?? null,
                 product_weight: product.weight ?? null,
                 product_volume: product.volume ?? 0,
@@ -870,6 +871,7 @@ export class Table {
                         product_id: row['product_id'],
                         product_name: row['product_name'],
                         product_price: row['product_price'],
+                        product_purchase_price: row['product_purchase_price'],
                         product_count: row['product_count'],
                         product_weight: row['product_weight'],
                         product_volume: row['product_volume'],
@@ -2269,6 +2271,9 @@ export class Section {
     }
 
     cancel(value, columns, pageId, slug, emit, options) {
+        if (typeof options?.onCancel === 'function') {
+            options.onCancel()
+        }
         for (let column in columns) {
             for (let section of columns[column]) {
                 this.cancelEditAll(section)
@@ -2370,6 +2375,19 @@ export class Section {
                 if (!allowed) return
             }
 
+            if (typeof options?.saveProducts === 'function') {
+                const saved = await options.saveProducts()
+                if (!saved) return
+            }
+
+            if (this.buffer.edits.length === 0 && !options?.isGlobalEdit && !options?.isCopy) {
+                this.buffer.backup = []
+                if (typeof options?.afterSave === 'function') {
+                    options.afterSave()
+                }
+                return
+            }
+
             const request = {
                 id: options?.isCopy ? pageId : (options?.isGlobalEdit ? 0 : pageId),
                 ...(options?.isCopy ? { copy: 1 } : {}),
@@ -2427,6 +2445,9 @@ export class Section {
             }
             emit('action', { action: 'savePage', value: response })
             this.buffer.backup = []
+            if (typeof options?.afterSave === 'function') {
+                options.afterSave()
+            }
         } catch (error) {
             console.log(error);
         } finally {

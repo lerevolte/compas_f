@@ -302,38 +302,44 @@
 }
 
 .marker-main-view {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    height: 30px;
-    padding-right: 12px;
-    border-radius: 15px 7px 7px 15px;
-    border: 1px solid #0000FF;
+    height: 18px;
+    padding-right: 10px;
+    border-radius: 9px 7px 7px 9px;
+    border: 1px solid #1253A2;
     background-color: #fff;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     white-space: nowrap;
     font-family: Helvetica, sans-serif;
+    width: max-content;
 }
 
 .actual-path-marker .icon-background {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 30px;
-    height: 30px;
-    background-color: #0000FF;
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    background-color: #1253A2;
     border-radius: 50%;
 }
 
-.actual-path-marker svg {
-    width: 16px;
-    height: 16px;
+.actual-point-icon {
+    display: block;
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    margin: -1px 0 0 -1px;
     transform-origin: center;
 }
 
 .marker-time-label {
     font-family: Helvetica, sans-serif;
-    font-size: 14px;
-    padding-left: 8px;
+    font-size: 12px;
+    line-height: 18px;
+    padding-left: 6px;
 }
 
 .actual-path-marker .route-popup__extend {
@@ -357,16 +363,11 @@
 
 // ── Stop marker overrides ──
 .stop-marker .marker-main-view {
-    border-width: 2px;
+    border-width: 1px;
 }
 
 .stop-marker .icon-background {
-    background-color: #FFFFFF !important;
-    border: solid 2px #bf0000;
-}
-
-.stop-marker svg path {
-    fill: #000000;
+    margin: -1px 0 0 -1px;
 }
 
 // ── Back button inside popups ──
@@ -810,10 +811,10 @@
 
 // ── SVG icons in markers ──
 .marker-svg-icon {
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     display: block;
-    filter: brightness(0) invert(1); // make white on colored background
+    filter: brightness(0) invert(1);
 }
 
 // ── Analytics cluster icons ──
@@ -898,13 +899,13 @@
 
   &__dot {
     position: absolute;
-    top: 11px;
-    left: 11px;
-    width: 22px;
-    height: 22px;
+    top: 13px;
+    left: 13px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
-    background: #1a73e8;
-    border: 3px solid #fff;
+    background: #1253A2;
+    border: 2px solid #fff;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
   }
 
@@ -915,7 +916,7 @@
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    background: rgba(26, 115, 232, 0.35);
+    background: rgba(18, 83, 162, 0.35);
     animation: current-geo-pulse 2s ease-out infinite;
   }
 
@@ -927,7 +928,7 @@
     white-space: nowrap;
     font-size: 12px;
     font-weight: 600;
-    color: #1a73e8;
+    color: #1253A2;
     background: rgba(255, 255, 255, 0.92);
     border-radius: 4px;
     padding: 2px 6px;

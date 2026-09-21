@@ -26,7 +26,7 @@
                     isHaveTopHeader: true,
                     isHaveFooter: false,
                     isDisableSockets: true,
-                    isDisableMassAction: props.options.isGlobalEdit,
+                    isDisableMassAction: true,
                     updatingCount: 0,
                     parentSlug: props.slug ?? 'logistic_tasks'
                 }"
@@ -39,7 +39,7 @@
                     value: item
                 })"
             />
-            <p class="dynamic__hint" v-if="props.options.isGlobalEdit">
+            <p class="dynamic__hint" v-if="props.options.isGlobalEdit || productsDirty">
                 Состав сохранится вместе с документом — нажмите «Сохранить».
             </p>
             <AppProductsCheck
@@ -129,6 +129,10 @@
                 isCopy: props.options.isCopy,
                 isExternal: props.options.isExternal,
                 beforeSave: props.options.beforeSave,
+                isProductsDirty: productsDirty,
+                saveProducts: () => detail.saveProducts(),
+                afterSave: () => detail.afterSave(),
+                onCancel: () => detail.cancelProducts(),
             }"
             :history="{
                 fields: detail.history.events,
@@ -157,7 +161,7 @@
     import api from '@/helpers/api.js'
     import routes from '@/helpers/routes.js'
     import IconLoader from '@AppIcons/Loader.vue'
-    import { History, Columns } from '@/helpers/classes.js'
+    import { History, Columns, Common } from '@/helpers/classes.js'
     import AppHistory from '@AppComponents/History/History.vue';
     import ColumnFields from '@AppComponents/ColumnFields/ColumnFields.vue';
     import AppVirtualTable from '@AppComponents/VirtualTable/VirtualTable.vue';
@@ -170,8 +174,13 @@
 
     const isOrderTab = computed(() => props.tabs.active?.tab == 'order')
     const orderWasMounted = ref(false)
-    const keepOrderMounted = computed(() => !props.options.isModule && orderWasMounted.value)
+    const keepOrderMounted = computed(() => !props.options.isModule)
     const productsTableRef = ref(null)
+    const common = new Common()
+    const productsDirty = computed(() => {
+        if (props.options.isModule || props.options.isGlobalEdit) return false
+        return productsTableRef.value?.table?.state === 'edit' || Array.isArray(detail.value?.productsDraft)
+    })
     const productsRows = computed(() => {
         const body = productsTableRef.value?.table?.body
         return Array.isArray(body) ? body : (detail.value?.products?.list?.data ?? [])
@@ -269,6 +278,7 @@
             }
             this.productsDraft = null
             this.productsBackup = null
+            this.productsPending = false
             this.socket = null
             this.history = new History()
             this.columns = new Columns()
@@ -477,6 +487,68 @@
             this.productsDraft = null
             this.productsBackup = null
             emit('action', { action: 'setProductsDraft', value: null })
+        }
+
+        async saveProducts() {
+            if (props.options.isGlobalEdit || !Number(props.id)) return true
+            const table = productsTableRef.value?.table
+            let rows = null
+            if (table?.state === 'edit') {
+                rows = table.body
+            } else if (Array.isArray(this.productsDraft)) {
+                rows = this.productsDraft
+            }
+            if (!Array.isArray(rows)) return true
+            const products = JSON.parse(JSON.stringify(rows))
+                .filter(row => row.id || (row.product_name && String(row.product_name).trim() !== ''))
+                .map(row => ({
+                    id: row.id,
+                    name: row.name,
+                    product_id: row.product_id,
+                    product_name: row.product_name,
+                    product_price: row.product_price,
+                    product_purchase_price: row.product_purchase_price,
+                    product_count: row.product_count,
+                    product_weight: row.product_weight,
+                    product_volume: row.product_volume,
+                    product_sum: row.product_sum,
+                    product_nds: row.product_nds,
+                    product_nds_included: row.product_nds_included
+                }))
+            const slug = props.slug ?? 'logistic_tasks'
+            let response = null
+            try {
+                response = await api.callMethod('PUT', routes.table.set_products.replace('${parent_slug}', slug).replace('${page_id}', props.id), { products })
+            } catch (e) {
+                return false
+            }
+            if (!response?.status || response.status != 200) {
+                const data = response?.data ?? {}
+                common.showNotification({
+                    title: data.message ?? 'Не удалось сохранить состав',
+                    description: Array.isArray(data.errors) ? data.errors.join('; ') : ''
+                }, 'error', { toastId: 'products-mismatch' })
+                return false
+            }
+            if (table) table.clear()
+            this.clearProductsDraft()
+            this.productsPending = true
+            return true
+        }
+
+        afterSave() {
+            if (!this.productsPending) return
+            this.productsPending = false
+            this.get()
+        }
+
+        cancelProducts() {
+            const table = productsTableRef.value?.table
+            if (table?.state === 'edit') table.cancel()
+            if (Array.isArray(this.productsBackup)) {
+                this.products.list = this.localProductsList(this.productsBackup)
+            }
+            this.clearProductsDraft()
         }
 
         productsSaved() {

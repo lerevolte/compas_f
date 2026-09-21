@@ -19,6 +19,7 @@
       <div class="detail__overlay" id="detail__overlay" v-if="entity.modal.length > 0">
         <AppWarningLarge
           v-for="(modal, index) in entity.modal"
+          :key="modal.uid ?? index"
           :options="{
               index: index,
               ...entitiesJSON[modal.slug],
@@ -94,6 +95,7 @@
   class Entity {
     constructor() {
       this.modal = []
+      this.modalSeq = 0
       this.active = metaJSON[router.params.slug]
       this.addresses = []
       this.currentTitle = `${metaJSON[router.params.slug]?.title} | Compas.pro`
@@ -112,6 +114,7 @@
     openModal(item) {
       item.slug = item.slug ?? router.params.slug
       item.tab_slug = item.tab_slug ?? null
+      item.uid = ++this.modalSeq
       this.lastOpenAt = Date.now()
 
       if (this.modal.length === 0) {

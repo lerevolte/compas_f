@@ -300,11 +300,26 @@ html {
                 position: static;
                 top: auto;
                 right: auto;
+                width: 36px;
+                height: 36px;
+                padding: 0;
+                margin: 0;
             }
 
             .page__header-actions {
                 flex: 0 0 auto;
                 align-items: center;
+                gap: 2px;
+
+                .qr-scan__button {
+                    width: 36px;
+                    height: 36px;
+                    flex-basis: 36px;
+                }
+            }
+
+            #filter-container {
+                margin-right: -6px;
             }
         }
 

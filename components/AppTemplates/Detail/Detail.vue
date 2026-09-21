@@ -229,7 +229,10 @@
             { slug: 'expense_invoices', title: 'Расходная накладная' },
             { slug: 'product_returns', title: 'Возврат от покупателя' }
         ],
-        supplier_orders: [{ slug: 'receipt_invoices', title: 'Приходная накладная' }],
+        supplier_orders: [
+            { slug: 'receipt_invoices', title: 'Приходная накладная' },
+            { slug: 'logistic_tasks', title: 'Задача логистики', taskAction: 'supply' }
+        ],
         addresses: [{ slug: 'logistic_tasks', title: 'Задача логистики' }]
     }
 
@@ -579,7 +582,18 @@
             }
             for (const field of this.hiddenFields ?? []) collect(field)
 
-            if (!(this.productsList || []).length && this.id && `${this.id}` !== '0') {
+            if (entity.taskAction) {
+                const actionId = this.permissions?.based_action?.[entity.taskAction]
+                if (actionId) {
+                    defaults.action_type = String(actionId)
+                    defaults.__labels = defaults.__labels || {}
+                    delete defaults.__labels.action_type
+                } else {
+                    delete defaults.action_type
+                }
+            }
+
+            if (this.id && `${this.id}` !== '0') {
                 try {
                     const url = routes.detail.get.replace('${slug}', props.slug ?? router.params.slug).replace('${id}', this.id)
                     const response = await api.callMethod('GET', url)
@@ -657,6 +671,7 @@
                     product_id: row.product_id,
                     product_name: row.product_name,
                     product_price: row.product_price,
+                    product_purchase_price: row.product_purchase_price,
                     product_count: row.product_count,
                     product_weight: row.product_weight,
                     product_volume: row.product_volume,
@@ -752,6 +767,7 @@
         if (Array.isArray(value)) value = value[0]
         if (value === null || value === undefined || value === '') return null
         if (String(value) === String(ids.loading)) return 'loading'
+        if (ids.supply !== undefined && String(value) === String(ids.supply)) return 'loading'
         if (String(value) === String(ids.unloading)) return 'unloading'
         return null
     })

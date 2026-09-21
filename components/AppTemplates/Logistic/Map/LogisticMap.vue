@@ -1404,7 +1404,7 @@
     const drawActualPath = (routeData) => {
         if (!routeData.actual_path || routeData.actual_path.length < 2 || !settings.analytics.actual_path) return;
         const coords = routeData.actual_path.map(p => [p.lat, p.lon]);
-        const polyline = L.polyline(coords, { color: '#0000FF', weight: 2, opacity: 0.7, dashArray: '10, 10', className: 'actual-path-line' }).addTo(mapInstance.value);
+        const polyline = L.polyline(coords, { color: '#1253A2', weight: 2, opacity: 0.85, dashArray: '10, 10', className: 'actual-path-line' }).addTo(mapInstance.value);
         actualPathLayers.push(polyline);
     };
 
@@ -1445,11 +1445,10 @@
                 // Time range
                 const timeFrom = first.options._time || '';
                 const timeTo = last.options._time || '';
-                const timeLabel = timeFrom === timeTo ? timeTo : `${timeFrom}—${timeTo}`;
 
-                const html = `<div class="actual-path-marker"><div class="marker-main-view"><div class="icon-container"><div class="icon-background"><svg width="21" height="21" viewBox="0 0 21 21" style="transform:rotate(${bearing}deg)"><g stroke="none" fill="none"><g transform="translate(-173,-643)" fill="#FFF"><g transform="translate(162.5,634.5)"><g><g><g transform="translate(20.49,20.49) translate(-20.49,-20.49) translate(5.49,5.49)"><path d="M15.15,9.07L20.84,19.54C21.37,20.51 21.01,21.72 20.04,22.25C19.53,22.52 18.94,22.57 18.4,22.37L13.36,20.54L8.4,22.36C7.36,22.73 6.21,22.2 5.83,21.16C5.64,20.62 5.68,20.03 5.95,19.52L11.63,9.07C12.16,8.1 13.38,7.74 14.35,8.27C14.69,8.45 14.97,8.73 15.15,9.07Z" transform="translate(13.39,15) translate(-13.39,-15)"/></g></g></g></g></g></g></svg></div></div><span class="marker-time-label">${timeLabel}</span></div><div class="route-popup__extend"><div class="point-attrs"><span class="point-attrs__item"><span class="point-attrs__label">Точек:</span><span class="point-attrs__val">${total}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Период:</span><span class="point-attrs__val">${timeFrom} — ${timeTo}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Ср. скорость:</span><span class="point-attrs__val">${avgSpeed} км/ч</span></span></div></div></div>`;
+                const html = `<div class="actual-path-marker"><div class="marker-main-view"><img src="/img/leaflet_marker.svg" class="actual-point-icon" style="transform:rotate(${bearing}deg)" /><span class="marker-time-label">${timeTo}</span></div><div class="route-popup__extend"><div class="point-attrs"><span class="point-attrs__item"><span class="point-attrs__label">Точек:</span><span class="point-attrs__val">${total}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Период:</span><span class="point-attrs__val">${timeFrom} — ${timeTo}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Ср. скорость:</span><span class="point-attrs__val">${avgSpeed} км/ч</span></span></div></div></div>`;
 
-                return L.divIcon({ className: 'custom-div-icon', html, iconSize: [90, 30], iconAnchor: [15, 15] });
+                return L.divIcon({ className: 'custom-div-icon', html, iconSize: [90, 18], iconAnchor: [9, 9] });
             }
         });
 
@@ -1476,9 +1475,9 @@
                 bearing = calculateBearing(pt.lat, pt.lon, nxt.lat, nxt.lon);
             }
             const speed = ((pt.speed || 0) * 1.60934).toFixed(1);
-            const html = `<div class="actual-path-marker"><div class="marker-main-view"><div class="icon-container"><div class="icon-background"><svg width="21" height="21" viewBox="0 0 21 21" style="transform:rotate(${bearing}deg)"><g stroke="none" fill="none"><g transform="translate(-173,-643)" fill="#FFF"><g transform="translate(162.5,634.5)"><g><g><g transform="translate(20.49,20.49) translate(-20.49,-20.49) translate(5.49,5.49)"><path d="M15.15,9.07L20.84,19.54C21.37,20.51 21.01,21.72 20.04,22.25C19.53,22.52 18.94,22.57 18.4,22.37L13.36,20.54L8.4,22.36C7.36,22.73 6.21,22.2 5.83,21.16C5.64,20.62 5.68,20.03 5.95,19.52L11.63,9.07C12.16,8.1 13.38,7.74 14.35,8.27C14.69,8.45 14.97,8.73 15.15,9.07Z" transform="translate(13.39,15) translate(-13.39,-15)"/></g></g></g></g></g></g></svg></div></div><span class="marker-time-label">${pt.time||''}</span></div><div class="route-popup__extend"><div class="point-attrs"><span class="point-attrs__item"><span class="point-attrs__label">Время:</span><span class="point-attrs__val">${pt.time||''}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Скорость:</span><span class="point-attrs__val">${speed} км/ч</span></span></div></div></div>`;
+            const html = `<div class="actual-path-marker"><div class="marker-main-view"><img src="/img/leaflet_marker.svg" class="actual-point-icon" style="transform:rotate(${bearing}deg)" /><span class="marker-time-label">${pt.time||''}</span></div><div class="route-popup__extend"><div class="point-attrs"><span class="point-attrs__item"><span class="point-attrs__label">Время:</span><span class="point-attrs__val">${pt.time||''}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Скорость:</span><span class="point-attrs__val">${speed} км/ч</span></span></div></div></div>`;
             const m = L.marker(cur, {
-                icon: L.divIcon({ className: 'custom-div-icon', html, iconSize: [90, 30], iconAnchor: [15, 15] }),
+                icon: L.divIcon({ className: 'custom-div-icon', html, iconSize: [90, 18], iconAnchor: [9, 9] }),
                 _time: pt.time || '',
                 _speed: parseFloat(speed),
                 _bearing: bearing
@@ -1498,14 +1497,12 @@
         return h * 60 + (m || 0);
     };
 
-    // ── Analyze actual_path to find stops (>5min stationary) ──
     const analyzeStops = (actualPath, taskPositions, radius) => {
         if (!actualPath || actualPath.length < 2) return { serviceStops: [], parkingStops: [] };
 
-        const STOP_THRESHOLD_METERS = 50; // consider stationary if moved less than 50m
+        const STOP_THRESHOLD_METERS = 50;
         const STOP_MIN_MINUTES = 5;
 
-        // Group consecutive stationary points
         const rawStops = [];
         let currentStop = null;
 
@@ -1526,7 +1523,6 @@
                     const duration = parseTimeToMinutes(currentStop.end_time) - parseTimeToMinutes(currentStop.start_time);
                     if (duration >= STOP_MIN_MINUTES) {
                         currentStop.duration = duration;
-                        // Average position
                         currentStop.lat = currentStop.points.reduce((s, p) => s + p.lat, 0) / currentStop.points.length;
                         currentStop.lon = currentStop.points.reduce((s, p) => s + p.lon, 0) / currentStop.points.length;
                         rawStops.push(currentStop);
@@ -1535,7 +1531,6 @@
                 }
             }
         }
-        // Don't forget last stop
         if (currentStop) {
             const duration = parseTimeToMinutes(currentStop.end_time) - parseTimeToMinutes(currentStop.start_time);
             if (duration >= STOP_MIN_MINUTES) {
@@ -1546,7 +1541,6 @@
             }
         }
 
-        // Classify stops: service (within radius of task) vs parking
         const serviceStops = [];
         const parkingStops = [];
 
@@ -1557,7 +1551,6 @@
             for (const taskPos of taskPositions) {
                 if (stopLatLng.distanceTo(taskPos.latLng) <= radius) {
                     isService = true;
-                    // Check if we can merge with existing service stop for this task (contiguous time)
                     const existing = serviceStops.find(s =>
                         s.related_task_id === taskPos.id &&
                         Math.abs(parseTimeToMinutes(s.end_time) - parseTimeToMinutes(stop.start_time)) <= 5
@@ -1584,7 +1577,6 @@
         return { serviceStops, parkingStops };
     };
 
-    // ── Analyze signal loss (>5min gap between consecutive points) ──
     const analyzeSignalLoss = (actualPath) => {
         if (!actualPath || actualPath.length < 2) return [];
         const SIGNAL_LOSS_MIN_MINUTES = 5;
@@ -1595,7 +1587,8 @@
             const curr = actualPath[i];
             const gap = parseTimeToMinutes(curr.time) - parseTimeToMinutes(prev.time);
 
-            if (gap >= SIGNAL_LOSS_MIN_MINUTES) {
+            const moved = L.latLng(prev.lat, prev.lon).distanceTo(L.latLng(curr.lat, curr.lon));
+            if (gap >= SIGNAL_LOSS_MIN_MINUTES && moved > 50) {
                 events.push({
                     loss_point: { lat: prev.lat, lon: prev.lon, time: prev.time },
                     restore_point: { lat: curr.lat, lon: curr.lon, time: curr.time },
@@ -1645,7 +1638,7 @@
 
                     const html = `<div class="actual-path-marker stop-marker"><div class="marker-main-view" style="border-color:${bgColor}"><div class="icon-container"><div class="icon-background" style="background-color:${bgColor}"><img src="${iconSrc}" class="marker-svg-icon" /></div></div><span class="marker-time-label">${label} (${total})</span></div><div class="route-popup__extend"><div class="point-attrs"><span class="point-attrs__item"><span class="point-attrs__label">Количество:</span><span class="point-attrs__val">${total}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Период:</span><span class="point-attrs__val">${timeFrom} — ${timeTo}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Общее время:</span><span class="point-attrs__val">${totalDuration} мин</span></span></div></div></div>`;
 
-                    return L.divIcon({ className: 'custom-div-icon', html, iconSize: [120, 30], iconAnchor: [15, 15] });
+                    return L.divIcon({ className: 'custom-div-icon', html, iconSize: [120, 18], iconAnchor: [9, 9] });
                 }
             });
 
@@ -1664,7 +1657,7 @@
             stops.forEach(s => {
                 const html = `<div class="actual-path-marker stop-marker"><div class="marker-main-view" style="border-color:${bgColor}"><div class="icon-container"><div class="icon-background" style="background-color:${bgColor}"><img src="${iconSrc}" class="marker-svg-icon" /></div></div><span class="marker-time-label">${label}</span></div><div class="route-popup__extend"><div class="point-attrs"><span class="point-attrs__item"><span class="point-attrs__label">Период:</span><span class="point-attrs__val">с ${s.start_time} по ${s.end_time}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Длительность:</span><span class="point-attrs__val">${s.duration} мин</span></span></div></div></div>`;
                 const m = L.marker([s.lat, s.lon], {
-                    icon: L.divIcon({ className: 'custom-div-icon', html, iconSize: [120, 30], iconAnchor: [15, 15] }),
+                    icon: L.divIcon({ className: 'custom-div-icon', html, iconSize: [120, 18], iconAnchor: [9, 9] }),
                     _duration: s.duration || 0,
                     _startTime: s.start_time || '',
                     _endTime: s.end_time || ''
@@ -1706,9 +1699,9 @@
                 const timeFrom = times[0] || '';
                 const timeTo = endTimes[endTimes.length - 1] || '';
 
-                const html = `<div class="actual-path-marker stop-marker"><div class="marker-main-view" style="border-color:#f07178"><div class="icon-container"><div class="icon-background" style="background-color:#f07178"><img src="/img/nosignal.svg" class="marker-svg-icon" /></div></div><span class="marker-time-label">Потеря (${total})</span></div><div class="route-popup__extend"><div class="point-attrs"><span class="point-attrs__item"><span class="point-attrs__label">Количество:</span><span class="point-attrs__val">${total}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Период:</span><span class="point-attrs__val">${timeFrom} — ${timeTo}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Общее время:</span><span class="point-attrs__val">${totalDuration} мин</span></span></div></div></div>`;
+                const html = `<div class="actual-path-marker stop-marker"><div class="marker-main-view" style="border-color:#f07178"><div class="icon-container"><div class="icon-background" style="background-color:#f07178"><img src="/img/geo_icon.svg" class="marker-svg-icon" /></div></div><span class="marker-time-label">Потеря (${total})</span></div><div class="route-popup__extend"><div class="point-attrs"><span class="point-attrs__item"><span class="point-attrs__label">Количество:</span><span class="point-attrs__val">${total}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Период:</span><span class="point-attrs__val">${timeFrom} — ${timeTo}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Общее время:</span><span class="point-attrs__val">${totalDuration} мин</span></span></div></div></div>`;
 
-                return L.divIcon({ className: 'custom-div-icon', html, iconSize: [150, 30], iconAnchor: [15, 15] });
+                return L.divIcon({ className: 'custom-div-icon', html, iconSize: [150, 18], iconAnchor: [9, 9] });
             }
         });
 
@@ -1726,9 +1719,9 @@
 
         events.forEach(ev => {
             const pt = ev.loss_point;
-            const html = `<div class="actual-path-marker stop-marker"><div class="marker-main-view" style="border-color:#f07178"><div class="icon-container"><div class="icon-background" style="background-color:#f07178"><img src="/img/nosignal.svg" class="marker-svg-icon" /></div></div><span class="marker-time-label">Потеря сигнала</span></div><div class="route-popup__extend"><div class="point-attrs"><span class="point-attrs__item"><span class="point-attrs__label">Период:</span><span class="point-attrs__val">${ev.loss_point.time} — ${ev.restore_point.time}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Длительность:</span><span class="point-attrs__val">${ev.duration} мин</span></span></div></div></div>`;
+            const html = `<div class="actual-path-marker stop-marker"><div class="marker-main-view" style="border-color:#f07178"><div class="icon-container"><div class="icon-background" style="background-color:#f07178"><img src="/img/geo_icon.svg" class="marker-svg-icon" /></div></div><span class="marker-time-label">Потеря сигнала</span></div><div class="route-popup__extend"><div class="point-attrs"><span class="point-attrs__item"><span class="point-attrs__label">Период:</span><span class="point-attrs__val">${ev.loss_point.time} — ${ev.restore_point.time}</span></span><span class="point-attrs__item"><span class="point-attrs__label">Длительность:</span><span class="point-attrs__val">${ev.duration} мин</span></span></div></div></div>`;
             const m = L.marker([pt.lat, pt.lon], {
-                icon: L.divIcon({ className: 'custom-div-icon', html, iconSize: [150, 30], iconAnchor: [15, 15] }),
+                icon: L.divIcon({ className: 'custom-div-icon', html, iconSize: [150, 18], iconAnchor: [9, 9] }),
                 _duration: ev.duration || 0,
                 _lossTime: ev.loss_point.time || '',
                 _restoreTime: ev.restore_point.time || ''

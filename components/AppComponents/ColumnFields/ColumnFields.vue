@@ -181,9 +181,9 @@
 
         <div class="detail__actions">
             <MassAction 
-                :isChoosed="section.buffer.backup.length > 0"
+                :isChoosed="section.buffer.backup.length > 0 || !!props.options.isProductsDirty"
                 :actions="{
-                    save: section.buffer.backup.length > 0,
+                    save: section.buffer.backup.length > 0 || !!props.options.isProductsDirty,
                     edit: false,
                     cancel: true,
                     delete: false
