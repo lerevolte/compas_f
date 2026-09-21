@@ -73,6 +73,7 @@ export class LogisticWithMap extends Logistic {
             this.routes.id = null;
             this._lastKnownActiveColorId = null;
             this.activeTaskId = null;
+            this._routeDataSeq++;
             this.selectedRouteData = null;
             this.filterFields = [];
             this.machine_tasks.updatingCount++;
@@ -181,13 +182,17 @@ export class LogisticWithMap extends Logistic {
             return;
         }
 
+        const isStale = () => seq !== this._routeDataSeq
+            || Number(this.machine_tasks.route_id) !== Number(routeId);
+
         try {
             this.loadingRouteMapData = true;
 
             const response = await api.callMethod('GET', `/routes/${routeId}/tasks`);
-            // Пока ждали ответ, стартовал более новый запрос данных маршрута —
-            // его результат актуальнее, наш ответ молча выбрасываем.
-            if (seq !== this._routeDataSeq) return;
+            // Пока ждали ответ, стартовал более новый запрос данных маршрута
+            // или активный маршрут сменился/сброшен (другой день, удаление) —
+            // наш ответ молча выбрасываем.
+            if (isStale()) return;
 
             let rows = response.data?.data || [];
 
@@ -254,7 +259,7 @@ export class LogisticWithMap extends Logistic {
                 console.log('🟠 map_data endpoint not available, using defaults');
             }
 
-            if (seq !== this._routeDataSeq) return;
+            if (isStale()) return;
 
             this.selectedRouteData = {
                 id: routeId,
@@ -273,7 +278,7 @@ export class LogisticWithMap extends Logistic {
 
         } catch (error) {
             console.error('🔴 Error loading route for map:', error);
-            if (seq === this._routeDataSeq) this.selectedRouteData = null;
+            if (!isStale()) this.selectedRouteData = null;
         } finally {
             if (seq === this._routeDataSeq) this.loadingRouteMapData = false;
         }
@@ -379,6 +384,7 @@ export class LogisticWithMap extends Logistic {
         this.routes.id = null;
         this._lastKnownActiveColorId = null;
         this.activeTaskId = null;
+        this._routeDataSeq++;
         this.selectedRouteData = null;
         this.unassignedTasks = [];
         this.filterFields = [];
@@ -398,6 +404,7 @@ export class LogisticWithMap extends Logistic {
         if (activeRoute?.value?.[0]) {
             this.loadRouteForMap(activeRoute.value[0]);
         } else {
+            this._routeDataSeq++;
             this.selectedRouteData = null;
         }
     }
@@ -460,7 +467,7 @@ export class LogisticWithMap extends Logistic {
                     }
                 } catch (e) {}
 
-                if (seq === this._routeDataSeq) {
+                if (seq === this._routeDataSeq && Number(this.machine_tasks.route_id) === Number(routeId)) {
                     this.selectedRouteData = {
                         id: routeId,
                         name: routeName,
@@ -473,7 +480,7 @@ export class LogisticWithMap extends Logistic {
                         signal_loss_events: []
                     };
                 }
-            } else if (seq !== null && seq === this._routeDataSeq) {
+            } else if (seq !== null && seq === this._routeDataSeq && Number(this.machine_tasks.route_id) === Number(routeId)) {
                 this.selectedRouteData = {
                     id: routeId,
                     name: `Маршрут ${routeId}`,
