@@ -2417,6 +2417,17 @@ export class Section {
                 ]
             })
 
+            if (response?.status && response.status != 200) {
+                const data = response.data ?? {}
+                if (data.title || Array.isArray(data.errors)) {
+                    new Common().showNotification({
+                        title: data.title ?? 'Не удалось сохранить',
+                        description: Array.isArray(data.errors) ? data.errors.join('; ') : ''
+                    }, 'error', { toastId: 'products-mismatch' })
+                }
+                return
+            }
+
             const finishField = (field) => {
                 if (!field.edit) return
                 if (field.type == 'relation' && field.value?.value) {
