@@ -276,11 +276,13 @@ html {
         @media (max-width: 990px) {
             display: flex;
             align-items: center;
+            justify-content: flex-start;
             gap: 8px;
 
             #mobile-menu-target {
                 flex: 1 1 auto;
                 min-width: 0;
+                margin-right: auto;
                 overflow-wrap: anywhere;
             }
 
