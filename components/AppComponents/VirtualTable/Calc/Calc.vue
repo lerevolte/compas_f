@@ -76,7 +76,7 @@
                 shipped: table.value.body.reduce((shipped, row) => shipped + Number(row.product_shipped || 0), 0),
                 weight: table.value.body.reduce((weight, row) => weight + (Number(row.product_count || 0) * Number(row.product_weight || 0)), 0),
                 volume: table.value.body.reduce((volume, row) => volume + (Number(row.product_count || 0) * Number(row.product_volume || 0)), 0),
-                sum: table.value.body.reduce((sum, row) => sum + (Number(row.product_count || 0) * Number(row.product_price || 0)), 0)
+                sum: table.value.body.reduce((sum, row) => sum + (Number(row.product_count || 0) * Number(row[table.value.options?.parentSlug === 'supplier_orders' ? 'product_purchase_price' : 'product_price'] || 0)), 0)
             }
         }
     })

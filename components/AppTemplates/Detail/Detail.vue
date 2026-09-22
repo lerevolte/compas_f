@@ -773,8 +773,10 @@
     })
 
     const basedEntities = computed(() => {
-        const list = BASED_ENTITIES[props.slug ?? router.params.slug] ?? []
+        const slug = props.slug ?? router.params.slug
+        const list = BASED_ENTITIES[slug] ?? []
         const kind = actionKind.value
+        if (slug === 'logistic_tasks' && detail.value.permissions?.based_action && !kind) return []
         const byAction = kind ? list.filter(entity => !entity.action || entity.action === kind) : list
         const map = detail.value.permissions?.based_create
         if (!map) return byAction

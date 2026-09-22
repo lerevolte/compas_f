@@ -227,7 +227,7 @@
                 />
                 <div
                     class="form__item form__item_default-value default-value-picker"
-                    v-if="!FIELDS_WITHOUT_DEFAULT_VALUE.includes(modal.field.key) && !['relation','file','text_group','status','select_dropdown','redactor','json','waybills','route_map','deal_stages','geoposition'].includes(modal.field.type)"
+                    v-if="!FIELDS_WITHOUT_DEFAULT_VALUE.includes(modal.field.key) && !['relation','file','text_group','select_dropdown','redactor','json','waybills','route_map','deal_stages','geoposition'].includes(modal.field.type) && !(modal.field.type == 'status' && props.modal.action == 'create')"
                 >
                     <AppPopup class="default-value-picker__popup" :isPreventBottom="true" :ignoreSelectors="['default-value-picker', '.dp__menu']">
                         <template #header>
@@ -245,8 +245,24 @@
                         </template>
                         <template #content>
                             <div class="default-value-picker__content">
+                                <AppStatus
+                                    v-if="modal.field.type == 'status'"
+                                    :isPreventBottom="true"
+                                    v-model="modal.field.default_value"
+                                    @update:modelValue="val => { modal.field.set_default = (val !== null && val !== '') ? 1 : 0 }"
+                                    :options="{
+                                        id: 0,
+                                        title: 'Значение по умолчанию',
+                                        name: 'default_value',
+                                        type: 'status',
+                                        list: statusDefaultOptions,
+                                        isHaveNull: true,
+                                        isCanCreate: false,
+                                        edit: true
+                                    }"
+                                />
                                 <AppSelect
-                                    v-if="modal.field.type == 'address'"
+                                    v-else-if="modal.field.type == 'address'"
                                     v-model="modal.field.default_value"
                                     @update:modelValue="val => { if (val && (val.text || val.coords)) modal.field.set_default = 1 }"
                                     :options="{
@@ -360,6 +376,7 @@
     import AppDate from '@AppComponents/Inputs/Date/Date.vue';
     import AppInput from '@AppComponents/Inputs/Input/Input.vue';
     import AppSelect from '@AppComponents/Inputs/Select/Select.vue';
+    import AppStatus from '@AppComponents/Inputs/Status/Status.vue';
     import AppTextarea from '@AppComponents/Inputs/Textarea/Textarea.vue';
     import AppCheckbox from '@AppComponents/Inputs/Checkbox/Checkbox.vue'
     import AppColorPicker from '@AppComponents/Inputs/ColorPicker/ColorPicker.vue';
@@ -557,6 +574,11 @@
             const request = JSON.parse(JSON.stringify(this.field))
 
             if (this.field.type == 'status') {
+                const stillExists = (request.options || []).some(o => String(o.value) === String(request.default_value))
+                if (!stillExists) {
+                    request.default_value = null
+                    request.set_default = 0
+                }
                 request.options = request.options.map((option, index) => {
                     return {
                         label: {
@@ -617,8 +639,23 @@
             const date = new Date(field.default_value)
             if (!isNaN(date.getTime())) return date.toLocaleDateString('ru-RU')
         }
+        if (field.type == 'status') {
+            const option = (field.options || []).find(o => String(o.value) === String(field.default_value))
+            return option?.label ?? field.default_value
+        }
         return field.default_value
     }
+
+    const statusDefaultOptions = computed(() => (modal.value.field?.options || []).map(o => ({
+        value: o.value,
+        label: {
+            id: o.value,
+            text: o.label,
+            color: o.color ?? '#B6B6B6',
+            file: Array.isArray(o.file) ? (o.file[0]?.url ?? null) : null,
+            is_hidden: 0
+        }
+    })))
 
     const modal = ref(new Modal())
 

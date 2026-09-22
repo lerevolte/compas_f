@@ -150,6 +150,7 @@ export default {
         waybillDelete: '/saby-waybills/${id}',
         sabyOrders: '/logistic_tasks/${id}/saby-orders',
         sabyOrderRefresh: '/saby-orders/${id}/refresh',
+        sabyOrderUpdateData: '/saby-orders/${id}/update-data',
         sabyOrderDelete: '/saby-orders/${id}',
         sabyOrderWaybill: '/saby-orders/${id}/waybill'
     },

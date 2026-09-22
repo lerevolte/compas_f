@@ -375,6 +375,8 @@
                             let value = defIsObject ? def.value : def
                             if (Array.isArray(field.value.value) && !Array.isArray(value)) {
                                 value = value === null || value === undefined || value === '' ? [] : [value]
+                            } else if (!Array.isArray(field.value.value) && Array.isArray(value)) {
+                                value = value.length ? value[0] : null
                             }
                             field.value.value = value
                             if (defIsObject && Array.isArray(def.localOptions)) {
