@@ -131,6 +131,7 @@
             contentEl.style.top = '0px';
             contentEl.style.bottom = 'auto';
             contentEl.style.position = 'fixed';
+            contentEl.style.maxHeight = '';
 
             const anchorRect = headerEl.getBoundingClientRect();
             if (!anchorRect.width && !anchorRect.height) {
@@ -173,11 +174,17 @@
             this.state.isTop = !openBelow;
 
             let top;
+            let available;
             if (openBelow) {
                 top = anchorRect.bottom + GAP;
+                available = bottomBound - top;
             } else {
                 top = anchorRect.top - GAP - contentRect.height;
                 if (top < MARGIN) top = MARGIN;
+                available = anchorRect.top - GAP - top;
+            }
+            if (contentRect.height > available && available > 80) {
+                contentEl.style.maxHeight = `${Math.floor(available)}px`;
             }
             contentEl.style.top = `${Math.round(top)}px`;
             contentEl.style.bottom = 'auto';

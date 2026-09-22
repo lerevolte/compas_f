@@ -435,7 +435,6 @@
 	border-left: 1px solid #eee;
 	padding: 0;
 	flex-shrink: 0;
-	max-height: 320px;
 	overflow-y: auto;
 	overscroll-behavior: contain;
 

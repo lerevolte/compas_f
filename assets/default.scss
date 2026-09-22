@@ -886,18 +886,23 @@ section {
     width: 470px !important;
     min-width: 470px !important;
     max-width: 470px !important;
-    overflow: visible;
+    max-height: calc(100vh - 10px);
+    overflow: hidden;
 
     .logistic-header__statistic-content {
-        display: block !important;
+        display: flex !important;
+        flex-direction: column;
         grid-template-columns: none !important;
         width: 100%;
+        min-height: 0;
     }
 
     .stat-layout {
         display: flex !important;
         width: 100%;
         align-items: stretch;
+        flex: 1 1 auto;
+        min-height: 0;
     }
 
     .stat-body {
@@ -910,6 +915,15 @@ section {
         flex: 0 0 150px !important;
         width: 150px !important;
         max-width: 150px !important;
+        max-height: none;
+        min-height: 0;
+        overflow-y: auto;
+        @include mixins.scrollBar();
+    }
+
+    .stat-body {
+        overflow-y: auto;
+        min-height: 0;
     }
 
     .stat-grid {
