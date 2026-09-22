@@ -126,6 +126,20 @@ export const buildQr = async (slug, id) => {
 export class Common {
     constructor() {}
 
+    productLineTotal(row, parentSlug = null) {
+        if (!row) return 0
+        const priceKey = parentSlug === 'supplier_orders' ? 'product_purchase_price' : 'product_price'
+        let total = Number(row.product_count || 0) * Number(row[priceKey] || 0)
+        if (parentSlug === 'supplier_orders') {
+            const rate = Array.isArray(row.product_nds) ? row.product_nds[0] : row.product_nds
+            const included = Array.isArray(row.product_nds_included) ? row.product_nds_included[0] : row.product_nds_included
+            if (rate !== null && rate !== undefined && rate !== '' && !isNaN(Number(rate)) && Number(rate) > 0 && String(included) === '0') {
+                total *= 1 + Number(rate) / 100
+            }
+        }
+        return total
+    }
+
     transformPrice(price, fixed) {
         return parseFloat(price).toFixed(fixed).replace(/\B(?=(\d{3})+(?!\d))/g, " ")
     }

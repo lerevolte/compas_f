@@ -29,7 +29,7 @@
                         <a class="waybills__link" v-if="item.cabinet_url" :href="item.cabinet_url" target="_blank" rel="noopener">Открыть в Saby</a>
                         <a class="waybills__link" v-if="item.pdf_url" :href="item.pdf_url" target="_blank" rel="noopener">PDF заказа</a>
                         <button class="waybills__link waybills__link_button" type="button" :disabled="refreshing === 'order_' + item.id" @click="refreshOrder(item)">{{ refreshing === 'order_' + item.id ? 'Обновляется…' : 'Обновить' }}</button>
-                        <button v-if="String(item.state_code ?? '0') === '0'" class="waybills__link waybills__link_button" type="button" :disabled="refreshing === 'ord_' + item.id" @click="updateOrderData(item)">{{ refreshing === 'ord_' + item.id ? 'Обновляется…' : 'Обновить данные заказа' }}</button>
+                        <button v-if="!['7', '9'].includes(String(item.state_code ?? '0'))" class="waybills__link waybills__link_button" type="button" :disabled="refreshing === 'ord_' + item.id" @click="updateOrderData(item)">{{ refreshing === 'ord_' + item.id ? 'Обновляется…' : 'Обновить данные заказа' }}</button>
                         <template v-if="confirmDelete === 'order_' + item.id">
                             <span class="waybills__confirm">Удалить заказ?</span>
                             <button class="waybills__link waybills__link_button waybills__link_danger" type="button" :disabled="deleting === 'order_' + item.id" @click="removeOrder(item)">{{ deleting === 'order_' + item.id ? 'Удаляется…' : 'Да, удалить' }}</button>

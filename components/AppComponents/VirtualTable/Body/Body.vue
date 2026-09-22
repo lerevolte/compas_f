@@ -639,8 +639,7 @@
                     const cell = table.value.body[rowIndex][column.key]
 
                     if (table.value.slug == 'products' && column.key == 'product_sum') {
-                        const priceKey = table.value.options?.parentSlug === 'supplier_orders' ? 'product_purchase_price' : 'product_price'
-                        return  common.transformPrice(table.value.body[rowIndex]?.[priceKey] * table.value.body[rowIndex]?.product_count, 0) 
+                        return  common.transformPrice(common.productLineTotal(table.value.body[rowIndex], table.value.options?.parentSlug), 0) 
                     } else if (column.type == 'address') {
                         return cell
                     } else if (Array.isArray(cell)) {
