@@ -235,6 +235,9 @@
         ],
         addresses: [{ slug: 'logistic_tasks', title: 'Задача логистики' }]
     }
+    const BASED_KEY_MAP = {
+        'supplier_orders:logistic_tasks': { company_id: 'shipment_company_id', shipment_company_id: 'company_id' }
+    }
 
     class Tabs {
         constructor() {
@@ -581,6 +584,22 @@
                 }
             }
             for (const field of this.hiddenFields ?? []) collect(field)
+
+            const keyMap = BASED_KEY_MAP[`${this.slug}:${entity.slug}`]
+            if (keyMap) {
+                const source = JSON.parse(JSON.stringify(defaults))
+                for (const from of Object.keys(keyMap)) {
+                    delete defaults[from]
+                    if (defaults.__labels) delete defaults.__labels[from]
+                }
+                for (const [from, to] of Object.entries(keyMap)) {
+                    if (source[from] !== undefined) defaults[to] = source[from]
+                    if (source.__labels?.[from] !== undefined) {
+                        defaults.__labels = defaults.__labels || {}
+                        defaults.__labels[to] = source.__labels[from]
+                    }
+                }
+            }
 
             if (entity.taskAction) {
                 const actionId = this.permissions?.based_action?.[entity.taskAction]
