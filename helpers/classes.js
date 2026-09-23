@@ -3586,6 +3586,7 @@ export class Socket {
             wsPort: 6001,
             wssPort: 6001,
             forceTLS: true,
+            enabledTransports: ['ws', 'wss'],
             disableStats: true,
             encrypted: false,
             cluster: 'eu',
