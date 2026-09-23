@@ -279,9 +279,19 @@
                     }
                 }
 
-                this.queryTab = {
-                    is_slug: true,
-                    id: request
+                const sourceId = detail.value.id
+                if (findedField && sourceId && `${sourceId}` !== '0' && !detail.value.isCopy) {
+                    this.queryTab = {
+                        is_slug: true,
+                        link_slug: detail.value.slug,
+                        link_id: sourceId,
+                        link_field: tab.tab
+                    }
+                } else {
+                    this.queryTab = {
+                        is_slug: true,
+                        id: request
+                    }
                 }
                 if (detail.value.isTrash) {
                     this.queryTab.with_trashed = 1
