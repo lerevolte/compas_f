@@ -368,6 +368,13 @@
 
 .stop-marker .icon-background {
     margin: -1px 0 0 -1px;
+    background-color: transparent;
+}
+
+.stop-marker .marker-svg-icon {
+    width: 18px;
+    height: 18px;
+    filter: none;
 }
 
 // ── Back button inside popups ──
