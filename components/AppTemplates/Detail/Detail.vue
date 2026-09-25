@@ -663,12 +663,21 @@
             const rows = (Array.isArray(this.productsDraft) ? this.productsDraft : [])
                 .filter(row => row.id || (row.product_name && String(row.product_name).trim() !== ''))
                 .filter(row => row.product_count !== null && row.product_count !== undefined && String(row.product_count).trim() !== '' && Number(row.product_count) > 0)
-            if (!rows.length) return true
+            const fields = {}
+            for (const key of ['storehouse_id', 'receipt_storehouse_id']) {
+                const field = common.findColumnField(this.columns, key) ?? (this.hiddenFields ?? []).find(f => f.key == key)
+                if (!field) continue
+                let value = field.value && typeof field.value === 'object' && !Array.isArray(field.value) && 'value' in field.value ? field.value.value : field.value
+                if (Array.isArray(value)) value = value[0]
+                fields[key] = value ?? null
+            }
+            if (!rows.length && !Object.keys(fields).length) return true
             try {
                 const response = await api.callMethod('POST', routes.relations.validateProducts, {
                     source_slug: props.source.slug,
                     source_id: props.source.id,
                     target_slug: target,
+                    fields,
                     products: rows.map(row => ({
                         id: row.id,
                         product_name: row.product_name,
@@ -679,7 +688,7 @@
                 const errors = response?.status == 200 ? (response.data?.errors ?? []) : []
                 if (errors.length) {
                     common.showNotification({
-                        title: 'Расхождение по составу с документом-основанием — сохранение запрещено',
+                        title: 'Расхождение с документом-основанием — сохранение запрещено',
                         description: errors.join('; ')
                     }, 'error', { toastId: 'products-mismatch' })
                     return false

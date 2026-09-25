@@ -938,7 +938,6 @@
         window.open(url, '_blank', 'noopener');
     };
 
-    // ── Render route ──
     const drawAnalytics = (routeData) => {
         drawActualPath(routeData);
         showActualPathMarkers(routeData);
@@ -1251,7 +1250,6 @@
             createTaskMarkers(validTasks);
         }
 
-        // Draw analytics layers (regardless of routing success)
         drawAnalytics(routeData);
 
         console.log('🟢 Route rendering complete, processedRoute:', processedRoute ? 'set' : 'null');
@@ -1407,12 +1405,30 @@
         });
     };
 
-    // ── Actual path ──
     const drawActualPath = (routeData) => {
         if (!routeData.actual_path || routeData.actual_path.length < 2 || !settings.analytics.actual_path) return;
-        const coords = routeData.actual_path.map(p => [p.lat, p.lon]);
-        const polyline = L.polyline(coords, { color: '#1253A2', weight: 2, opacity: 0.85, dashArray: '10, 10', className: 'actual-path-line' }).addTo(mapInstance.value);
-        actualPathLayers.push(polyline);
+        const path = routeData.actual_path;
+        const segments = [];
+        let current = [[path[0].lat, path[0].lon]];
+        for (let i = 1; i < path.length; i++) {
+            const prev = path[i - 1];
+            const curr = path[i];
+            if (isSignalLossGap(prev, curr)) {
+                if (current.length > 1) segments.push({ coords: current, lost: false });
+                segments.push({ coords: [[prev.lat, prev.lon], [curr.lat, curr.lon]], lost: true });
+                current = [[curr.lat, curr.lon]];
+            } else {
+                current.push([curr.lat, curr.lon]);
+            }
+        }
+        if (current.length > 1) segments.push({ coords: current, lost: false });
+        segments.forEach(seg => {
+            const polyline = L.polyline(seg.coords, seg.lost
+                ? { color: '#A8A8A8', weight: 2, opacity: 0.9, dashArray: '10, 10', className: 'actual-path-line actual-path-line_lost' }
+                : { color: '#1253A2', weight: 2, opacity: 0.85, dashArray: '10, 10', className: 'actual-path-line' }
+            ).addTo(mapInstance.value);
+            actualPathLayers.push(polyline);
+        });
     };
 
     const drawCurrentPosition = (routeData) => {
@@ -1584,18 +1600,21 @@
         return { serviceStops, parkingStops };
     };
 
+    const isSignalLossGap = (prev, curr) => {
+        const gap = parseTimeToMinutes(curr.time) - parseTimeToMinutes(prev.time);
+        if (gap < 5) return false;
+        return L.latLng(prev.lat, prev.lon).distanceTo(L.latLng(curr.lat, curr.lon)) > 50;
+    };
+
     const analyzeSignalLoss = (actualPath) => {
         if (!actualPath || actualPath.length < 2) return [];
-        const SIGNAL_LOSS_MIN_MINUTES = 5;
         const events = [];
 
         for (let i = 1; i < actualPath.length; i++) {
             const prev = actualPath[i - 1];
             const curr = actualPath[i];
             const gap = parseTimeToMinutes(curr.time) - parseTimeToMinutes(prev.time);
-
-            const moved = L.latLng(prev.lat, prev.lon).distanceTo(L.latLng(curr.lat, curr.lon));
-            if (gap >= SIGNAL_LOSS_MIN_MINUTES && moved > 50) {
+            if (isSignalLossGap(prev, curr)) {
                 events.push({
                     loss_point: { lat: prev.lat, lon: prev.lon, time: prev.time },
                     restore_point: { lat: curr.lat, lon: curr.lon, time: curr.time },
@@ -1606,7 +1625,6 @@
         return events;
     };
 
-    // ── Show stops on map (with data-aware clustering) ──
     const showStopMarkers = (routeData) => {
         if (!settings.analytics.stops) return;
         stopMarkersLayer.clearLayers();
@@ -1680,7 +1698,6 @@
         createCluster(parkingStops, 'parking');
     };
 
-    // ── Signal loss markers (with data-aware clustering) ──
     const showSignalLossMarkers = (routeData) => {
         if (!settings.analytics.signal_loss) return;
         signalLossMarkersLayer.clearLayers();

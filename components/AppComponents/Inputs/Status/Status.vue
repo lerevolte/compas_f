@@ -113,7 +113,6 @@
                 }
             });
 
-            // Закрытие опций
             this.closeOptions = (event) => {
                 const inside = [statusRef.value, contentRef.value, pickerRef.value]
                     .some(el => el && el.contains(event.target))
@@ -169,21 +168,37 @@
             }
         }
 
-        // Получение активных опций
         getActiveOptions(value) {
+            if (Array.isArray(value)) {
+                const selected = (this.state.list ?? []).filter(p => value.some(v => v == p.value))
+                if (!selected.length) {
+                    return props.options.isHaveNull ? { value: null, label: { text: 'Не выбрано', color: '', file: null } } : this.state.list?.[0]
+                }
+                if (selected.length == 1) return selected[0]
+                return { value, label: { ...selected[0].label, text: selected.map(p => p.label?.text).join(', ') } }
+            }
             if ((value === null || value === undefined || value === '') && props.options.isHaveNull) {
                 return { value: null, label: { text: 'Не выбрано', color: '', file: null } }
             }
             return this.state.list ? this.state.list.find(p => p.value == value) ?? this.state.list[0] : this.state.list[0]
         }
 
-        // Изменение значения
         changeValue(option) {
+            if (props.options.multiple) {
+                if (option.value === null) {
+                    this.toggleOptions()
+                    emit('update:modelValue', null)
+                    return
+                }
+                const current = Array.isArray(props.modelValue) ? props.modelValue : (props.modelValue === null || props.modelValue === undefined || props.modelValue === '' ? [] : [props.modelValue])
+                const next = current.some(v => v == option.value) ? current.filter(v => v != option.value) : [...current, option.value]
+                emit('update:modelValue', next.length ? next : null)
+                return
+            }
             this.toggleOptions()
             emit('update:modelValue', option.value)
         }
 
-        // Открытие/закрытие опций
         toggleOptions() {
             this.state.isOpen = !this.state.isOpen;
 

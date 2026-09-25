@@ -950,9 +950,21 @@ export class Table {
                         return
                     }
                 } else {
-                    await api.callMethod('POST', routes.table.save.replace('${slug}', this.slug), {
+                    const response = await api.callMethod('POST', routes.table.save.replace('${slug}', this.slug), {
                         rows: request
                     })
+                    const data = response?.data ?? {}
+                    if (response?.status && response.status != 200 && (data.title || Array.isArray(data.errors))) {
+                        this.common.showNotification({
+                            title: data.title ?? 'Не удалось сохранить',
+                            description: Array.isArray(data.errors) ? data.errors.join('; ') : ''
+                        }, 'error', { toastId: 'products-mismatch' })
+                        this.blockedSave = true
+                        return
+                    }
+                    if (Array.isArray(data.warnings) && data.warnings.length) {
+                        this.common.showNotification({ title: 'Изменения в связанных документах', description: data.warnings.join('; ') }, 'warning')
+                    }
                 }
             } else {
                 await api.callMethod('PUT', routes.table.save_path.replace('${path}', this.path), {
@@ -2440,6 +2452,9 @@ export class Section {
                     }, 'error', { toastId: 'products-mismatch' })
                 }
                 return
+            }
+            if (Array.isArray(response?.data?.warnings) && response.data.warnings.length) {
+                new Common().showNotification({ title: 'Изменения в связанных документах', description: response.data.warnings.join('; ') }, 'warning')
             }
 
             const finishField = (field) => {

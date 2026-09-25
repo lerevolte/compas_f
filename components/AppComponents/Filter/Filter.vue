@@ -154,6 +154,7 @@
                                     edit: true,
                                     list: field.options,
                                     isHaveNull: true,
+                                    multiple: true,
                                 }"
                                 v-model="filter.state.tabsValues[field.key]"
                             />
@@ -375,7 +376,7 @@
                         if (type == 'request') {
                             return findedOption?.value
                         } else {
-                            return field.type == 'status' || field.type == 'relation' ? findedOption.label?.text : findedOption.label
+                            return field.type == 'status' || field.type == 'relation' ? findedOption?.label?.text : findedOption?.label
                         }
                     }
                 }
@@ -391,10 +392,9 @@
                         return response
                     case 'select_dropdown':
                         return transformSelect(this.state.tabsValues[key], key, type)
-                    case 'status':
-                        return transformSelect(this.state.tabsValues[key], key, type)
                     case 'relation':
                         return transformSelect(this.state.tabsValues[key], key, type)
+                    case 'status':
                     case 'deal_stages': {
                         const value = this.state.tabsValues[key]
                         if (Array.isArray(value)) {
