@@ -233,5 +233,10 @@
         "title": "Заказы поставщикам",
         "desc": "",
         "template": null
+    },
+    "storehouses": {
+        "title": "Склады",
+        "desc": "",
+        "template": null
     }
 }

@@ -232,5 +232,11 @@
         "title_singular": "Заказ поставщику",
         "title_plural": "Заказы поставщикам",
         "color": "#3F7FBF"
+    },
+    "storehouses": {
+        "slug": "storehouses",
+        "title_singular": "Склад",
+        "title_plural": "Склады",
+        "color": "#8E7CC3"
     }
 }

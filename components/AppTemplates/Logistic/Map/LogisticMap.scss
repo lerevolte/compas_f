@@ -299,6 +299,11 @@
 .actual-path-marker {
     position: relative;
     cursor: pointer;
+    height: 18px;
+}
+
+.actual-path-marker > .marker-main-view {
+    display: flex;
 }
 
 .marker-main-view {
@@ -345,9 +350,9 @@
 .actual-path-marker .route-popup__extend {
     display: none;
     position: absolute;
-    top: 100%;
+    top: calc(100% + 5px);
     left: 0;
-    margin-top: 8px;
+    margin-top: 0;
     padding: 5px;
     width: max-content;
     min-width: 200px;

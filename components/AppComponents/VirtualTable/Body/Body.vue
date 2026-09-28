@@ -342,6 +342,21 @@
                                 {{ geopositionValue(row.index, column) }}
                             </span>
 
+                            <span class="table__text text table__saby" v-else-if="column.type == 'waybills'">
+                                <span class="table__saby-item" v-for="item in sabyItems(row.index, column)" :key="item.type + '-' + item.id">
+                                    <span class="table__saby-line">
+                                        <span class="table__saby-name">{{ item.type == 'waybill' ? 'ЭТрН' : 'Заказ' }}{{ item.number ? ' № ' + item.number : '' }}</span>
+                                        <a v-if="item.url" :href="item.url" target="_blank" class="table__saby-open" title="Открыть в Saby" @click.stop>Saby</a>
+                                        <span class="table__saby-state" v-if="item.state">{{ item.state }}</span>
+                                    </span>
+                                    <span class="table__saby-line table__saby-line_waybill" v-if="item.waybill">
+                                        <span class="table__saby-name">ЭТрН{{ item.waybill.number ? ' № ' + item.waybill.number : '' }}</span>
+                                        <a v-if="item.waybill.url" :href="item.waybill.url" target="_blank" class="table__saby-open" title="Открыть в Saby" @click.stop>Saby</a>
+                                        <span class="table__saby-state" v-if="item.waybill.state">{{ item.waybill.state }}</span>
+                                    </span>
+                                </span>
+                            </span>
+
                             <span class="table__text text" v-else-if="column.type == 'json'" :title="jsonTitle(cell.useCellModel(row.index, column).value)" v-html="jsonInline(cell.useCellModel(row.index, column).value)"></span>
 
                             <AppRouteStatuses
@@ -638,8 +653,20 @@
                     }
                     const cell = table.value.body[rowIndex][column.key]
 
-                    if (table.value.slug == 'products' && column.key == 'product_sum') {
-                        return  common.transformPrice(common.productLineTotal(table.value.body[rowIndex], table.value.options?.parentSlug), 0) 
+                    if (table.value.slug == 'products' && ['product_sum', 'product_nds_sum', 'product_total'].includes(column.key)) {
+                        const row = table.value.body[rowIndex]
+                        const parentSlug = table.value.options?.parentSlug
+                        const parts = common.productLineParts(row, parentSlug)
+                        if (column.key == 'product_sum') {
+                            const editing = !column.read_only && (row.edit || table.value.options?.isPermanentEdit)
+                            if (editing) {
+                                const draft = row.__sumEdit
+                                if (draft && draft.price === row[common.productPriceKey(parentSlug)] && draft.count === row.product_count) return draft.value
+                                return common.roundMoney(parts.net)
+                            }
+                            return common.transformPrice(parts.net, 2)
+                        }
+                        return common.transformPrice(column.key == 'product_total' ? parts.gross : parts.vat, 2)
                     } else if (column.type == 'address') {
                         return cell
                     } else if (Array.isArray(cell)) {
@@ -657,6 +684,22 @@
                     }
                     
                     const cell = table.value.body[rowIndex][column.key]
+
+                    if (table.value.slug == 'products' && column.key == 'product_sum') {
+                        const row = table.value.body[rowIndex]
+                        const parentSlug = table.value.options?.parentSlug
+                        const priceKey = common.productPriceKey(parentSlug)
+                        const net = Number(String(val ?? '').replace(/\s/g, '').replace(',', '.'))
+                        const count = Number(row.product_count || 0)
+                        if (Number.isFinite(net) && count > 0) {
+                            const { rate, included } = common.productLineVat(row)
+                            const base = included && rate > 0 ? net * (1 + rate / 100) : net
+                            row[priceKey] = common.roundMoney(base / count)
+                        }
+                        row.__sumEdit = { value: val, price: row[priceKey], count: row.product_count }
+                        row.product_sum = Number.isFinite(net) ? net : null
+                        return
+                    }
 
                     if (column.type == 'address') {
                         table.value.body[rowIndex][column.key] = val
@@ -777,6 +820,19 @@
     }
 
     const cell = new Cell()
+
+    const sabyItems = (rowIndex, column) => {
+        let value = table.value.body[rowIndex]?.[column.key]
+        if (typeof value === 'string') {
+            if (!value.trim()) return []
+            try {
+                value = JSON.parse(value)
+            } catch (e) {
+                return []
+            }
+        }
+        return Array.isArray(value) ? value.filter(item => item && typeof item === 'object') : []
+    }
 
     const geopositionValue = (rowIndex, column) => {
         let value = table.value.body[rowIndex]?.[column.key]

@@ -2,3 +2,54 @@
     background: green !important
     ;
 }
+.table__saby {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    white-space: normal;
+}
+
+.table__saby-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.table__saby-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.table__saby-line_waybill {
+    padding-left: 10px;
+}
+
+.table__saby-name {
+    white-space: nowrap;
+}
+
+.table__saby-open {
+    flex: 0 0 auto;
+    padding: 0 6px;
+    border-radius: 4px;
+    border: 1px solid #0584FE;
+    color: #0584FE;
+    font-size: 11px;
+    line-height: 16px;
+    text-decoration: none;
+
+    &:hover {
+        background: #0584FE;
+        color: #fff;
+    }
+}
+
+.table__saby-state {
+    color: #6d7885;
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

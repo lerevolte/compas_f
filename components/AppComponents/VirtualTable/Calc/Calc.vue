@@ -34,7 +34,23 @@
                     Сумма:
                 </span>
                 <strong class="table-calc__value">
-                    {{ common.transformPrice(calculateContent.sum, 0) }}
+                    {{ common.transformPrice(calculateContent.sum, 2) }}
+                </strong>
+            </div>
+            <div class="table-calc__item" v-if="calculateContent.vat > 0">
+                <span class="table-calc__label">
+                    Сумма НДС:
+                </span>
+                <strong class="table-calc__value">
+                    {{ common.transformPrice(calculateContent.vat, 2) }}
+                </strong>
+            </div>
+            <div class="table-calc__item">
+                <span class="table-calc__label">
+                    Всего:
+                </span>
+                <strong class="table-calc__value">
+                    {{ common.transformPrice(calculateContent.total, 2) }}
                 </strong>
             </div>
             <div class="table-calc__item" v-if="hasShipped">
@@ -76,7 +92,9 @@
                 shipped: table.value.body.reduce((shipped, row) => shipped + Number(row.product_shipped || 0), 0),
                 weight: table.value.body.reduce((weight, row) => weight + (Number(row.product_count || 0) * Number(row.product_weight || 0)), 0),
                 volume: table.value.body.reduce((volume, row) => volume + (Number(row.product_count || 0) * Number(row.product_volume || 0)), 0),
-                sum: table.value.body.reduce((sum, row) => sum + common.productLineTotal(row, table.value.options?.parentSlug), 0)
+                sum: table.value.body.reduce((sum, row) => sum + common.productLineParts(row, table.value.options?.parentSlug).net, 0),
+                vat: table.value.body.reduce((sum, row) => sum + common.productLineParts(row, table.value.options?.parentSlug).vat, 0),
+                total: table.value.body.reduce((sum, row) => sum + common.productLineParts(row, table.value.options?.parentSlug).gross, 0)
             }
         }
     })

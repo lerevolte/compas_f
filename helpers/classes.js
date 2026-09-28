@@ -126,18 +126,39 @@ export const buildQr = async (slug, id) => {
 export class Common {
     constructor() {}
 
-    productLineTotal(row, parentSlug = null) {
-        if (!row) return 0
-        const priceKey = parentSlug === 'supplier_orders' ? 'product_purchase_price' : 'product_price'
-        let total = Number(row.product_count || 0) * Number(row[priceKey] || 0)
-        if (parentSlug === 'supplier_orders') {
-            const rate = Array.isArray(row.product_nds) ? row.product_nds[0] : row.product_nds
-            const included = Array.isArray(row.product_nds_included) ? row.product_nds_included[0] : row.product_nds_included
-            if (rate !== null && rate !== undefined && rate !== '' && !isNaN(Number(rate)) && Number(rate) > 0 && String(included) === '0') {
-                total *= 1 + Number(rate) / 100
-            }
+    productPriceKey(parentSlug = null) {
+        return parentSlug === 'supplier_orders' ? 'product_purchase_price' : 'product_price'
+    }
+
+    productLineVat(row) {
+        const rawRate = Array.isArray(row?.product_nds) ? row.product_nds[0] : row?.product_nds
+        const rawIncluded = Array.isArray(row?.product_nds_included) ? row.product_nds_included[0] : row?.product_nds_included
+        const rate = rawRate !== null && rawRate !== undefined && rawRate !== '' && !isNaN(Number(rawRate)) && Number(rawRate) > 0 ? Number(rawRate) : 0
+        const included = !(rawIncluded !== null && rawIncluded !== undefined && String(rawIncluded) === '0')
+        return { rate, included }
+    }
+
+    productLineParts(row, parentSlug = null) {
+        if (!row) return { net: 0, vat: 0, gross: 0, rate: 0, included: true }
+        const base = Number(row.product_count || 0) * Number(row[this.productPriceKey(parentSlug)] || 0)
+        const { rate, included } = this.productLineVat(row)
+        if (!(rate > 0)) return { net: base, vat: 0, gross: base, rate: 0, included }
+        if (included) {
+            const net = base / (1 + rate / 100)
+            return { net, vat: base - net, gross: base, rate, included }
         }
-        return total
+        const vat = base * rate / 100
+        return { net: base, vat, gross: base + vat, rate, included }
+    }
+
+    productLineTotal(row, parentSlug = null) {
+        return this.productLineParts(row, parentSlug).gross
+    }
+
+    roundMoney(value) {
+        const n = Number(value)
+        if (!Number.isFinite(n)) return 0
+        return Math.round(n * 100) / 100
     }
 
     transformPrice(price, fixed) {
@@ -889,7 +910,9 @@ export class Table {
                         product_count: row['product_count'],
                         product_weight: row['product_weight'],
                         product_volume: row['product_volume'],
-                        product_sum: row['product_sum'],
+                        product_sum: this.common.roundMoney(this.common.productLineParts(row, this.options?.parentSlug).net),
+                        product_nds_sum: this.common.roundMoney(this.common.productLineParts(row, this.options?.parentSlug).vat),
+                        product_total: this.common.roundMoney(this.common.productLineParts(row, this.options?.parentSlug).gross),
                         product_nds: row['product_nds'],
                         product_nds_included: row['product_nds_included']
                     })
