@@ -213,6 +213,19 @@
     }
 }
 
+.waybills__picker-badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    line-height: 16px;
+    color: #B25E00;
+    background: #FFF1DD;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
 .waybills__picker-note {
     display: inline-block;
     margin-left: 6px;

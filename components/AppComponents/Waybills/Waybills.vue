@@ -117,7 +117,7 @@
                     <AppCheckbox
                         v-model="picker.currentIsLoading"
                         :options="{ title: 'Текущая задача — точка погрузки' }"
-                        @update:modelValue="picker.selected = null"
+                        @update:modelValue="picker.selected = $event ? null : picker.defaultLoadingTaskId"
                     />
                 </div>
                 <div class="waybills__picker-title" v-if="picker.tasks.length > 1">
@@ -147,7 +147,10 @@
                                 @click="selectLoadingTask(row)"
                             >
                                 <td>{{ index + 1 }}</td>
-                                <td>{{ row.name || ('Задача #' + row.id) }}</td>
+                                <td>
+                                    {{ row.name || ('Задача #' + row.id) }}
+                                    <span class="waybills__picker-badge" v-if="row.is_loading_warehouse">{{ picker.loadingWarehouseLabel }}</span>
+                                </td>
                                 <td>{{ row.address }}</td>
                                 <td>{{ row.plan_time }}</td>
                             </tr>
@@ -254,6 +257,8 @@
         carName: null,
         tasks: [],
         selected: null,
+        defaultLoadingTaskId: null,
+        loadingWarehouseLabel: 'Склад погрузки',
         currentIsLoading: false
     })
 
@@ -335,10 +340,13 @@
             if (bodyType && !bodyTypes.some(v => String(v.value) === String(bodyType))) {
                 bodyType = null
             }
+            const defaultLoadingTaskId = response.data?.default_loading_task_id || null
             picker.value = {
                 open: true,
                 tasks,
-                selected: null,
+                selected: defaultLoadingTaskId && tasks.some(t => t.id === defaultLoadingTaskId) ? defaultLoadingTaskId : null,
+                defaultLoadingTaskId,
+                loadingWarehouseLabel: response.data?.loading_warehouse_label || 'Склад погрузки',
                 currentIsLoading: false,
                 massMethod: savedMassMethod,
                 massMethods: methods,
