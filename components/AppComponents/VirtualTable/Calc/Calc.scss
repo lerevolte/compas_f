@@ -6,23 +6,37 @@
     align-items: center;
     background: variables.$color-white;
     justify-content: space-between;
+    gap: 20px 30px;
     border: 1px solid #eeeff1;
     margin-bottom: 25px;
     padding: 20px 25px;
     border-radius: 10px;
     box-shadow: 0 5px 20px #eeeff1;
+
+    > button {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
 }
 
 .table-calc__group {
-    gap: 40px;
+    gap: 12px 32px;
     display: flex;
     align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    min-width: 0;
 }
 
 .table-calc__item {
-    gap: 15px;
+    gap: 8px;
     display: flex;
-    align-items: center;
+    align-items: baseline;
+    white-space: nowrap;
+}
+
+.table-calc__value {
+    font-variant-numeric: tabular-nums;
 }
 
 @media (max-width: 990px) {

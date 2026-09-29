@@ -345,12 +345,12 @@
                             <span class="table__text text table__saby" v-else-if="column.type == 'waybills'">
                                 <span class="table__saby-item" v-for="item in sabyItems(row.index, column)" :key="item.type + '-' + item.id">
                                     <span class="table__saby-line">
-                                        <span class="table__saby-name">{{ item.type == 'waybill' ? 'ЭТрН' : 'Заказ' }}{{ item.number ? ' № ' + item.number : '' }}</span>
+                                        <span class="table__saby-name">{{ item.type == 'waybill' ? 'ЭТрН' : 'Заказ' }}</span>
                                         <a v-if="item.url" :href="item.url" target="_blank" class="table__saby-open" title="Открыть в Saby" @click.stop>Saby</a>
                                         <span class="table__saby-state" v-if="item.state">{{ item.state }}</span>
                                     </span>
                                     <span class="table__saby-line table__saby-line_waybill" v-if="item.waybill">
-                                        <span class="table__saby-name">ЭТрН{{ item.waybill.number ? ' № ' + item.waybill.number : '' }}</span>
+                                        <span class="table__saby-name">ЭТрН</span>
                                         <a v-if="item.waybill.url" :href="item.waybill.url" target="_blank" class="table__saby-open" title="Открыть в Saby" @click.stop>Saby</a>
                                         <span class="table__saby-state" v-if="item.waybill.state">{{ item.waybill.state }}</span>
                                     </span>

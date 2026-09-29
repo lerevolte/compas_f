@@ -495,7 +495,7 @@
             let isChain = (entity.slug === 'expense_invoices' && SHIPMENT_SOURCES.includes(this.slug))
                 || (entity.slug === 'receipt_invoices' && SHIPMENT_SOURCES.includes(this.slug))
                 || (this.slug === 'deals' && SHIPMENT_SOURCES.includes(entity.slug))
-                || (this.slug === 'supplier_orders' && entity.slug === 'receipt_invoices')
+                || (this.slug === 'supplier_orders' && (entity.slug === 'receipt_invoices' || SHIPMENT_SOURCES.includes(entity.slug)))
 
             let checkData = null
             if (isReturn || isChain) {

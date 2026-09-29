@@ -254,6 +254,7 @@
         // Изменение файла
         async onFileChange(event) {
             const files = Array.from(event.target.files);
+            event.target.value = '';
 
             if (files.length > 0) {
                 try {
