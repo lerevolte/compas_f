@@ -333,8 +333,8 @@
         display: none;
     }
 
-    .field__checkbox {
-        min-height: 40px;
+    .field__checkbox .form__item_checkbox {
+        min-height: 20px;
     }
 
     &.field_static {

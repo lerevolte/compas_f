@@ -240,16 +240,19 @@
                         @update:model-value="!field.edit && fieldObject.initChangeField(field, null, 'option')"
                     />
 
-                    <AppCheckbox
-                        v-else-if="field.type == 'checkbox'"
-                        class="field__checkbox"
-                        :modelValue="fieldObject.checkboxValue(field) === '1'"
-                        :options="{
-                            title: field.title,
-                            disabled: !field.can_edit
-                        }"
-                        @update:modelValue="val => fieldObject.setCheckboxValue(field, val)"
-                    />
+                    <div class="blank field__checkbox" v-else-if="field.type == 'checkbox'">
+                        <span class="blank__title">
+                            {{ field.title }}
+                        </span>
+                        <AppCheckbox
+                            :modelValue="fieldObject.checkboxValue(field) === '1'"
+                            :options="{
+                                title: '',
+                                disabled: !field.can_edit
+                            }"
+                            @update:modelValue="val => fieldObject.setCheckboxValue(field, val)"
+                        />
+                    </div>
 
                     <TileSectionComponent 
                         v-else-if="field.type == 'text_group'"

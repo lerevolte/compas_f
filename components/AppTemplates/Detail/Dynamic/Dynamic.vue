@@ -128,6 +128,7 @@
                 beforeSave: props.options.beforeSave,
                 isProductsDirty: productsDirty,
                 saveProducts: () => detail.saveProducts(),
+                draftProducts: () => detail.draftProducts(),
                 afterSave: () => detail.afterSave(),
                 onCancel: () => detail.cancelProducts(),
             }"
@@ -486,6 +487,21 @@
             this.productsDraft = null
             this.productsBackup = null
             emit('action', { action: 'setProductsDraft', value: null })
+        }
+
+        draftProducts() {
+            const body = productsTableRef.value?.table?.body
+            const rows = Array.isArray(body) ? body : (Array.isArray(this.productsDraft) ? this.productsDraft : null)
+            if (!rows) return null
+            return JSON.parse(JSON.stringify(rows))
+                .filter(row => row.id || (row.product_name && String(row.product_name).trim() !== ''))
+                .filter(row => Number(row.product_count) > 0)
+                .map(row => ({
+                    id: row.id,
+                    name: row.product_name,
+                    price: row.product_price,
+                    count: row.product_count
+                }))
         }
 
         async saveProducts() {

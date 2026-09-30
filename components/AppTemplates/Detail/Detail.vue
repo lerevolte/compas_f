@@ -738,9 +738,10 @@
             const item = response.data
 
             const wasCreate = !this.id || `${this.id}` === '0'
+            const wasCopy = !!this.isCopy
             if (this.isGlobalEdit || wasCreate) {
                 const slug = props.slug ?? router.params.slug
-                if (wasCreate) {
+                if (wasCreate || wasCopy) {
                     this.refreshProductsDraft()
                 }
                 const draftRows = Array.isArray(this.productsDraft) ? this.productsDraft : null
@@ -776,7 +777,7 @@
                             } catch (e) {}
                         }
                     }
-                } else if (wasCreate && item.id) {
+                } else if ((wasCreate || wasCopy) && item.id) {
                     await this.saveDraftProducts(slug, item.id, draftRows)
                 }
                 this.updateComponent++

@@ -2450,6 +2450,11 @@ export class Section {
                 }, {})
             }
 
+            if (options?.isCopy && typeof options?.draftProducts === 'function') {
+                const draft = options.draftProducts()
+                if (Array.isArray(draft)) request.products_draft = draft
+            }
+
             if (request.name) {
                 emit('action', {
                     action: 'getTitle',
