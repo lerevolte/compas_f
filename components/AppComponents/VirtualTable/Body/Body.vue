@@ -127,10 +127,6 @@
                                 isHaveNull: true,
                                 multiple: column.is_plural,
                                 visibleCount: 5,
-                                // В ячейке таблицы множественная связь не должна
-                                // растягивать строку: при >1 привязке показываем
-                                // только «Всего X, посмотреть все», при 1 —
-                                // само значение (8533).
                                 isCompact: true,
                                 isCanAdd: table.body[row.index] && !column.read_only && (table.body[row.index]?.edit || table.options.isPermanentEdit) && (column.can_edit ?? true),
                                 placeholder: ''
@@ -159,6 +155,19 @@
                             </AppFansyBox>
                         </div>
 
+
+                        <AppCheckbox
+                            v-else-if="column.type == 'checkbox' && table.body[row.index]"
+                            :modelValue="checkboxValue(row.index, column) === '1'"
+                            :options="{
+                                title: '',
+                                disabled: !!column.read_only || !(table.body[row.index].edit || table.options?.isPermanentEdit)
+                            }"
+                            @update:modelValue="val => {
+                                cell.checkEditting(table.body[row.index], {value: checkboxValue(row.index, column), key: column.key})
+                                cell.useCellModel(row.index, column).value = val ? '1' : '0'
+                            }"
+                        />
 
                         <template v-else-if="table.body[row.index] && !column.read_only && (table.body[row.index].edit || table.options?.isPermanentEdit)" >
                             <AppTextarea
@@ -208,19 +217,6 @@
                                 }"
                                 v-model="cell.useCellModel(row.index, column).value"
                                 @update:prevValue="val => cell.checkEditting(table.body[row.index], {value: val, key: column.key})"
-                            />
-
-                            <AppCheckbox
-                                v-else-if="column.type == 'checkbox' && table.body[row.index]"
-                                :modelValue="String(cell.useCellModel(row.index, column).value ?? '1') === '1'"
-                                :options="{
-                                    title: '',
-                                    disabled: !!column.read_only || !(table.body[row.index].edit || table.options?.isPermanentEdit)
-                                }"
-                                @update:modelValue="val => {
-                                    cell.checkEditting(table.body[row.index], {value: String(cell.useCellModel(row.index, column).value ?? '1'), key: column.key})
-                                    cell.useCellModel(row.index, column).value = val ? '1' : '0'
-                                }"
                             />
 
                             <AppDate
@@ -419,6 +415,14 @@
     const uid = useId()
 
     const SERVICE_KEYS = ['isChoose', 'clicked', 'actions', 'iconDrag', 'iconDelete']
+    const NDS_INCLUDED_KEYS = ['product_nds_included', 'nds_included']
+
+    const checkboxValue = (rowIndex, column) => {
+        let value = cell.useCellModel(rowIndex, column).value
+        if (Array.isArray(value)) value = value[0]
+        if (value == null || value === '') return NDS_INCLUDED_KEYS.includes(column.key) ? '1' : '0'
+        return value === true || String(value) === '1' ? '1' : '0'
+    }
 
     const isCellValueEmpty = (row, column) => {
         if (!row) return true
@@ -754,7 +758,6 @@
             return c
         }
 
-        // Копирование текста
         copyText(value, buttonRef) {
             buttonRef.classList.add('button_copy_active')
             common.copyText(value)
@@ -798,7 +801,6 @@
             this.activeCell = cellEl
         }
 
-        // Колонки, значение которых логично копировать (не чекбоксы/действия)
         isCopyableColumn(cellEl) {
             const key = cellEl?.getAttribute?.('data-column-key')
             const column = table.value.header.find(c => c.key == key)

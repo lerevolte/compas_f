@@ -2845,8 +2845,21 @@ export class Field {
         await api.callMethod('POST', routes.detail.hidden_fields, {ids: hidden.map(p => p.id)})
     }
 
+    checkboxValue(field) {
+        let value = field.value
+        if (Array.isArray(value)) value = value[0]
+        if (value == null || value === '') return field.key == 'nds_included' ? '1' : '0'
+        return value === true || String(value) === '1' ? '1' : '0'
+    }
+
+    setCheckboxValue(field, checked) {
+        if (!field.can_edit) return
+        if (!field.edit) this.initChangeField(field, null, 'option')
+        field.value = checked ? '1' : '0'
+    }
+
     checkVisible(field, state) {
-        if ((state && field.visible_always) || field.type == 'text_group') {
+        if ((state && field.visible_always) || field.type == 'text_group' || field.type == 'checkbox') {
             return false
         } else {
             if (field.type == 'select_dropdown') {
@@ -2994,7 +3007,9 @@ export class Field {
 
             if (target.closest('[data-action]')) return
 
-            if (['text', 'number', 'date', 'select_dropdown'].includes(field.type)) {
+            if (field.type == 'checkbox') {
+                if (field.edit) return
+            } else if (['text', 'number', 'date', 'select_dropdown'].includes(field.type)) {
                 if (field.edit ||
                     target.classList.contains('blank__link') ||
                     (

@@ -221,9 +221,9 @@
             { slug: 'payment_invoices', title: 'Счет на оплату' }
         ],
         logistic_tasks: [
-            { slug: 'expense_invoices', title: 'Расходная накладная', action: 'unloading' },
-            { slug: 'product_returns', title: 'Возврат от покупателя', action: 'unloading' },
-            { slug: 'receipt_invoices', title: 'Приходная накладная', action: 'loading' }
+            { slug: 'expense_invoices', title: 'Расходная накладная', action: ['unloading', 'transfer'] },
+            { slug: 'product_returns', title: 'Возврат от покупателя', action: ['unloading'] },
+            { slug: 'receipt_invoices', title: 'Приходная накладная', action: ['loading', 'transfer'] }
         ],
         pickups: [
             { slug: 'expense_invoices', title: 'Расходная накладная' },
@@ -501,7 +501,7 @@
             if (isReturn || isChain) {
                 try {
                     const url = routes.relations.productsCheck.replace('${slug}', this.slug).replace('${id}', this.id)
-                    const response = await api.callMethod('GET', url)
+                    const response = await api.callMethod('GET', `${url}${url.includes('?') ? '&' : '?'}target=${entity.slug}`)
                     checkData = response?.status == 200 ? (response.data ?? null) : null
                 } catch (e) {
                     checkData = null
@@ -807,6 +807,7 @@
         if (String(value) === String(ids.loading)) return 'loading'
         if (ids.supply !== undefined && String(value) === String(ids.supply)) return 'loading'
         if (String(value) === String(ids.unloading)) return 'unloading'
+        if (ids.transfer !== undefined && String(value) === String(ids.transfer)) return 'transfer'
         return null
     })
 
@@ -815,7 +816,7 @@
         const list = BASED_ENTITIES[slug] ?? []
         const kind = actionKind.value
         if (slug === 'logistic_tasks' && detail.value.permissions?.based_action && !kind) return []
-        const byAction = kind ? list.filter(entity => !entity.action || entity.action === kind) : list
+        const byAction = kind ? list.filter(entity => !entity.action || entity.action.includes(kind)) : list
         const map = detail.value.permissions?.based_create
         if (!map) return byAction
         return byAction.filter(entity => map[entity.slug] !== false)

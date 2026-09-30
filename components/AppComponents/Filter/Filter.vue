@@ -138,6 +138,17 @@
                                 v-model="filter.state.tabsValues[field.key]"
                             />
                             <AppSelect
+                                v-else-if="field.type == 'checkbox'"
+                                :isPreventBottom="true"
+                                :options="{
+                                    ...field,
+                                    list: CHECKBOX_OPTIONS,
+                                    isHaveNull: true,
+                                    multiple: false
+                                }"
+                                v-model="filter.state.tabsValues[field.key]"
+                            />
+                            <AppSelect
                                 v-else-if="field.type == 'boolean'"
                                 :isPreventBottom="true"
                                 :options="{
@@ -301,6 +312,7 @@
     const injectedFilter = inject('filter')
     const filterTabsRef = ref(null)
     const common = new Common()
+    const CHECKBOX_OPTIONS = [{ value: '1', label: 'Да' }, { value: '0', label: 'Нет' }]
     const classObserver = ref(null)
     const resizeObserver = ref(null)
     const tabsWidthObserver = ref(null)
@@ -390,6 +402,11 @@
                             response = response.replace(' - ', '%2C')
                         }
                         return response
+                    case 'checkbox': {
+                        const value = this.state.tabsValues[key]
+                        if (type == 'request') return value
+                        return CHECKBOX_OPTIONS.find(option => option.value == value)?.label
+                    }
                     case 'select_dropdown':
                         return transformSelect(this.state.tabsValues[key], key, type)
                     case 'relation':

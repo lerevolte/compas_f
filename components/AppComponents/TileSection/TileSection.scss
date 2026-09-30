@@ -333,6 +333,10 @@
         display: none;
     }
 
+    .field__checkbox {
+        min-height: 40px;
+    }
+
     &.field_static {
         .blank__title {
             color: variables.$color-border;

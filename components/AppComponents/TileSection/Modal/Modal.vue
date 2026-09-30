@@ -227,7 +227,7 @@
                 />
                 <div
                     class="form__item form__item_default-value default-value-picker"
-                    v-if="!FIELDS_WITHOUT_DEFAULT_VALUE.includes(modal.field.key) && !['relation','file','text_group','select_dropdown','redactor','json','waybills','route_map','deal_stages','geoposition'].includes(modal.field.type) && !(modal.field.type == 'status' && props.modal.action == 'create')"
+                    v-if="!FIELDS_WITHOUT_DEFAULT_VALUE.includes(modal.field.key) && !['relation','file','text_group','select_dropdown','redactor','checkbox','json','waybills','route_map','deal_stages','geoposition'].includes(modal.field.type) && !(modal.field.type == 'status' && props.modal.action == 'create')"
                 >
                     <AppPopup class="default-value-picker__popup" :isPreventBottom="true" :ignoreSelectors="['default-value-picker', '.dp__menu']">
                         <template #header>
@@ -474,9 +474,9 @@
                     show_file_name: false,
 
                 },
-                redactor: {}
+                redactor: {},
+                checkbox: {}
             }
-            // Типы полей для создания и редактирования
             this.types = {
                 text: 'Строка',
                 number: 'Число',
@@ -485,6 +485,7 @@
                 file: 'Файл',
                 relation: 'Программное',
                 date: 'Дата',
+                checkbox: 'Чекбокс',
                 text_group: 'Группа полей',
                 redactor: 'Редактор',
             }
@@ -493,7 +494,6 @@
             this.validator = new Validator()
         }
 
-        // Изменение типа поля
         changeType() {
             this.field = Object.assign(this.field, this.fields[this.field.type])
 
