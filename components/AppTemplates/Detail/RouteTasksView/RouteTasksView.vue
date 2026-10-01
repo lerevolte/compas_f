@@ -1,7 +1,24 @@
 <template>
-    <div class="route-tasks-view" :class="{ 'route-tasks-view_solo': props.isExternal }">
-        <div v-if="!props.isExternal" class="route-tasks-view__col route-tasks-view__col_fields">
+    <div class="route-tasks-view" :class="{ 'route-tasks-view_solo': !isConfigurable }">
+        <div v-if="isConfigurable" class="route-tasks-view__col route-tasks-view__col_fields">
             <div class="route-tasks-view__col-title">Поля задачи</div>
+            <AppSelect
+                class="route-tasks-view__role"
+                :isPreventBottom="true"
+                :options="{
+                    id: 'route_tasks_view_role',
+                    title: 'Настройки для роли',
+                    type: 'select_dropdown',
+                    list: roleOptions,
+                    name: 'role_id',
+                    edit: true,
+                    searchable: false,
+                    required: false,
+                    isHaveNull: false,
+                    multiple: false
+                }"
+                v-model="activeRole"
+            />
             <draggable
                 tag="div"
                 class="route-tasks-view__fields"
@@ -29,7 +46,7 @@
                 </template>
             </draggable>
 
-            <AppPopup class="route-tasks-view__add" :isPreventBottom="true" v-if="userStore.user?.is_admin">
+            <AppPopup class="route-tasks-view__add" :isPreventBottom="true">
                 <template #header>
                     <AppButton class="button_text">
                         Добавить поле
@@ -120,6 +137,7 @@
     import api from '@/helpers/api.js'
     import routes from '@/helpers/routes.js'
     import AppCheckbox from '@AppComponents/Inputs/Checkbox/Checkbox.vue'
+    import AppSelect from '@AppComponents/Inputs/Select/Select.vue'
     import AppButton from '@AppComponents/Button/Button.vue'
     import AppPopup from '@AppComponents/Popup/Popup.vue'
     import AppShowMore from '@AppComponents/ShowMore/ShowMore.vue'
@@ -140,7 +158,17 @@
     const emit = defineEmits(['openModal'])
 
     const TASK_SLUG = 'logistic_tasks'
+    const DEFAULT_ROLE = 'default'
     const allFields = ref([])
+    const tableColumns = ref([])
+    const isConfigurable = computed(() => !props.isExternal && !!userStore.user?.is_admin)
+    const activeRole = ref(userStore.user?.role_id ?? DEFAULT_ROLE)
+    const roleOptions = computed(() => [
+        { value: DEFAULT_ROLE, label: 'По умолчанию' },
+        ...(userStore.roles ?? []).map(role => ({ value: role.id, label: role.label }))
+    ])
+    const roleParam = () => activeRole.value == null || activeRole.value === DEFAULT_ROLE ? '' : activeRole.value
+    let configRequest = 0
     const tasks = ref([])
     const loading = ref(false)
     const permissions = ref({})
@@ -203,19 +231,28 @@
     }
 
     const persist = async () => {
+        if (!isConfigurable.value) return
         try {
             const data = allFields.value.map(f => ({ key: f.key, enabled: !!f.enabled, sort: f.sort }))
-            await api.callMethod('PUT', routes.logistic.tasksViewFields, { fields: data })
+            await api.callMethod('PUT', routes.logistic.tasksViewFields, { fields: data, role_id: roleParam() || null })
         } catch (e) {}
     }
 
     const loadSavedConfig = async () => {
         try {
-            const resp = await api.callMethod('GET', routes.logistic.tasksViewFields)
+            const query = isConfigurable.value ? `?role_id=${roleParam()}` : ''
+            const resp = await api.callMethod('GET', routes.logistic.tasksViewFields + query)
             return resp.data?.fields ?? []
         } catch (e) {
             return []
         }
+    }
+
+    const switchRole = async () => {
+        const request = ++configRequest
+        const savedConfig = await loadSavedConfig()
+        if (request !== configRequest) return
+        buildFieldsFromTable(tableColumns.value, savedConfig)
     }
 
     const showField = (field) => {
@@ -260,7 +297,8 @@
         try {
             const response = await api.callMethod('GET', '/objects/logistic_tasks/compose?per_page=1')
             permissions.value = response.data?.permissions ?? {}
-            buildFieldsFromTable(response.data?.table, savedConfig)
+            tableColumns.value = response.data?.table ?? []
+            buildFieldsFromTable(tableColumns.value, savedConfig)
         } catch (e) {
             console.error('Не удалось получить поля logistic_tasks:', e)
         }
@@ -420,6 +458,7 @@
     }
 
     watch(() => props.routeId, () => reload(), { immediate: false })
+    watch(activeRole, () => switchRole())
 
     onMounted(async () => {
         if (props.isExternal) {
