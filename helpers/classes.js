@@ -1109,6 +1109,10 @@ export class Table {
                     for (let key of Object.keys(this.dependences.query)) {
                         if (key == 'trashed') {
                             request.push(`${key}=${this.dependences.query[key] ? 1 : 0}`)
+                        } else if (key == 'category_tree_id') {
+                            if (this.dependences.query[key]) {
+                                request.push(`category_tree_id=${encodeURIComponent(this.dependences.query[key])}`)
+                            }
                         } else if (Array.isArray(this.dependences.query[key])) {
                             for (let value of this.dependences.query[key]) {
                                 request.push(`filter[${key}][]=${encodeURIComponent(value)}`)
@@ -1661,6 +1665,10 @@ export class Filter {
                         response.push(`per_page=${this.setter.dependences.query[key]}`)
                     } else if (key == 'is_slug') {
                         response.push(`is_slug=${this.setter.dependences.query[key]}`)
+                    } else if (key == 'category_tree_id') {
+                        if (this.setter.dependences.query[key]) {
+                            response.push(`category_tree_id=${encodeURIComponent(this.setter.dependences.query[key])}`)
+                        }
                     } else if (this.setter.dependences.query[key]) {
                         response.push(`filter[${key}]=${encodeURIComponent(this.setter.dependences.query[key])}`)
                     }
@@ -1682,6 +1690,10 @@ export class Filter {
                     response.push(`filter[${field.key}]=${field.value}`)
                 }
             });
+
+            if (fields.some(field => field.key == 'category_id' && field.value != null && field.value !== '' && !(Array.isArray(field.value) && !field.value.length))) {
+                response.push('exclude_childs=1')
+            }
 
             return response.join('&')
         }

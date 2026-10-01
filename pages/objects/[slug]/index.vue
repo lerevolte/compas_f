@@ -177,7 +177,7 @@
 			this.tree = []
 			this.active = null
 			this.keyUpdate = 0
-			this.query = { category_id: null }
+			this.query = { category_tree_id: null }
 			this.modalActions = [
 				{ name: 'Изменить', action: 'initUpdate', enabled: true },
 				{ name: 'Удалить', action: 'initDelete', enabled: true }
@@ -219,7 +219,7 @@
 
 		set(category) {
 			this.active = category ? category.id : null
-			this.query.category_id = this.active
+			this.query.category_tree_id = this.active
 			this.keyUpdate++
 		}
 
@@ -228,7 +228,7 @@
 				if (excludeId && item.id == excludeId) continue
 				result.push({
 					value: item.id,
-					label: `${'.. '.repeat(level)}${item.name}`
+					label: `${'.. '.repeat(level)}${item.name} (ID ${item.id})`
 				})
 				this.flatten(item.children, level + 1, excludeId, result)
 			}
@@ -274,7 +274,7 @@
 		initUpdate(category) {
 			this.modal = {
 				state: true,
-				title: 'Изменение группы',
+				title: `Изменение группы (ID ${category.id})`,
 				actionTitle: 'Сохранить',
 				action: 'update',
 				text: null,
@@ -324,7 +324,7 @@
 				await api.callMethod('DELETE', routes.product_categories.delete.replace('${id}', this.modal.content.id))
 				if (this.active) {
 					this.active = null
-					this.query.category_id = null
+					this.query.category_tree_id = null
 				}
 				await this.load()
 				this.keyUpdate++
