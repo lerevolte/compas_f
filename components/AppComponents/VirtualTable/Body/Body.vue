@@ -315,23 +315,26 @@
                                 {{ multiTextValue(row.index, column) }}
                             </span>
 
-                            <span
-                                class="table__text text"
-                                v-else-if="column.type == 'deal_stages'"
-                                :title="stageOption(row.index, column)?.label"
-                                :style="{ display: 'inline-flex', alignItems: 'center', gap: '6px' }"
-                            >
-                                <span
-                                    v-if="stageOption(row.index, column)"
-                                    :style="{
-                                        width: '8px',
-                                        height: '8px',
-                                        minWidth: '8px',
-                                        borderRadius: '50%',
-                                        background: stageOption(row.index, column)?.color || '#ccc'
-                                    }"
-                                ></span>
-                                {{ stageOption(row.index, column)?.label ?? '' }}
+                            <AppStatus
+                                v-else-if="column.type == 'deal_stages' && stageKnown(row.index, column)"
+                                :parentContainer="sectionRef"
+                                :options="{
+                                    id: `${uid}_${row.index}_${column.key}`,
+                                    title: null,
+                                    type: 'status',
+                                    edit: false,
+                                    list: stageList(column),
+                                    name: column.key,
+                                    required: false,
+                                    isHaveNull: false,
+                                    isCanCreate: false,
+                                    placeholder: ''
+                                }"
+                                :model-value="stageValue(row.index, column)"
+                            />
+
+                            <span class="table__text text" v-else-if="column.type == 'deal_stages'" :title="stageValue(row.index, column)">
+                                {{ stageValue(row.index, column) ?? '' }}
                             </span>
 
                             <span class="table__text text" v-else-if="column.type == 'geoposition'" :title="geopositionValue(row.index, column)">
@@ -404,7 +407,7 @@
     import AppFansyBoxItem from '@AppComponents/FansyBox/Item/Item.vue'
     import IconDrag from '@AppIcons/Actions/Drag.vue'
     import IconClose from '@AppIcons/Close.vue'
-    import { Common } from '@/helpers/classes.js'
+    import { Common, stageStatusOptions } from '@/helpers/classes.js'
     import { format } from 'date-fns'
     import isEqual from 'lodash/isEqual'
     import { useMediaQuery } from '@vueuse/core'
@@ -872,15 +875,26 @@
         return value ?? ''
     }
 
-    const stageOption = (rowIndex, column) => {
+    const stageValue = (rowIndex, column) => {
         let value = table.value.body[rowIndex]?.[column.key]
         if (value && typeof value === 'object' && 'value' in value) value = value.value
-        if (value == null || value === '') return null
-        return (column.options || []).find(option => option.value == value) ?? { label: value, color: null }
+        return value == null || value === '' ? null : value
+    }
+
+    const stageKnown = (rowIndex, column) => {
+        const value = stageValue(rowIndex, column)
+        return value != null && (Array.isArray(column.options) ? column.options : []).some(option => option.value == value)
+    }
+
+    const stageLists = new WeakMap()
+    const stageList = (column) => {
+        const options = column.options
+        if (!Array.isArray(options)) return []
+        if (!stageLists.has(options)) stageLists.set(options, stageStatusOptions(options))
+        return stageLists.get(options)
     }
 
     const getItemKey = (item) => {
-        // Используем original если доступен (реальные данные строки), иначе сам item
         const rowData = item.original || item
         if (table.value?.options?.isLocalTable) {
             return rowData.local_id ?? rowData.id ?? `${table.value.slug}_${item.index ?? item.key}`

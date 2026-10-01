@@ -63,7 +63,7 @@
             </AppPopup>
         </header>
         <AppDealStages
-            v-if="stageField && detail.id && !detail.isGlobalEdit && !detail.forbidden && !props.is_external"
+            v-if="stageField && stageField.show_stage_bar !== 0 && detail.id && !detail.isGlobalEdit && !detail.forbidden && !props.is_external"
             :options="{ ...stageField, title: null, mode: 'bar', edit: stageField.can_edit !== false }"
             :pageId="detail.id"
             @changed="detail.updateComponent++"

@@ -1,64 +1,21 @@
 <template>
-    <div class="form__item deal-stages" v-if="props.options.mode == 'value'">
-        <label class="blank__title" v-if="props.options.title">
-            {{ props.options.title }}
-        </label>
-
-        <span
-            class="deal-stages__value"
-            :class="{'deal-stages__value_clickable': isValueClickable}"
-            v-if="current"
-            :title="current.label"
-            @click="isValueClickable ? listModal = true : null"
-        >
-            <span class="deal-stages__dot" :style="{ background: current.color || '#ccc' }"></span>
-            {{ current.label }}
-        </span>
-        <span
-            class="deal-stages__value deal-stages__value_empty"
-            :class="{'deal-stages__value_clickable': isValueClickable}"
-            v-else
-            @click="isValueClickable ? listModal = true : null"
-        >
-            не заполнено
-        </span>
-
-        <teleport to="#menu__overlay" v-if="listModal">
-            <dialog class="modal modal_warning" open>
-                <div class="modal__background" @click="listModal = false"></div>
-
-                <div class="modal__content">
-                    <IconClose class="modal__close" @click="listModal = false" />
-
-                    <AppH2>
-                        Изменить стадию
-                    </AppH2>
-
-                    <div class="deal-stages__list">
-                        <AppButton
-                            v-for="stage in stages"
-                            :key="stage.value"
-                            class="deal-stages__list-button"
-                            :class="{
-                                'skeleton': loading,
-                                'deal-stages__list-button_active': stage.value == value
-                            }"
-                            @click="stage.value == value ? null : applyStage(stage)"
-                        >
-                            <span class="deal-stages__dot" :style="{ background: stage.color || '#ccc' }"></span>
-                            {{ stage.label }}
-                        </AppButton>
-                    </div>
-
-                    <div class="modal__buttons">
-                        <AppButton @click="listModal = false">
-                            Отмена
-                        </AppButton>
-                    </div>
-                </div>
-            </dialog>
-        </teleport>
-    </div>
+    <AppStatus
+        v-if="props.options.mode == 'value'"
+        :options="{
+            id: props.options.id,
+            title: props.options.title,
+            name: props.options.key,
+            type: 'status',
+            list: statusList,
+            edit: isValueClickable,
+            can_edit: props.options.can_edit,
+            focus: false,
+            isHaveNull: !current,
+            isCanCreate: false
+        }"
+        :model-value="current ? value : null"
+        @update:modelValue="next => applyStage(stages.find(stage => stage.value == next))"
+    />
 
     <div class="deal-stages deal-stages_bar" v-else>
         <div class="deal-stages__bar" v-if="stages.length > 0" @pointerleave="hoverIndex = null">
@@ -173,6 +130,8 @@
     import './DealStages.scss'
     import api from '@/helpers/api.js'
     import routes from '@/helpers/routes.js'
+    import { stageStatusOptions } from '@/helpers/classes.js'
+    import AppStatus from '@AppComponents/Inputs/Status/Status.vue'
     import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'
     import AppH2 from '@AppComponents/Headers/H2/H2.vue'
     import AppButton from '@AppComponents/Button/Button.vue'
@@ -193,13 +152,13 @@
         'changed'
     ])
 
-    const stages = ref([])
+    const stages = ref(Array.isArray(props.options.options) ? props.options.options : [])
+    const statusList = computed(() => stageStatusOptions(stages.value))
     const value = ref(typeof props.options.value === 'object' && props.options.value !== null
         ? props.options.value.value
         : props.options.value)
     const confirmStage = ref(null)
     const finalModal = ref(null)
-    const listModal = ref(false)
     const loading = ref(false)
     const hoverIndex = ref(null)
 
@@ -212,6 +171,10 @@
 
     watch(() => props.options.value, (next) => {
         value.value = typeof next === 'object' && next !== null ? next.value : next
+    })
+
+    watch(() => props.options.options, (next) => {
+        if (Array.isArray(next) && next.length) stages.value = next
     })
 
     const semanticsOf = (stage) => {
@@ -279,7 +242,6 @@
             loading.value = false
             confirmStage.value = null
             finalModal.value = null
-            listModal.value = false
         }
     }
 

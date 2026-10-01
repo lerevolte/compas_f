@@ -31,7 +31,7 @@
                 :options="{
                     title: 'Тип поля',
                     isHaveNull: false,
-                    list: Object.keys(modal.types).filter(p => p != 'relation' && p != 'redactor').map(p => {
+                    list: Object.keys(modal.types).filter(p => p != 'relation' && p != 'redactor' && p != 'deal_stages').map(p => {
                         return {
                             value: p,
                             label: modal.types[p]
@@ -80,9 +80,9 @@
                 @update:modelValue="modal.changeSubfields()"
             />
 
-            <div class="modal__field-group" v-if="['select_dropdown', 'status'].includes(modal.field.type)">
+            <div class="modal__field-group" v-if="['select_dropdown', 'status', 'deal_stages'].includes(modal.field.type)">
                 <span class="blank__title">
-                    Сохраненные элементы
+                    {{ modal.field.type == 'deal_stages' ? 'Стадии' : 'Сохраненные элементы' }}
                 </span>
                 <draggable
                     tag="div"
@@ -92,6 +92,7 @@
                     :fallbackOnBody="true"
                     item-key="modal-options" 
                     handle=".icon_drag"
+                    :disabled="modal.field.type == 'deal_stages'"
                     class="modal__options"
                     drag-class="draggable-drag"
                     ghost-class="draggable-ghost"
@@ -100,11 +101,12 @@
                     <template #item="{ element: option, index  }">
                         <div class="modal__option">
                             <IconDrag 
+                                v-if="modal.field.type != 'deal_stages'"
                                 class="icon_drag-field"
                             />
 
                             <div class="modal__option-field">
-                                <template v-if="modal.field.type == 'status'">
+                                <template v-if="['status', 'deal_stages'].includes(modal.field.type)">
                                     <AppColorPicker v-model="option.color">
                                         <template #icon>
                                             <IconPipette />
@@ -142,19 +144,24 @@
                                 </template>
                                 <AppInput 
                                     :options="{
-                                        title: null
+                                        title: null,
+                                        placeholder: option.b24_label ?? ''
                                     }"
                                     v-model="option.label"
                                 />
+                                <span class="modal__option-hint" v-if="modal.field.type == 'deal_stages'" :title="option.b24_label">
+                                    ({{ option.b24_label }})
+                                </span>
                             </div>
                             <IconClose 
+                                v-if="modal.field.type != 'deal_stages'"
                                 @click="modal.removeOption(option)"
                             />
                         </div>
                     </template>
                 </draggable> 
 
-                <AppButton class="button_text" @click="modal.addOption()">
+                <AppButton class="button_text" v-if="modal.field.type != 'deal_stages'" @click="modal.addOption()">
                     Добавить
                 </AppButton>
             </div>
@@ -213,6 +220,13 @@
                         />
                     </template>
                 </AppColorPicker>
+                <AppCheckbox
+                    v-if="modal.field.type == 'deal_stages'"
+                    v-model="modal.field.show_stage_bar"
+                    :options="{
+                        title: 'Выводить плашку стадий сверху в карточке',
+                    }"
+                />
                 <AppCheckbox 
                     v-model="modal.field.required"
                     :options="{
@@ -430,7 +444,6 @@
 
     class Modal {
         constructor() {
-            // Поля для создания и редактирования
             this.fields = {
                 default: {
                     id: 0,
@@ -488,6 +501,7 @@
                 checkbox: 'Чекбокс',
                 text_group: 'Группа полей',
                 redactor: 'Редактор',
+                deal_stages: 'Стадии Bitrix24',
             }
 
             this.field = {}
@@ -525,7 +539,6 @@
             }
         }
 
-        // Добавление опции
         addOption() {
             this.field.options.push({
                 label: '',
@@ -533,12 +546,10 @@
             })
         }
 
-        // Удаление опции
         removeOption(option) {
             this.field.options = this.field.options.filter(p => p.value != option.value)
         }
 
-        // Добавление подполей
         changeSubfields() {
             const list = this.getFields()
             let findedField = null
@@ -552,7 +563,6 @@
             }
         }
 
-        // Получение полей для группы
         getTextGroupOptions() {
             const list = this.getFields()
             return list.map(field => {
@@ -563,7 +573,6 @@
             })
         }
 
-        // Сохранение
         save() {
             if (this.field.has_roles_read && this.field.roles_read.length == 0) {
                 this.field.has_roles_read = 0
@@ -595,6 +604,21 @@
                 })
             }
 
+            if (this.field.type == 'deal_stages') {
+                request.options = (request.options || []).map(option => {
+                    const base = option.b24_label ?? ''
+                    const custom = String(option.label ?? '').trim()
+                    const isCustom = custom !== '' && custom !== base
+                    return {
+                        ...option,
+                        label: isCustom ? `${custom} (${base})` : base,
+                        custom_label: isCustom ? custom : '',
+                        file: option.file ? option.file[0]?.url ?? null : null
+                    }
+                })
+                request.show_stage_bar = request.show_stage_bar ? 1 : 0
+            }
+
             this.validator.check([{
                 title: 'Название поля',
                 key: 'title',
@@ -612,7 +636,6 @@
             emit('actionField', {action: props.modal.action == 'updateField' ? 'update' : 'create', value: request})
         }
 
-        // Закрытие модального окна
         close() {
             this.field = {}
             this.validator.state = false
@@ -669,20 +692,14 @@
             }
         } else if (props.modal.action == 'updateField') {
             if (props.modal.content.type == 'text_group') {
-                // Поля внутри группы (field.fields) больше не видны в getTextGroupOptions()
-                // — они убраны из внешних секций после drag. Добавляем их вручную в options,
-                // иначе у чипов выбранных полей не будет label (показывается пустой крестик).
                 const groupFieldOptions = Array.isArray(props.modal.content.fields)
                     ? props.modal.content.fields.map(f => ({ label: f.title, value: f.id }))
                     : []
                 modal.value.field = {
                     ...props.modal.content,
-                    // Пересчитываем subfields из live-массива fields (учитывает
-                    // последние drag-операции без перезагрузки страницы).
                     subfields: Array.isArray(props.modal.content.fields)
                         ? props.modal.content.fields.map(f => f.id)
                         : (props.modal.content.subfields || []),
-                    // Поля группы + доступные поля из внешних секций (без дублей).
                     options: [...groupFieldOptions, ...modal.value.getTextGroupOptions()],
                 }
             } else if (props.modal.content.type == 'status') {
@@ -695,6 +712,23 @@
                             value: option.label.id,
                             color: option.label.color,
                             file: isImageSrc(option.label.file) ? [{url: option.label.file}] : null
+                        }
+                    })
+                }
+            } else if (props.modal.content.type == 'deal_stages') {
+                const stageOptions = Array.isArray(props.modal.content.options) ? props.modal.content.options : []
+                modal.value.field = {
+                    ...props.modal.content,
+                    roles_write: props.modal.content.roles_write ? props.modal.content.roles_write.filter(p => userStore.roles.find(r => r.id == p))  : [],
+                    roles_read: props.modal.content.roles_write ? props.modal.content.roles_read.filter(p => userStore.roles.find(r => r.id == p))  : [],
+                    show_stage_bar: props.modal.content.show_stage_bar === 0 ? 0 : 1,
+                    options: stageOptions.map(option => {
+                        const base = option.b24_label ?? option.label ?? ''
+                        return {
+                            ...option,
+                            label: option.custom_label || base,
+                            b24_label: base,
+                            file: isImageSrc(option.file) ? [{url: option.file}] : null
                         }
                     })
                 }

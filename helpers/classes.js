@@ -19,6 +19,19 @@ export function isImageSrc(file) {
     return src != '' && src != '[]' && src != '{}' && src != 'null' && src != 'undefined'
 }
 
+export function stageStatusOptions(options) {
+    return (Array.isArray(options) ? options : []).map(option => ({
+        value: option.value,
+        label: {
+            id: option.value,
+            text: option.label,
+            color: option.color || '#B6B6B6',
+            file: option.file || null,
+            is_hidden: 0
+        }
+    }))
+}
+
 export async function openUpdPdf(slug, ids, withDocs = false, options = {}) {
     const common = new Common()
     ids = (ids || []).filter(id => id)
