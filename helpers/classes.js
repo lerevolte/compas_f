@@ -841,7 +841,7 @@ export class Table {
         try {
             this.loading = true
             this.isChanged = true
-            const route = this.slug == 'products' && this.options?.isLocalTable ? routes.table.reset_products : routes.table.reset.replace('${slug}', this.slug)
+            const route = this.slug == 'products' && this.options?.isLocalTable ? routes.table.reset_products.replace('${parent_slug}', this.options?.parentSlug ?? 'logistic_tasks') : routes.table.reset.replace('${slug}', this.slug)
             const response = await api.callMethod('GET', route)
 
             if (response.data.fields) {
@@ -1513,7 +1513,7 @@ export class Table {
     }
 
     async saveSettings(role) {
-        let method = this.slug == 'products' && this.options?.isLocalTable ? routes.table.update_products : routes.table.save_settings.replace('${slug}', this.slug)
+        let method = this.slug == 'products' && this.options?.isLocalTable ? routes.table.update_products.replace('${parent_slug}', this.options?.parentSlug ?? 'logistic_tasks') : routes.table.save_settings.replace('${slug}', this.slug)
 
         try {
             await api.callMethod('POST', role ? `${method}/${role}` : method, {

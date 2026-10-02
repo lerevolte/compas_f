@@ -47,8 +47,8 @@ export default {
         copy: '/objects/${slug}/${row_id}/compose?is_copy=1',
         delete: '/objects/${slug}',
         restore: '/objects/${slug}/restore',
-        update_products: '/tables/order_products',
-        reset_products: '/tables/order_products/reset',
+        update_products: '/tables/order_products_${parent_slug}',
+        reset_products: '/tables/order_products_${parent_slug}/reset',
         set_products: '/${parent_slug}/${page_id}/set_products'
     },
     filter: {

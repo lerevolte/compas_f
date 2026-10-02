@@ -28,14 +28,14 @@
                     <div class="waybills__actions">
                         <a class="waybills__link" v-if="item.cabinet_url" :href="item.cabinet_url" target="_blank" rel="noopener">Открыть в Saby</a>
                         <a class="waybills__link" v-if="item.pdf_url" :href="item.pdf_url" target="_blank" rel="noopener">PDF заказа</a>
-                        <button class="waybills__link waybills__link_button" type="button" :disabled="refreshing === 'order_' + item.id" @click="refreshOrder(item)">{{ refreshing === 'order_' + item.id ? 'Обновляется…' : 'Обновить' }}</button>
-                        <button v-if="!['7', '9'].includes(String(item.state_code ?? '0'))" class="waybills__link waybills__link_button" type="button" :disabled="refreshing === 'ord_' + item.id" @click="updateOrderData(item)">{{ refreshing === 'ord_' + item.id ? 'Обновляется…' : 'Обновить данные заказа' }}</button>
-                        <template v-if="confirmDelete === 'order_' + item.id">
+                        <button v-if="canEdit" class="waybills__link waybills__link_button" type="button" :disabled="refreshing === 'order_' + item.id" @click="refreshOrder(item)">{{ refreshing === 'order_' + item.id ? 'Обновляется…' : 'Обновить' }}</button>
+                        <button v-if="canEdit && !['7', '9'].includes(String(item.state_code ?? '0'))" class="waybills__link waybills__link_button" type="button" :disabled="refreshing === 'ord_' + item.id" @click="updateOrderData(item)">{{ refreshing === 'ord_' + item.id ? 'Обновляется…' : 'Обновить данные заказа' }}</button>
+                        <template v-if="canEdit && confirmDelete === 'order_' + item.id">
                             <span class="waybills__confirm">Удалить заказ?</span>
                             <button class="waybills__link waybills__link_button waybills__link_danger" type="button" :disabled="deleting === 'order_' + item.id" @click="removeOrder(item)">{{ deleting === 'order_' + item.id ? 'Удаляется…' : 'Да, удалить' }}</button>
                             <button class="waybills__link waybills__link_button" type="button" :disabled="deleting === 'order_' + item.id" @click="confirmDelete = null">Отмена</button>
                         </template>
-                        <button v-else class="waybills__link waybills__link_button waybills__link_danger" type="button" @click="confirmDelete = 'order_' + item.id">Удалить</button>
+                        <button v-else-if="canEdit" class="waybills__link waybills__link_button waybills__link_danger" type="button" @click="confirmDelete = 'order_' + item.id">Удалить</button>
                     </div>
 
                     <div class="waybills__sub" v-if="item.waybill">
@@ -51,8 +51,8 @@
                             <a class="waybills__link" v-if="item.waybill.pdf_url" :href="item.waybill.pdf_url" target="_blank" rel="noopener">Печать</a>
                             <a class="waybills__link" v-if="item.waybill.cabinet_url" :href="item.waybill.cabinet_url" target="_blank" rel="noopener">Открыть в Saby</a>
                             <button class="waybills__link waybills__link_button" type="button" v-if="item.waybill.qr_url" @click="toggleQr('order_' + item.id, item.waybill.qr_url)">{{ openedQr === 'order_' + item.id ? 'Скрыть QR' : 'QR для ГИБДД' }}</button>
-                            <button class="waybills__link waybills__link_button" type="button" :disabled="refreshing === 'owbd_' + item.id" @click="updateOrderWaybillData(item)">{{ refreshing === 'owbd_' + item.id ? 'Обновляются…' : 'Обновить данные в ТрН' }}</button>
-                            <template v-if="item.waybill.id && item.waybill.can_delete">
+                            <button v-if="canEdit" class="waybills__link waybills__link_button" type="button" :disabled="refreshing === 'owbd_' + item.id" @click="updateOrderWaybillData(item)">{{ refreshing === 'owbd_' + item.id ? 'Обновляются…' : 'Обновить данные в ТрН' }}</button>
+                            <template v-if="canEdit && item.waybill.id && item.waybill.can_delete">
                                 <template v-if="confirmDelete === 'owb_' + item.id">
                                     <span class="waybills__confirm">Удалить накладную?</span>
                                     <button class="waybills__link waybills__link_button waybills__link_danger" type="button" :disabled="deleting === 'owb_' + item.id" @click="removeOrderWaybill(item)">{{ deleting === 'owb_' + item.id ? 'Удаляется…' : 'Да, удалить' }}</button>
@@ -81,9 +81,9 @@
                         <a class="waybills__link" v-if="item.pdf_url" :href="item.pdf_url" target="_blank" rel="noopener">Печать</a>
                         <a class="waybills__link" v-if="item.cabinet_url" :href="item.cabinet_url" target="_blank" rel="noopener">Открыть в Saby</a>
                         <button class="waybills__link waybills__link_button" type="button" v-if="item.qr_url" @click="toggleQr('wb_' + item.id, item.qr_url)">{{ openedQr === 'wb_' + item.id ? 'Скрыть QR' : 'QR для ГИБДД' }}</button>
-                        <button class="waybills__link waybills__link_button" type="button" :disabled="refreshing === 'wb_' + item.id" @click="refreshWaybill(item)">{{ refreshing === 'wb_' + item.id ? 'Обновляется…' : 'Обновить' }}</button>
-                        <button class="waybills__link waybills__link_button" type="button" :disabled="refreshing === 'wbd_' + item.id" @click="updateWaybillData(item)">{{ refreshing === 'wbd_' + item.id ? 'Обновляются…' : 'Обновить данные в ТрН' }}</button>
-                        <template v-if="item.can_delete === false"></template>
+                        <button v-if="canEdit" class="waybills__link waybills__link_button" type="button" :disabled="refreshing === 'wb_' + item.id" @click="refreshWaybill(item)">{{ refreshing === 'wb_' + item.id ? 'Обновляется…' : 'Обновить' }}</button>
+                        <button v-if="canEdit" class="waybills__link waybills__link_button" type="button" :disabled="refreshing === 'wbd_' + item.id" @click="updateWaybillData(item)">{{ refreshing === 'wbd_' + item.id ? 'Обновляются…' : 'Обновить данные в ТрН' }}</button>
+                        <template v-if="item.can_delete === false || !canEdit"></template>
                         <template v-else-if="confirmDelete === 'wb_' + item.id">
                             <span class="waybills__confirm">Удалить накладную?</span>
                             <button class="waybills__link waybills__link_button waybills__link_danger" type="button" :disabled="deleting === 'wb_' + item.id" @click="removeWaybill(item)">{{ deleting === 'wb_' + item.id ? 'Удаляется…' : 'Да, удалить' }}</button>
@@ -105,14 +105,14 @@
             <button
                 class="waybills__button"
                 type="button"
-                v-if="!orders.length && !picker.open"
+                v-if="canEdit && !orders.length && !picker.open"
                 :disabled="loading || creating || pickerLoading"
                 @click="openPicker"
             >
                 {{ pickerLoading ? 'Загрузка маршрута…' : (creating ? 'Создаётся…' : 'Создать заказ в Саби') }}
             </button>
 
-            <div class="waybills__picker" v-if="picker.open">
+            <div class="waybills__picker" v-if="canEdit && picker.open">
                 <div class="waybills__picker-mode">
                     <AppCheckbox
                         v-model="picker.currentIsLoading"
@@ -237,6 +237,7 @@
     const waybills = ref([])
     const errors = ref([])
     const enabled = ref(false)
+    const canEdit = ref(true)
     const loading = ref(false)
     const creating = ref(false)
     const refreshing = ref(null)
@@ -292,6 +293,7 @@
             const response = await api.callMethod('GET', url)
             if (response.status == 200) {
                 enabled.value = response.data?.enabled !== false
+                canEdit.value = response.data?.can_edit !== false
                 orders.value = response.data?.data || []
                 waybills.value = response.data?.waybills || []
             }
