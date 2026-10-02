@@ -711,6 +711,7 @@
                     product_price: row.product_price,
                     product_purchase_price: row.product_purchase_price,
                     product_count: row.product_count,
+                    product_output_count: row.product_output_count,
                     product_weight: row.product_weight,
                     product_volume: row.product_volume,
                     product_sum: row.product_sum,

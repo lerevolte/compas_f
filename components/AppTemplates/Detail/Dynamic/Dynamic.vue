@@ -129,6 +129,7 @@
                 isProductsDirty: productsDirty,
                 saveProducts: () => detail.saveProducts(),
                 draftProducts: () => detail.draftProducts(),
+                hasProducts: () => detail.hasProducts(),
                 afterSave: () => detail.afterSave(),
                 onCancel: () => detail.cancelProducts(),
             }"
@@ -489,6 +490,12 @@
             emit('action', { action: 'setProductsDraft', value: null })
         }
 
+        hasProducts() {
+            const draft = this.draftProducts()
+            if (draft) return draft.length > 0
+            return (this.products?.list?.data ?? []).some(row => Number(row.product_count) > 0)
+        }
+
         draftProducts() {
             const body = productsTableRef.value?.table?.body
             const rows = Array.isArray(body) ? body : (Array.isArray(this.productsDraft) ? this.productsDraft : null)
@@ -524,6 +531,7 @@
                     product_price: row.product_price,
                     product_purchase_price: row.product_purchase_price,
                     product_count: row.product_count,
+                    product_output_count: row.product_output_count,
                     product_weight: row.product_weight,
                     product_volume: row.product_volume,
                     product_sum: row.product_sum,

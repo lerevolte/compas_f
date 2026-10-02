@@ -111,6 +111,7 @@ function draftProductsFromJson(raw) {
                 product_price: product.price ?? null,
                 product_purchase_price: product.purchase_price ?? null,
                 product_count: product.count ?? null,
+                product_output_count: product.output_count ?? null,
                 product_weight: product.weight ?? null,
                 product_volume: product.volume ?? 0,
                 product_sum: product.sum ?? null,
@@ -921,6 +922,7 @@ export class Table {
                         product_price: row['product_price'],
                         product_purchase_price: row['product_purchase_price'],
                         product_count: row['product_count'],
+                        product_output_count: row['product_output_count'],
                         product_weight: row['product_weight'],
                         product_volume: row['product_volume'],
                         product_sum: this.common.roundMoney(this.common.productLineParts(row, this.options?.parentSlug).net),
@@ -2402,6 +2404,19 @@ export class Section {
                     }
                     return arr
                 }, [])
+                const productsField = typeof options?.hasProducts === 'function'
+                    ? requiredReadOnly.find(f => f.key == 'products' && f.type == 'json')
+                    : null
+                if (productsField) {
+                    requiredReadOnly.splice(requiredReadOnly.indexOf(productsField), 1)
+                    if (!options.hasProducts()) {
+                        new Common().showNotification({
+                            title: `Не заполнено поле «${productsField.title}»`,
+                            description: 'Добавьте хотя бы одну позицию с количеством больше нуля'
+                        }, 'error', { toastId: 'products-required' })
+                        return
+                    }
+                }
                 if (requiredReadOnly.length > 0) {
                     this.validator.check(requiredReadOnly)
                     if (Object.keys(this.validator.errors).length > 0) {

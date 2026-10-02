@@ -10,7 +10,7 @@
                     Количество:
                 </span>
                 <strong class="table-calc__value">
-                    {{ common.transformPrice(calculateContent.count, 0) }}
+                    {{ formatCount(calculateContent.count) }}
                 </strong>
             </div>
             <div class="table-calc__item">
@@ -58,7 +58,7 @@
                     Фактическое кол-во:
                 </span>
                 <strong class="table-calc__value">
-                    {{ common.transformPrice(calculateContent.shipped, 0) }}
+                    {{ formatCount(calculateContent.shipped) }}
                 </strong>
             </div>
         </div>
@@ -82,11 +82,14 @@
         return cols.length == 0 || cols.some(c => !c.read_only)
     })
 
+    const formatCount = (value) => {
+        const number = Math.round(Number(value || 0) * 1000) / 1000
+        const digits = Number.isInteger(number) ? 0 : String(number).split('.')[1].length
+        return common.transformPrice(number, digits)
+    }
+
     const calculateContent = computed({
         get() {
-            // product_weight — это вес единицы товара; общий вес строки = count × weight.
-            // Раньше Общий вес не реагировал на изменение количества из-за того, что
-            // суммировался без умножения на product_count.
             return {
                 count: table.value.body.reduce((count, row) => count + Number(row.product_count || 0), 0),
                 shipped: table.value.body.reduce((shipped, row) => shipped + Number(row.product_shipped || 0), 0),
