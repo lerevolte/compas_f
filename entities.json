@@ -238,5 +238,11 @@
         "title_singular": "Склад",
         "title_plural": "Склады",
         "color": "#8E7CC3"
+    },
+    "specifications": {
+        "slug": "specifications",
+        "title_singular": "Спецификация",
+        "title_plural": "Спецификации",
+        "color": "#5B8C5A"
     }
 }

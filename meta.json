@@ -238,5 +238,10 @@
         "title": "Склады",
         "desc": "",
         "template": null
+    },
+    "specifications": {
+        "title": "Спецификации",
+        "desc": "",
+        "template": null
     }
 }
