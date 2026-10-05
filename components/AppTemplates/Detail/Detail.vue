@@ -233,7 +233,11 @@
             { slug: 'receipt_invoices', title: 'Приходная накладная' },
             { slug: 'logistic_tasks', title: 'Задача логистики', taskAction: 'supply' }
         ],
-        addresses: [{ slug: 'logistic_tasks', title: 'Задача логистики' }]
+        addresses: [{ slug: 'logistic_tasks', title: 'Задача логистики' }],
+        cash_documents: [
+            { slug: 'cash_expenses', title: 'Расход', skip: ['name', 'comment', 'sum', 'date', 'operations'] },
+            { slug: 'cash_incomes', title: 'Поступление', skip: ['name', 'comment', 'sum', 'date', 'operations'] }
+        ]
     }
     const BASED_KEY_MAP = {
         'supplier_orders:logistic_tasks': { company_id: 'shipment_company_id', shipment_company_id: 'company_id' }
@@ -594,6 +598,10 @@
                 }
             }
             for (const field of this.hiddenFields ?? []) collect(field)
+            for (const key of entity.skip ?? []) {
+                delete defaults[key]
+                if (defaults.__labels) delete defaults.__labels[key]
+            }
 
             const keyMap = BASED_KEY_MAP[`${this.slug}:${entity.slug}`]
             if (keyMap) {

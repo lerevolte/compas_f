@@ -244,5 +244,29 @@
         "title_singular": "Спецификация",
         "title_plural": "Спецификации",
         "color": "#5B8C5A"
+    },
+    "expense_articles": {
+        "slug": "expense_articles",
+        "title_singular": "Статья расходов",
+        "title_plural": "Статьи расходов",
+        "color": "#A0522D"
+    },
+    "cash_documents": {
+        "slug": "cash_documents",
+        "title_singular": "Документ по кассе",
+        "title_plural": "Документы по кассе",
+        "color": "#2F6F9F"
+    },
+    "cash_expenses": {
+        "slug": "cash_expenses",
+        "title_singular": "Расход",
+        "title_plural": "Расходы",
+        "color": "#C0392B"
+    },
+    "cash_incomes": {
+        "slug": "cash_incomes",
+        "title_singular": "Поступление",
+        "title_plural": "Поступления",
+        "color": "#2E8B57"
     }
 }

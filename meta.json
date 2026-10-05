@@ -243,5 +243,25 @@
         "title": "Спецификации",
         "desc": "",
         "template": null
+    },
+    "expense_articles": {
+        "title": "Статьи расходов",
+        "desc": "",
+        "template": null
+    },
+    "cash_documents": {
+        "title": "Документы по кассе",
+        "desc": "",
+        "template": null
+    },
+    "cash_expenses": {
+        "title": "Расходы",
+        "desc": "",
+        "template": null
+    },
+    "cash_incomes": {
+        "title": "Поступления",
+        "desc": "",
+        "template": null
     }
 }
