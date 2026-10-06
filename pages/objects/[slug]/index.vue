@@ -10,7 +10,34 @@
 			<div class="page__header-actions">
 				<AppQrScanner />
 
-				<AppButton v-if="canCreate" class="button_fill" @click="emit('openModal', {
+				<AppPopup
+					v-if="canCreate && createOptions"
+					class="page__create-menu"
+					:isPreventBottom="true"
+				>
+					<template #header>
+						<AppButton class="button_fill">
+							<AppIconPlus />
+							<span class="text">
+								Создать
+							</span>
+						</AppButton>
+					</template>
+					<template #content>
+						<div
+							class="popup__option"
+							v-for="option in createOptions"
+							:key="option.slug"
+							@click="e => {
+								e.target?.closest('.popup')?.classList.remove('popup_open')
+								emit('openModal', { type: 'create', slug: option.slug, id: '0' })
+							}"
+						>
+							{{ option.title }}
+						</div>
+					</template>
+				</AppPopup>
+				<AppButton v-else-if="canCreate" class="button_fill" @click="emit('openModal', {
 					type: 'create',
 					slug: pageSlug,
 					id: '0'
@@ -59,7 +86,7 @@
 			ref="tableComp"
 			:slug="router.params.slug"
 			:key="router.path"
-			@openModal="item => emit('openModal', item)"
+			@openModal="item => openItem(item)"
 		/>
 		<AppVirtualTable
 			v-else
@@ -155,6 +182,7 @@
 	import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'
 	import AppInput from '@AppComponents/Inputs/Input/Input.vue';
 	import AppSelect from '@AppComponents/Inputs/Select/Select.vue';
+	import AppPopup from '@AppComponents/Popup/Popup.vue'
 
 	import metaJSON from '/meta.json'
 	import api from '@/helpers/api.js'
@@ -170,7 +198,40 @@
 	const tableComp = ref(null)
 	const canCreate = computed(() => tableComp.value?.table?.permissions?.create_p !== 'N')
 	const pageSlug = computed(() => props.slug || router.params.slug)
-	const isCatalog = computed(() => pageSlug.value == 'products')
+	const CATALOGS = {
+		products: {
+			routes: routes.product_categories,
+			deleteText: 'Товары останутся без категории'
+		},
+		expense_articles: {
+			routes: routes.expense_article_categories,
+			deleteText: 'Статьи останутся без категории'
+		}
+	}
+	const CREATE_OPTIONS = {
+		cash_documents: [
+			{ slug: 'cash_expenses', title: 'Расход' },
+			{ slug: 'cash_incomes', title: 'Поступление' }
+		]
+	}
+	const isCatalog = computed(() => !!CATALOGS[pageSlug.value])
+	const catalogConfig = computed(() => CATALOGS[pageSlug.value] ?? CATALOGS.products)
+	const createOptions = computed(() => CREATE_OPTIONS[pageSlug.value] ?? null)
+
+	const openItem = async (item) => {
+		if (pageSlug.value === 'cash_documents' && item?.type === 'open' && item.slug === 'cash_documents' && item.id) {
+			try {
+				const response = await api.callMethod('GET', routes.cash_documents.operation.replace('${id}', item.id))
+				if (response?.status == 200 && response.data?.slug && response.data?.id) {
+					emit('openModal', { type: 'open', slug: response.data.slug, id: response.data.id })
+					return
+				}
+			} catch (error) {
+				console.log(error)
+			}
+		}
+		emit('openModal', item)
+	}
 
 	class Catalog {
 		constructor() {
@@ -195,7 +256,7 @@
 
 		async load() {
 			try {
-				const response = await api.callMethod('GET', routes.product_categories.get)
+				const response = await api.callMethod('GET', catalogConfig.value.routes.get)
 				this.tree = this.normalize(Array.isArray(response.data) ? response.data : [])
 			} catch (error) {
 				console.log(error)
@@ -258,7 +319,7 @@
 			if (!this.modal.content.name) return
 			try {
 				this.modal.loading = true
-				await api.callMethod('POST', routes.product_categories.create, {
+				await api.callMethod('POST', catalogConfig.value.routes.create, {
 					name: this.modal.content.name,
 					parent_id: this.modal.content.parent_id || null
 				})
@@ -291,7 +352,7 @@
 			if (!this.modal.content.name) return
 			try {
 				this.modal.loading = true
-				await api.callMethod('PUT', routes.product_categories.update.replace('${id}', this.modal.content.id), {
+				await api.callMethod('PUT', catalogConfig.value.routes.update.replace('${id}', this.modal.content.id), {
 					name: this.modal.content.name,
 					parent_id: this.modal.content.parent_id || null
 				})
@@ -310,7 +371,7 @@
 				title: 'Удаление группы',
 				actionTitle: 'Удалить',
 				action: 'delete',
-				text: `Будет удалена группа «${category.name}» вместе с вложенными группами. Товары останутся без категории. Продолжить?`,
+				text: `Будет удалена группа «${category.name}» вместе с вложенными группами. ${catalogConfig.value.deleteText}. Продолжить?`,
 				content: {
 					id: category.id
 				},
@@ -321,7 +382,7 @@
 		async delete() {
 			try {
 				this.modal.loading = true
-				await api.callMethod('DELETE', routes.product_categories.delete.replace('${id}', this.modal.content.id))
+				await api.callMethod('DELETE', catalogConfig.value.routes.delete.replace('${id}', this.modal.content.id))
 				if (this.active) {
 					this.active = null
 					this.query.category_tree_id = null
@@ -351,6 +412,13 @@
 		slug: {
 			default: '',
 			type: String
+		}
+	})
+
+	watch(pageSlug, () => {
+		catalog.value = new Catalog()
+		if (isCatalog.value) {
+			catalog.value.load()
 		}
 	})
 

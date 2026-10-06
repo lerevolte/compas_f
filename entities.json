@@ -247,8 +247,8 @@
     },
     "expense_articles": {
         "slug": "expense_articles",
-        "title_singular": "Статья расходов",
-        "title_plural": "Статьи расходов",
+        "title_singular": "Статья",
+        "title_plural": "Статьи",
         "color": "#A0522D"
     },
     "cash_documents": {

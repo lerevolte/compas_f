@@ -102,6 +102,15 @@ export default {
         update: '/products/categories/${id}',
         delete: '/products/categories/${id}'
     },
+    expense_article_categories: {
+        get: '/expense-articles/categories',
+        create: '/expense-articles/categories',
+        update: '/expense-articles/categories/${id}',
+        delete: '/expense-articles/categories/${id}'
+    },
+    cash_documents: {
+        operation: '/cash-documents/${id}/operation'
+    },
     settings: {
         common: {
             get: '/settings/account',

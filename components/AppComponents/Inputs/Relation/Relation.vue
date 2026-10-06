@@ -178,9 +178,9 @@
         return String(label).trim() === ''
     }
     const dropEmptyForProducts = (list, options) =>
-        options?.relation_type === 'products'
+        (options?.relation_type === 'products'
             ? (list ?? []).filter(p => !isEmptyOption(p))
-            : (list ?? [])
+            : (list ?? [])).filter(p => !(p?.label && typeof p.label === 'object' && p.label.is_filtered))
 
     const emit = defineEmits([
         'update:modelValue',

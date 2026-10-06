@@ -233,11 +233,7 @@
             { slug: 'receipt_invoices', title: 'Приходная накладная' },
             { slug: 'logistic_tasks', title: 'Задача логистики', taskAction: 'supply' }
         ],
-        addresses: [{ slug: 'logistic_tasks', title: 'Задача логистики' }],
-        cash_documents: [
-            { slug: 'cash_expenses', title: 'Расход', skip: ['name', 'comment', 'sum', 'date', 'operations'] },
-            { slug: 'cash_incomes', title: 'Поступление', skip: ['name', 'comment', 'sum', 'date', 'operations'] }
-        ]
+        addresses: [{ slug: 'logistic_tasks', title: 'Задача логистики' }]
     }
     const BASED_KEY_MAP = {
         'supplier_orders:logistic_tasks': { company_id: 'shipment_company_id', shipment_company_id: 'company_id' }
