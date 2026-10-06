@@ -47,6 +47,47 @@
             />
         </div>
 
+        <div class="dynamin__group" v-else-if="!props.options.isModule && isMaterialsTab">
+            <div class="dynamic__materials-actions" v-if="canEditMaterials && Number(props.id) && !props.options.isExternal">
+                <AppButton class="button_fill" :disabled="detail.materialsLoading" @click="detail.fillMaterials()">
+                    <span class="text">Заполнить по спецификации</span>
+                </AppButton>
+            </div>
+            <p class="dynamic__materials-hint" v-if="!Number(props.id)">
+                Материалы можно указать после сохранения
+            </p>
+            <AppVirtualTable
+                v-else
+                :key="`materials-${detail.materialsVersion}`"
+                :pageId="props.id"
+                :options="{
+                    draggableTarget: '.table__icon-drag',
+                    isDraggable: canEditMaterials,
+                    isHaveOrder: canEditMaterials,
+                    group: 'order_products',
+                    isLocalTable: true,
+                    isHaveQuery: false,
+                    query: {},
+                    isHaveFilter: false,
+                    isPermanentEdit: canEditMaterials,
+                    isTrash: false,
+                    isHaveTopHeader: true,
+                    isHaveFooter: false,
+                    isDisableSockets: true,
+                    isDisableMassAction: true,
+                    updatingCount: 0,
+                    parentSlug: `${props.slug}_materials`
+                }"
+                :table="detail.materials"
+                :slug="'products'"
+                @saveTable="detail.loadMaterials()"
+                @openModal="item => emit('action', {
+                    action: 'openModal',
+                    value: item
+                })"
+            />
+        </div>
+
         <AppHistory
             v-else-if="!props.options.isModule && props.tabs.active?.tab == 'history'"
             :title="'История изменений'"
@@ -168,6 +209,10 @@
     import AppRelatedObjects from '@AppComponents/RelatedObjects/RelatedObjects.vue';
     import AppPrintDocuments from '@AppComponents/PrintDocuments/PrintDocuments.vue'
     import AppProductsCheck from '@AppComponents/ProductsCheck/ProductsCheck.vue'
+    import AppButton from '@AppComponents/Button/Button.vue'
+
+    const PRODUCTION_SLUGS = ['production_orders', 'productions']
+    const isMaterialsTab = computed(() => props.tabs.active?.tab == 'materials' && PRODUCTION_SLUGS.includes(props.slug))
 
     const CHECKED_SLUGS = ['logistic_tasks', 'pickups', 'expense_invoices', 'product_returns', 'receipt_invoices']
 
@@ -275,6 +320,12 @@
                 table: [],
                 list: []
             }
+            this.materials = {
+                table: [],
+                list: []
+            }
+            this.materialsVersion = 0
+            this.materialsLoading = false
             this.productsDraft = null
             this.productsBackup = null
             this.productsPending = false
@@ -406,6 +457,9 @@
                     ? response.data.table.tableBody
                     : this.localProductsList(Array.isArray(response.data.table.tableBody) ? response.data.table.tableBody : [])
                 emit('action', { action: 'getProducts', value: this.products.list.data ?? [] })
+                if (response.data.materials_table) {
+                    this.setMaterials(response.data.materials_table)
+                }
                 if (props.options.isGlobalEdit) {
                     if (!this.productsDraft && Array.isArray(props.defaults?.__products)) {
                         this.productsDraft = JSON.parse(JSON.stringify(props.defaults.__products))
@@ -436,6 +490,47 @@
         }
         openModal(item) {
             emit('openModal', item)
+        }
+
+        setMaterials(payload) {
+            this.materials.table = payload?.tableKeys ?? []
+            const body = payload?.tableBody
+            this.materials.list = Array.isArray(body?.data) ? body : this.localProductsList(Array.isArray(body) ? body : [])
+            this.materialsVersion++
+        }
+
+        async loadMaterials() {
+            if (!Number(props.id)) return
+            const url = routes.production.materials.replace('${slug}', props.slug).replace('${id}', props.id)
+            const response = await api.callMethod('GET', url)
+            if (response?.status == 200) {
+                this.setMaterials(response.data)
+            }
+        }
+
+        async fillMaterials() {
+            if (!Number(props.id) || this.materialsLoading) return
+            this.materialsLoading = true
+            try {
+                const url = routes.production.fill_materials.replace('${slug}', props.slug).replace('${id}', props.id)
+                const response = await api.callMethod('POST', url)
+                if (response?.status != 200) {
+                    common.showNotification({
+                        title: response?.data?.message ?? 'Не удалось заполнить материалы',
+                        description: ''
+                    }, 'error')
+                    return
+                }
+                if (!response.data?.count) {
+                    common.showNotification({
+                        title: 'Нечего заполнить',
+                        description: 'Укажите на вкладке «Продукция» спецификации и количество'
+                    }, 'default')
+                }
+                await this.loadMaterials()
+            } finally {
+                this.materialsLoading = false
+            }
         }
 
         localProductsList(rows) {
@@ -532,6 +627,7 @@
                     product_purchase_price: row.product_purchase_price,
                     product_count: row.product_count,
                     product_output_count: row.product_output_count,
+                    product_specification_id: row.product_specification_id,
                     product_weight: row.product_weight,
                     product_volume: row.product_volume,
                     product_sum: row.product_sum,
@@ -615,6 +711,11 @@
         if (prevState === 'edit' && state === null && table && !table.saving && !props.options.isGlobalEdit && Number(props.id) && detail.value.productsDraft) {
             detail.value.clearProductsDraft()
         }
+    })
+    const canEditMaterials = computed(() => {
+        const keys = detail.value?.materials?.table || []
+        if (!keys.length) return false
+        return keys.some(c => !c.read_only)
     })
     const canEditProducts = computed(() => {
         const keys = detail.value?.products?.table || []

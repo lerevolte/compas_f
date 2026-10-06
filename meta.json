@@ -263,5 +263,15 @@
         "title": "Поступления",
         "desc": "",
         "template": null
+    },
+    "production_orders": {
+        "title": "Заказы на производство",
+        "desc": "",
+        "template": null
+    },
+    "productions": {
+        "title": "Производство",
+        "desc": "",
+        "template": null
     }
 }

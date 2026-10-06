@@ -111,6 +111,10 @@ export default {
     cash_documents: {
         operation: '/cash-documents/${id}/operation'
     },
+    production: {
+        materials: '/production/${slug}/${id}/materials',
+        fill_materials: '/production/${slug}/${id}/fill_materials'
+    },
     settings: {
         common: {
             get: '/settings/account',

@@ -112,6 +112,9 @@ function draftProductsFromJson(raw) {
                 product_purchase_price: product.purchase_price ?? null,
                 product_count: product.count ?? null,
                 product_output_count: product.output_count ?? null,
+                product_specification_id: product.specification_id
+                    ? { value: [product.specification_id], localOptions: [{ value: product.specification_id, label: { id: product.specification_id, sort: 0, file: '', is_hidden: 0, field_id: 0, color: '', text: `Спецификация #${product.specification_id}` } }] }
+                    : { value: [null], localOptions: [] },
                 product_weight: product.weight ?? null,
                 product_volume: product.volume ?? 0,
                 product_sum: product.sum ?? null,
@@ -923,6 +926,7 @@ export class Table {
                         product_purchase_price: row['product_purchase_price'],
                         product_count: row['product_count'],
                         product_output_count: row['product_output_count'],
+                        product_specification_id: row['product_specification_id'],
                         product_weight: row['product_weight'],
                         product_volume: row['product_volume'],
                         product_sum: this.common.roundMoney(this.common.productLineParts(row, this.options?.parentSlug).net),

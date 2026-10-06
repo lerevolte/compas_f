@@ -268,5 +268,17 @@
         "title_singular": "Поступление",
         "title_plural": "Поступления",
         "color": "#2E8B57"
+    },
+    "production_orders": {
+        "slug": "production_orders",
+        "title_singular": "Заказ на производство",
+        "title_plural": "Заказы на производство",
+        "color": "#8E5BB5"
+    },
+    "productions": {
+        "slug": "productions",
+        "title_singular": "Производство",
+        "title_plural": "Производство",
+        "color": "#B5703A"
     }
 }

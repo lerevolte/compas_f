@@ -117,7 +117,7 @@
                                 title: null,
                                 edit: table.body[row.index] && !column.read_only && (table.body[row.index]?.edit || table.options.isPermanentEdit),
                                 type: column.type,
-                                relation_type: table.slug == 'products' && table.options?.isLocalTable ? 'products' : null,
+                                relation_type: table.slug == 'products' && table.options?.isLocalTable ? (column.key == 'product_id' ? 'products' : column.related_table) : null,
                                 list: column.options,
                                 slug: column.related_table,
                                 name: column.key,
@@ -135,7 +135,7 @@
                             @clickLink="id => table.open({id, related_table: column.related_table})"
                             @create="item => table.create(column.related_table)"
                             @showAll="() => table.open({id: table.body[row.index].id, related_table: table.slug, tab_slug: column.related_table})"
-                            @update:model-value="val => table.slug == 'products' && getRow(val, table.body[row.index])"
+                            @update:model-value="val => table.slug == 'products' && (column.key == 'product_id' ? getRow(val, table.body[row.index]) : markRowEdited(table.body[row.index]))"
                             @update:prevValue="val => cell.checkEditting(table.body[row.index], {value: val, key: column.key})"
                         />
 
@@ -1450,6 +1450,14 @@
         }
     }
     
+    const markRowEdited = (row) => {
+        if (!row) return
+        row.edit = true
+        if (table.value.state !== 'edit') {
+            table.value.state = 'edit'
+        }
+    }
+
     const checkEnabledRow = (row) => {
         if (table.value.options.localFilter.state) {
             return table.value.options.localFilter.value.find(option => isEqual(option, row.address?.coords))

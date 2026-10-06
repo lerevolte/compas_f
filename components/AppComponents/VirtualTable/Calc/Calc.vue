@@ -29,7 +29,7 @@
                     {{ common.transformPrice(calculateContent.volume, 0) }}
                 </strong>
             </div>
-            <div class="table-calc__item">
+            <div class="table-calc__item" v-if="hasPrices">
                 <span class="table-calc__label">
                     Сумма:
                 </span>
@@ -37,7 +37,7 @@
                     {{ common.transformPrice(calculateContent.sum, 2) }}
                 </strong>
             </div>
-            <div class="table-calc__item" v-if="calculateContent.vat > 0">
+            <div class="table-calc__item" v-if="hasPrices && calculateContent.vat > 0">
                 <span class="table-calc__label">
                     Сумма НДС:
                 </span>
@@ -45,7 +45,7 @@
                     {{ common.transformPrice(calculateContent.vat, 2) }}
                 </strong>
             </div>
-            <div class="table-calc__item">
+            <div class="table-calc__item" v-if="hasPrices">
                 <span class="table-calc__label">
                     Всего:
                 </span>
@@ -76,6 +76,7 @@
     const common = new Common()
 
     const hasShipped = computed(() => (table.value.header || []).some(c => c.key === 'product_shipped'))
+    const hasPrices = computed(() => (table.value.header || []).some(c => ['product_price', 'product_sum'].includes(c.key)))
 
     const canEdit = computed(() => {
         const cols = (table.value.header || []).filter(c => !['actions', 'isChoose', 'clicked', 'iconDrag', 'iconDelete'].includes(c.key))

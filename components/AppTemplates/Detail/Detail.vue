@@ -233,7 +233,8 @@
             { slug: 'receipt_invoices', title: 'Приходная накладная' },
             { slug: 'logistic_tasks', title: 'Задача логистики', taskAction: 'supply' }
         ],
-        addresses: [{ slug: 'logistic_tasks', title: 'Задача логистики' }]
+        addresses: [{ slug: 'logistic_tasks', title: 'Задача логистики' }],
+        production_orders: [{ slug: 'productions', title: 'Производство', skip: ['materials', 'production_status'] }]
     }
     const BASED_KEY_MAP = {
         'supplier_orders:logistic_tasks': { company_id: 'shipment_company_id', shipment_company_id: 'company_id' }
@@ -496,6 +497,7 @@
                 || (entity.slug === 'receipt_invoices' && SHIPMENT_SOURCES.includes(this.slug))
                 || (this.slug === 'deals' && SHIPMENT_SOURCES.includes(entity.slug))
                 || (this.slug === 'supplier_orders' && (entity.slug === 'receipt_invoices' || SHIPMENT_SOURCES.includes(entity.slug)))
+                || (this.slug === 'production_orders' && entity.slug === 'productions')
 
             let checkData = null
             if (isReturn || isChain) {
@@ -662,6 +664,7 @@
             const isChain = (props.source.slug === 'deals' && SHIPMENT_SOURCES.includes(target))
                 || (SHIPMENT_SOURCES.includes(props.source.slug) && ['expense_invoices', 'product_returns', 'receipt_invoices'].includes(target))
                 || (props.source.slug === 'supplier_orders' && target === 'receipt_invoices')
+                || (props.source.slug === 'production_orders' && target === 'productions')
             if (!isChain) return true
             this.refreshProductsDraft()
             const rows = (Array.isArray(this.productsDraft) ? this.productsDraft : [])
@@ -716,6 +719,7 @@
                     product_purchase_price: row.product_purchase_price,
                     product_count: row.product_count,
                     product_output_count: row.product_output_count,
+                    product_specification_id: row.product_specification_id,
                     product_weight: row.product_weight,
                     product_volume: row.product_volume,
                     product_sum: row.product_sum,
