@@ -224,7 +224,7 @@
     const common = new Common()
     const productsDirty = computed(() => {
         if (props.options.isModule || props.options.isGlobalEdit) return false
-        return productsTableRef.value?.table?.state === 'edit' || Array.isArray(detail.value?.productsDraft)
+        return productsTableRef.value?.table?.state === 'edit' || Array.isArray(detail.value?.productsDraft) || materialsTableRef.value?.table?.state === 'edit'
     })
     const productsRows = computed(() => {
         const body = productsTableRef.value?.table?.body
@@ -608,17 +608,8 @@
                 }))
         }
 
-        async saveProducts() {
-            if (props.options.isGlobalEdit || !Number(props.id)) return true
-            const table = productsTableRef.value?.table
-            let rows = null
-            if (table?.state === 'edit') {
-                rows = table.body
-            } else if (Array.isArray(this.productsDraft)) {
-                rows = this.productsDraft
-            }
-            if (!Array.isArray(rows)) return true
-            const products = JSON.parse(JSON.stringify(rows))
+        compositionPayload(rows) {
+            return JSON.parse(JSON.stringify(rows))
                 .filter(row => row.id || (row.product_name && String(row.product_name).trim() !== ''))
                 .map(row => ({
                     id: row.id,
@@ -636,25 +627,54 @@
                     product_nds: row.product_nds,
                     product_nds_included: row.product_nds_included
                 }))
-            const slug = props.slug ?? 'logistic_tasks'
+        }
+
+        async putComposition(parentSlug, products, errorTitle) {
             let response = null
             try {
-                response = await api.callMethod('PUT', routes.table.set_products.replace('${parent_slug}', slug).replace('${page_id}', props.id), { products })
+                response = await api.callMethod('PUT', routes.table.set_products.replace('${parent_slug}', parentSlug).replace('${page_id}', props.id), { products })
             } catch (e) {
                 return false
             }
             if (!response?.status || response.status != 200) {
                 const data = response?.data ?? {}
                 common.showNotification({
-                    title: data.message ?? 'Не удалось сохранить состав',
+                    title: data.message ?? errorTitle,
                     description: Array.isArray(data.errors) ? data.errors.join('; ') : ''
                 }, 'error', { toastId: 'products-mismatch' })
                 return false
             }
-            if (table) table.clear()
-            this.clearProductsDraft()
-            this.productsPending = true
             return true
+        }
+
+        async saveMaterials() {
+            const table = materialsTableRef.value?.table
+            if (table?.state !== 'edit') return true
+            const saved = await this.putComposition(`${props.slug}_materials`, this.compositionPayload(table.body), 'Не удалось сохранить материалы')
+            if (!saved) return false
+            table.clear()
+            this.productsPending = true
+            await this.loadMaterials()
+            return true
+        }
+
+        async saveProducts() {
+            if (props.options.isGlobalEdit || !Number(props.id)) return true
+            const table = productsTableRef.value?.table
+            let rows = null
+            if (table?.state === 'edit') {
+                rows = table.body
+            } else if (Array.isArray(this.productsDraft)) {
+                rows = this.productsDraft
+            }
+            if (Array.isArray(rows)) {
+                const saved = await this.putComposition(props.slug ?? 'logistic_tasks', this.compositionPayload(rows), 'Не удалось сохранить состав')
+                if (!saved) return false
+                if (table) table.clear()
+                this.clearProductsDraft()
+                this.productsPending = true
+            }
+            return await this.saveMaterials()
         }
 
         afterSave() {
@@ -666,6 +686,8 @@
         cancelProducts() {
             const table = productsTableRef.value?.table
             if (table?.state === 'edit') table.cancel()
+            const materialsTable = materialsTableRef.value?.table
+            if (materialsTable?.state === 'edit') materialsTable.cancel()
             if (Array.isArray(this.productsBackup)) {
                 this.products.list = this.localProductsList(this.productsBackup)
             }
