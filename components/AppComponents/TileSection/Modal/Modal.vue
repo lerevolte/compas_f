@@ -221,7 +221,7 @@
                     </template>
                 </AppColorPicker>
                 <AppCheckbox
-                    v-if="modal.field.type == 'deal_stages'"
+                    v-if="['deal_stages', 'status'].includes(modal.field.type)"
                     v-model="modal.field.show_stage_bar"
                     :options="{
                         title: 'Выводить плашку стадий сверху в карточке',
@@ -616,6 +616,8 @@
                         file: option.file ? option.file[0]?.url ?? null : null
                     }
                 })
+            }
+            if (['deal_stages', 'status'].includes(this.field.type)) {
                 request.show_stage_bar = request.show_stage_bar ? 1 : 0
             }
 

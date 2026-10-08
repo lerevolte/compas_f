@@ -98,3 +98,11 @@
 }
 
 
+
+.deal-stages-value {
+    width: 100%;
+
+    &.deal-stages-value_clickable {
+        cursor: pointer;
+    }
+}

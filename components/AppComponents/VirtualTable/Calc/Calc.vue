@@ -1,6 +1,30 @@
 <template>
     <div class="table-calc">
-        <AppButton class="button_fill button_small" v-if="canEdit" @click="table.addLocalRow()">
+        <AppPopup
+            class="table-calc__actions"
+            v-if="canEdit && rowActions.length"
+            :isPreventBottom="true"
+        >
+            <template #header>
+                <AppButton class="button_fill button_small table-calc__actions-button" aria-label="Действия со строками">
+                    <IconTriangle />
+                </AppButton>
+            </template>
+            <template #content>
+                <div class="popup__option" @click="table.addLocalRow()">
+                    Добавить строку
+                </div>
+                <div
+                    class="popup__option"
+                    v-for="action in rowActions"
+                    :key="action.key"
+                    @click="action.handler()"
+                >
+                    {{ action.title }}
+                </div>
+            </template>
+        </AppPopup>
+        <AppButton class="button_fill button_small" v-else-if="canEdit" @click="table.addLocalRow()">
             <AppIconPlus />
             Добавить строку
         </AppButton>
@@ -70,6 +94,8 @@
     
     import AppButton from '@AppComponents/Button/Button.vue';
 	import AppIconPlus from '@AppIcons/Plus.vue'
+    import IconTriangle from '@AppIcons/Triangle.vue'
+    import AppPopup from '@AppComponents/Popup/Popup.vue'
     import {Common} from '@AppHelpers/classes.js'
 
     const table = inject('table')
@@ -77,6 +103,8 @@
 
     const hasShipped = computed(() => (table.value.header || []).some(c => c.key === 'product_shipped'))
     const hasPrices = computed(() => (table.value.header || []).some(c => ['product_price', 'product_sum'].includes(c.key)))
+
+    const rowActions = computed(() => (Array.isArray(table.value.options?.rowActions) ? table.value.options.rowActions : []).filter(action => typeof action?.handler === 'function'))
 
     const canEdit = computed(() => {
         const cols = (table.value.header || []).filter(c => !['actions', 'isChoose', 'clicked', 'iconDrag', 'iconDelete'].includes(c.key))

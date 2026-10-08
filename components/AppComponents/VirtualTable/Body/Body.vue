@@ -284,7 +284,7 @@
                                 {{ cell.useCellModel(row.index, column).value }}
                             </span>
 
-                            <span class="table__text text" :style="column.set_color && column.color ? { color: column.color } : null" :title="cell.useCellModel(row.index, column).value != null ? `${common.formatByMask(cell.useCellModel(row.index, column).value, column.mask)}${column.unit ? ' ' + column.unit : ''}` : null" v-else-if="['text', 'number'].includes(column.type) && (!column.is_external_link || !table.body[row.index][column.key]?.external_link)">
+                            <span class="table__text text" :style="cellTextStyle(row.index, column)" :title="cell.useCellModel(row.index, column).value != null ? `${common.formatByMask(cell.useCellModel(row.index, column).value, column.mask)}${column.unit ? ' ' + column.unit : ''}` : null" v-else-if="['text', 'number'].includes(column.type) && (!column.is_external_link || !table.body[row.index][column.key]?.external_link)">
                                 {{ common.formatByMask(cell.useCellModel(row.index, column).value, column.mask) }}<span class="table__unit" v-if="column.unit && cell.useCellModel(row.index, column).value"> {{ column.unit }}</span>
                             </span>
 
@@ -418,6 +418,34 @@
     const uid = useId()
 
     const SERVICE_KEYS = ['isChoose', 'clicked', 'actions', 'iconDrag', 'iconDelete']
+
+    const cellTextStyle = (index, column) => {
+        const colorBy = column?.color_by
+        if (colorBy?.field && colorBy?.colors) {
+            let value = table.value.body[index]?.[colorBy.field]
+            if (typeof value === 'string' && value.trim().startsWith('[')) {
+                try {
+                    value = JSON.parse(value)
+                } catch (e) {
+                    value = null
+                }
+            }
+            if (value && typeof value === 'object' && !Array.isArray(value)) {
+                value = value.value
+            }
+            if (Array.isArray(value)) {
+                value = value[0]
+            }
+            if (value && typeof value === 'object') {
+                value = value.value
+            }
+            const color = value != null ? colorBy.colors[String(value)] : null
+            if (color) {
+                return { color }
+            }
+        }
+        return column?.set_color && column?.color ? { color: column.color } : null
+    }
     const NDS_INCLUDED_KEYS = ['product_nds_included', 'nds_included']
 
     const checkboxValue = (rowIndex, column) => {

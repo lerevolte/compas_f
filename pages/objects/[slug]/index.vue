@@ -16,8 +16,8 @@
 					:isPreventBottom="true"
 				>
 					<template #header>
-						<AppButton class="button_fill">
-							<AppIconPlus />
+						<AppButton class="button_fill page__create-menu-button">
+							<IconTriangle />
 							<span class="text">
 								Создать
 							</span>
@@ -176,6 +176,7 @@
     import AppVirtualTable from '@AppComponents/VirtualTable/VirtualTable.vue';
 	import AppButton from '@AppComponents/Button/Button.vue'
 	import AppIconPlus from '@AppIcons/Plus.vue'
+	import IconTriangle from '@AppIcons/Triangle.vue'
 	import AppQrScanner from '@AppComponents/QrScanner/QrScanner.vue'
 	import AppCategories from '@AppComponents/Categories/Categories.vue';
 	import CategoriesTreeItem from '@AppComponents/Categories/TreeItem.vue';

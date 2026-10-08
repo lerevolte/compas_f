@@ -62,12 +62,21 @@
                 </template>
             </AppPopup>
         </header>
-        <AppDealStages
-            v-if="stageField && stageField.show_stage_bar !== 0 && detail.id && !detail.isGlobalEdit && !detail.forbidden && !props.is_external"
-            :options="{ ...stageField, title: null, mode: 'bar', edit: stageField.can_edit !== false }"
-            :pageId="detail.id"
-            @changed="detail.updateComponent++"
-        />
+        <template v-if="stageField && detail.id && !detail.isGlobalEdit && !detail.forbidden && !props.is_external">
+            <AppDealStages
+                v-if="stageField.type == 'deal_stages'"
+                :options="{ ...stageField, title: null, mode: 'bar', edit: stageField.can_edit !== false }"
+                :pageId="detail.id"
+                @changed="detail.updateComponent++"
+            />
+            <AppStatusStages
+                v-else
+                :options="stageField"
+                :pageId="detail.id"
+                :slug="detail.slug"
+                @changed="detail.updateComponent++"
+            />
+        </template>
         <AppTabs
             :tabs="tabs.list"
             :activeTab="tabs.active?.tab"
@@ -151,6 +160,7 @@
     import IconArrowBack from '@AppIcons/ArrowBack.vue';
     import AppModalWarning from '@AppComponents/Modal/Warning/Warning.vue'
     import AppDealStages from '@AppComponents/DealStages/DealStages.vue'
+    import AppStatusStages from '@AppComponents/StatusStages/StatusStages.vue'
     import AppPopup from '@AppComponents/Popup/Popup.vue'
     import IconTriangle from '@AppIcons/Triangle.vue'
     import api from '@/helpers/api.js'
@@ -841,7 +851,8 @@
         for (const column in detail.value.columns) {
             for (const section of detail.value.columns[column] ?? []) {
                 for (const field of section.fields ?? []) {
-                    if (field.type == 'deal_stages') return field
+                    if (field.type == 'deal_stages' && field.show_stage_bar !== 0) return field
+                    if (field.type == 'status' && Number(field.show_stage_bar) === 1) return field
                 }
             }
         }

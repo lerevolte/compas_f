@@ -19,6 +19,23 @@
     }
 }
 
+.table-calc__actions {
+    flex: 0 0 auto;
+}
+
+.table-calc__actions-button {
+    min-width: 44px;
+    justify-content: center;
+
+    .icon__triangle {
+        display: flex;
+    }
+
+    svg polygon {
+        fill: #ffffff;
+    }
+}
+
 .table-calc__group {
     gap: 12px 32px;
     display: flex;

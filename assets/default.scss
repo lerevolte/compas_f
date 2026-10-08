@@ -211,6 +211,18 @@ html {
             gap: 8px;
         }
 
+        .page__create-menu-button {
+            gap: 8px;
+
+            .icon__triangle {
+                display: flex;
+            }
+
+            svg polygon {
+                fill: #ffffff;
+            }
+        }
+
         .page__header__create-placeholder {
             display: none;
             visibility: hidden;

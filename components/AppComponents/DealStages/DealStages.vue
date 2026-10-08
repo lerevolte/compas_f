@@ -1,21 +1,28 @@
 <template>
-    <AppStatus
+    <div
+        class="deal-stages-value"
         v-if="props.options.mode == 'value'"
-        :options="{
-            id: props.options.id,
-            title: props.options.title,
-            name: props.options.key,
-            type: 'status',
-            list: statusList,
-            edit: isValueClickable,
-            can_edit: props.options.can_edit,
-            focus: false,
-            isHaveNull: !current,
-            isCanCreate: false
-        }"
-        :model-value="current ? value : null"
-        @update:modelValue="next => applyStage(stages.find(stage => stage.value == next))"
-    />
+        ref="valueRef"
+        :class="{ 'deal-stages-value_clickable': isValueClickable && !editing }"
+        @click="startEdit"
+    >
+        <AppStatus
+            :options="{
+                id: props.options.id,
+                title: props.options.title,
+                name: props.options.key,
+                type: 'status',
+                list: statusList,
+                edit: isValueClickable && editing,
+                can_edit: props.options.can_edit,
+                focus: true,
+                isHaveNull: !current,
+                isCanCreate: false
+            }"
+            :model-value="current ? value : null"
+            @update:modelValue="next => applyStage(stages.find(stage => stage.value == next))"
+        />
+    </div>
 
     <div class="deal-stages deal-stages_bar" v-else>
         <div class="deal-stages__bar" v-if="stages.length > 0" @pointerleave="hoverIndex = null">
@@ -161,6 +168,19 @@
     const finalModal = ref(null)
     const loading = ref(false)
     const hoverIndex = ref(null)
+    const editing = ref(false)
+    const valueRef = ref(null)
+    const stopEdit = (event) => {
+        if (valueRef.value && valueRef.value.contains(event.target)) return
+        if (event.target?.closest?.('.status__options')) return
+        editing.value = false
+        document.removeEventListener('click', stopEdit)
+    }
+    const startEdit = () => {
+        if (!isValueClickable.value || editing.value) return
+        editing.value = true
+        setTimeout(() => document.addEventListener('click', stopEdit), 0)
+    }
 
     const isValueClickable = computed(() =>
         props.pageId
@@ -242,10 +262,15 @@
             loading.value = false
             confirmStage.value = null
             finalModal.value = null
+            editing.value = false
+            document.removeEventListener('click', stopEdit)
         }
     }
 
     onMounted(() => {
         load()
+    })
+    onBeforeUnmount(() => {
+        document.removeEventListener('click', stopEdit)
     })
 </script>

@@ -48,16 +48,12 @@
         </div>
 
         <div class="dynamin__group" v-else-if="!props.options.isModule && isMaterialsTab">
-            <div class="dynamic__materials-actions" v-if="canEditMaterials && Number(props.id) && !props.options.isExternal">
-                <AppButton class="button_fill" :disabled="detail.materialsLoading" @click="detail.fillMaterials()">
-                    <span class="text">Заполнить по спецификации</span>
-                </AppButton>
-            </div>
             <p class="dynamic__materials-hint" v-if="!Number(props.id)">
                 Материалы можно указать после сохранения
             </p>
             <AppVirtualTable
                 v-else
+                ref="materialsTableRef"
                 :key="`materials-${detail.materialsVersion}`"
                 :pageId="props.id"
                 :options="{
@@ -76,7 +72,12 @@
                     isDisableSockets: true,
                     isDisableMassAction: true,
                     updatingCount: 0,
-                    parentSlug: `${props.slug}_materials`
+                    parentSlug: `${props.slug}_materials`,
+                    rowActions: canEditMaterials && !props.options.isExternal ? [{
+                        key: 'fill_materials',
+                        title: 'Заполнить по спецификации',
+                        handler: () => detail.fillMaterials()
+                    }] : []
                 }"
                 :table="detail.materials"
                 :slug="'products'"
@@ -209,7 +210,6 @@
     import AppRelatedObjects from '@AppComponents/RelatedObjects/RelatedObjects.vue';
     import AppPrintDocuments from '@AppComponents/PrintDocuments/PrintDocuments.vue'
     import AppProductsCheck from '@AppComponents/ProductsCheck/ProductsCheck.vue'
-    import AppButton from '@AppComponents/Button/Button.vue'
 
     const PRODUCTION_SLUGS = ['production_orders', 'productions']
     const isMaterialsTab = computed(() => props.tabs.active?.tab == 'materials' && PRODUCTION_SLUGS.includes(props.slug))
@@ -220,6 +220,7 @@
     const orderWasMounted = ref(false)
     const keepOrderMounted = computed(() => !props.options.isModule)
     const productsTableRef = ref(null)
+    const materialsTableRef = ref(null)
     const common = new Common()
     const productsDirty = computed(() => {
         if (props.options.isModule || props.options.isGlobalEdit) return false
@@ -526,8 +527,9 @@
                         title: 'Нечего заполнить',
                         description: 'Укажите на вкладке «Продукция» спецификации и количество'
                     }, 'default')
+                    return
                 }
-                await this.loadMaterials()
+                materialsTableRef.value?.table?.setLocalRows(response.data.rows ?? [])
             } finally {
                 this.materialsLoading = false
             }

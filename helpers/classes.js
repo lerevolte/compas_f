@@ -1591,6 +1591,25 @@ export class Table {
         })
     }
 
+    setLocalRows(rows) {
+        if (!this.state) {
+            this.backupLocalBody()
+        }
+
+        this.state = 'edit'
+        this.body = (Array.isArray(rows) ? rows : []).map((row, index) => {
+            return {
+                ...row,
+                local_id: index,
+                edit: true,
+                isChoose: true
+            }
+        })
+        nextTick(() => {
+            this.initVirtualizer()
+        })
+    }
+
     initCreateRoute() {
         this.emit('initCreateRoute', true)
     }
@@ -2757,7 +2776,14 @@ export class Field {
             }
 
             const { fields, group_id, ...request } = field;
-            await api.callMethod('PUT', routes.detail.update_field.replace('${id}', field.id), request)
+            const response = await api.callMethod('PUT', routes.detail.update_field.replace('${id}', field.id), request)
+            if (response?.status && response.status != 200) {
+                emit('action', {
+                    action: 'get',
+                    data: null
+                })
+                return
+            }
             if (field.type == 'text_group' || group_field) {
                 emit('action', {
                     action: 'get',
