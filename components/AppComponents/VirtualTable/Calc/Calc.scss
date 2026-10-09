@@ -23,9 +23,12 @@
     flex: 0 0 auto;
 }
 
-.table-calc__actions-button {
+button.table-calc__actions-button {
     width: 40px;
+    min-width: 40px;
     height: 40px;
+    min-height: 40px;
+    max-height: none;
     padding: 0;
     justify-content: center;
 
@@ -74,7 +77,7 @@
             display: flex;
         }
 
-        .table-calc__actions-button {
+        button.table-calc__actions-button {
             height: 40px;
         }
     }
