@@ -21,6 +21,7 @@
             :bubbleScroll="false"
             :item-key="getItemKey"
             class="table__body" 
+            :style="bodyStyle"
             drag-class="draggable-drag"
             ghost-class="draggable-ghost"
             fallback-class="draggable-fallback"
@@ -929,6 +930,13 @@
         }
         return rowData.id ?? rowData.local_id ?? `${table.value.slug}_${item.index ?? item.key}`
     }
+
+    const bodyStyle = computed(() => {
+        if (!isMobile.value || table.value.isDragging || props.options?.isShort) return null
+        const measured = typeof table.value.rowVirtualizer?.getTotalSize === 'function' ? Number(table.value.rowVirtualizer.getTotalSize()) : 0
+        const total = measured > 0 ? measured : (table.value.body?.length ?? 0) * 50
+        return total > 0 ? { height: `${total}px` } : null
+    })
 
     const rows = computed({
         get() {
