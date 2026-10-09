@@ -8,10 +8,22 @@
   overflow: hidden;
   margin-bottom: 40px;
   position: relative;
-  // На странице объектов таблица должна занимать всю ширину контента.
-  // Ограничение calc(100vw - 264px) нужно только в раскладке логистики
-  // (таблицы в колонках рядом с картой) — оно вынесено в Logistic.scss под
-  // .logistic .section-table (задача 27).
+}
+
+@media (max-width: 990px) {
+  .page > main > .section-table,
+  .detail .section-table {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    flex: 0 0 auto;
+
+    .table {
+      height: auto;
+      max-height: none;
+      overflow-y: visible;
+    }
+  }
 }
 
 .table {

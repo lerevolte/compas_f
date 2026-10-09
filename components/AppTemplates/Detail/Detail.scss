@@ -52,22 +52,38 @@
         padding: 0px;
         margin: 0px 15px;
         max-height: calc(100% - 40px);
+
+        @media (max-width: 990px) {
+            max-height: none;
+        }
     }
 
     .dynamin__group {
         padding: 0px;
         margin: 0 15px;
         max-height: calc(100% - 160px);
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+
+        .table-calc {
+            flex: 0 0 auto;
+        }
 
         .section-table {
             margin: 0px;
             max-height: none;
+            flex: 1 1 auto;
+            min-height: 0;
 
-            // Скрываем только верхний show-more (рядом с заголовком таблицы),
-            // не задевая action-попапы в строках.
             .section-table__top .show-more {
                 display: none;
             }
+        }
+
+        @media (max-width: 990px) {
+            max-height: none;
+            display: block;
         }
     }
 

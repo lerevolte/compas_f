@@ -9,6 +9,9 @@
     color: #7a4b00;
     font-size: variables.$font-size-default;
     line-height: 1.4;
+    flex: 0 0 auto;
+    max-height: 40%;
+    overflow: auto;
 
     &__title {
         font-weight: 600;
