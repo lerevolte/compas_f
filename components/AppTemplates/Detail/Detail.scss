@@ -92,7 +92,12 @@
         @media (max-width: 990px) {
             max-height: none;
             display: block;
-            padding-bottom: 90px;
+        }
+    }
+
+    @media (max-width: 990px) {
+        .detail__actions {
+            margin-top: 90px;
         }
     }
 
