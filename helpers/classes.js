@@ -1307,8 +1307,7 @@ export class Table {
         this.body = this.body.map((row) => {
             return {
                 ...row,
-                edit: true,
-                isChoose: true
+                edit: true
             }
         })
 
@@ -1425,8 +1424,7 @@ export class Table {
             this.body = this.body.map(row => {
                 return {
                     ...row,
-                    edit: true,
-                    isChoose: true
+                    edit: true
                 }
             })
         }
@@ -1570,8 +1568,7 @@ export class Table {
         this.body = this.body.map(row => {
             return {
                 ...row,
-                edit: true,
-                isChoose: true
+                edit: true
             }
         })
         const newObj = this.header.reduce((acc, item) => {
@@ -1579,7 +1576,7 @@ export class Table {
             return acc;
         }, {});
         newObj.edit = true
-        newObj.isChoose = true
+        newObj.isChoose = false
         const maxLocalId = this.body.reduce((max, r) => {
             const lid = Number(r?.local_id)
             return Number.isFinite(lid) && lid > max ? lid : max
@@ -1601,8 +1598,7 @@ export class Table {
             return {
                 ...row,
                 local_id: index,
-                edit: true,
-                isChoose: true
+                edit: true
             }
         })
         nextTick(() => {
@@ -2503,6 +2499,7 @@ export class Section {
             const request = {
                 id: options?.isCopy ? pageId : (options?.isGlobalEdit ? 0 : pageId),
                 ...(options?.isCopy ? { copy: 1 } : {}),
+                ...(options?.isGlobalEdit && typeof options?.hiddenDefaults === 'function' ? (options.hiddenDefaults() ?? {}) : {}),
                 ...this.buffer.edits.reduce((obj, field) => {
                     if (field.type == 'relation') {
                         obj[field.key] = field.value?.value.filter(p => p)

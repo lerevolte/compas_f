@@ -72,9 +72,17 @@
 
         .section-table {
             margin: 0px;
+            height: auto;
             max-height: none;
-            flex: 1 1 auto;
+            flex: 0 1 auto;
             min-height: 0;
+
+            .table {
+                height: auto;
+                max-height: none;
+                flex: 0 1 auto;
+                min-height: 0;
+            }
 
             .section-table__top .show-more {
                 display: none;
@@ -84,6 +92,7 @@
         @media (max-width: 990px) {
             max-height: none;
             display: block;
+            padding-bottom: 90px;
         }
     }
 

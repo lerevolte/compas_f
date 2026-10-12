@@ -30,6 +30,10 @@
         rows: {
             default: () => [],
             type: Array
+        },
+        source: {
+            default: null,
+            type: Object
         }
     })
 
@@ -39,13 +43,17 @@
     const relationsVersion = useState('object-relations-version', () => 0)
 
     const load = async () => {
-        if (!props.slug || !props.id || props.id == 0) {
+        const isDraft = !props.id || props.id == 0
+        if (!props.slug || (isDraft && !(props.source?.slug && props.source?.id))) {
             parent.value = null
             limits.value = []
             return
         }
         try {
-            const url = routes.relations.productsCheck.replace('${slug}', props.slug).replace('${id}', props.id)
+            let url = routes.relations.productsCheck.replace('${slug}', props.slug).replace('${id}', isDraft ? 0 : props.id)
+            if (isDraft) {
+                url += `?parent_slug=${encodeURIComponent(props.source.slug)}&parent_id=${encodeURIComponent(props.source.id)}`
+            }
             const response = await api.callMethod('GET', url)
             parent.value = response?.status == 200 ? (response.data?.parent ?? null) : null
             limits.value = response?.status == 200 ? (response.data?.limits ?? []) : []
@@ -105,5 +113,5 @@
     })
 
     onMounted(load)
-    watch(() => [props.slug, props.id, relationsVersion.value], load)
+    watch(() => [props.slug, props.id, props.source?.slug, props.source?.id, relationsVersion.value], load)
 </script>

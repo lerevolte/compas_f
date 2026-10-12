@@ -101,6 +101,7 @@
                 isModule: tabs.is_module,
                 isCopy: detail.isCopy,
                 isGlobalEdit: detail.isGlobalEdit,
+                source: props.source,
                 beforeSave: () => detail.validateDraftBeforeCreate()
             }"
             :updateComponent="detail.updateComponent"
@@ -559,7 +560,11 @@
                         continue
                     }
                     if (used.is_service) {
-                        result.push(withServicePrice(row, Math.max(0, Number(row.product_price || 0) - Number(used.used_price || 0))))
+                        const count = Number(row.product_count || 0)
+                        const price = Number(row.product_price || 0)
+                        const restPrice = Math.max(0, price - Number(used.used_price || 0))
+                        if ((count > 0 && Number(used.used || 0) >= count) || (price > 0 && restPrice <= 0)) continue
+                        result.push(withServicePrice(row, restPrice))
                         continue
                     }
                     const remaining = Math.max(0, Number(row.product_count || 0) - Number(used.used || 0))

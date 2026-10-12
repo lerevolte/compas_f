@@ -27,6 +27,11 @@
                     <span class="related__label">ID:</span>
                     <span class="related__value">{{ node.id }}</span>
                 </div>
+                <div class="related__row" v-for="item in node.extra ?? []" :key="item.key">
+                    <span class="related__label">{{ item.label }}:</span>
+                    <span class="related__value related__value_status" v-if="item.key === 'status'" :style="item.color ? { '--status-color': item.color } : null">{{ item.value }}</span>
+                    <span class="related__value" v-else>{{ item.value }}</span>
+                </div>
                 <div class="related__row related__products" v-if="node.products && node.products.length">
                     <span class="related__label">Состав:</span>
                     <span class="related__value">

@@ -24,6 +24,22 @@
       overflow-y: visible;
     }
   }
+
+  .page > main > .section-table .table.table_loading {
+    min-height: 220px;
+
+    .table__body,
+    .socket-row {
+      display: none;
+    }
+
+    .loader__wrapper {
+      position: static;
+      margin: 60px 0 0;
+      display: flex;
+      justify-content: center;
+    }
+  }
 }
 
 .table {

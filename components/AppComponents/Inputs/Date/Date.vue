@@ -215,12 +215,12 @@
                     {
                         id: 0,
                         title: "Сегодня",
-                        day: [format(now, 'yyyy-MM.dd'), format(now, 'yyyy-MM.dd')],
+                        day: [format(now, 'yyyy-MM-dd'), format(now, 'yyyy-MM-dd')],
                     },
                     {
                         id: 1,
                         title: "Завтра",
-                        day: [format(addDays(now, 1), 'yyyy-MM.dd'), format(addDays(now, 1), 'yyyy-MM.dd')],
+                        day: [format(addDays(now, 1), 'yyyy-MM-dd'), format(addDays(now, 1), 'yyyy-MM-dd')],
                     },
                     {
                         id: 2,

@@ -40,10 +40,11 @@
                 })"
             />
             <AppProductsCheck
-                v-if="!props.options.isGlobalEdit && !props.options.isExternal && CHECKED_SLUGS.includes(props.slug)"
+                v-if="!props.options.isExternal && CHECKED_SLUGS.includes(props.slug) && (!props.options.isGlobalEdit || props.options.source)"
                 :slug="props.slug"
-                :id="props.id"
+                :id="props.options.isGlobalEdit ? 0 : props.id"
                 :rows="productsRows"
+                :source="props.options.isGlobalEdit ? props.options.source : null"
             />
         </div>
 
@@ -172,6 +173,7 @@
                 saveProducts: () => detail.saveProducts(),
                 draftProducts: () => detail.draftProducts(),
                 hasProducts: () => detail.hasProducts(),
+                hiddenDefaults: () => detail.hiddenDefaults(),
                 afterSave: () => detail.afterSave(),
                 onCancel: () => detail.cancelProducts(),
             }"
@@ -481,7 +483,8 @@
                 }
                 this.columns.get(response.data.detail)
                 emit('action', { action: 'getColumns', value: response.data.detail.columns })
-                emit('action', { action: 'getHiddenFields', value: response.data.detail.hidden_fields ?? [] })
+                this.hiddenFields = Array.isArray(response.data.detail.hidden_fields) ? response.data.detail.hidden_fields : []
+                emit('action', { action: 'getHiddenFields', value: this.hiddenFields })
                 emit('action', { action: 'setPermissions', value: { permissions: response.data.permissions || {}, readonly: !!response.data.detail?.readonly } })
             } catch (error) {
                 console.log(error);
@@ -585,6 +588,39 @@
             this.productsDraft = null
             this.productsBackup = null
             emit('action', { action: 'setProductsDraft', value: null })
+        }
+
+        hiddenDefaults() {
+            if (!props.options.isGlobalEdit || !props.defaults) return {}
+            const visible = new Set()
+            for (const colKey in this.columns?.list ?? {}) {
+                for (const section of this.columns.list[colKey] ?? []) {
+                    for (const field of section.fields ?? []) {
+                        if (field.type === 'text_group' && Array.isArray(field.fields)) {
+                            field.fields.forEach(sub => visible.add(sub.key))
+                        } else {
+                            visible.add(field.key)
+                        }
+                    }
+                }
+            }
+            const result = {}
+            for (const field of this.hiddenFields ?? []) {
+                const key = field?.key
+                if (!key || visible.has(key) || !(key in props.defaults) || key.startsWith('__')) continue
+                if (['json', 'file', 'history'].includes(field.type) || key === 'products') continue
+                if (field.only_read || field.read_only || field.is_program || field.can_edit === 0 || field.can_edit === false) continue
+                let value = props.defaults[key]
+                if (value && typeof value === 'object' && !Array.isArray(value) && 'value' in value) value = value.value
+                if (field.type === 'relation') {
+                    value = (Array.isArray(value) ? value : (value === null || value === undefined || value === '' ? [] : [value])).filter(v => v !== null && v !== undefined && v !== '')
+                    if (!value.length) continue
+                } else if (value === null || value === undefined || value === '') {
+                    continue
+                }
+                result[key] = JSON.parse(JSON.stringify(value))
+            }
+            return result
         }
 
         hasProducts() {

@@ -8,7 +8,7 @@
       <template v-if="$slots.topTitle" #title><slot name="topTitle" /></template>
       <template v-if="$slots.topActions" #actions><slot name="topActions" /></template>
     </TableTop>
-    <div ref="tableRef" class="table" :class="{'table_permanent-edit': props.options.isPermanentEdit, 'table_short': props.options?.isShort, 'table_dragging': table.isDragging, 'table_append-on-drop': props.options?.isAppendOnDrop, 'table_products': table.slug == 'products'}">
+    <div ref="tableRef" class="table" :class="{'table_permanent-edit': props.options.isPermanentEdit, 'table_short': props.options?.isShort, 'table_dragging': table.isDragging, 'table_append-on-drop': props.options?.isAppendOnDrop, 'table_products': table.slug == 'products', 'table_loading': table.loading}">
       <TableHeader>
 
       </TableHeader>
