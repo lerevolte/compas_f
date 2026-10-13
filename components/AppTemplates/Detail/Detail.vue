@@ -510,8 +510,9 @@
                 || (this.slug === 'supplier_orders' && (entity.slug === 'receipt_invoices' || SHIPMENT_SOURCES.includes(entity.slug)))
                 || (this.slug === 'production_orders' && entity.slug === 'productions')
 
+            const isReturnTarget = entity.slug === 'product_returns'
             let checkData = null
-            if (isReturn || isChain) {
+            if (isReturn || isChain || isReturnTarget) {
                 try {
                     const url = routes.relations.productsCheck.replace('${slug}', this.slug).replace('${id}', this.id)
                     const response = await api.callMethod('GET', `${url}${url.includes('?') ? '&' : '?'}target=${entity.slug}`)
@@ -522,6 +523,10 @@
             }
             if (isReturn && checkData?.loading) {
                 isChain = true
+            }
+            if (isReturnTarget && Array.isArray(checkData?.services) && checkData.services.length) {
+                const services = checkData.services.map(Number)
+                products = products.filter(row => !services.includes(Number(row.id || row.product_id?.value?.[0] || 0)))
             }
             if (checkData?.neutral) {
                 return products.map(row => ({ ...row, product_shipped: 0 }))

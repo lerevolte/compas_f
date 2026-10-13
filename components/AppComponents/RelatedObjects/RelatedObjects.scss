@@ -67,15 +67,28 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-
-            &::before {
-                content: '';
-                width: 8px;
-                height: 8px;
-                border-radius: 50%;
-                background: var(--status-color, #a8a8a8);
-            }
         }
+    }
+
+    &__status-dot {
+        flex: 0 0 auto;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--status-color, #a8a8a8);
+    }
+
+    &__status-icon {
+        flex: 0 0 auto;
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        object-fit: cover;
+    }
+
+    &__ordinal {
+        font-weight: 600;
+        margin-right: 6px;
     }
 
     &__products {

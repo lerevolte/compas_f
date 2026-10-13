@@ -26,25 +26,16 @@
   }
 
   .page > main > .section-table {
-    padding-bottom: 90px;
-    margin-bottom: 0;
+    margin-bottom: 90px;
   }
+}
 
-  .page > main > .section-table .table.table_loading {
-    min-height: 220px;
-
-    .table__body,
-    .socket-row {
-      display: none;
-    }
-
-    .loader__wrapper {
-      position: static;
-      margin: 60px 0 0;
-      display: flex;
-      justify-content: center;
-    }
-  }
+.section-table__loader {
+  flex: 1 1 auto;
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .table {

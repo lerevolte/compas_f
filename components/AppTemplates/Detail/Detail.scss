@@ -96,8 +96,16 @@
     }
 
     @media (max-width: 990px) {
-        .detail__actions {
-            margin-top: 90px;
+        height: auto;
+        min-height: 100%;
+
+        & > .dynamin__group,
+        & > .section-table,
+        & > .history,
+        & > .related,
+        & > .print-docs,
+        .column-fields > .column-fields__column:last-of-type {
+            margin-bottom: 90px;
         }
     }
 

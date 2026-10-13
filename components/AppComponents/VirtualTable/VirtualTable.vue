@@ -8,7 +8,10 @@
       <template v-if="$slots.topTitle" #title><slot name="topTitle" /></template>
       <template v-if="$slots.topActions" #actions><slot name="topActions" /></template>
     </TableTop>
-    <div ref="tableRef" class="table" :class="{'table_permanent-edit': props.options.isPermanentEdit, 'table_short': props.options?.isShort, 'table_dragging': table.isDragging, 'table_append-on-drop': props.options?.isAppendOnDrop, 'table_products': table.slug == 'products', 'table_loading': table.loading}">
+    <div class="section-table__loader" v-if="isInitialLoading">
+      <IconLoader />
+    </div>
+    <div ref="tableRef" class="table" v-show="!isInitialLoading" :class="{'table_permanent-edit': props.options.isPermanentEdit, 'table_short': props.options?.isShort, 'table_dragging': table.isDragging, 'table_append-on-drop': props.options?.isAppendOnDrop, 'table_products': table.slug == 'products', 'table_loading': table.loading}">
       <TableHeader>
 
       </TableHeader>
@@ -27,11 +30,11 @@
         @changeActive="row => emit('changeActive', row)"
         @getData="data => emit('getData', data)"
       />
-      <div class="loader__wrapper" v-if="table.loading">
+      <div class="loader__wrapper" v-if="table.loading && !isInitialLoading">
         <IconLoader />
       </div>
     </div>
-    <TableFooter v-if="props.options?.isHaveFooter" />
+    <TableFooter v-if="props.options?.isHaveFooter && !isInitialLoading" />
   </section>
 
   <teleport :to="massActionTarget" v-if="isClient && !props.options?.isDisableMassAction && !props.options?.isExternal">
@@ -290,6 +293,8 @@
     if (p === 'Y') return table.value.body.filter(r => r.isChoose).every(r => table.value.ownsRow(r))
     return true
   })
+
+  const isInitialLoading = computed(() => !!table.value.loading && !(table.value.body?.length))
 
   const isChoosed = computed(() => {
         // MassAction показываем при чекбокс-выделении, при правке строки, а

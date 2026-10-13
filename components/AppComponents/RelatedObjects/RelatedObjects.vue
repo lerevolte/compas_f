@@ -19,23 +19,18 @@
                     <span class="related__entity">{{ node.entity_title }}:</span>
                     <span class="related__date" v-if="node.created_at">{{ node.created_at }}</span>
                 </div>
-                <div class="related__row">
-                    <span class="related__label">Название:</span>
-                    <span class="related__value">{{ node.name }}</span>
-                </div>
-                <div class="related__row">
-                    <span class="related__label">ID:</span>
-                    <span class="related__value">{{ node.id }}</span>
-                </div>
-                <div class="related__row" v-for="item in node.extra ?? []" :key="item.field ?? item.key">
+                <div class="related__row" :class="{ 'related__products': item.type === 'products' }" v-for="item in node.rows ?? []" :key="item.key">
                     <span class="related__label">{{ item.label }}:</span>
-                    <span class="related__value related__value_status" v-if="item.key === 'status'" :style="item.color ? { '--status-color': item.color } : null">{{ item.value }}</span>
-                    <span class="related__value" v-else>{{ item.value }}</span>
-                </div>
-                <div class="related__row related__products" v-if="node.products && node.products.length">
-                    <span class="related__label">Состав:</span>
-                    <span class="related__value">
-                        <template v-for="(product, index) in node.products" :key="index">{{ index ? ', ' : '' }}{{ product.name }} <b>{{ product.count }} шт.</b></template>
+                    <span class="related__value related__value_status" v-if="item.type === 'status'" :style="item.color ? { '--status-color': item.color } : null">
+                        <img class="related__status-icon" v-if="isImageSrc(item.file)" :src="item.file" alt="" />
+                        <span class="related__status-dot" v-else></span>
+                        {{ item.value }}
+                    </span>
+                    <span class="related__value" v-else-if="item.type === 'products'">
+                        <template v-for="(product, index) in item.value" :key="index">{{ index ? ', ' : '' }}{{ product.name }} <b>{{ product.count }} шт.</b></template>
+                    </span>
+                    <span class="related__value" v-else>
+                        <span class="related__ordinal" v-if="item.key === 'name' && node.ordinal">{{ node.ordinal }}.</span>{{ item.value }}
                     </span>
                 </div>
             </div>
@@ -49,6 +44,7 @@
     import api from '@/helpers/api.js'
     import routes from '@/helpers/routes.js'
     import IconLoader from '@AppIcons/Loader.vue'
+    import { isImageSrc } from '@AppHelpers/classes.js'
 
     const props = defineProps({
         id: {

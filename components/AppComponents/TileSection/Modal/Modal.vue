@@ -239,6 +239,12 @@
                         title: 'Показывать всегда',
                     }"
                 />
+                <AppCheckbox
+                    v-model="modal.field.show_in_relations"
+                    :options="{
+                        title: 'Выводить в связанных документах',
+                    }"
+                />
                 <div
                     class="form__item form__item_default-value default-value-picker"
                     v-if="!FIELDS_WITHOUT_DEFAULT_VALUE.includes(modal.field.key) && !['relation','file','text_group','select_dropdown','redactor','checkbox','json','waybills','route_map','deal_stages','geoposition'].includes(modal.field.type) && !(modal.field.type == 'status' && props.modal.action == 'create')"
@@ -452,6 +458,7 @@
                     title: '',
                     required: 0,
                     visible_always: 1,
+                    show_in_relations: 0,
                     default_value: null,
                     set_default: 0,
                     has_roles_read: 0,
@@ -620,6 +627,7 @@
             if (['deal_stages', 'status'].includes(this.field.type)) {
                 request.show_stage_bar = request.show_stage_bar ? 1 : 0
             }
+            request.show_in_relations = request.show_in_relations ? 1 : 0
 
             this.validator.check([{
                 title: 'Название поля',
