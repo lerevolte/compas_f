@@ -2,6 +2,7 @@
     <div class="detail">
         <header id="mobile-menu-target" class="detail-page__header">
             <IconArrowBack @click="detail.closeDetail"/>
+            <span class="detail-page__ordinal" v-if="detail.ordinal && !detail.isCopy">{{ detail.ordinal }}.</span>
             <AppH1 ref="H1Ref" class="textarea_title">
                 <p
                     class="ghost_text"
@@ -330,6 +331,7 @@
             this.forbidden = false
             this.permissions = {}
             this.readonly = false
+            this.ordinal = null
             this.actions = {
                 default: [
                     {
@@ -463,6 +465,11 @@
 
         getTitle(title) {
             this.header.name = title
+        }
+
+        getOrdinal(value) {
+            const number = Number(value)
+            this.ordinal = Number.isInteger(number) && number > 0 ? number : null
         }
 
         getColumns(columns) {

@@ -159,7 +159,11 @@ html {
         grid-template-columns: 1fr;
         height: 100vh;
         height: 100dvh;
-        grid-template-rows: 1fr;
+        grid-template-rows: max-content;
+
+        &:has(.menu__sublinks) {
+            grid-template-rows: auto max-content;
+        }
 
         main {
             grid-column: 1;

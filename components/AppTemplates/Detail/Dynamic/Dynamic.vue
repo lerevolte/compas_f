@@ -378,6 +378,7 @@
                 if (!props.options.isModule) {
                     emit('action', { action: 'getTabs', value: response.data.tabs })
                     emit('action', { action: 'getTitle', value: response.data.detail.title?.name })
+                    emit('action', { action: 'getOrdinal', value: response.data.detail.title?.ordinal ?? null })
                     emit('action', {action: 'checkIsTrash', value: Boolean(response.data.detail.deleted_at)})
                     emit('action', {
                         action: 'updateMetaHeader', value: {
