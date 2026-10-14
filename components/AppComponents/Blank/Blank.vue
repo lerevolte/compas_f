@@ -11,7 +11,7 @@
             class="blank__link" 
             :class="{'blank__text_empty': props.options.isCheckEmpty && !props.item.text, 'blank__text_default': !props.item.link}"
         >
-            {{ props.item.text ? props.item.text.value ?? props.item.text : '' }}
+            <span class="blank__prefix" v-if="props.item.prefix">{{ props.item.prefix }}</span>{{ props.item.text ? props.item.text.value ?? props.item.text : '' }}
         </a>
         <p 
             v-else 
@@ -21,7 +21,7 @@
             }"
             :style="{'--colorText': props.options?.color ?? '#000'}"
         >
-            {{ props.item.text ? props.item.text.value ?? props.item.text : '' }}<span class="blank__unit" v-if="props.item.unit && (props.item.text || props.item.text === 0)"> {{ props.item.unit }}</span>
+            <span class="blank__prefix" v-if="props.item.prefix">{{ props.item.prefix }}</span>{{ props.item.text ? props.item.text.value ?? props.item.text : '' }}<span class="blank__unit" v-if="props.item.unit && (props.item.text || props.item.text === 0)"> {{ props.item.unit }}</span>
         </p>
     </div>
 </template>

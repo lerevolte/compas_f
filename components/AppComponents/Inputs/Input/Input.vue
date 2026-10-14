@@ -3,7 +3,24 @@
         <label class="blank__title" :for="props.options.id" v-if="props.options.title && props.options.title != ''">
             <span>{{ props.options.title }}</span>
         </label>
+        <div class="input__prefixed" v-if="props.options.prefix">
+            <span class="input__prefix">{{ props.options.prefix }}</span>
+            <input 
+                ref="inputRef"
+                :id="props.options.id" 
+                :name="props.options.name" 
+                :type="isNumber ? 'text' : props.options.type" 
+                :inputmode="isNumber ? 'decimal' : null"
+                :placeholder="props.options.placeholder"
+                :value="modelValue"
+                :autocomplete="props.options.autocomplete"
+                v-maska="maskaOptions"
+                @input="onInput"
+                @blur="onBlur"
+            >
+        </div>
         <input 
+            v-else
             ref="inputRef"
             :id="props.options.id" 
             :name="props.options.name" 

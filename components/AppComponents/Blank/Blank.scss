@@ -68,6 +68,23 @@
         margin-left: 4px;
     }
 
+    .blank__prefix {
+        display: inline-flex;
+        align-items: center;
+        height: 22px;
+        margin-right: 8px;
+        padding: 0 6px;
+        border: 1px solid #e2e5e9;
+        border-radius: 4px;
+        background: #f3f5f8;
+        font-size: 13px;
+        font-weight: 600;
+        color: #23232a;
+        text-decoration: none;
+        vertical-align: middle;
+        user-select: none;
+    }
+
     &.blank_static {
         .blank__title {
             color: variables.$color-border;

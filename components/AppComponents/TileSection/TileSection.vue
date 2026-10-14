@@ -90,7 +90,6 @@
                 <div 
                     class="field" 
                     :class="{ 
-                        'field_ordinal': field.key == 'name' && !!detailOrdinal,
                         'field_hidden': !props.options.isModule && !field.edit && fieldObject.checkVisible(field, true),
                         'field_empty': !field.edit && fieldObject.checkVisible(field, false),
                         'field_static': !field.can_edit,
@@ -103,7 +102,6 @@
                         v-if="canEditLayout"
                         class="icon_drag-field"
                     />
-                    <span class="field__ordinal" v-if="field.key == 'name' && detailOrdinal">{{ detailOrdinal }}-</span>
 
                     <AppStatus 
                         v-if="field.type == 'status'"
@@ -306,6 +304,7 @@
                             <AppInput 
                                 :options="{
                                     ...field,
+                                    prefix: ordinalPrefix(field),
                                     focus: !localGlobalEdit
                                 }"
                                 :error="field.error"
@@ -369,6 +368,7 @@
                             }"
                             :item="{
                                 title: field.title,
+                                prefix: ordinalPrefix(field),
                                 link: field.is_external_link && field.value ? field.value.external_link ?? null : null,
                                 text: field.is_external_link && field.value ? field.value.value ?? field.value : (field.mask ? common.formatByMask(field.value, field.mask) : field.value),
                                 unit: field.unit ?? null
@@ -581,6 +581,7 @@
     import './TileSection.scss';
 
     const detailOrdinal = inject('detailOrdinal', null)
+    const ordinalPrefix = field => field.key == 'name' && detailOrdinal?.value ? `${detailOrdinal.value}-` : null
     
     import draggable from 'vuedraggable'; 
     import IconEdit from '@AppIcons/Actions/Edit.vue';
