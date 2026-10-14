@@ -10,7 +10,6 @@ export const useMenuStore = defineStore('menuStore', {
         }
     },
 
-    // Явно включаем персист в localStorage на клиенте
     persist: true,
 
     actions: {
