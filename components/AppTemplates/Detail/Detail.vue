@@ -603,7 +603,7 @@
             const collect = (field) => {
                 const fields = field.type === 'text_group' && Array.isArray(field.fields) ? field.fields : [field]
                 for (const item of fields) {
-                    if (!item.key || SKIP_BASED_KEYS.includes(item.key)) continue
+                    if (!item.key || SKIP_BASED_KEYS.includes(item.key) || String(item.key).startsWith('related_')) continue
                     if (item.value === undefined || item.value === null) continue
                     defaults[item.key] = JSON.parse(JSON.stringify(item.value))
                     if (['status', 'select_dropdown'].includes(item.type) && Array.isArray(item.options)) {
