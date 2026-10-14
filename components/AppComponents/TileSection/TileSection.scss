@@ -431,3 +431,49 @@
         }
     }
 }
+
+.field.field_ordinal {
+    position: relative;
+
+    .field__ordinal {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 40px;
+        min-width: 40px;
+        padding: 0 8px;
+        border: 1px solid #e2e5e9;
+        border-right: 0;
+        border-radius: 5px 0 0 5px;
+        background: #f3f5f8;
+        font-weight: 600;
+        color: #23232a;
+        pointer-events: none;
+        box-sizing: border-box;
+    }
+
+    .section__field-group .form__item_input input {
+        padding-left: 52px;
+    }
+
+    &:has(> .blank) {
+        .field__ordinal {
+            height: 22px;
+            min-width: 0;
+            padding: 0 6px;
+            border-right: 1px solid #e2e5e9;
+            border-radius: 4px;
+            font-size: 13px;
+            bottom: 1px;
+        }
+
+        .blank__text,
+        .blank__link {
+            padding-left: 40px;
+        }
+    }
+}

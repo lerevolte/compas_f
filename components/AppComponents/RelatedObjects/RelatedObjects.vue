@@ -19,10 +19,10 @@
                     <span class="related__entity">{{ node.entity_title }}:</span>
                     <span class="related__date" v-if="node.created_at">{{ node.created_at }}</span>
                 </div>
-                <div class="related__row" :class="{ 'related__products': isProducts(item) }" v-for="item in node.rows ?? []" :key="item.key">
+                <div class="related__row" :class="{ 'related__products': isProducts(item), 'related__row_status': item.type === 'status' }" v-for="item in node.rows ?? []" :key="item.key">
                     <span class="related__label">{{ item.label }}:</span>
                     <span class="related__value related__value_status" v-if="item.type === 'status'" :style="item.color ? { '--status-color': item.color } : null">
-                        <img class="related__status-icon" v-if="isImageSrc(item.file)" :src="item.file" alt="" />
+                        <img class="related__status-icon" v-if="hasIcon(item)" :src="item.file" alt="" @error="failedIcons.add(item.file)" />
                         <span class="related__status-dot" v-else></span>
                         {{ item.value }}
                     </span>
@@ -30,7 +30,7 @@
                         <template v-for="(product, index) in item.value" :key="index">{{ index ? ', ' : '' }}{{ product.name }} <b>{{ product.count }} шт.</b></template>
                     </span>
                     <span class="related__value" v-else>
-                        <span class="related__ordinal" v-if="item.key === 'name' && node.ordinal">{{ node.ordinal }}.</span>{{ item.value }}
+                        <span class="related__ordinal" v-if="item.key === 'name' && node.ordinal">{{ node.ordinal }}-</span>{{ item.value }}
                     </span>
                 </div>
             </div>
@@ -47,6 +47,8 @@
     import { isImageSrc } from '@AppHelpers/classes.js'
 
     const isProducts = item => item.type === 'products' || Array.isArray(item.value)
+    const failedIcons = reactive(new Set())
+    const hasIcon = item => isImageSrc(item.file) && !failedIcons.has(item.file)
 
     const props = defineProps({
         id: {

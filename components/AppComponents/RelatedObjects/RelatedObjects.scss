@@ -3,7 +3,14 @@
     padding: 20px 0;
 
     &__loader {
-        margin: 20px auto;
+        margin: 0;
+    }
+
+    &:has(> .related__loader) {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 50vh;
     }
 
     &__empty {
@@ -42,6 +49,10 @@
         display: flex;
         align-items: baseline;
         gap: 8px;
+
+        &_status {
+            align-items: center;
+        }
     }
 
     &__entity {
@@ -67,6 +78,7 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
+            line-height: 18px;
         }
     }
 
@@ -88,7 +100,6 @@
 
     &__ordinal {
         font-weight: 600;
-        margin-right: 6px;
     }
 
     &__products {

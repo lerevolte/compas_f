@@ -814,6 +814,7 @@
     const taskTableRefs = { unassigned: null, route: null };
     const setTaskTableRef = (key, el) => {
         taskTableRefs[key] = el || null;
+        if (key === 'unassigned' && logistic.value) logistic.value.unassignedTableMounted = !!el;
     };
     const routesCanCreate = ref(true);
     const updateRoutesPerm = () => {

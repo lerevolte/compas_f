@@ -155,11 +155,19 @@ export class LogisticWithMap extends Logistic {
         }
     }
 
-    // Аналог для таблицы «Задачи логистики»: если у нераспределённой задачи
-    // после перезагрузки таблицы изменились координаты — обновляем маркеры
-    // нераспределённых задач на карте.
     onUnassignedTasksTableLoaded(rows) {
-        if (!Array.isArray(rows) || rows.length === 0) return;
+        if (!Array.isArray(rows)) return;
+        if (this._syncUnassignedFromTable && this._unassignedStatusColors) {
+            this._syncUnassignedFromTable = false;
+            const statusColors = this._unassignedStatusColors;
+            this.unassignedTasks = rows.map(row => ({
+                ...row,
+                statusColor: statusColors[row.point_status] || '#ccc',
+                planTime: row.plan_time || row.planTime || ''
+            }));
+            return;
+        }
+        if (rows.length === 0) return;
         const knownById = new Map(
             (this.unassignedTasks || []).map(t => [Number(t.id), this._addressCoordsKey(t.address)])
         );
@@ -282,6 +290,16 @@ export class LogisticWithMap extends Logistic {
         } finally {
             if (seq === this._routeDataSeq) this.loadingRouteMapData = false;
         }
+    }
+
+    refreshUnassigned() {
+        if (this.unassignedTableMounted && this._unassignedStatusColors) {
+            this._syncUnassignedFromTable = true;
+            this.logistic_tasks.updatingCount++;
+            return;
+        }
+        this.loadUnassignedTasks();
+        this.logistic_tasks.updatingCount++;
     }
 
     async loadUnassignedTasks() {
@@ -415,15 +433,21 @@ export class LogisticWithMap extends Logistic {
 
         const ids = list.map(row => row.id);
 
-        // НЕ выходим при пустом списке: пустой ids = из маршрута вытащили
-        // последнюю задачу. Бэкенду всё равно нужно её отвязать (route_id = null),
-        // иначе после перезагрузки задача останется привязанной к маршруту и не
-        // появится в «Задачах логистики» (там фильтр route_id = null).
         return this._enqueueRouteMutation(() => this._changeRouteTasks(routeId, ids));
+    }
+
+    _sameIdSet(a, b) {
+        const left = new Set((a || []).map(id => String(id)));
+        const right = new Set((b || []).map(id => String(id)));
+        return left.size === right.size && [...left].every(id => right.has(id));
     }
 
     async _changeRouteTasks(routeId, ids) {
         try {
+            const previousIds = Number(this.selectedRouteData?.id) === Number(routeId)
+                ? (this.selectedRouteData.tasks || []).map(t => t.id)
+                : null;
+            const reorderOnly = previousIds !== null && this._sameIdSet(previousIds, ids);
             const response = await api.callMethod('PUT', `/routes/${routeId}/tasks`, { ids });
             const isActiveRoute = Number(this.machine_tasks.route_id) === Number(routeId);
             const seq = isActiveRoute ? ++this._routeDataSeq : null;
@@ -494,42 +518,21 @@ export class LogisticWithMap extends Logistic {
                 };
             }
 
-            // Reload unassigned tasks (task may have moved in/out)
-            this.loadUnassignedTasks();
-            this.logistic_tasks.updatingCount++;
-            this.routes.updatingCount++;
-            // Перерисовываем и «Задачи в машине»: drag тасует строки локально, но
-            // время прибытия (plan_time) пересчитывает бэк в update_tasks. Без
-            // рефетча таблица показывала старое время в новом порядке (8508).
             this.machine_tasks.updatingCount++;
-            // Notify parent to refresh analytics
-            if (this.onRouteChanged) this.onRouteChanged();
+            if (!reorderOnly) {
+                this.refreshUnassigned();
+                this.routes.updatingCount++;
+                if (this.onRouteChanged) this.onRouteChanged();
+            }
         } catch (error) {
             console.error('🔴 Error updating route tasks:', error);
         }
     }
 
-    async onTaskDroppedToUnassigned(row) {
-        // Task was dropped from route to unassigned — need to remove it from route
-        const routeId = this.machine_tasks.route_id;
-        if (!routeId) return;
-
-        // Get current route tasks table (without the dropped task)
-        // The route_tasks table already updated via @removeRow → changeRouteTasks
-        // But if drag goes to unassigned table, @removeRow fires on route table
-        // and @addRow fires on unassigned table.
-        // changeRouteTasks handles the route side.
-        // Here we just need to refresh the unassigned table and map.
+    onTaskDroppedToUnassigned() {
         this._loadingUnassigned = false;
-        this.loadUnassignedTasks();
-        this.logistic_tasks.updatingCount++;
     }
 
-    // Прикрепление задачи к маршруту по drag&drop на строку маршрута в таблице Маршруты.
-    // Использует существующий PUT /routes/{id}/tasks с полным списком ids — берём текущие
-    // задачи маршрута и добавляем перенесённую. Параллельно эта же ручка снимает задачу
-    // с предыдущего маршрута (если она там была), поэтому работает и для перемещения
-    // между маршрутами.
     async assignTaskToRoute(taskId, routeId) {
         if (!taskId || !routeId) return;
         return this._enqueueRouteMutation(() => this._assignTaskToRoute(taskId, routeId));
@@ -548,12 +551,8 @@ export class LogisticWithMap extends Logistic {
         } catch (error) {
             console.error('🔴 Error assigning task to route:', error);
         } finally {
-            // Перерисовать таблицу маршрутов (вернёт исходное состояние без вставленной задачи)
             this.routes.updatingCount++;
-            // Обновить список нераспределённых задач
-            this.loadUnassignedTasks();
-            this.logistic_tasks.updatingCount++;
-            // Если активный маршрут (Задачи в машине) совпадает — перерисовать его
+            this.refreshUnassigned();
             if (this.machine_tasks.route_id == routeId || this.machine_tasks.route_id) {
                 this.machine_tasks.updatingCount++;
                 if (this.machine_tasks.route_id) {
@@ -610,11 +609,8 @@ export class LogisticWithMap extends Logistic {
         } catch (error) {
             console.error('🔴 Error creating task from address:', error);
         } finally {
-            // Перерисовать маршруты и нераспределённые задачи.
             this.routes.updatingCount++;
-            this.loadUnassignedTasks();
-            this.logistic_tasks.updatingCount++;
-            // Перерисовать активный маршрут (Задачи в машине) и карту.
+            this.refreshUnassigned();
             if (this.machine_tasks.route_id) {
                 this.machine_tasks.updatingCount++;
                 this.loadRouteForMap(this.machine_tasks.route_id);
@@ -640,8 +636,7 @@ export class LogisticWithMap extends Logistic {
             console.error('🔴 Error creating task from warehouse:', error);
         } finally {
             this.routes.updatingCount++;
-            this.loadUnassignedTasks();
-            this.logistic_tasks.updatingCount++;
+            this.refreshUnassigned();
             if (this.machine_tasks.route_id) {
                 this.machine_tasks.updatingCount++;
                 this.loadRouteForMap(this.machine_tasks.route_id);
@@ -671,8 +666,7 @@ export class LogisticWithMap extends Logistic {
         } finally {
             this.routes.updatingCount++;
             this.machine_tasks.updatingCount++;
-            this.loadUnassignedTasks();
-            this.logistic_tasks.updatingCount++;
+            this.refreshUnassigned();
             if (Number(this.machine_tasks.route_id) === Number(routeId)) {
                 this.loadRouteForMap(routeId);
             }

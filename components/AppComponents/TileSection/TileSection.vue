@@ -90,6 +90,7 @@
                 <div 
                     class="field" 
                     :class="{ 
+                        'field_ordinal': field.key == 'name' && !!detailOrdinal?.value,
                         'field_hidden': !props.options.isModule && !field.edit && fieldObject.checkVisible(field, true),
                         'field_empty': !field.edit && fieldObject.checkVisible(field, false),
                         'field_static': !field.can_edit,
@@ -102,6 +103,7 @@
                         v-if="canEditLayout"
                         class="icon_drag-field"
                     />
+                    <span class="field__ordinal" v-if="field.key == 'name' && detailOrdinal?.value">{{ detailOrdinal.value }}-</span>
 
                     <AppStatus 
                         v-if="field.type == 'status'"
@@ -577,6 +579,8 @@
 
 <script setup>
     import './TileSection.scss';
+
+    const detailOrdinal = inject('detailOrdinal', null)
     
     import draggable from 'vuedraggable'; 
     import IconEdit from '@AppIcons/Actions/Edit.vue';

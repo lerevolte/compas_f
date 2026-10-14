@@ -207,7 +207,18 @@ html {
     }
 
     &.page__header_table {
-        position: relative;
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        margin-top: -25px;
+        padding-top: 25px;
+        background-color: variables.$color-background;
+
+        @media (max-width: 990px) {
+            margin-top: -15px;
+            padding-top: 15px;
+            background-color: variables.$color-white;
+        }
 
         .page__header-actions {
             display: flex;

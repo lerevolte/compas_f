@@ -2,7 +2,7 @@
     <div class="detail">
         <header id="mobile-menu-target" class="detail-page__header">
             <IconArrowBack @click="detail.closeDetail"/>
-            <span class="detail-page__ordinal" v-if="detail.ordinal && !detail.isCopy">{{ detail.ordinal }}.</span>
+            <span class="detail-page__ordinal" v-if="detail.ordinal && !detail.isCopy">{{ detail.ordinal }}-</span>
             <AppH1 ref="H1Ref" class="textarea_title">
                 <p
                     class="ghost_text"
@@ -827,6 +827,7 @@
     }
 
     const detail = ref(new Detail())
+    provide('detailOrdinal', computed(() => (detail.value.isCopy ? null : detail.value.ordinal)))
 
     const relationsVersion = useState('object-relations-version', () => 0)
 
