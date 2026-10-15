@@ -126,14 +126,14 @@
     max-width: 100%;
     min-width: 0;
     margin-bottom: 25px;
-    position: sticky;
-    top: 0;
-    z-index: 40;
-    background-color: variables.$color-background;
 
-    @media (max-width: 990px) {
+    @media (max-width: 767px) {
+        position: sticky;
+        top: 0;
+        z-index: 40;
         margin-top: -15px;
         padding-top: 15px !important;
+        padding-bottom: 12px !important;
         background-color: variables.$color-white;
     }
 
