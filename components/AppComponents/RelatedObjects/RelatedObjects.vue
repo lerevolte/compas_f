@@ -22,7 +22,9 @@
                 <div class="related__row" :class="{ 'related__products': isProducts(item), 'related__row_status': item.type === 'status' }" v-for="item in node.rows ?? []" :key="item.key">
                     <span class="related__label">{{ item.label }}:</span>
                     <span class="related__value related__value_status" v-if="item.type === 'status'" :style="item.color ? { '--status-color': item.color } : null">
-                        <img class="related__status-icon" v-if="hasIcon(item)" :src="item.file" alt="" @error="failedIcons.add(item.file)" />
+                        <span class="related__status-icon" v-if="hasIcon(item)">
+                            <img :src="item.file" alt="" @error="failedIcons.add(item.file)" />
+                        </span>
                         <span class="related__status-dot" v-else></span>
                         {{ item.value }}
                     </span>

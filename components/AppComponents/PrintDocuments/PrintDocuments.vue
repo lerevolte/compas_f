@@ -18,9 +18,9 @@
             />
             <div class="print-docs__info">
                 <div class="print-docs__row">
-                    <span class="print-docs__entity">УПД</span>
+                    <span class="print-docs__entity">{{ isReceipt ? 'Чек' : 'УПД' }}</span>
                 </div>
-                <div class="print-docs__name">Универсальный передаточный документ</div>
+                <div class="print-docs__name">{{ isReceipt ? 'Товарный чек' : 'Универсальный передаточный документ' }}</div>
             </div>
         </div>
 
@@ -110,6 +110,7 @@
     const emit = defineEmits(['openModal'])
 
     const docs = ref([])
+    const isReceipt = ref(false)
     const loading = ref(false)
     const checked = ref({})
     const relationsVersion = useState('object-relations-version', () => 0)
@@ -156,9 +157,11 @@
             const url = routes.relations.printDocs.replace('${slug}', props.slug).replace('${id}', props.id)
             const response = await api.callMethod('GET', url)
             docs.value = response.status == 200 ? (response.data?.data ?? []) : []
+            isReceipt.value = response.status == 200 && !!response.data?.is_receipt
             checked.value = {}
         } catch (e) {
             docs.value = []
+            isReceipt.value = false
         } finally {
             loading.value = false
         }

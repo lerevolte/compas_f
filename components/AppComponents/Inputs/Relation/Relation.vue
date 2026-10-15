@@ -111,7 +111,7 @@
                     @click="!isOptionDisabled(option) && selectInstances[index]?.changeValue(option, index)"
                 >
                     <span class="value__text">
-                        {{ option.label.text || option.label.text == null ? option.label.text : option.label }}
+                        <span class="value__ordinal" v-if="option.label?.ordinal">{{ option.label.ordinal }}-</span>{{ option.label.text || option.label.text == null ? option.label.text : option.label }}
                     </span>
                     <span class="value__text value__text_subtext">
                         ID: {{ option.value }}

@@ -207,16 +207,12 @@ html {
     }
 
     &.page__header_table {
-        position: sticky;
-        top: 0;
-        z-index: 40;
-        margin-top: -25px;
-        padding-top: 25px;
-        background-color: variables.$color-background;
-
-        @media (max-width: 990px) {
-            margin-top: -15px;
-            padding-top: 15px;
+        @media (max-width: 767px) {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            margin: -15px -10px 15px;
+            padding: 15px 10px 12px;
             background-color: variables.$color-white;
         }
 

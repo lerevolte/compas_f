@@ -1099,6 +1099,7 @@ export class Table {
         for (let i = 0; i < this.body.length; i++) {
             this.body[i].isChoose = false
             this.body[i].edit = false
+            delete this.body[i].isLocalNew
         }
 
         let isChooseAll = this.header.find(column => column.key == 'isChoose')
@@ -1321,7 +1322,7 @@ export class Table {
             this.backup.body = JSON.parse(JSON.stringify(localBody ?? this.body))
         } else {
             if (localBody) {
-                this.backup.body = JSON.parse(JSON.stringify(localBody.map(row => {
+                this.backup.body = JSON.parse(JSON.stringify(localBody.filter(row => !row.isLocalNew).map(row => {
                     let backupRow = this.backup.body.find(item => item.id == row.id)
                     if (backupRow) {
                         return backupRow
@@ -1330,7 +1331,7 @@ export class Table {
                     }
                 })))
             } else {
-                this.backup.body = JSON.parse(JSON.stringify(this.body.map(row => {
+                this.backup.body = JSON.parse(JSON.stringify(this.body.filter(row => !row.isLocalNew).map(row => {
                     let backupRow = this.backup.body.find(item => item.id == row.id)
                     if (backupRow) {
                         return backupRow
@@ -1577,6 +1578,7 @@ export class Table {
         }, {});
         newObj.edit = true
         newObj.isChoose = false
+        newObj.isLocalNew = true
         const maxLocalId = this.body.reduce((max, r) => {
             const lid = Number(r?.local_id)
             return Number.isFinite(lid) && lid > max ? lid : max

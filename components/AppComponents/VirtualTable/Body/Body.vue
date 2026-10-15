@@ -282,15 +282,15 @@
                                 :title="cell.useCellModel(row.index, column).value"
                                 @click.stop="table.open({ id: table.body[row.index].link.id, related_table: table.body[row.index].link.slug })"
                             >
-                                {{ cell.useCellModel(row.index, column).value }}
+                                <span class="table__ordinal" v-if="nameOrdinal(row.index, column)">{{ nameOrdinal(row.index, column) }}</span>{{ cell.useCellModel(row.index, column).value }}
                             </span>
 
                             <span class="table__text text" :style="cellTextStyle(row.index, column)" :title="cell.useCellModel(row.index, column).value != null ? `${common.formatByMask(cell.useCellModel(row.index, column).value, column.mask)}${column.unit ? ' ' + column.unit : ''}` : null" v-else-if="['text', 'number'].includes(column.type) && (!column.is_external_link || !table.body[row.index][column.key]?.external_link)">
-                                {{ common.formatByMask(cell.useCellModel(row.index, column).value, column.mask) }}<span class="table__unit" v-if="column.unit && cell.useCellModel(row.index, column).value"> {{ column.unit }}</span>
+                                <span class="table__ordinal" v-if="nameOrdinal(row.index, column)">{{ nameOrdinal(row.index, column) }}</span>{{ common.formatByMask(cell.useCellModel(row.index, column).value, column.mask) }}<span class="table__unit" v-if="column.unit && cell.useCellModel(row.index, column).value"> {{ column.unit }}</span>
                             </span>
 
                             <a :href="cell.useCellModel(row.index, column, 'external_link').value" target="_blank" class="table__text text" :title="cell.useCellModel(row.index, column, 'value').value" v-else-if="column.type == 'text' && column.is_external_link">
-                                {{ cell.useCellModel(row.index, column, 'value').value }}
+                                <span class="table__ordinal" v-if="nameOrdinal(row.index, column)">{{ nameOrdinal(row.index, column) }}</span>{{ cell.useCellModel(row.index, column, 'value').value }}
                             </a>
 
                             <div class="table__text-group"  v-else-if="column.type == 'address'">
@@ -419,6 +419,12 @@
     const uid = useId()
 
     const SERVICE_KEYS = ['isChoose', 'clicked', 'actions', 'iconDrag', 'iconDelete']
+
+    const nameOrdinal = (index, column) => {
+        if (column?.key !== 'name') return null
+        const ordinal = table.value.body[index]?.name_ordinal
+        return ordinal ? `${ordinal}-` : null
+    }
 
     const cellTextStyle = (index, column) => {
         const colorBy = column?.color_by

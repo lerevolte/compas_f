@@ -95,7 +95,15 @@
         width: 18px;
         height: 18px;
         border-radius: 4px;
-        object-fit: cover;
+        overflow: hidden;
+        background: var(--status-color, #a8a8a8);
+
+        img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
     }
 
     &__ordinal {

@@ -313,6 +313,23 @@
       margin-left: 3px;
       user-select: none;
     }
+
+    .table__ordinal {
+      display: inline-flex;
+      align-items: center;
+      height: 20px;
+      margin-right: 6px;
+      padding: 0 5px;
+      border: 1px solid #e2e5e9;
+      border-radius: 4px;
+      background: #f3f5f8;
+      font-size: 12px;
+      font-weight: 600;
+      color: #23232a;
+      text-decoration: none;
+      vertical-align: middle;
+      user-select: none;
+    }
   }
 
   .table__text-group {
