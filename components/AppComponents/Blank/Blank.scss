@@ -5,13 +5,10 @@
     gap: 5px;
     display: flex;
     flex-direction: column;
-    // flex-child: без min-width контент (длинная строка) распирает родителя
     min-width: 0;
 
     &.blank_pre {
         .blank__text {
-            // pre-wrap сохраняет переносы/пробелы, но переносит длинные строки —
-            // длинный текст в одну строку больше не растягивает секцию/страницу
             white-space: pre-wrap;
             word-break: break-word;
             @include mixins.textVerticalHidden(20);
@@ -93,7 +90,8 @@
 }
 
 .blank_required {
-    .blank__title {
+    .blank__title,
+    .form__item_status > .form__item-title {
         position: relative;
         max-width: max-content;
 

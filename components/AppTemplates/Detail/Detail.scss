@@ -3,7 +3,11 @@
 
 .modal__body {
     .detail-page__header {
-        background-color: variables.$color-white;
+        background-color: transparent;
+
+        @media (max-width: 767px) {
+            background-color: variables.$color-white;
+        }
     }
 
     @media (max-width: 990px) {
@@ -205,9 +209,6 @@
     margin-left: -15px;
 }
 
-// Внутри модалки .modal__body не имеет горизонтальных паддингов в 25px,
-// поэтому отрицательные margin / расширенная ширина уводят панель за
-// край прокручиваемого контейнера и она оказывается визуально срезана.
 .modal__body .detail__actions {
     margin-left: 0;
     width: 100%;

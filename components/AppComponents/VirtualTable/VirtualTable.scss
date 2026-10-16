@@ -45,26 +45,12 @@
   display: flex;
   flex-direction: column;
   max-height: 100%;
-  // Собственный stacking context: без него sticky-ячейки и строки со своими
-  // z-index (10–100) рисуются ПОВЕРХ полос прокрутки контейнера, и скроллбары
-  // «прячутся за контентом». Со stacking context скроллбары рисуются последними,
-  // поверх всех детей.
   isolation: isolate;
-  // Постоянно видимый скроллбар (overlay-скроллбар macOS автоскрывается).
   @include mixins.scrollBar();
-  // Safari: contain + will-change ломают position: sticky на ячейках.
-  // contain: layout|paint создаёт containing block для position:fixed —
-  // в результате action-попап в строке клипается границами таблицы.
-  // Оставляем только will-change, который не делает containing block.
   @supports not (-webkit-touch-callout: none) {
     will-change: scroll-position;
   }
 
-  // overflow: hidden НЕЛЬЗЯ использовать для блокировки скролла при drag — он
-  // сбрасывает scrollTop/scrollLeft в 0 (Safari), и таблица «прыгает» к началу,
-  // из-за чего призрак строки оказывается обрезанным «от верха таблицы». Скролл
-  // при перетаскивании блокируем JS-ом, сохраняя текущую позицию (см. Body.vue
-  // lockTableScroll). Здесь оставляем только resize.
   &.table_resize {
     overflow-y: hidden;
   }
@@ -125,12 +111,6 @@
       }
     }
 
-    // «Состав» (products) — многострочное HTML-значение с <br>. Общий для
-    // table_short стиль .table__text{display:flex; white-space:nowrap} ломал
-    // переносы строк (товары «пляшут»). На странице логистики строка должна
-    // быть строго 50px, поэтому состав НЕ выводим полностью: показываем одну
-    // строку с усечением (line-clamp), остальное скрыто — строка не
-    // растягивается (8595).
     .table__cell[data-column-key="products"] .table__text {
       display: block;
       white-space: nowrap;
@@ -162,12 +142,6 @@
   height: 40px;
   left: 0px;
   justify-content: center;
-  // Раньше использовался calc(100vw - 280px) — это привязка к viewport,
-  // которая ломалась внутри логистических колонок (там таблица ~50vw).
-  // Надпись «N изменений» оказывалась в середине ВСЕЙ ширины таблицы,
-  // которая шире видимой области; чтобы её увидеть, нужно было скроллить
-  // вправо. Берём ширину видимой области у sticky-элемента: 100% — это
-  // ширина контейнера .table, и центрирование становится корректным.
   width: 100%;
   box-sizing: border-box;
 }
@@ -201,10 +175,6 @@
     z-index: 10;
     left: var(--cell-left);
 
-    // Safari: sticky на flex-ячейках в position:absolute row отваливается
-    // после определённого скролла. Отключаем sticky и компенсируем
-    // через translateX в Header.checkStickyCells. will-change гарантирует
-    // плавную GPU-анимацию transform во время горизонтального скролла.
     @supports (-webkit-touch-callout: none) {
       position: relative;
       left: 0;
@@ -229,16 +199,11 @@
     z-index: 30;
   }
 
-  // Выделение ячейки кликом для копирования (таблицы с isCellCopy):
-  // рамка — «ячейка выбрана», заливка — «значение скопировано» (Ctrl+C).
   &.table__cell_copy-select {
     outline: 1px solid #1253a2;
     outline-offset: -1px;
   }
 
-  // active+copy-select в не-фиксированной колонке не должна подниматься над
-  // липким заголовком/зафиксированными столбцами при скролле (8534): рамка
-  // inset, ей не нужен z-index выше строки.
   &.table__cell_active.table__cell_copy-select:not(.table__cell_fixed) {
     z-index: auto;
   }
@@ -271,15 +236,10 @@
     display: flex;
     align-items: center;
 
-    // Файл-превью — составное значение, для него верхнее выравнивание
-    // выглядит лучше.
     &:has(.table__file) {
       display: block;
     }
 
-    // Группа адресов (текст + кнопка копирования) — раньше тоже прижималась
-    // к верху (display:block). Поле типа «Адрес» должно центрироваться по
-    // вертикали в ячейке (8547), поэтому оставляем flex + align-items:center.
     &:has(.table__text-group) {
       align-items: center;
     }
@@ -312,6 +272,11 @@
       color: #8f8f8f;
       margin-left: 3px;
       user-select: none;
+    }
+
+    .input__prefix {
+      padding: 0 6px;
+      font-size: 12px;
     }
 
     .table__ordinal {
@@ -431,11 +396,6 @@
     z-index: 100;
   }
 
-  // Выделение ячейки для копирования (isCellCopy) — это лишь inset-рамка
-  // внутри строки, ей не нужно подниматься над липким заголовком (z-index
-  // 55). Раньше copy-select делил z-index:100 с открытыми списками, и
-  // выделенная строка логистики при скролле наезжала на заголовки таблицы
-  // (баг 8442). Держим её ниже заголовка.
   &:has(.table__cell_copy-select) {
     z-index: 11;
   }
@@ -469,10 +429,6 @@
   &.table__body_dragging {
     @include mixins.userSelect(none);
 
-    // Клон-призрак (.draggable-fallback) позиционирует сам Sortable (inline
-    // top/left по rect строки). Если он попадает под это правило, !important
-    // top:0 перебивает inline-позицию, и призрак «прыгает» к верху таблицы
-    // (обрезается при прокрутке). Поэтому клон исключаем.
     .table__row:not(.draggable-fallback) {
       position: relative !important;
       top: 0 !important;
@@ -505,10 +461,6 @@
     align-items: start;
     background: var(--color-row);
 
-    // Поля редактирования (статус, дата, инпут, select, relation) — прямые
-    // flex-потомки ячейки с align-items:start, из-за чего прижимались к
-    // верху. Центрируем их по вертикали (8547). Раньше это делалось только
-    // для select — теперь для всех form__item-полей.
     > .form__item {
       align-self: center;
     }
@@ -614,9 +566,6 @@
     }
 
     .form__item_select {
-      // Ячейка таблицы — flex с align-items:start, поэтому содержимое
-      // select-поля (в т.ч. кнопка «Всего N, посмотреть все») прижималось
-      // к верху. Центрируем по вертикали внутри ячейки.
       align-self: center;
 
       .select {
@@ -655,11 +604,6 @@
   }
 }
 
-// Компактные инпуты/селекты (30px вместо стандартных 40px) — только для
-// страницы «Логистика», где идёт массовое редактирование в плотных таблицах.
-// Раньше 30px стояли дефолтом и протекали на страницы списка объектов —
-// там высота должна оставаться 40px (8547). Поэтому 40px — общий дефолт
-// (см. выше), а компактные 30px скоупим под корневой класс .logistic.
 .logistic {
   .table__body .table__cell {
     input,
@@ -725,10 +669,6 @@
       display: block;
     }
 
-    // На мобилке строка — вертикальная карточка. Служебные ячейки «выделение»
-    // (isChoose) и «действие» (actions) выравниваем по левому краю (8661):
-    // неусловный блок ниже центрирует иконку действий, из-за чего на телефоне
-    // ячейки выглядели криво.
     .table__cell[data-column-key="actions"],
     .table__cell[data-column-key="isChoose"] {
       align-items: flex-start;
@@ -833,8 +773,6 @@
   }
 }
 
-// Колонка «Действие» — иконка действий должна быть в центре ячейки.
-// Иначе при узких ячейках (например, order_products) кнопка прижата к левому краю.
 .table__cell[data-column-key="actions"] {
   justify-content: center;
   padding-left: 0;
@@ -854,8 +792,6 @@
   }
 }
 
-// Колонка с иконкой drag — figure внутри статически центрируем по вертикали,
-// иначе SVG прижат к верху и индекс «1» болтается рядом без выравнивания.
 .table__cell[data-column-key="iconDrag"] {
   justify-content: center;
   align-items: center;
@@ -871,14 +807,6 @@
   min-height: 100vh;
 }
 
-// ── Межтабличное перетаскивание: строка падает в КОНЕЦ таблицы-приёмника ──
-// Класс .table__body_cross-drop ставится на тело таблицы-приёмника только при
-// перетаскивании ИЗ другой таблицы (см. Body.vue onMoveCheck). Тогда плейсхолдер
-// (.draggable-ghost) уходит под все строки. Строки виртуализированы и
-// спозиционированы absolute по --row-start, поэтому переводим тело в обычный
-// поток (flex-колонка, строки relative), а плейсхолдер через order — в конец.
-// ВАЖНО: при перетаскивании ВНУТРИ таблицы (за ручку) этот класс не ставится —
-// там плейсхолдер показывает реальное место вставки, а не конец.
 .table__body_cross-drop {
   display: flex !important;
   flex-direction: column !important;
@@ -893,11 +821,6 @@
   order: 999 !important;
 }
 
-// ── Плейсхолдер при горизонтальном скролле ──
-// Прижимаем строку-ghost к видимому окну таблицы: ширина = видимая область,
-// сдвиг = scrollLeft. Значения задаёт JS на контейнере (.table__body, см.
-// Body.vue positionGhostInView) — на самой строке их выставлять нельзя:
-// строковый :style-биндинг строк затирает inline-стили при любом ре-рендере.
 .table__body[data-ghost-fit] .table__row.draggable-ghost {
   width: var(--ghost-width, 100%) !important;
   min-width: var(--ghost-width, 100%) !important;
@@ -906,22 +829,14 @@
   overflow: hidden;
 }
 
-// Safari: forceFallback клонирует строку в document.body, где CSS-переменная
-// --color-row может не разрешиться (нет родительского контекста таблицы).
-// Явный белый фон гарантирует видимость ghost'а на всю его длину.
 .table__row.draggable-fallback {
   background: white;
 
   .table__cell {
     background: var(--color-row, white);
-    // Клон живёт вне .table__body и не получает его правило
-    // `align-items: start` — без этого содержимое ячеек в ghost'е
-    // центрируется по вертикали и «съезжает» относительно исходной строки.
     align-items: start;
   }
 
-  // Ячейка с ручкой драга в реальной таблице центрируется — сохраняем
-  // то же выравнивание в клоне.
   .table__cell[data-column-key="iconDrag"] {
     align-items: center;
   }

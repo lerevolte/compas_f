@@ -202,7 +202,7 @@
                         <IconArrowBack class='menu__arrow' />
                     </template>
                     <template #content>
-                        <NuxtLink class="popup__option" to="/profile">
+                        <NuxtLink class="popup__option" to="/profile" @click="menu.isMobile && menu.closeMenu()">
                             Настройки
                         </NuxtLink>
                         <a href="https://compas.pro/auth/entry" class="popup__option">
@@ -254,11 +254,6 @@
     class Menu {
         constructor() {
             this.isChanged = false
-            // Снимок сайдбара на момент загрузки/сохранения. Кнопку «Сохранить»
-            // показываем только когда текущий список отличается от снимка (8656).
-            // Диф надёжнее событий: дочерний AppSettings эмитит update:modelList
-            // при инициализации (не правка пользователя), из-за чего кнопка была
-            // видна всегда.
             this.baseline = null
             this.isHiddenOpen = false
             this.list = []
@@ -273,7 +268,6 @@
             this.isMobile = useMediaQuery('(max-width: 990px)')
         }
 
-        // Получение
         async get() {
             try {
                 this.loading = true
@@ -291,22 +285,18 @@
             }
         }
 
-        // Обновление
         async update() {
-            // Обновляем информацию о пользователе
             const full_name = `${userStore.user?.name ?? ''} ${userStore.user?.last_name ?? ''}`
             this.user = {
                 name: full_name.replaceAll(' ', '') == '' ? 'Без имени' : full_name,
                 avatar: userStore.user && userStore.user?.avatar ? JSON.parse(userStore.user?.avatar)[0]?.url ?? null : null,
                 color: userStore.user?.color || '#a6b7d4'
             }
-            // Обновляем меню
             this.list = menuStore.list
             this.visible = this.list.filter(item => !item.is_hidden)
             this.hidden = this.list.filter(item => item.is_hidden)
         }
 
-        // Изменение отображения поля
         enableField(field) {
             const apply = p => ({
                 ...p,
@@ -317,7 +307,6 @@
             this.list = [...this.visible, ...this.hidden].sort((a, b) => a.sort - b.sort)
         }
 
-        // Вернуть значение по умолчанию
         async reset() {
             try {
                 this.loading = true
@@ -331,7 +320,6 @@
             }
         }
 
-        // Поиск активной вкладки
         isActive(link) {
             if (route.path.startsWith(link)) {
                 this.activeGroup = this.getActiveGroup(link)
@@ -349,7 +337,6 @@
             }
         }
 
-        // Начало перетаскивания в меню
         dragStart(e) {
             e?.preventDefault()
             this.isDragging = true
@@ -361,7 +348,6 @@
             }
         }
 
-        // Конец перетаскивания в меню
         dragEnd(val) {
             if (this.isHiddenOpen) {
                 menuHidden.value.removeAttribute('open')
@@ -378,7 +364,6 @@
             this.updateSortOrder()
         }
 
-        // Обновление сортировки
         updateSortOrder() {
             [...this.visible, ...this.hidden].forEach((el, index) => {
                 el.sort = index + 1
@@ -387,13 +372,6 @@
             this.list = [...this.visible, ...this.hidden].sort((a, b) => a.sort - b.sort)
         }
 
-        // Каноническая сериализация состояния сайдбара для сравнения со снимком.
-        // Считаем ОТДЕЛЬНО видимые и скрытые в их относительном порядке — так
-        // представление инвариантно к тому, как элементы разложены в this.list.
-        // Это критично: при инициализации updateSortOrder пересобирает this.list
-        // как [видимые…, скрытые…] и перенумеровывает sort, поэтому «сырой»
-        // снимок массива всегда расходился и кнопка «Сохранить» висела всегда
-        // (8656). sort в проекцию НЕ включаем (это лишь производная от порядка).
         serializeList() {
             const pick = (item) => ({
                 id: item?.id,
@@ -426,10 +404,6 @@
             }, 100);
         }
 
-        // (8478) Пункты «Настройки портала» (/settings), «Настройки ролей
-        // сущности» (/roles) и «Корзина» (/trash) видны только админам.
-        // Скрываем только на отрисовке — данные меню остаются целыми, чтобы
-        // сохранение порядка не выкидывало эти пункты.
         isAdminOnly(item) {
             const link = item?.link || ''
             if (['/settings', '/roles', '/trash'].some(l => link.startsWith(l))) return true
@@ -440,9 +414,6 @@
             return userStore.user?.is_admin ? true : !this.isAdminOnly(item)
         }
 
-        // Первый рабочий link для логотипа.
-        // Пропускаем disabled (!enabled) на верхнем уровне — они не видны в сайдбаре.
-        // Если первый видимый пункт — группа, берём первого ребёнка с link.
         resolveFirstLink() {
             const first = (this.visible || []).find(it => !!it?.enabled)
             if (!first) return null
@@ -457,14 +428,10 @@
 
     const menu = ref(new Menu())
 
-    // Видимость кнопки «Сохранить» в сайдбаре: есть несохранённые изменения —
-    // текущий список отличается от снимка (baseline), зафиксированного после
-    // загрузки/сохранения (8656). computed в setup — гарантированно реактивен.
     const hasMenuChanges = computed(() =>
         menu.value.baseline !== null && menu.value.serializeList() !== menu.value.baseline
     )
 
-    // Загружаем данные самыми первыми на сайте
     if (props.options?.type == 'default') {
         menu.value.list = Array.isArray(menuStore?.list) ? menuStore.list : []
         menu.value.visible = menu.value.list.filter(item => !item.is_hidden)
@@ -475,18 +442,12 @@
     
     onMounted(async () => {
         if (props.options?.type == 'default') {
-            // Сначала показываем сохраненное меню (если есть), чтобы навигация не стиралась
             if (menuStore.list && menuStore.list.length > 0) {
                 await menu.value.update()
             }
-            // Затем дожидаемся обновления меню из API (которое запущено в setup) и обновляем отображение
             await menuStore.get()
             await menu.value.update()
             isClient.value = true
-            // Меню загружено — фиксируем снимок. Ждём, пока отработает вся
-            // реактивная инициализация AppSettings (синхронизация visible/hidden
-            // → updateSortOrder), затем снимаем baseline — иначе кнопка «Сохранить»
-            // висела бы всегда (8656). До baseline hasMenuChanges = false.
             await nextTick()
             await nextTick()
             menu.value.setBaseline()
