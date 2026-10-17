@@ -228,7 +228,7 @@
 
     const BASED_ENTITIES = {
         deals: [
-            { slug: 'logistic_tasks', title: 'Задача логистики' },
+            { slug: 'logistic_tasks', title: 'Задача логистики', taskAction: 'unloading' },
             { slug: 'pickups', title: 'Запись на самовывоз' },
             { slug: 'payment_invoices', title: 'Счет на оплату' }
         ],
