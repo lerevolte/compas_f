@@ -18,9 +18,9 @@
             />
             <div class="print-docs__info">
                 <div class="print-docs__row">
-                    <span class="print-docs__entity">{{ isReceipt ? 'Чек' : 'УПД' }}</span>
+                    <span class="print-docs__entity">{{ mainDoc.short }}</span>
                 </div>
-                <div class="print-docs__name">{{ isReceipt ? 'Товарный чек' : 'Универсальный передаточный документ' }}</div>
+                <div class="print-docs__name">{{ mainDoc.title }}</div>
             </div>
         </div>
 
@@ -111,6 +111,12 @@
 
     const docs = ref([])
     const isReceipt = ref(false)
+    const isTransfer = ref(false)
+    const mainDoc = computed(() => {
+        if (isTransfer.value) return { short: 'Перемещение', title: 'Перемещение запасов' }
+        if (isReceipt.value) return { short: 'Чек', title: 'Товарный чек' }
+        return { short: 'УПД', title: 'Универсальный передаточный документ' }
+    })
     const loading = ref(false)
     const checked = ref({})
     const relationsVersion = useState('object-relations-version', () => 0)
@@ -158,10 +164,12 @@
             const response = await api.callMethod('GET', url)
             docs.value = response.status == 200 ? (response.data?.data ?? []) : []
             isReceipt.value = response.status == 200 && !!response.data?.is_receipt
+            isTransfer.value = response.status == 200 && !!response.data?.is_transfer
             checked.value = {}
         } catch (e) {
             docs.value = []
             isReceipt.value = false
+            isTransfer.value = false
         } finally {
             loading.value = false
         }
