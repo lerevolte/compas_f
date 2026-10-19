@@ -181,6 +181,11 @@
       will-change: transform;
     }
 
+    &.table__cell_select-open {
+      will-change: auto;
+      z-index: 45;
+    }
+
     &.table__cell_stuck {
       z-index: 40;
       background: #f9f9fa;

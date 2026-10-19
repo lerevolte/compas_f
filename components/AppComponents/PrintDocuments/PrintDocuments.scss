@@ -41,6 +41,7 @@
         flex-direction: column;
         gap: 4px;
         min-width: 0;
+        flex: 1;
     }
 
     &__row {
@@ -97,6 +98,94 @@
 
     &__actions {
         margin-top: 16px;
+    }
+
+    &__copies {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+        cursor: default;
+    }
+
+    &__copies-btn {
+        width: 28px;
+        height: 28px;
+        border: 1px solid #d5dbe5;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #1f335c;
+        font-size: 16px;
+        line-height: 1;
+        cursor: pointer;
+
+        &:hover {
+            border-color: #2f8cff;
+        }
+    }
+
+    &__copies-input {
+        width: 44px;
+        height: 28px;
+        border: 1px solid #d5dbe5;
+        border-radius: 6px;
+        text-align: center;
+        font-size: 14px;
+        -moz-appearance: textfield;
+
+        &::-webkit-outer-spin-button,
+        &::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    }
+
+    &__copies-label {
+        color: #8b8b8b;
+        font-size: 13px;
+        margin-left: 2px;
+    }
+
+    &__subtitle {
+        margin: 20px 0 10px;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    &__upload {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    &__upload-input {
+        display: none;
+    }
+
+    &__hint {
+        color: #8b8b8b;
+        font-size: 12px;
+    }
+
+    &__remove {
+        color: #c53030;
+        font-size: 12px;
+        width: fit-content;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}
+
+@media (max-width: 767px) {
+    .print-docs__card {
+        flex-wrap: wrap;
+    }
+
+    .print-docs__copies {
+        margin-left: 32px;
     }
 }
 

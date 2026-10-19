@@ -45,6 +45,7 @@ export async function openUpdPdf(slug, ids, withDocs = false, options = {}) {
         if (withDocs) query.push('docs=1')
         if (Array.isArray(options.docKeys)) query.push(`doc_keys=${encodeURIComponent(options.docKeys.join(','))}`)
         if (options.includeUpd === false) query.push('upd=0')
+        if (options.mainCopies) query.push(`upd_copies=${options.mainCopies}`)
         const response = await axios.get(`${routes.domain}/api/${slug}/upd?${query.join('&')}`, {
             headers: { Authorization: `Bearer ${userStore.token}` },
             responseType: 'blob',

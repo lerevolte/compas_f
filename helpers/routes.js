@@ -1,5 +1,4 @@
 export default {
-    // domain: 'https://compas.pro',
     domain: typeof window !== 'undefined' 
         ? (window.location.hostname === 'localhost' ? 'https://test3.compas.pro' : window.location.origin) 
         : '',
@@ -172,7 +171,8 @@ export default {
         create: '/object-relations',
         validateProducts: '/object-relations/validate-products',
         printDocs: '/object-relations/${slug}/${id}/print-documents',
-        productsCheck: '/object-relations/${slug}/${id}/products-check'
+        productsCheck: '/object-relations/${slug}/${id}/products-check',
+        printAttachments: '/print-attachments/${slug}/${id}'
     },
     chart: {
         get: '/analytics',

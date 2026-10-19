@@ -32,6 +32,7 @@
                     trashed: true
                 },
                 isHaveFilter: true,
+                isHaveFooter: true,
                 isTrash: true
             }"
             :slug="tabs.active?.tab"
@@ -73,7 +74,6 @@
 		}
 	})
 	
-    // Табы
     class Tabs {
         constructor() {
             this.active = null
@@ -105,7 +105,6 @@
             }
         }
 
-        // Установка активного таба
         set(tab) {
             this.active = tab.tab
             this.updatingCount++

@@ -426,6 +426,13 @@
             const contentRef = this._contentRef
             if (!popupRef || !contentRef || !this.state.isOpen) return
 
+            const fixedCell = popupRef.closest('.table__cell_fixed')
+            if (fixedCell && this._fixedCell !== fixedCell) {
+                this._fixedCell?.classList.remove('table__cell_select-open')
+                fixedCell.classList.add('table__cell_select-open')
+                this._fixedCell = fixedCell
+            }
+
             const rect = popupRef.getBoundingClientRect()
             contentRef.style.position = 'fixed'
             contentRef.style.margin = '0'
@@ -446,6 +453,10 @@
         }
 
         clearFixedPosition() {
+            if (this._fixedCell) {
+                this._fixedCell.classList.remove('table__cell_select-open')
+                this._fixedCell = null
+            }
             if (this._scrollHandler) {
                 window.removeEventListener('scroll', this._scrollHandler, true)
                 this._scrollHandler = null
