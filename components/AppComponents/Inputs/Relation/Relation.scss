@@ -479,3 +479,17 @@
         translate: none;
     }
 }
+.select-container .select__option {
+    align-items: flex-start;
+
+    .value__text:first-child {
+        white-space: normal;
+        overflow: visible;
+        overflow-wrap: anywhere;
+        min-width: 0;
+    }
+
+    &.select__option_active {
+        padding-right: 34px;
+    }
+}

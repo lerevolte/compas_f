@@ -196,6 +196,9 @@
         return m ? `${m[3]}.${m[2]}.${m[1]}` : d
     }
 
+    const LIFT_PROPS = ['will-change', 'transform', 'filter', 'contain']
+    const LIFT_VALUES = { 'will-change': 'auto', transform: 'none', filter: 'none', contain: 'none' }
+
     class Select {
         constructor(index) {
             this.index = index;
@@ -433,6 +436,8 @@
                 this._fixedCell = fixedCell
             }
 
+            this.liftAncestors(contentRef)
+
             const rect = popupRef.getBoundingClientRect()
             contentRef.style.position = 'fixed'
             contentRef.style.margin = '0'
@@ -452,7 +457,42 @@
             }
         }
 
+        liftAncestors(contentRef) {
+            const boundary = contentRef.closest('.table, .table-validate')
+            if (!boundary) return
+            this._lifted = this._lifted || new Map()
+            let el = contentRef.parentElement
+            while (el) {
+                const cs = getComputedStyle(el)
+                const creates = cs.transform !== 'none'
+                    || cs.filter !== 'none'
+                    || (cs.perspective && cs.perspective !== 'none')
+                    || /transform|perspective|filter/.test(cs.willChange || '')
+                    || /paint|layout|strict|content/.test(cs.contain || '')
+                if (creates) {
+                    if (!this._lifted.has(el)) {
+                        this._lifted.set(el, LIFT_PROPS.map(prop => [prop, el.style.getPropertyValue(prop), el.style.getPropertyPriority(prop)]))
+                    }
+                    LIFT_PROPS.forEach(prop => el.style.setProperty(prop, LIFT_VALUES[prop], 'important'))
+                }
+                if (el === boundary) break
+                el = el.parentElement
+            }
+        }
+
+        restoreAncestors() {
+            if (!this._lifted) return
+            this._lifted.forEach((saved, el) => {
+                saved.forEach(([prop, value, priority]) => {
+                    if (value) el.style.setProperty(prop, value, priority)
+                    else el.style.removeProperty(prop)
+                })
+            })
+            this._lifted = null
+        }
+
         clearFixedPosition() {
+            this.restoreAncestors()
             if (this._fixedCell) {
                 this._fixedCell.classList.remove('table__cell_select-open')
                 this._fixedCell = null
