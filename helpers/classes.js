@@ -144,8 +144,12 @@ export const buildQr = async (slug, id) => {
 export class Common {
     constructor() {}
 
-    productPriceKey(parentSlug = null) {
-        return parentSlug === 'supplier_orders' ? 'product_purchase_price' : 'product_price'
+    productPriceKey(parentSlug = null, row = null) {
+        if (parentSlug === 'supplier_orders') return 'product_purchase_price'
+        if (parentSlug !== 'receipt_invoices') return 'product_price'
+        const empty = value => value === null || value === undefined || value === '' || isNaN(Number(value))
+        if (row && empty(row.product_purchase_price) && !empty(row.product_price)) return 'product_price'
+        return 'product_purchase_price'
     }
 
     productLineVat(row) {
@@ -158,7 +162,7 @@ export class Common {
 
     productLineParts(row, parentSlug = null) {
         if (!row) return { net: 0, vat: 0, gross: 0, rate: 0, included: true }
-        const base = Number(row.product_count || 0) * Number(row[this.productPriceKey(parentSlug)] || 0)
+        const base = Number(row.product_count || 0) * Number(row[this.productPriceKey(parentSlug, row)] || 0)
         const { rate, included } = this.productLineVat(row)
         if (!(rate > 0)) return { net: base, vat: 0, gross: base, rate: 0, included }
         if (included) {

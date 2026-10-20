@@ -716,6 +716,7 @@
                         id: row.id,
                         product_name: row.product_name,
                         product_price: row.product_price,
+                        product_purchase_price: row.product_purchase_price,
                         product_count: row.product_count
                     }))
                 })
