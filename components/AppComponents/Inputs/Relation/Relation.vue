@@ -96,6 +96,11 @@
                     </div>
                 </div>
             </div>
+            <Teleport to="body" :disabled="!selectInstances[index]?.state?.floating">
+            <div
+                :ref="el => selectInstances[index]?.setFloatingRef(el)"
+                :class="selectInstances[index]?.state?.floating ? 'select select_icon select-container select_open select__floating' : 'select__floating-host'"
+            >
             <div class="select__options" :class="{ 'popup__content_top': selectInstances[index]?.state?.isTop }">
                 <div class="select__option" :value="null" @click="selectInstances[index]?.changeValue({ value: null }, index)">
                     Не выбрано
@@ -125,6 +130,8 @@
                     Создать
                 </div>
             </div>
+            </div>
+            </Teleport>
         </div>
 
         <AppError v-show="props.error.state">
@@ -196,20 +203,20 @@
         return m ? `${m[3]}.${m[2]}.${m[1]}` : d
     }
 
-    const LIFT_PROPS = ['will-change', 'transform', 'filter', 'contain']
-    const LIFT_VALUES = { 'will-change': 'auto', transform: 'none', filter: 'none', contain: 'none' }
-
     class Select {
         constructor(index) {
             this.index = index;
             this.selectRef = null;
             this.clickedItem = null;
 
+            this.floatingRef = null;
+
             this.state = reactive({
                 list: [],
                 isTop: false,
                 search: '',
-                isOpen: false
+                isOpen: false,
+                floating: false
             });
 
             this.closeOptions = (event) => {
@@ -217,7 +224,7 @@
                     this._mousedownInside = false
                     return
                 }
-                if (this.selectRef && !this.selectRef.contains(event.target)) {
+                if (this.selectRef && !this.contains(event.target)) {
                     this.commitCustomIfTyped()
                     this.state.isOpen = false;
                     this.state.search = ''
@@ -247,6 +254,14 @@
 
         setSelectRef(ref) {
             this.selectRef = ref;
+        }
+
+        setFloatingRef(ref) {
+            this.floatingRef = ref;
+        }
+
+        contains(target) {
+            return !!((this.selectRef && this.selectRef.contains(target)) || (this.floatingRef && this.floatingRef.contains(target)))
         }
 
         getActiveOption(value, localOptions) {
@@ -332,8 +347,9 @@
             if (this.state.isOpen) {
                 document.addEventListener('click', this.closeOptions);
                 this._mousedownHandler = (e) => {
-                    this._mousedownInside = !!(this.selectRef && this.selectRef.contains(e.target))
+                    this._mousedownInside = this.contains(e.target)
                 }
+                this.state.floating = !!this.selectRef?.closest('.table, .table-validate')
                 document.addEventListener('mousedown', this._mousedownHandler)
                 nextTick(() => this.checkPosition(event));
 
@@ -373,8 +389,8 @@
         }
 
         checkPosition(event) {
-            let popupRef = event.target.closest('.select')
-            let contentRef = popupRef ? popupRef.querySelector('.select__options') : null
+            let popupRef = event?.target?.closest('.select') || this.selectRef
+            let contentRef = this.floatingRef?.querySelector('.select__options') || (popupRef ? popupRef.querySelector('.select__options') : null)
 
             if (!popupRef || !contentRef) return;
 
@@ -404,7 +420,8 @@
                 }
             }
             const contentRect = contentRef.getBoundingClientRect();
-            this.state.isTop = props.isPreventBottom ? false : contentRect.bottom > bottomBound;
+            const contentBottom = this.state.floating ? popupRef.getBoundingClientRect().bottom + 5 + contentRect.height : contentRect.bottom
+            this.state.isTop = props.isPreventBottom ? false : contentBottom > bottomBound;
 
             if (popupRef.closest('.table, .table-validate')) {
                 this.applyFixedPosition()
@@ -436,8 +453,6 @@
                 this._fixedCell = fixedCell
             }
 
-            this.liftAncestors(contentRef)
-
             const rect = popupRef.getBoundingClientRect()
             contentRef.style.position = 'fixed'
             contentRef.style.margin = '0'
@@ -457,42 +472,8 @@
             }
         }
 
-        liftAncestors(contentRef) {
-            const boundary = contentRef.closest('.table, .table-validate')
-            if (!boundary) return
-            this._lifted = this._lifted || new Map()
-            let el = contentRef.parentElement
-            while (el) {
-                const cs = getComputedStyle(el)
-                const creates = cs.transform !== 'none'
-                    || cs.filter !== 'none'
-                    || (cs.perspective && cs.perspective !== 'none')
-                    || /transform|perspective|filter/.test(cs.willChange || '')
-                    || /paint|layout|strict|content/.test(cs.contain || '')
-                if (creates) {
-                    if (!this._lifted.has(el)) {
-                        this._lifted.set(el, LIFT_PROPS.map(prop => [prop, el.style.getPropertyValue(prop), el.style.getPropertyPriority(prop)]))
-                    }
-                    LIFT_PROPS.forEach(prop => el.style.setProperty(prop, LIFT_VALUES[prop], 'important'))
-                }
-                if (el === boundary) break
-                el = el.parentElement
-            }
-        }
-
-        restoreAncestors() {
-            if (!this._lifted) return
-            this._lifted.forEach((saved, el) => {
-                saved.forEach(([prop, value, priority]) => {
-                    if (value) el.style.setProperty(prop, value, priority)
-                    else el.style.removeProperty(prop)
-                })
-            })
-            this._lifted = null
-        }
-
         clearFixedPosition() {
-            this.restoreAncestors()
+            this.state.floating = false
             if (this._fixedCell) {
                 this._fixedCell.classList.remove('table__cell_select-open')
                 this._fixedCell = null

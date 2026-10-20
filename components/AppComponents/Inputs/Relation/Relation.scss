@@ -493,3 +493,12 @@
         padding-right: 34px;
     }
 }
+
+.select.select__floating {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    z-index: 3000;
+}
