@@ -249,7 +249,8 @@
         production_orders: [{ slug: 'productions', title: 'Производство', skip: ['materials', 'production_status'] }]
     }
     const BASED_KEY_MAP = {
-        'supplier_orders:logistic_tasks': { company_id: 'shipment_company_id', shipment_company_id: 'company_id' }
+        'supplier_orders:logistic_tasks': { company_id: 'shipment_company_id', shipment_company_id: 'company_id' },
+        'supplier_orders:receipt_invoices': { company_id: 'shipment_company_id', shipment_company_id: 'company_id' }
     }
 
     class Tabs {
