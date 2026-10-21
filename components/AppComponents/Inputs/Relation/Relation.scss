@@ -99,6 +99,16 @@
             }
         }
 
+        &.select_open {
+            .select__content-abs .value__text_id {
+                display: none;
+            }
+
+            .select__content-container input {
+                padding-right: 40px;
+            }
+        }
+
         &.select_hidden {
             display: none;
         }

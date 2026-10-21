@@ -7,6 +7,11 @@
         </div>
 
         <div ref="mapContainer" class="map__frame-map"></div>
+
+        <div class="map__frame-zoom" :class="{ 'map__frame-zoom_header': props.options?.enableHeader }" v-if="isZoomReady">
+            <a class="map__frame-zoom-in" role="button" title="Приблизить" @click="zoomBy(1)">+</a>
+            <a class="map__frame-zoom-out" role="button" title="Отдалить" @click="zoomBy(-1)">−</a>
+        </div>
     </div>
 </template>
 
@@ -56,6 +61,14 @@
 
     const mapContainer = ref(null);
     let yMap = null;
+    const isZoomReady = ref(false);
+
+    const zoomBy = (delta) => {
+        if (!yMap) return;
+        try {
+            yMap.setZoom(yMap.getZoom() + delta, { duration: 200, checkZoomRange: true });
+        } catch (e) {}
+    };
     let placemark = null;
     let resizeObserver = null;
 
@@ -218,15 +231,7 @@
                 emit('map-click', event.get('coords'));
             });
 
-            try {
-                const containerH = mapContainer.value.offsetHeight || 360;
-                const zoomControl = new window.ymaps.control.ZoomControl({
-                    options: {
-                        position: { left: 10, top: Math.max(10, Math.round((containerH - 70) / 2)) }
-                    }
-                });
-                yMap.controls.add(zoomControl);
-            } catch (e) {}
+            isZoomReady.value = true;
 
             if (typeof ResizeObserver !== 'undefined') {
                 resizeObserver = new ResizeObserver(() => {
@@ -267,6 +272,7 @@
         if (yMap) {
             try { yMap.destroy(); } catch (e) {}
             yMap = null;
+            isZoomReady.value = false;
             placemark = null;
         }
     });

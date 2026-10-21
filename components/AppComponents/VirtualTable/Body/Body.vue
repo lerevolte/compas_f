@@ -166,7 +166,7 @@
                             }"
                             @update:modelValue="val => {
                                 cell.checkEditting(table.body[row.index], {value: checkboxValue(row.index, column), key: column.key})
-                                cell.useCellModel(row.index, column).value = val ? '1' : '0'
+                                toggleCheckbox(row.index, column, val)
                             }"
                         />
 
@@ -461,6 +461,21 @@
         if (Array.isArray(value)) value = value[0]
         if (value == null || value === '') return NDS_INCLUDED_KEYS.includes(column.key) ? '1' : '0'
         return value === true || String(value) === '1' ? '1' : '0'
+    }
+
+    const toggleCheckbox = (rowIndex, column, val) => {
+        const row = table.value.body[rowIndex]
+        const keepSum = table.value.slug == 'products' && column.key == 'product_nds_included' && row
+        const net = keepSum ? common.productLineParts(row, table.value.options?.parentSlug).net : 0
+        cell.useCellModel(rowIndex, column).value = val ? '1' : '0'
+        if (!keepSum) return
+        const count = Number(row.product_count || 0)
+        const { rate, included } = common.productLineVat(row)
+        if (!(count > 0) || !(rate > 0)) return
+        const priceKey = common.productPriceKey(table.value.options?.parentSlug, row)
+        const base = included ? net * (1 + rate / 100) : net
+        row[priceKey] = common.roundMoney(base / count)
+        row.__sumEdit = null
     }
 
     const isCellValueEmpty = (row, column) => {

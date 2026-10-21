@@ -70,44 +70,66 @@
 }
 
 
-.map__frame-map {
-    .leaflet-control-zoom {
-        border: 1px solid variables.$color-border-light;
-        box-shadow: variables.$box-shadow;
-        border-radius: 10px;
-        overflow: hidden;
+.map__frame-zoom {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
 
-        a {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #fff;
-            color: variables.$color-icon-active;
-            border: none;
-            width: 36px;
-            height: 36px;
-            line-height: 36px;
-            font-size: 20px;
-            font-weight: 600;
-            transition: background-color 0.2s, color 0.2s;
+    &.map__frame-zoom_header {
+        top: 50px;
+    }
 
-            &:hover {
-                background-color: #f5f8fc;
-                color: variables.$color-hover;
-            }
+    a {
+        font-family: 'Lucida Console', Monaco, monospace;
+    }
+}
 
-            &.leaflet-disabled {
-                background-color: #fff;
-                color: variables.$color-border;
-                cursor: default;
-            }
+.map__frame-zoom,
+.map__frame-map .leaflet-control-zoom {
+    border: 1px solid variables.$color-border-light;
+    box-shadow: variables.$box-shadow;
+    border-radius: 10px;
+    overflow: hidden;
+
+    a {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #fff;
+        color: variables.$color-icon-active;
+        border: none;
+        width: 36px;
+        height: 36px;
+        line-height: 36px;
+        font-size: 20px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background-color 0.2s, color 0.2s;
+        @include mixins.userSelect(none);
+
+        &:hover {
+            background-color: #f5f8fc;
+            color: variables.$color-hover;
         }
 
-        a.leaflet-control-zoom-in {
-            border-bottom: 1px solid variables.$color-border-light;
+        &.leaflet-disabled {
+            background-color: #fff;
+            color: variables.$color-border;
+            cursor: default;
         }
     }
 
+    a.leaflet-control-zoom-in,
+    a.map__frame-zoom-in {
+        border-bottom: 1px solid variables.$color-border-light;
+    }
+}
+
+.map__frame-map {
     .leaflet-control-attribution {
         background: rgba(255, 255, 255, 0.8);
         padding: 4px 8px;

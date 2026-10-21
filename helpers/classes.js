@@ -134,7 +134,11 @@ export const buildQr = async (slug, id) => {
     const qr = { state: true, url, svg: '' }
     try {
         const { renderSVG } = await import('uqr')
-        qr.svg = renderSVG(url, { pixelSize: 5, border: 2 })
+        const svg = renderSVG(url, { pixelSize: 5, border: 2, ecc: 'Q' })
+        const size = Number(svg.match(/viewBox="0 0 (\d+)/)?.[1] || 0)
+        const logo = Math.round(size * 0.3)
+        const offset = Math.round((size - logo) / 2)
+        qr.svg = size ? svg.replace('</svg>', `<image href="/img/qr_logo.png" x="${offset}" y="${offset}" width="${logo}" height="${logo}"/></svg>`) : svg
     } catch (e) {
         console.log('qr', e)
     }
@@ -746,7 +750,7 @@ export class Table {
                 count: this.body.length,
                 estimateSize: () => 50,
                 getScrollElement: () => this.tableRef,
-                overscan: this.options?.overscan ?? 8,
+                overscan: this.options?.overscan ?? 50,
             })
         })
     }

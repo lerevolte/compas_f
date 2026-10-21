@@ -47,6 +47,8 @@
     
                 <IconSelectArrow />
             </div>
+            <Teleport to="body" :disabled="!select.state.floating">
+            <div :class="select.state.floating ? 'select select_open select__floating' : 'select__floating-host'">
             <div class="select__options" ref="contentRef" :class="{ 'popup__content_top': select.state.isTop }">
                 <div class="select__option" v-if="props.options.isHaveNull && !props.options.multiple" :value="null" @click="select.changeValue({ value: null })">
                     Не выбрано
@@ -69,6 +71,8 @@
                     </span>
                 </div>
             </div>
+            </div>
+            </Teleport>
         </div>
 
         <AppError v-show="props.error.state">
@@ -118,6 +122,7 @@
                 visibleList: [],
                 search: '',
                 isOpen: false,
+                floating: false,
                 lastTab: null
             });
 
@@ -128,7 +133,7 @@
                     this._mousedownInside = false
                     return
                 }
-                if (selectRef.value && !selectRef.value.contains(event.target)) {
+                if (selectRef.value && !this.contains(event.target)) {
                     if (props.options.type == 'address' && this.state.search && this.state.search.trim()) {
                         const typed = this.state.search.trim();
                         const coords = parseCoords(typed);
@@ -138,6 +143,7 @@
 
                         emit('update:modelValue', newValue);
                         
+                        this.clearFloating();
                         this.state.isOpen = false;
                         this.state.search = '';
                         this.state.isTop = false;
@@ -148,6 +154,7 @@
                     }
                     
                     this.commitSearch();
+                    this.clearFloating();
                     this.state.isOpen = false;
                     this.state.search = '';
                     this.state.isTop = false;
@@ -263,8 +270,9 @@
             if (this.state.isOpen) {
                 document.addEventListener('click', this.closeOptions);
                 this._mousedownHandler = (e) => {
-                    this._mousedownInside = !!(selectRef.value && selectRef.value.contains(e.target))
+                    this._mousedownInside = this.contains(e.target)
                 }
+                this.state.floating = !!selectRef.value?.closest('.table, .table-validate')
                 document.addEventListener('mousedown', this._mousedownHandler)
                 nextTick(() => this.checkPosition());
                 if (props.options.isSaveSearch) {
@@ -285,6 +293,7 @@
                     this.state.list = props.options.list
                     this.state.visibleList = props.options.list
                 }
+                this.clearFloating()
                 selectRef.value.querySelector('input').blur();
                 document.removeEventListener('click', this.closeOptions);
                 if (this._mousedownHandler) {
@@ -313,8 +322,30 @@
             }
         }
 
+        contains(target) {
+            return !!((selectRef.value && selectRef.value.contains(target)) || (contentRef.value && contentRef.value.contains(target)))
+        }
+
         checkPosition() {
             if (!contentRef.value || !selectRef.value) return;
+
+            if (this.state.floating) {
+                this.applyFloatingPosition()
+                if (!this._scrollHandler) {
+                    this._scrollHandler = (e) => {
+                        if (!this.state.isOpen) return
+                        if (e.target && e.target.nodeType === 1 && contentRef.value && contentRef.value.contains(e.target)) return
+                        if (this._repositionRaf) return
+                        this._repositionRaf = requestAnimationFrame(() => {
+                            this._repositionRaf = null
+                            this.applyFloatingPosition()
+                        })
+                    }
+                    window.addEventListener('scroll', this._scrollHandler, true)
+                    window.addEventListener('resize', this._scrollHandler)
+                }
+                return
+            }
 
             let bottomBound;
             if (props.parentContainer) {
@@ -354,6 +385,55 @@
                     : '';
             }
         }
+    }
+
+    Select.prototype.applyFloatingPosition = function () {
+        const content = contentRef.value
+        if (!content || !selectRef.value || !this.state.isOpen) return
+
+        const rect = selectRef.value.getBoundingClientRect()
+        let bottomBound = window.innerHeight
+        const massAction = document.querySelector('.mass-action')
+        if (massAction) {
+            const massRect = massAction.getBoundingClientRect()
+            if (massRect.top > 0 && massRect.top < bottomBound) bottomBound = massRect.top
+        }
+
+        content.style.maxHeight = ''
+        content.style.position = 'fixed'
+        content.style.margin = '0'
+        content.style.left = rect.left + 'px'
+        content.style.width = rect.width + 'px'
+        const height = content.offsetHeight
+        const spaceBelow = bottomBound - rect.bottom - 10
+        const spaceAbove = rect.top - 10
+        this.state.isTop = height > spaceBelow && spaceAbove > spaceBelow
+
+        if (this.state.isTop) {
+            content.style.top = 'auto'
+            content.style.bottom = (window.innerHeight - rect.top + 5) + 'px'
+            if (height > spaceAbove) content.style.maxHeight = `${Math.max(Math.floor(spaceAbove), 100)}px`
+        } else {
+            content.style.bottom = 'auto'
+            content.style.top = (rect.bottom + 5) + 'px'
+            if (height > spaceBelow) content.style.maxHeight = `${Math.max(Math.floor(spaceBelow), 100)}px`
+        }
+    }
+
+    Select.prototype.clearFloating = function () {
+        if (this._scrollHandler) {
+            window.removeEventListener('scroll', this._scrollHandler, true)
+            window.removeEventListener('resize', this._scrollHandler)
+            this._scrollHandler = null
+        }
+        if (this._repositionRaf) {
+            cancelAnimationFrame(this._repositionRaf)
+            this._repositionRaf = null
+        }
+        if (contentRef.value) {
+            ['position', 'margin', 'left', 'width', 'top', 'bottom', 'maxHeight'].forEach(prop => contentRef.value.style[prop] = '')
+        }
+        this.state.floating = false
     }
 
     const select = new Select()
@@ -422,6 +502,7 @@
 
 
     onBeforeUnmount(() => {
+        select.clearFloating();
         document.removeEventListener('click', select.closeOptions);
     });
 </script>
