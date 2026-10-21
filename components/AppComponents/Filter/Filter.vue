@@ -438,9 +438,12 @@
                         return this.state.tabsValues[key]
                 }
             }
-            const inputSearch = opts.fromPopup ? this.state.searchInPopup : this.state.search
             const existingSearchChip = this.state.activeTabs.find(t => t.key == 'search')?.value || ''
-            const effectiveSearch = inputSearch || existingSearchChip
+            const popupSearchShown = !!(this.state.searchInPopup || this.state.searchEnabled || existingSearchChip)
+            const inputSearch = opts.fromPopup
+                ? this.state.searchInPopup
+                : (this.state.search || (popupSearchShown ? this.state.searchInPopup : existingSearchChip))
+            const effectiveSearch = String(inputSearch ?? '').trim()
 
             const isFieldEnabled = key => this.state.fields.find(field => field.key == key)?.enabled !== false
 
