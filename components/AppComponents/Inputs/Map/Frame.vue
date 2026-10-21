@@ -9,8 +9,8 @@
         <div ref="mapContainer" class="map__frame-map"></div>
 
         <div class="map__frame-zoom" :class="{ 'map__frame-zoom_header': props.options?.enableHeader }" v-if="isZoomReady">
-            <a class="map__frame-zoom-in" role="button" title="Приблизить" @click="zoomBy(1)">+</a>
-            <a class="map__frame-zoom-out" role="button" title="Отдалить" @click="zoomBy(-1)">−</a>
+            <a class="map__frame-zoom-in" role="button" title="Приблизить" @click="zoomBy(1)"></a>
+            <a class="map__frame-zoom-out" role="button" title="Отдалить" @click="zoomBy(-1)"></a>
         </div>
     </div>
 </template>
