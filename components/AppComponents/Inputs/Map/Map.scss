@@ -72,40 +72,19 @@
 
 .map__frame-zoom {
     position: absolute;
-    top: 50%;
+    top: 10px;
     left: 10px;
     z-index: 5;
     display: flex;
     flex-direction: column;
-    transform: translateY(-50%);
 
     &.map__frame-zoom_header {
-        top: calc(50% + 20px);
+        top: 49px;
     }
 
     a {
-        position: relative;
-
-        &::before,
-        &::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 12px;
-            height: 2px;
-            border-radius: 1px;
-            background: currentColor;
-            transform: translate(-50%, -50%);
-        }
-    }
-
-    a.map__frame-zoom-in::after {
-        transform: translate(-50%, -50%) rotate(90deg);
-    }
-
-    a.map__frame-zoom-out::after {
-        content: none;
+        font-family: 'Lucida Console', Monaco, monospace;
+        text-indent: 1px;
     }
 }
 
@@ -313,7 +292,7 @@
         max-height: 0;
         overflow: hidden;
         transition: all 0.5s ease;
-        z-index: 1000; /* Arbitrary, but try to be above "most" things. */
+        z-index: 1000;
     }
     
     .leaflet-routing-geocoder-result table {

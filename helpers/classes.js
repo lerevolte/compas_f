@@ -165,16 +165,16 @@ export class Common {
     }
 
     productLineParts(row, parentSlug = null) {
-        if (!row) return { net: 0, vat: 0, gross: 0, rate: 0, included: true }
+        if (!row) return { sum: 0, net: 0, vat: 0, gross: 0, rate: 0, included: true }
         const base = Number(row.product_count || 0) * Number(row[this.productPriceKey(parentSlug, row)] || 0)
         const { rate, included } = this.productLineVat(row)
-        if (!(rate > 0)) return { net: base, vat: 0, gross: base, rate: 0, included }
+        if (!(rate > 0)) return { sum: base, net: base, vat: 0, gross: base, rate: 0, included }
         if (included) {
             const net = base / (1 + rate / 100)
-            return { net, vat: base - net, gross: base, rate, included }
+            return { sum: base, net, vat: base - net, gross: base, rate, included }
         }
         const vat = base * rate / 100
-        return { net: base, vat, gross: base + vat, rate, included }
+        return { sum: base, net: base, vat, gross: base + vat, rate, included }
     }
 
     productLineTotal(row, parentSlug = null) {
@@ -938,7 +938,7 @@ export class Table {
                         product_specification_id: row['product_specification_id'],
                         product_weight: row['product_weight'],
                         product_volume: row['product_volume'],
-                        product_sum: this.common.roundMoney(this.common.productLineParts(row, this.options?.parentSlug).net),
+                        product_sum: this.common.roundMoney(this.common.productLineParts(row, this.options?.parentSlug).sum),
                         product_nds_sum: this.common.roundMoney(this.common.productLineParts(row, this.options?.parentSlug).vat),
                         product_total: this.common.roundMoney(this.common.productLineParts(row, this.options?.parentSlug).gross),
                         product_nds: row['product_nds'],

@@ -464,18 +464,7 @@
     }
 
     const toggleCheckbox = (rowIndex, column, val) => {
-        const row = table.value.body[rowIndex]
-        const keepSum = table.value.slug == 'products' && column.key == 'product_nds_included' && row
-        const net = keepSum ? common.productLineParts(row, table.value.options?.parentSlug).net : 0
         cell.useCellModel(rowIndex, column).value = val ? '1' : '0'
-        if (!keepSum) return
-        const count = Number(row.product_count || 0)
-        const { rate, included } = common.productLineVat(row)
-        if (!(count > 0) || !(rate > 0)) return
-        const priceKey = common.productPriceKey(table.value.options?.parentSlug, row)
-        const base = included ? net * (1 + rate / 100) : net
-        row[priceKey] = common.roundMoney(base / count)
-        row.__sumEdit = null
     }
 
     const isCellValueEmpty = (row, column) => {
@@ -708,9 +697,9 @@
                             if (editing) {
                                 const draft = row.__sumEdit
                                 if (draft && draft.price === row[common.productPriceKey(parentSlug)] && draft.count === row.product_count) return draft.value
-                                return common.roundMoney(parts.net)
+                                return common.roundMoney(parts.sum)
                             }
-                            return common.transformPrice(parts.net, 2)
+                            return common.transformPrice(parts.sum, 2)
                         }
                         return common.transformPrice(column.key == 'product_total' ? parts.gross : parts.vat, 2)
                     } else if (column.type == 'address') {
@@ -734,15 +723,13 @@
                         const row = table.value.body[rowIndex]
                         const parentSlug = table.value.options?.parentSlug
                         const priceKey = common.productPriceKey(parentSlug)
-                        const net = Number(String(val ?? '').replace(/\s/g, '').replace(',', '.'))
+                        const sum = Number(String(val ?? '').replace(/\s/g, '').replace(',', '.'))
                         const count = Number(row.product_count || 0)
-                        if (Number.isFinite(net) && count > 0) {
-                            const { rate, included } = common.productLineVat(row)
-                            const base = included && rate > 0 ? net * (1 + rate / 100) : net
-                            row[priceKey] = common.roundMoney(base / count)
+                        if (Number.isFinite(sum) && count > 0) {
+                            row[priceKey] = common.roundMoney(sum / count)
                         }
                         row.__sumEdit = { value: val, price: row[priceKey], count: row.product_count }
-                        row.product_sum = Number.isFinite(net) ? net : null
+                        row.product_sum = Number.isFinite(sum) ? sum : null
                         return
                     }
 

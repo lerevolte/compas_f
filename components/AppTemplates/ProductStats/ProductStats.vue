@@ -74,13 +74,6 @@
 
             <section class="ps-table_tasks" v-if="selectedProduct !== null">
                 <div class="ps-table__loader" v-if="loadingTasks">Загрузка…</div>
-                <!--
-                    Таблица задач логистики — точно такая же, как на
-                    /objects/logistic_tasks (полный набор столбцов/настроек,
-                    редактируемая). Локальная таблица: данные приходят
-                    отфильтрованными по дате и выбранному товару, сохранение
-                    правок идёт через стандартный endpoint logistic_tasks (8557).
-                -->
                 <AppVirtualTable
                     v-else-if="bottomTable"
                     :key="`${apiDate}_${selectedProduct}`"
@@ -114,8 +107,6 @@
     import { format } from 'date-fns';
 
     const props = defineProps({
-        // В модалке аналитики у контента нет внешних отступов (их на странице
-        // даёт <main>), поэтому добавляем их сами через класс (8557).
         isModal: {
             type: Boolean,
             default: false
@@ -126,8 +117,6 @@
         'openModal'
     ]);
 
-    // Выбранную дату запоминаем, чтобы при повторном заходе на страницу она
-    // подставлялась (8584).
     const DATE_STORAGE_KEY = 'product-stats:date';
     const restoreDate = () => {
         try {
@@ -140,7 +129,6 @@
         return new Date();
     };
 
-    // Сентинел для строки «Все товары» (статистика по всем товарам).
     const ALL_PRODUCTS = '__all_products__';
     const ALL_ACTIONS = 'all';
 
@@ -206,7 +194,6 @@
         bottomTable.value = null;
         loadingTasks.value = true;
         try {
-            // Для «Все товары» запрашиваем все задачи на дату (all=1), иначе — по товару.
             const query = name === ALL_PRODUCTS
                 ? `delivery_date=${apiDate.value}&all=1`
                 : `delivery_date=${apiDate.value}&product=${encodeURIComponent(name)}`;
@@ -232,7 +219,6 @@
 </script>
 
 <style lang="scss" scoped>
-    // В модалке аналитики нет отступов от <main> — задаём их сами.
     .product-stats_modal {
         padding: 25px 15px;
     }
@@ -355,9 +341,6 @@
         color: #8f8f8f;
     }
 
-    // Таблица задач логистики — фиксированная высота 500px со скроллом (8579).
-    // .section-table height:100% сам по себе не работает без заданной высоты
-    // родителя, поэтому задаём её здесь.
     .ps-table_tasks :deep(.section-table) {
         height: 500px;
         margin-bottom: 0;

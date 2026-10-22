@@ -314,7 +314,8 @@
     position: absolute;
     display: flex;
     align-items: center;
-    top: 10px;
+    top: 50%;
+    transform: translateY(-50%);
     left: 10px;
     max-height: 76px;
 
@@ -417,7 +418,7 @@
 .table__body {
   width: 100%;
   position: relative;
-  min-height: 50px; // Минимальная высота для пустой таблицы, чтобы vuedraggable мог определить зону drop
+  min-height: 50px;
 
   &.table__body_edit:not(.table__body_local) {
     .table__row:not(.table__row_choose) {
@@ -718,6 +719,7 @@
       position: static;
       height: auto;
       max-height: none;
+      transform: none;
 
       .fancybox__item:first-child .fancybox-item__img {
         height: 60px;

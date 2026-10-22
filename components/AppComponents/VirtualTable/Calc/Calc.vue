@@ -124,7 +124,7 @@
                 shipped: table.value.body.reduce((shipped, row) => shipped + Number(row.product_shipped || 0), 0),
                 weight: table.value.body.reduce((weight, row) => weight + (Number(row.product_count || 0) * Number(row.product_weight || 0)), 0),
                 volume: table.value.body.reduce((volume, row) => volume + (Number(row.product_count || 0) * Number(row.product_volume || 0)), 0),
-                sum: table.value.body.reduce((sum, row) => sum + common.productLineParts(row, table.value.options?.parentSlug).net, 0),
+                sum: table.value.body.reduce((sum, row) => sum + common.productLineParts(row, table.value.options?.parentSlug).sum, 0),
                 vat: table.value.body.reduce((sum, row) => sum + common.productLineParts(row, table.value.options?.parentSlug).vat, 0),
                 total: table.value.body.reduce((sum, row) => sum + common.productLineParts(row, table.value.options?.parentSlug).gross, 0)
             }
