@@ -23,7 +23,8 @@
                 :class="{ 'ps-types__item_active': selectedAction === type.id }"
                 @click="selectAction(type.id)"
             >
-                <span class="ps-types__dot" v-if="type.color" :style="{ background: type.color }"></span>
+                <img class="ps-types__icon" v-if="isImageSrc(type.file)" :src="type.file" alt="" />
+                <span class="ps-types__dot" v-else-if="type.color" :style="{ background: type.color }"></span>
                 {{ type.value }}
                 <span class="ps-types__count">{{ type.count }}</span>
             </div>
@@ -105,6 +106,7 @@
     import api from '@/helpers/api.js';
     import routes from '@/helpers/routes.js';
     import { format } from 'date-fns';
+    import { isImageSrc } from '@AppHelpers/classes.js';
 
     const props = defineProps({
         isModal: {
@@ -254,6 +256,13 @@
             color: #000;
             cursor: default;
         }
+    }
+
+    .ps-types__icon {
+        width: 18px;
+        height: 18px;
+        object-fit: contain;
+        flex-shrink: 0;
     }
 
     .ps-types__dot {
