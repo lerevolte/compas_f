@@ -72,27 +72,24 @@
 
 .map__frame-zoom {
     position: absolute;
-    top: 10px;
+    top: 50%;
     left: 10px;
     z-index: 5;
     display: flex;
     flex-direction: column;
+    transform: translateY(-50%);
 
     &.map__frame-zoom_header {
-        top: 49px;
-    }
-
-    a {
-        font-family: 'Lucida Console', Monaco, monospace;
-        text-indent: 1px;
+        top: calc(50% + 20px);
     }
 }
 
 .map__frame-zoom,
 .map__frame-map .leaflet-control-zoom {
-    border: 1px solid variables.$color-border-light;
-    box-shadow: variables.$box-shadow;
+    border: 2px solid rgba(0, 0, 0, 0.2);
     border-radius: 10px;
+    background-clip: padding-box;
+    box-shadow: none;
     overflow: hidden;
 
     a {
@@ -102,31 +99,29 @@
         background-color: #fff;
         color: variables.$color-icon-active;
         border: none;
-        width: 36px;
-        height: 36px;
-        line-height: 36px;
-        font-size: 20px;
-        font-weight: 600;
+        width: 30px;
+        height: 30px;
+        line-height: 30px;
+        font: 600 20px/30px 'Lucida Console', Monaco, monospace;
+        text-indent: 1px;
         cursor: pointer;
         text-decoration: none;
-        transition: background-color 0.2s, color 0.2s;
         @include mixins.userSelect(none);
 
         &:hover {
-            background-color: #f5f8fc;
-            color: variables.$color-hover;
+            background-color: #f4f4f4;
         }
 
         &.leaflet-disabled {
-            background-color: #fff;
-            color: variables.$color-border;
+            background-color: #f4f4f4;
+            color: #bbb;
             cursor: default;
         }
     }
 
     a.leaflet-control-zoom-in,
     a.map__frame-zoom-in {
-        border-bottom: 1px solid variables.$color-border-light;
+        border-bottom: 1px solid #ccc;
     }
 }
 
