@@ -192,6 +192,11 @@ export default {
         products: '/product-stats/products',
         tasks: '/product-stats/tasks'
     },
+    carrierSalary: {
+        companies: '/carrier-salary/companies',
+        cars: '/carrier-salary/cars',
+        routes: '/carrier-salary/routes'
+    },
     bitrix24: {
         deal_stages: '/bitrix24/deal-stages',
         change_stage: '/bitrix24/deals/${id}/stage'

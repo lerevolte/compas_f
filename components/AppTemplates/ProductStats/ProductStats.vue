@@ -7,6 +7,28 @@
             <AppDateFilter v-model="activeDate" @update:modelValue="loadProducts" />
         </div>
 
+        <div class="ps-types" style="display: none" v-if="actionTypes.length > 0">
+            <div
+                class="ps-types__item"
+                :class="{ 'ps-types__item_active': selectedAction === ALL_ACTIONS }"
+                @click="selectAction(ALL_ACTIONS)"
+            >
+                Все
+                <span class="ps-types__count">{{ actionTypesTotal }}</span>
+            </div>
+            <div
+                v-for="type in actionTypes"
+                :key="type.id"
+                class="ps-types__item"
+                :class="{ 'ps-types__item_active': selectedAction === type.id }"
+                @click="selectAction(type.id)"
+            >
+                <span class="ps-types__dot" v-if="type.color" :style="{ background: type.color }"></span>
+                {{ type.value }}
+                <span class="ps-types__count">{{ type.count }}</span>
+            </div>
+        </div>
+
         <div class="product-stats__tables">
             <section class="ps-table">
                 <div class="ps-table__title">Товары на {{ formattedDate }}</div>
@@ -120,6 +142,7 @@
 
     // Сентинел для строки «Все товары» (статистика по всем товарам).
     const ALL_PRODUCTS = '__all_products__';
+    const ALL_ACTIONS = 'all';
 
     const activeDate = ref(restoreDate());
     const products = ref([]);
@@ -129,6 +152,11 @@
     const selectedProduct = ref(null);
     const loadingProducts = ref(false);
     const loadingTasks = ref(false);
+    const actionTypes = ref([]);
+    const selectedAction = ref(ALL_ACTIONS);
+
+    const actionTypesTotal = computed(() => actionTypes.value.reduce((sum, type) => sum + Number(type.count || 0), 0));
+    const actionQuery = computed(() => selectedAction.value === ALL_ACTIONS ? '' : `&action_type=${encodeURIComponent(selectedAction.value)}`);
 
     const apiDate = computed(() => format(activeDate.value, 'yyyy-MM-dd'));
     const formattedDate = computed(() => format(activeDate.value, 'dd.MM.yyyy'));
@@ -151,14 +179,21 @@
         bottomTable.value = null;
         loadingProducts.value = true;
         try {
-            const response = await api.callMethod('GET', `${routes.productStats.products}?delivery_date=${apiDate.value}`);
+            const response = await api.callMethod('GET', `${routes.productStats.products}?delivery_date=${apiDate.value}${actionQuery.value}`);
             const data = response.data ?? {};
+            actionTypes.value = Array.isArray(data.action_types) ? data.action_types : [];
+            if (selectedAction.value !== ALL_ACTIONS && !actionTypes.value.some(type => type.id === selectedAction.value)) {
+                selectedAction.value = ALL_ACTIONS;
+                loadingProducts.value = false;
+                return loadProducts();
+            }
             products.value = Array.isArray(data.products) ? data.products : [];
             allOrderCount.value = Number(data.all_order_count ?? 0);
             allTotalCount.value = Number(data.all_total_count ?? 0);
         } catch (error) {
             console.log('product-stats products', error);
             products.value = [];
+            actionTypes.value = [];
             allOrderCount.value = 0;
             allTotalCount.value = 0;
         } finally {
@@ -175,7 +210,7 @@
             const query = name === ALL_PRODUCTS
                 ? `delivery_date=${apiDate.value}&all=1`
                 : `delivery_date=${apiDate.value}&product=${encodeURIComponent(name)}`;
-            const response = await api.callMethod('GET', `${routes.productStats.tasks}?${query}`);
+            const response = await api.callMethod('GET', `${routes.productStats.tasks}?${query}${actionQuery.value}`);
             bottomTable.value = response.data ?? null;
         } catch (error) {
             console.log('product-stats tasks', error);
@@ -183,6 +218,12 @@
         } finally {
             loadingTasks.value = false;
         }
+    };
+
+    const selectAction = (id) => {
+        if (selectedAction.value === id) return;
+        selectedAction.value = id;
+        loadProducts();
     };
 
     onMounted(() => {
@@ -201,6 +242,44 @@
         align-items: center;
         gap: 30px;
         flex-wrap: wrap;
+    }
+
+    .ps-types {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .ps-types__item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid #bcbcbc;
+        border-radius: 5px;
+        color: #8f8f8f;
+        cursor: pointer;
+        padding: 10px 15px;
+        white-space: nowrap;
+        background: #fff;
+
+        &.ps-types__item_active {
+            border-color: #0584fe;
+            color: #000;
+            cursor: default;
+        }
+    }
+
+    .ps-types__dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .ps-types__count {
+        color: #8f8f8f;
+        font-size: 12px;
     }
 
     .product-stats__tables {
