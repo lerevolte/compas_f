@@ -498,6 +498,20 @@
 
         async basedProducts(entity) {
             let products = JSON.parse(JSON.stringify(this.productsList || [])).map(({ isChoose, edit, local_id, ...row }) => row)
+            if (common.productPriceKey(this.slug) === 'product_purchase_price' && common.productPriceKey(entity.slug) === 'product_price') {
+                products = products.map(row => {
+                    const purchase = row.product_purchase_price
+                    if (purchase === null || purchase === undefined || purchase === '' || isNaN(Number(purchase))) return row
+                    const repriced = { ...row, product_price: purchase }
+                    const parts = common.productLineParts(repriced, entity.slug)
+                    return {
+                        ...repriced,
+                        product_sum: common.roundMoney(parts.sum),
+                        product_nds_sum: common.roundMoney(parts.vat),
+                        product_total: common.roundMoney(parts.gross)
+                    }
+                })
+            }
             const withRemaining = (row, remaining) => ({
                 ...row,
                 product_count: remaining,
