@@ -7,7 +7,7 @@
             <AppDateFilter v-model="activeDate" @update:modelValue="loadProducts" />
         </div>
 
-        <div class="ps-types" style="display: none" v-if="actionTypes.length > 0">
+        <div class="ps-types" v-if="actionTypes.length > 0">
             <div
                 class="ps-types__item"
                 :class="{ 'ps-types__item_active': selectedAction === ALL_ACTIONS }"

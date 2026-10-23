@@ -273,5 +273,15 @@
         "title": "Производство",
         "desc": "",
         "template": null
+    },
+    "transfer_orders": {
+        "title": "Заказы на перемещение",
+        "desc": "",
+        "template": null
+    },
+    "transfers": {
+        "title": "Перемещения",
+        "desc": "",
+        "template": null
     }
 }

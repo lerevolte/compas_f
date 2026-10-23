@@ -280,5 +280,17 @@
         "title_singular": "Производство",
         "title_plural": "Производство",
         "color": "#B5703A"
+    },
+    "transfer_orders": {
+        "slug": "transfer_orders",
+        "title_singular": "Заказ на перемещение",
+        "title_plural": "Заказы на перемещение",
+        "color": "#3A7CB5"
+    },
+    "transfers": {
+        "slug": "transfers",
+        "title_singular": "Перемещение",
+        "title_plural": "Перемещения",
+        "color": "#3AB58C"
     }
 }

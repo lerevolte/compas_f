@@ -246,7 +246,8 @@
             { slug: 'logistic_tasks', title: 'Задача логистики', taskAction: 'supply' }
         ],
         addresses: [{ slug: 'logistic_tasks', title: 'Задача логистики' }],
-        production_orders: [{ slug: 'productions', title: 'Производство', skip: ['materials', 'production_status'] }]
+        production_orders: [{ slug: 'productions', title: 'Производство', skip: ['materials', 'production_status'] }],
+        transfer_orders: [{ slug: 'transfers', title: 'Перемещение' }]
     }
     const BASED_KEY_MAP = {
         'supplier_orders:logistic_tasks': { company_id: 'shipment_company_id', shipment_company_id: 'company_id' },
@@ -531,6 +532,7 @@
                 || (this.slug === 'deals' && SHIPMENT_SOURCES.includes(entity.slug))
                 || (this.slug === 'supplier_orders' && (entity.slug === 'receipt_invoices' || SHIPMENT_SOURCES.includes(entity.slug)))
                 || (this.slug === 'production_orders' && entity.slug === 'productions')
+                || (this.slug === 'transfer_orders' && entity.slug === 'transfers')
 
             const isReturnTarget = entity.slug === 'product_returns'
             let checkData = null
@@ -707,6 +709,7 @@
                 || (SHIPMENT_SOURCES.includes(props.source.slug) && ['expense_invoices', 'product_returns', 'receipt_invoices'].includes(target))
                 || (props.source.slug === 'supplier_orders' && target === 'receipt_invoices')
                 || (props.source.slug === 'production_orders' && target === 'productions')
+                || (props.source.slug === 'transfer_orders' && target === 'transfers')
             if (!isChain) return true
             this.refreshProductsDraft()
             const rows = (Array.isArray(this.productsDraft) ? this.productsDraft : [])

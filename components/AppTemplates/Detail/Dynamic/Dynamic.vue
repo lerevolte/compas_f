@@ -216,7 +216,7 @@
     const PRODUCTION_SLUGS = ['production_orders', 'productions']
     const isMaterialsTab = computed(() => props.tabs.active?.tab == 'materials' && PRODUCTION_SLUGS.includes(props.slug))
 
-    const CHECKED_SLUGS = ['logistic_tasks', 'pickups', 'expense_invoices', 'product_returns', 'receipt_invoices']
+    const CHECKED_SLUGS = ['logistic_tasks', 'pickups', 'expense_invoices', 'product_returns', 'receipt_invoices', 'transfers']
 
     const isOrderTab = computed(() => props.tabs.active?.tab == 'order')
     const orderWasMounted = ref(false)

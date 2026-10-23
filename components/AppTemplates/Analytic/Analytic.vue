@@ -59,11 +59,6 @@
         </template>
     </draggable>
 
-    <!--
-        Блок «Статистика товаров по дням» — без графика. Открывается по клику
-        как остальные блоки аналитики, но в модалке рендерится таблица
-        статистики (template: 'product-stats'), а не AppAnalyticDetail (8557).
-    -->
     <div class="analytics__grid analytics__grid_extra">
         <div
             class="analytics__chart analytics__chart_link"
@@ -71,6 +66,13 @@
         >
             <div class="analytics__chart-title">Статистика товаров по дням</div>
             <div class="analytics__chart-hint">Открыть таблицу →</div>
+        </div>
+        <div
+            class="analytics__chart analytics__chart_link"
+            @click="navigateTo('/carrier-salary')"
+        >
+            <div class="analytics__chart-title">Зарплата перевозчиков</div>
+            <div class="analytics__chart-hint">Открыть отчёт →</div>
         </div>
     </div>
 </template>
