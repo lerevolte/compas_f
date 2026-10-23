@@ -306,3 +306,22 @@
     color: #8f8f8f;
     text-align: center;
 }
+
+.detail__saving {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+    color: #1B1C1E;
+}
+
+.detail__saving-loader {
+    width: 40px;
+    height: 40px;
+}

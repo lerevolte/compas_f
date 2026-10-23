@@ -1,5 +1,9 @@
 <template>
     <div class="detail">
+        <div class="detail__saving" v-if="detail.saving">
+            <IconLoader class="detail__saving-loader" />
+            <span>Сохраняем документ и состав…</span>
+        </div>
         <header id="mobile-menu-target" class="detail-page__header">
             <IconArrowBack @click="detail.closeDetail"/>
             <span class="detail-page__ordinal" v-if="detail.ordinal && !detail.isCopy">{{ detail.ordinal }}-</span>
@@ -165,6 +169,7 @@
     import AppStatusStages from '@AppComponents/StatusStages/StatusStages.vue'
     import AppPopup from '@AppComponents/Popup/Popup.vue'
     import IconTriangle from '@AppIcons/Triangle.vue'
+    import IconLoader from '@AppIcons/Loader.vue'
     import api from '@/helpers/api.js'
     import routes from '@/helpers/routes.js'
 
@@ -327,6 +332,7 @@
             this.hiddenFields = []
             this.productsList = []
             this.productsDraft = null
+            this.saving = false
             this.isGlobalEdit = false
             this.isCopy = false
             this.isTrash = false
@@ -750,10 +756,8 @@
             return true
         }
 
-        async saveDraftProducts(slug, id, rows = null) {
-            const draft = Array.isArray(rows) ? rows : this.productsDraft
-            if (!Array.isArray(draft)) return false
-            const products = draft
+        draftPayload(rows) {
+            return (Array.isArray(rows) ? rows : [])
                 .filter(row => row.id || (row.product_name && String(row.product_name).trim() !== ''))
                 .filter(row => row.product_count !== null && row.product_count !== undefined && String(row.product_count).trim() !== '' && Number(row.product_count) > 0)
                 .map(row => ({
@@ -772,21 +776,71 @@
                     product_nds: row.product_nds,
                     product_nds_included: row.product_nds_included
                 }))
+        }
+
+        showProductsBlocked(data) {
+            common.showNotification({
+                title: data?.message ?? 'Состав не сохранён',
+                description: Array.isArray(data?.errors) ? data.errors.join('; ') : ''
+            }, 'error', { toastId: 'products-mismatch' })
+        }
+
+        async saveDraftProducts(slug, id, rows = null) {
+            const draft = Array.isArray(rows) ? rows : this.productsDraft
+            if (!Array.isArray(draft)) return false
+            const products = this.draftPayload(draft)
             this.productsDraft = null
             try {
                 const response = await api.callMethod('PUT', routes.table.set_products.replace('${parent_slug}', slug).replace('${page_id}', id), { products })
                 if (response?.status == 200) return true
                 if (response?.status == 422) {
-                    common.showNotification({
-                        title: response?.data?.message ?? 'Состав не сохранён',
-                        description: Array.isArray(response?.data?.errors) ? response.data.errors.join('; ') : ''
-                    }, 'error', { toastId: 'products-mismatch' })
+                    this.showProductsBlocked(response?.data)
                     return 'blocked'
                 }
                 return false
             } catch (e) {
                 return false
             }
+        }
+
+        async linkWithDraft(relation, slug, draftRows) {
+            const products = this.draftPayload(draftRows)
+            if (!products.length) {
+                try {
+                    await api.callMethod('POST', routes.relations.create, { ...relation, copy_products: true })
+                } catch (e) {}
+                return
+            }
+            let response = null
+            try {
+                response = await api.callMethod('POST', routes.relations.create, { ...relation, copy_products: false, products })
+            } catch (e) {}
+            const data = response?.status == 200 ? (response.data ?? {}) : null
+            if (data?.products_saved === true) {
+                this.productsDraft = null
+                return
+            }
+            if (data && Number(data.products_status) === 422) {
+                this.productsDraft = null
+                this.showProductsBlocked({ message: data.products_message, errors: data.products_errors })
+                return
+            }
+            const draftResult = await this.saveDraftProducts(slug, relation.target_id, draftRows)
+            if (draftResult === false) {
+                try {
+                    await api.callMethod('POST', routes.relations.create, { ...relation, copy_products: true })
+                } catch (e) {}
+            }
+        }
+
+        startSaving() {
+            this.saving = true
+            if (typeof window !== 'undefined') window.addEventListener('beforeunload', preventUnload)
+        }
+
+        stopSaving() {
+            this.saving = false
+            if (typeof window !== 'undefined') window.removeEventListener('beforeunload', preventUnload)
         }
 
         async savePage(response) {
@@ -800,6 +854,25 @@
                     this.refreshProductsDraft()
                 }
                 const draftRows = Array.isArray(this.productsDraft) ? this.productsDraft : null
+                const linkSource = wasCreate && props.source?.slug && props.source?.id && item.id
+                const saveDraft = !linkSource && (wasCreate || wasCopy) && item.id
+                if (linkSource || (saveDraft && draftRows)) {
+                    this.startSaving()
+                }
+                try {
+                    if (linkSource) {
+                        await this.linkWithDraft({
+                            source_slug: props.source.slug,
+                            source_id: props.source.id,
+                            target_slug: slug,
+                            target_id: item.id
+                        }, slug, draftRows)
+                    } else if (saveDraft) {
+                        await this.saveDraftProducts(slug, item.id, draftRows)
+                    }
+                } finally {
+                    this.stopSaving()
+                }
                 this.isGlobalEdit = false
                 this.isCopy = false
                 this.id = item.id
@@ -810,31 +883,6 @@
                         slug: detail.value.slug
                     },
                 })
-
-                if (wasCreate && props.source?.slug && props.source?.id && item.id) {
-                    const relation = {
-                        source_slug: props.source.slug,
-                        source_id: props.source.id,
-                        target_slug: slug,
-                        target_id: item.id
-                    }
-                    const hasDraft = !!(draftRows && draftRows.some(row => (row.id || (row.product_name && String(row.product_name).trim() !== '')) && Number(row.product_count) > 0))
-                    try {
-                        await api.callMethod('POST', routes.relations.create, { ...relation, copy_products: !hasDraft })
-                        relationsVersion.value++
-                    } catch (e) {}
-                    if (hasDraft) {
-                        const draftResult = await this.saveDraftProducts(slug, item.id, draftRows)
-                        if (draftResult === false) {
-                            try {
-                                await api.callMethod('POST', routes.relations.create, { ...relation, copy_products: true })
-                                relationsVersion.value++
-                            } catch (e) {}
-                        }
-                    }
-                } else if ((wasCreate || wasCopy) && item.id) {
-                    await this.saveDraftProducts(slug, item.id, draftRows)
-                }
                 this.updateComponent++
             }
             relationsVersion.value++
@@ -843,6 +891,11 @@
         updateMetaHeader(meta) {
             emit('updateMetaHeader', meta)
         }
+    }
+
+    const preventUnload = (event) => {
+        event.preventDefault()
+        event.returnValue = ''
     }
 
     const detail = ref(new Detail())
@@ -902,6 +955,7 @@
     })
 
     onUnmounted(() => {
+        if (typeof window !== 'undefined') window.removeEventListener('beforeunload', preventUnload)
         emit('closeDetail', true)
     })
 </script>
