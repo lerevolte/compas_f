@@ -233,14 +233,15 @@
 
     const BASED_ENTITIES = {
         deals: [
-            { slug: 'logistic_tasks', title: 'Задача логистики', taskAction: 'unloading' },
+            { slug: 'logistic_tasks', title: 'Задача логистики', taskAction: 'unloading', skip: ['storehouse_id'] },
             { slug: 'pickups', title: 'Запись на самовывоз' },
             { slug: 'payment_invoices', title: 'Счет на оплату' }
         ],
         logistic_tasks: [
-            { slug: 'expense_invoices', title: 'Расходная накладная', action: ['unloading', 'transfer'] },
+            { slug: 'expense_invoices', title: 'Расходная накладная', action: ['unloading'] },
             { slug: 'product_returns', title: 'Возврат от покупателя', action: ['unloading'] },
-            { slug: 'receipt_invoices', title: 'Приходная накладная', action: ['loading', 'transfer'] }
+            { slug: 'receipt_invoices', title: 'Приходная накладная', action: ['loading'] },
+            { slug: 'transfers', title: 'Перемещение', action: ['transfer'] }
         ],
         pickups: [
             { slug: 'expense_invoices', title: 'Расходная накладная' },
@@ -252,11 +253,15 @@
         ],
         addresses: [{ slug: 'logistic_tasks', title: 'Задача логистики' }],
         production_orders: [{ slug: 'productions', title: 'Производство', skip: ['materials', 'production_status'] }],
-        transfer_orders: [{ slug: 'transfers', title: 'Перемещение' }]
+        transfer_orders: [
+            { slug: 'transfers', title: 'Перемещение' },
+            { slug: 'logistic_tasks', title: 'Задача логистики', taskAction: 'transfer' }
+        ]
     }
     const BASED_KEY_MAP = {
         'supplier_orders:logistic_tasks': { company_id: 'shipment_company_id', shipment_company_id: 'company_id' },
-        'supplier_orders:receipt_invoices': { company_id: 'shipment_company_id', shipment_company_id: 'company_id' }
+        'supplier_orders:receipt_invoices': { company_id: 'shipment_company_id', shipment_company_id: 'company_id' },
+        'transfer_orders:logistic_tasks': { transfer_date: 'delivery_date' }
     }
 
     class Tabs {
@@ -538,7 +543,8 @@
                 || (this.slug === 'deals' && SHIPMENT_SOURCES.includes(entity.slug))
                 || (this.slug === 'supplier_orders' && (entity.slug === 'receipt_invoices' || SHIPMENT_SOURCES.includes(entity.slug)))
                 || (this.slug === 'production_orders' && entity.slug === 'productions')
-                || (this.slug === 'transfer_orders' && entity.slug === 'transfers')
+                || (this.slug === 'transfer_orders' && (entity.slug === 'transfers' || entity.slug === 'logistic_tasks'))
+                || (this.slug === 'logistic_tasks' && entity.slug === 'transfers')
 
             const isReturnTarget = entity.slug === 'product_returns'
             let checkData = null
@@ -715,7 +721,8 @@
                 || (SHIPMENT_SOURCES.includes(props.source.slug) && ['expense_invoices', 'product_returns', 'receipt_invoices'].includes(target))
                 || (props.source.slug === 'supplier_orders' && target === 'receipt_invoices')
                 || (props.source.slug === 'production_orders' && target === 'productions')
-                || (props.source.slug === 'transfer_orders' && target === 'transfers')
+                || (props.source.slug === 'transfer_orders' && (target === 'transfers' || target === 'logistic_tasks'))
+                || (props.source.slug === 'logistic_tasks' && target === 'transfers')
             if (!isChain) return true
             this.refreshProductsDraft()
             const rows = (Array.isArray(this.productsDraft) ? this.productsDraft : [])

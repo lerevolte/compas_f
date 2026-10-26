@@ -517,7 +517,7 @@
         if (isLogistic && column.key === 'read_p') {
             return (column.options || []).filter(o => o.value !== 'Y' && o.value !== 'E')
         }
-        if (!row || !['routes', 'logistic_tasks', 'pickups'].includes(row.slug) || !['read_p', 'update_p'].includes(column.key)) {
+        if (!row || !['routes', 'logistic_tasks', 'pickups', 'supplier_orders'].includes(row.slug) || !['read_p', 'update_p'].includes(column.key)) {
             return (column.options || []).filter(o => o.value !== 'E')
         }
         return column.options
