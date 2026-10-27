@@ -60,6 +60,40 @@
         font-size: 12px;
     }
 
+    &__user {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        width: fit-content;
+        color: #1253a2;
+        font-size: 13px;
+        text-decoration: none;
+
+        &:hover .print-docs__user-name {
+            text-decoration: underline;
+        }
+    }
+
+    &__avatar {
+        flex: 0 0 auto;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: var(--backgroundColor);
+
+        figcaption {
+            display: grid;
+            place-items: center;
+            width: 100%;
+            height: 100%;
+            color: #ffffff;
+            font-family: VAG;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+    }
+
     &__name {
         color: #1253a2;
         font-size: 14px;

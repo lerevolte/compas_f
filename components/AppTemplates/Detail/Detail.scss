@@ -154,6 +154,8 @@
     
     h1 {
         position: relative;
+        min-width: 0;
+        overflow-wrap: anywhere;
 
         * {
             font-size: variables.$font-size-h1;
@@ -185,6 +187,7 @@
     gap: 5px;
     order: -1;
     align-items: center;
+    flex-shrink: 0;
 
     .icon-action,
     .show-more {
@@ -237,6 +240,7 @@
 
 .detail-page__header .create-based {
     align-self: center;
+    flex-shrink: 0;
 
     .popup__header {
         display: flex;

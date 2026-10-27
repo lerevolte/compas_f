@@ -103,6 +103,18 @@
                             <span class="print-docs__date" v-if="att.created_at">{{ att.created_at }}</span>
                         </div>
                         <a
+                            v-if="att.user?.id"
+                            class="print-docs__user"
+                            :href="`/objects/users/${att.user.id}`"
+                            @click.prevent.stop="emit('openModal', { slug: 'users', id: att.user.id })"
+                        >
+                            <figure class="ibg print-docs__avatar" :style="`--backgroundColor: ${att.user.color || '#9aa5b8'};`">
+                                <img :src="att.user.icon" alt="" v-if="att.user.icon">
+                                <figcaption v-else>{{ att.user.ab }}</figcaption>
+                            </figure>
+                            <span class="print-docs__user-name">{{ att.user.name }}</span>
+                        </a>
+                        <a
                             class="print-docs__name"
                             :href="att.url"
                             target="_blank"

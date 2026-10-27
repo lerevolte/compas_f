@@ -330,10 +330,11 @@ export class Common {
 
         for (const [key, value] of urlParams.entries()) {
             const numberValue = Number(value);
-            if (value !== '' && !isNaN(numberValue)) {
-                params[key] = numberValue;
+            const parsed = value !== '' && !isNaN(numberValue) ? numberValue : value;
+            if (key.endsWith('[]')) {
+                params[key] = [...(Array.isArray(params[key]) ? params[key] : []), parsed];
             } else {
-                params[key] = value;
+                params[key] = parsed;
             }
         }
 
@@ -1687,10 +1688,13 @@ export class Filter {
                     .map(c => c.key)
                 if (relKeys.length) response.push(`rel_fields=${encodeURIComponent(relKeys.join(','))}`)
                 for (const key in saved_query) {
-                    if (key.startsWith('filter[') && saved_query[key] != null && saved_query[key] !== '') {
-                        response.push(`${key}=${saved_query[key]}`)
+                    if (!key.startsWith('filter[') || saved_query[key] == null || saved_query[key] === '') continue
+                    const values = Array.isArray(saved_query[key]) ? saved_query[key] : [saved_query[key]]
+                    for (const value of values) {
+                        if (value != null && value !== '') response.push(`${key}=${encodeURIComponent(value)}`)
                     }
                 }
+                if (saved_query.q != null && saved_query.q !== '') response.push(`q=${encodeURIComponent(saved_query.q)}`)
             }
 
             if (this.setter.dependences.state) {

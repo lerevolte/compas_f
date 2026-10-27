@@ -1,6 +1,6 @@
 <template>
     <div class="filter" ref="filterRef" :class="{ 'filter_open': filter.state.isOpen }">
-        <div class="filter__header" :class="{'filter__header_fill': filter.state.activeTabs.length > 0}">
+        <div class="filter__header" :class="{'filter__header_fill': filter.state.activeTabs.length > 0 || filter.state.hiddenTabs.length > 0}">
             <AppInput
                 @click="event => filter.toggleOptions(event)"
                 @keyup.enter="filter.updateInfo()"
@@ -39,7 +39,7 @@
                     Фильтр + поиск
                 </div>
 
-                <div class="filter__header" :class="{'filter__header_fill': filter.state.activeTabs.length > 0}">
+                <div class="filter__header" :class="{'filter__header_fill': filter.state.activeTabs.length > 0 || filter.state.hiddenTabs.length > 0}">
                     <AppInput
                         @keyup.enter="filter.updateInfo()"
                         v-model="filter.state.search"
@@ -537,6 +537,36 @@
 
             this.savedFilter.setDefaultFields()
             this.savedFilter.updateSort()
+            this.applyUrlQuery()
+        }
+
+        applyUrlQuery() {
+            if (this.urlApplied || !this.state.fields.length || typeof window === 'undefined') return
+            this.urlApplied = true
+            const table = injectedFilter?.setter
+            if (!table?.slug || table.dependences?.state || table.options?.isLocalTable || table.options?.isExternal) return
+            if (window.location.pathname.replace(/\/+$/, '') !== `/objects/${table.slug}`) return
+            const query = common.getQueryUrl() ?? {}
+            const values = {}
+            for (const rawKey in query) {
+                const match = rawKey.match(/^filter\[([^\]]+)\](\[\])?$/)
+                if (!match) continue
+                const field = this.state.fields.find(f => f.key == match[1])
+                if (!field || ['date', 'checkbox'].includes(field.type)) return
+                const list = Array.isArray(query[rawKey]) ? query[rawKey] : [query[rawKey]]
+                const multiple = ['status', 'deal_stages', 'json'].includes(field.type)
+                if (!multiple && list.length > 1) return
+                values[field.key] = multiple ? list : list[0]
+            }
+            const search = query.q != null && query.q !== '' ? String(query.q) : ''
+            if (!Object.keys(values).length && !search) return
+            for (const key in values) {
+                this.state.tabsValues[key] = values[key]
+                const field = this.state.fields.find(f => f.key == key)
+                if (field) field.enabled = true
+            }
+            this.state.search = search
+            this.updateInfo({ skipDefaults: true })
         }
 
         updateFields(savedFilterFields) {
@@ -803,7 +833,7 @@
                 isCheckingTabs = true
 
                 const containerWidth = filterRef.value.offsetWidth
-                const availableWidth = containerWidth - 100 // Запас 100px
+                const availableWidth = containerWidth - 100
 
                 const visibleTabs = filterTabsRef.value.querySelectorAll('.filter__tab:not(.filter__tab_other)')
                 const otherTab = filterTabsRef.value.querySelector('.filter__tab_other')
@@ -879,7 +909,7 @@
                 }
 
                 isCheckingTabs = false
-            }, 50) // Debounce 50ms
+            }, 50)
         }
 
         if (classObserver.value) {
