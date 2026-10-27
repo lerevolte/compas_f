@@ -28,7 +28,9 @@
                     isDisableSockets: true,
                     isDisableMassAction: true,
                     updatingCount: 0,
-                    parentSlug: props.slug ?? 'logistic_tasks'
+                    parentSlug: props.slug ?? 'logistic_tasks',
+                    parentId: props.options.isGlobalEdit ? 0 : props.id,
+                    parentSource: props.options.isGlobalEdit ? props.options.source : null
                 }"
                 :table="detail.products"
                 :slug="'products'"

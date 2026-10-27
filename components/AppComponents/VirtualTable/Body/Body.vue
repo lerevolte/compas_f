@@ -410,6 +410,8 @@
     import IconDrag from '@AppIcons/Actions/Drag.vue'
     import IconClose from '@AppIcons/Close.vue'
     import { Common, stageStatusOptions } from '@/helpers/classes.js'
+    import api from '@/helpers/api.js'
+    import routes from '@/helpers/routes.js'
     import { format } from 'date-fns'
     import isEqual from 'lodash/isEqual'
     import { useMediaQuery } from '@vueuse/core'
@@ -1336,6 +1338,28 @@
         if (table.value.state !== 'edit') {
             table.value.state = 'edit'
         }
+        applyParentPrice(row, val.value[0])
+    }
+
+    const applyParentPrice = async (row, productId) => {
+        const options = table.value.options ?? {}
+        const parentSlug = options.parentSlug
+        const parentId = Number(options.parentId) || 0
+        const source = options.parentSource
+        if (!parentSlug || !productId || (!parentId && !(source?.slug && source?.id))) return
+        let url = routes.table.parent_prices.replace('${parent_slug}', parentSlug).replace('${page_id}', parentId)
+        if (!parentId) url += `?source_slug=${encodeURIComponent(source.slug)}&source_id=${encodeURIComponent(source.id)}`
+        let response = null
+        try {
+            response = await api.callMethod('GET', url)
+        } catch (e) {
+            return
+        }
+        const entry = response?.status == 200 ? response.data?.prices?.[productId] : null
+        if (!entry || row.product_id != productId && row.id != productId) return
+        row[`product_${response.data.key}`] = entry.price
+        if (entry.nds !== undefined) row.product_nds = entry.nds
+        if (entry.nds_included !== undefined) row.product_nds_included = entry.nds_included == null || entry.nds_included === '' ? '1' : String(entry.nds_included)
     }
     
     const markRowEdited = (row) => {
