@@ -26,10 +26,8 @@
     const ready = ref(!router.query.attach_employee)
 
     const showAttachResult = (common, result) => {
-        if (result === 'attached') {
+        if (result === 'attached' || result === 'exists') {
             return
-        } else if (result === 'exists') {
-            common.showNotification({ title: 'Вы уже привязаны', description: 'Пользователь уже есть в поле «Сотрудник»' }, 'default')
         } else if (result) {
             common.showNotification({ title: 'Не удалось привязаться', description: result.replace(/^error:/, '') }, 'error')
         }
