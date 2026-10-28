@@ -27,7 +27,7 @@
 
     const showAttachResult = (common, result) => {
         if (result === 'attached') {
-            common.showNotification({ title: 'Готово', description: 'Вы добавлены в поле «Сотрудник»' }, 'success')
+            return
         } else if (result === 'exists') {
             common.showNotification({ title: 'Вы уже привязаны', description: 'Пользователь уже есть в поле «Сотрудник»' }, 'default')
         } else if (result) {
