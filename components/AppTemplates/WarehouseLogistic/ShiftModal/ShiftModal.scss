@@ -1,0 +1,56 @@
+@use '@/assets/variables.scss' as variables;
+
+.shift-modal__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+}
+
+.shift-modal__step {
+    &::before {
+        content: none;
+    }
+}
+
+.shift-modal__search {
+    flex: 1 1 200px;
+    min-width: 0;
+    height: 40px;
+    padding: 0 15px;
+    box-sizing: border-box;
+    border: 1px solid variables.$color-border;
+    border-radius: 5px;
+    font: inherit;
+
+    &:focus {
+        outline: none;
+        border-color: variables.$color-focus;
+    }
+}
+
+.shift-modal__times {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 15px;
+}
+
+.shift-modal__time {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #5b6b82;
+
+    input {
+        height: 34px;
+        padding: 0 8px;
+        border: 1px solid variables.$color-border;
+        border-radius: 5px;
+        font: inherit;
+    }
+}
+
+.shift-modal__empty {
+    padding: 15px;
+    color: #8a94a6;
+}

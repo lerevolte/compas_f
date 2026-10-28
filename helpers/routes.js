@@ -167,6 +167,15 @@ export default {
         sabyOrderDelete: '/saby-orders/${id}',
         sabyOrderWaybill: '/saby-orders/${id}/waybill'
     },
+    warehouseLogistic: {
+        config: '/warehouse-logistic/config',
+        shift: '/warehouse-logistic/shifts/${id}',
+        createShift: '/warehouse-logistic/shifts',
+        createTask: '/warehouse-logistic/tasks',
+        scheduleTask: '/warehouse-logistic/tasks/${id}/schedule',
+        taskFromWarehouse: '/warehouse-logistic/tasks/from-warehouse',
+        search: '/objects/search?field_id=${field_id}&q='
+    },
     relations: {
         tree: '/object-relations/${slug}/${id}',
         create: '/object-relations',
