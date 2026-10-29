@@ -300,6 +300,7 @@
 <style>
 .page.page_menu_collapsed { grid-template-columns: 0 1fr; }
 .page-menu-toggle { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 30px; height: 30px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.detail-page__header > .page-menu-toggle { order: -2; }
 @media(max-width: 990px) {
   .page-menu-toggle {display: none!important;}
 }
