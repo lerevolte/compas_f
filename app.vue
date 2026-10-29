@@ -1,15 +1,15 @@
 <template>
   <div class="wrapper">
-      <div class="page" :class="{ 'page_auth': !getRoute.state, 'page_menu_collapsed': !menuVisible }">
+      <div class="page" :class="{ 'page_auth': !getRoute.state, 'page_menu_collapsed': !menuVisible && !isMobile }">
         <AppMenu 
           v-if="getRoute.state"
-          v-show="menuVisible"
+          v-show="menuVisible || isMobile"
           :options="{
             type: getRoute.type
           }"
         />
         <ClientOnly>
-          <Teleport v-if="getRoute.state" to="#mobile-menu-target">
+          <Teleport v-if="getRoute.state && !isMobile" to="#mobile-menu-target">
             <button class="page-menu-toggle" type="button" :aria-label="menuVisible ? 'Скрыть меню' : 'Показать меню'" @click="menuVisible = !menuVisible">
               <svg width="15" height="12" viewBox="0 0 15 12" aria-hidden="true"><path d="M1 0h13a1 1 0 0 1 0 2H1a1 1 0 0 1 0-2Zm0 5h13a1 1 0 0 1 0 2H1a1 1 0 0 1 0-2Zm0 5h13a1 1 0 0 1 0 2H1a1 1 0 0 1 0-2Z" fill="#A6B7D4"/></svg>
             </button>
@@ -85,6 +85,7 @@
 
   const router = useRoute()
   const menuVisible = ref(false)
+  const isMobile = useMediaQuery('(max-width: 990px)')
 
   import metaJSON from './meta.json'
   import entitiesJSON from './entities.json'
@@ -298,7 +299,7 @@
 <style>
 .page.page_menu_collapsed { grid-template-columns: 0 1fr; }
 .page-menu-toggle { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 30px; height: 30px; padding: 0; border: 0; background: transparent; cursor: pointer; }
-@media(max-width: 768px) {
+@media(max-width: 990px) {
   .page-menu-toggle {display: none!important;}
 }
 </style>
