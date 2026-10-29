@@ -298,4 +298,7 @@
 <style>
 .page.page_menu_collapsed { grid-template-columns: 0 1fr; }
 .page-menu-toggle { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 30px; height: 30px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+@media(max-width: 768px) {
+  .page-menu-toggle {display: none!important;}
+}
 </style>
