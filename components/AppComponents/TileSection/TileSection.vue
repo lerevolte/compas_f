@@ -4,8 +4,6 @@
         ref="sectionRef"
         :class="{
             'tile-section_editting': section.fields.find(item => item.edit || (item.type == 'text_group' && item.fields.find(item => item.edit))),
-            // 'tile-section_short' временно отключён — UI сворачивания скрыт, данные всегда развёрнуты.
-            // 'tile-section_short': section.isLocalShort,
             'tile-section_field': props.options.type == 'field'
         }">
         <div class="tile-section__header" ref="headerRef" >
@@ -154,7 +152,7 @@
                             isHaveNull: true,
                             visibleCount: 5,
                             isSetDefault: true,
-                            isCanAdd: !props.options.isModule && (field.can_create ?? true) && (field.can_edit ?? true),
+                            isCanAdd: !props.options.isExternal && (field.can_edit ?? true) && (props.options.isModule ? !!field.is_plural : (field.can_create ?? true)),
                             multiple: field.is_plural,
                             placeholder: '' 
                         }"
@@ -723,7 +721,6 @@
             this.fields = computed(() => props.section.fields)
         }
 
-        // Получение секции
         async get() {
             const response = props.section
             this.id = response.id
@@ -738,7 +735,6 @@
             }
         }
  
-        // Редактирование заголовка
         initEditTitle() {
             this.editTitle = true
             nextTick(() => {
@@ -747,7 +743,6 @@
             })
         }
 
-        // Установка заголовка
         setTitle(e) {
             e.preventDefault()
             this.editTitle = false
@@ -764,7 +759,6 @@
             }})
         }
 
-        // Обновление секции
         hideSection() {
             this.setLocalShort(this.is_short)
             emit('actionSection', {action: 'update', value: {
@@ -774,7 +768,6 @@
             }})
         }
 
-        // Установка локального состояния
         setLocalShort(state) {
             this.isLocalShort = state
         }
@@ -783,7 +776,6 @@
     const section = ref(new TileSection())
     const fieldObject = ref(new Field(props.sectionClass, emit))
 
-    // Проверка клика вне заголовка при его редактировании
     const checkClick = (e) => {
         if (!headerRef.value.contains(e.target)) {
             document.removeEventListener('click', checkClick);
