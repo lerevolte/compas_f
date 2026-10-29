@@ -1,12 +1,20 @@
 <template>
   <div class="wrapper">
-      <div class="page" :class="{ 'page_auth': !getRoute.state }">
+      <div class="page" :class="{ 'page_auth': !getRoute.state, 'page_menu_collapsed': !menuVisible }">
         <AppMenu 
           v-if="getRoute.state"
+          v-show="menuVisible"
           :options="{
             type: getRoute.type
           }"
         />
+        <ClientOnly>
+          <Teleport v-if="getRoute.state" to="#mobile-menu-target">
+            <button class="page-menu-toggle" type="button" :aria-label="menuVisible ? 'Скрыть меню' : 'Показать меню'" @click="menuVisible = !menuVisible">
+              <svg width="15" height="12" viewBox="0 0 15 12" aria-hidden="true"><path d="M1 0h13a1 1 0 0 1 0 2H1a1 1 0 0 1 0-2Zm0 5h13a1 1 0 0 1 0 2H1a1 1 0 0 1 0-2Zm0 5h13a1 1 0 0 1 0 2H1a1 1 0 0 1 0-2Z" fill="#A6B7D4"/></svg>
+            </button>
+          </Teleport>
+        </ClientOnly>
         <NuxtPage 
           :entity="entity"
           :slug="router.params.slug"
@@ -76,6 +84,7 @@
 	import AppWarningLarge from '@AppComponents/Modal/Large/Large.vue'
 
   const router = useRoute()
+  const menuVisible = ref(false)
 
   import metaJSON from './meta.json'
   import entitiesJSON from './entities.json'
@@ -285,3 +294,8 @@
 
   provide('socket', socket)
 </script>
+
+<style>
+.page.page_menu_collapsed { grid-template-columns: 0 1fr; }
+.page-menu-toggle { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 30px; height: 30px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+</style>

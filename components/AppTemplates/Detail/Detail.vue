@@ -512,9 +512,9 @@
             let products = JSON.parse(JSON.stringify(this.productsList || [])).map(({ isChoose, edit, local_id, ...row }) => row)
             if (common.productPriceKey(this.slug) === 'product_purchase_price' && common.productPriceKey(entity.slug) === 'product_price') {
                 products = products.map(row => {
-                    const purchase = row.product_purchase_price
-                    if (purchase === null || purchase === undefined || purchase === '' || isNaN(Number(purchase))) return row
-                    const repriced = { ...row, product_price: purchase }
+                    const sale = row.product_id?.localOptions?.[0]?.label?.price ?? row.product_price
+                    if (sale === null || sale === undefined || sale === '' || isNaN(Number(sale))) return row
+                    const repriced = { ...row, product_price: sale }
                     const parts = common.productLineParts(repriced, entity.slug)
                     return {
                         ...repriced,
@@ -775,6 +775,7 @@
                     product_price: row.product_price,
                     product_purchase_price: row.product_purchase_price,
                     product_count: row.product_count,
+                    product_additional_count: row.product_additional_count,
                     product_output_count: row.product_output_count,
                     product_specification_id: row.product_specification_id,
                     product_weight: row.product_weight,

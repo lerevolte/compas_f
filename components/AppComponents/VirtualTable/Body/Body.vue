@@ -721,6 +721,17 @@
                     
                     const cell = table.value.body[rowIndex][column.key]
 
+                    if (table.value.slug == 'products' && column.key == 'product_additional_count') {
+                        const row = table.value.body[rowIndex]
+                        const oldExtra = Number(row.product_additional_count || 0)
+                        const extra = Number(String(val ?? '').replace(',', '.'))
+                        if (Number.isFinite(extra) && extra >= 0) {
+                            row.product_count = Number(row.product_count || 0) - oldExtra + extra
+                            row.product_additional_count = extra
+                        }
+                        return
+                    }
+
                     if (table.value.slug == 'products' && column.key == 'product_sum') {
                         const row = table.value.body[rowIndex]
                         const parentSlug = table.value.options?.parentSlug
