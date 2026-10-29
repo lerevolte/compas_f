@@ -77,6 +77,7 @@
   import '@/assets/fonts/fonts.css'
 
   import { Socket } from '@AppHelpers/classes.js';
+  import { useMediaQuery } from '@vueuse/core'
   import AppMenu from '@AppComponents/Menu/Menu.vue';
 	import AppDetail from '@AppTemplates/Detail/Detail.vue';
   import AppAnalyticDetail from '@AppTemplates/Analytic/Detail/Detail.vue';
