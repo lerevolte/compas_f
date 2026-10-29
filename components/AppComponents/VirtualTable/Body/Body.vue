@@ -692,7 +692,7 @@
 
                     if (table.value.slug == 'products' && ['product_sum', 'product_nds_sum', 'product_total'].includes(column.key)) {
                         const row = table.value.body[rowIndex]
-                        const parentSlug = table.value.options?.parentSlug
+                        const parentSlug = table.value.options?.priceSlug ?? table.value.options?.parentSlug
                         const parts = common.productLineParts(row, parentSlug)
                         if (column.key == 'product_sum') {
                             const editing = !column.read_only && (row.edit || table.value.options?.isPermanentEdit)
@@ -734,7 +734,7 @@
 
                     if (table.value.slug == 'products' && column.key == 'product_sum') {
                         const row = table.value.body[rowIndex]
-                        const parentSlug = table.value.options?.parentSlug
+                        const parentSlug = table.value.options?.priceSlug ?? table.value.options?.parentSlug
                         const priceKey = common.productPriceKey(parentSlug)
                         const sum = Number(String(val ?? '').replace(/\s/g, '').replace(',', '.'))
                         const count = Number(row.product_count || 0)

@@ -29,6 +29,8 @@
                     isDisableMassAction: true,
                     updatingCount: 0,
                     parentSlug: props.slug ?? 'logistic_tasks',
+                    priceSlug: props.options.isGlobalEdit && props.options.source?.slug === 'supplier_orders'
+                        ? 'supplier_orders' : detail.products.priceSlug,
                     parentId: props.options.isGlobalEdit ? 0 : props.id,
                     parentSource: props.options.isGlobalEdit ? props.options.source : null
                 }"
@@ -459,6 +461,14 @@
                 }
 
                 this.products.table = response.data.table.tableKeys
+                this.products.priceSlug = response.data.table.priceSlug
+                if (props.options.isGlobalEdit && props.options.source?.slug === 'supplier_orders' && ['logistic_tasks', 'pickups'].includes(props.slug)) {
+                    this.products.table = this.products.table.map(column => {
+                        if (column.key === 'product_price') return { ...column, enabled: 0, read_only: 1 }
+                        if (column.key === 'product_purchase_price') return { ...column, enabled: 1, read_only: 0, title: 'Цена закупки' }
+                        return column
+                    })
+                }
                 this.products.list = Array.isArray(response.data.table.tableBody?.data)
                     ? response.data.table.tableBody
                     : this.localProductsList(Array.isArray(response.data.table.tableBody) ? response.data.table.tableBody : [])

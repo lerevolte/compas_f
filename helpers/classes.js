@@ -939,9 +939,9 @@ export class Table {
                         product_specification_id: row['product_specification_id'],
                         product_weight: row['product_weight'],
                         product_volume: row['product_volume'],
-                        product_sum: this.common.roundMoney(this.common.productLineParts(row, this.options?.parentSlug).sum),
-                        product_nds_sum: this.common.roundMoney(this.common.productLineParts(row, this.options?.parentSlug).vat),
-                        product_total: this.common.roundMoney(this.common.productLineParts(row, this.options?.parentSlug).gross),
+                        product_sum: this.common.roundMoney(this.common.productLineParts(row, this.options?.priceSlug ?? this.options?.parentSlug).sum),
+                        product_nds_sum: this.common.roundMoney(this.common.productLineParts(row, this.options?.priceSlug ?? this.options?.parentSlug).vat),
+                        product_total: this.common.roundMoney(this.common.productLineParts(row, this.options?.priceSlug ?? this.options?.parentSlug).gross),
                         product_nds: row['product_nds'],
                         product_nds_included: row['product_nds_included']
                     })

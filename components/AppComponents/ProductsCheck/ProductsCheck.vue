@@ -40,6 +40,7 @@
     const common = new Common()
     const parent = ref(null)
     const limits = ref([])
+    const priceKey = ref('product_price')
     const relationsVersion = useState('object-relations-version', () => 0)
 
     const load = async () => {
@@ -57,6 +58,7 @@
             const response = await api.callMethod('GET', url)
             parent.value = response?.status == 200 ? (response.data?.parent ?? null) : null
             limits.value = response?.status == 200 ? (response.data?.limits ?? []) : []
+            priceKey.value = response?.status == 200 ? (response.data?.price_key ?? 'product_price') : 'product_price'
         } catch (e) {
             parent.value = null
             limits.value = []
@@ -82,7 +84,7 @@
                 continue
             }
             const count = Number(row.product_count || 0)
-            const price = Number(row.product_price || 0)
+            const price = Number(row[priceKey.value] || 0)
             if (limit.is_service) {
                 if (Number(limit.price) > 0) {
                     const lineTotal = price * (count > 0 ? count : 1)
